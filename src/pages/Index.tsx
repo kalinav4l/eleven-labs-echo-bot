@@ -6,7 +6,15 @@ import { useJarvis } from '@/hooks/useJarvis'
 
 const Index = () => {
   const [isActive, setIsActive] = useState(false)
-  const { messages, isPlaying, isLoading, sendMessage } = useJarvis()
+  const { 
+    messages, 
+    isPlaying, 
+    isLoading, 
+    isListening,
+    sendMessage,
+    startListening,
+    stopListening
+  } = useJarvis()
 
   useEffect(() => {
     setIsActive(true)
@@ -46,6 +54,9 @@ const Index = () => {
             <div className={`w-3 h-3 rounded-full ${isActive ? 'bg-green-400 animate-pulse' : 'bg-gray-500'}`} />
             <div className="h-px w-20 bg-gradient-to-l from-transparent to-cyan-400" />
           </div>
+          <p className="text-cyan-400/60 text-sm font-mono mt-4">
+            VOICE INTERFACE ENABLED | GLAS MASCULIN ACTIV
+          </p>
         </div>
 
         {/* Jarvis Core */}
@@ -53,22 +64,25 @@ const Index = () => {
           <JarvisCore 
             isActive={isActive}
             isPlaying={isPlaying}
-            isLoading={isLoading}
+            isLoading={isLoading || isListening}
           />
         </div>
 
-        {/* Chat Interface */}
+        {/* Voice Chat Interface */}
         <JarvisChat
           messages={messages}
           onSendMessage={sendMessage}
           isLoading={isLoading}
           isPlaying={isPlaying}
+          isListening={isListening}
+          onStartListening={startListening}
+          onStopListening={stopListening}
         />
 
         {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-cyan-400/60 text-sm font-mono">
-            STARK INDUSTRIES © 2024 | СИСТЕМЫ АКТИВИРОВАНЫ
+            STARK INDUSTRIES © 2024 | СИСТЕМ VOCAL АКТИВИРОВАН
           </p>
         </div>
       </div>
