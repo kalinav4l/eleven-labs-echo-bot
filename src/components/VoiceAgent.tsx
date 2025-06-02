@@ -129,43 +129,32 @@ export const VoiceAgent: React.FC = () => {
             )}
           </div>
         </div>
-
-        {/* Agent Selection Section */}
-        <div className="bg-gray-800 rounded-lg p-4 w-80">
-          <h3 className="text-gray-300 text-sm font-medium mb-3 text-center">Selectează Asistentul</h3>
-          <div className="space-y-2">
-            {availableAgents.map((agent) => (
-              <div
-                key={agent.id}
-                onClick={() => handleAgentSelect(agent.id)}
-                className={cn(
-                  "flex items-center p-3 rounded-lg cursor-pointer transition-all duration-200",
-                  selectedAgentId === agent.id 
-                    ? "bg-cyan-600 text-white" 
-                    : "bg-gray-700 text-gray-300 hover:bg-gray-600",
-                  isConnected && "cursor-not-allowed opacity-50"
-                )}
-              >
-                <div className={cn(
-                  "w-3 h-3 rounded-full mr-3 transition-colors",
-                  selectedAgentId === agent.id ? "bg-white" : "bg-gray-500"
-                )} />
-                <div className="flex-1">
-                  <div className="font-medium">{agent.name}</div>
-                  <div className="text-xs opacity-70 font-mono">
-                    {agent.id.substring(0, 12)}...
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          {isConnected && (
-            <div className="text-xs text-gray-400 mt-2 text-center">
-              Deconectează-te pentru a schimba asistentul
-            </div>
-          )}
-        </div>
       </div>
+
+      {/* Agent Selection Section - Show only when not connected and not speaking */}
+      {!isConnected && !isSpeaking && (
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 flex gap-3">
+          {availableAgents.map((agent) => (
+            <div
+              key={agent.id}
+              onClick={() => handleAgentSelect(agent.id)}
+              className={cn(
+                "px-6 py-3 rounded-full border-2 cursor-pointer transition-all duration-200 text-sm font-medium",
+                selectedAgentId === agent.id 
+                  ? "bg-gray-600 border-gray-500 text-white" 
+                  : "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500"
+              )}
+              style={{
+                background: selectedAgentId === agent.id 
+                  ? 'linear-gradient(135deg, rgba(75, 85, 99, 0.9) 0%, rgba(55, 65, 81, 0.9) 100%)'
+                  : 'rgba(31, 41, 55, 0.8)'
+              }}
+            >
+              {agent.name}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Floating Words for User Input */}
       <FloatingWords 
