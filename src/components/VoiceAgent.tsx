@@ -3,11 +3,13 @@ import React, { useState } from 'react'
 import { useConversation } from '@11labs/react'
 import { cn } from '@/lib/utils'
 import { InfoOverlay } from './InfoOverlay'
+import { FloatingWords } from './FloatingWords'
 
 export const VoiceAgent: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false)
   const [agentId] = useState('fp62KWgF1zlxF7sQiHaw')
   const [lastMessage, setLastMessage] = useState('')
+  const [userMessage, setUserMessage] = useState('')
   
   const conversation = useConversation({
     onConnect: () => {
@@ -18,14 +20,19 @@ export const VoiceAgent: React.FC = () => {
       console.log('Disconnected from voice agent')
       setIsConnected(false)
       setLastMessage('')
+      setUserMessage('')
     },
     onError: (error) => {
       console.error('Voice agent error:', error)
     },
     onMessage: (message) => {
       console.log('Message received:', message)
-      if (message.message && message.source === 'ai') {
-        setLastMessage(message.message)
+      if (message.message) {
+        if (message.source === 'ai') {
+          setLastMessage(message.message)
+        } else if (message.source === 'user') {
+          setUserMessage(message.message)
+        }
       }
     }
   })
@@ -90,7 +97,13 @@ export const VoiceAgent: React.FC = () => {
         </div>
       </div>
 
-      {/* Info Overlay */}
+      {/* Floating Words for User Input */}
+      <FloatingWords 
+        message={userMessage} 
+        isVisible={isConnected && userMessage.length > 0} 
+      />
+
+      {/* Info Overlay for AI responses */}
       <InfoOverlay 
         message={lastMessage} 
         isVisible={isConnected && isSpeaking} 
