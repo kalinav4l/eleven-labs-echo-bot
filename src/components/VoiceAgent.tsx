@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react'
 import { useConversation } from '@11labs/react'
 import { cn } from '@/lib/utils'
@@ -7,7 +6,7 @@ import { FloatingWords } from './FloatingWords'
 
 export const VoiceAgent: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false)
-  const [agentId] = useState('KEDmMmG6lxQTa92htFqb')
+  const [agentId] = useState('agent_01jwryy4w5e8fsta9v9j304zzq')
   const [lastMessage, setLastMessage] = useState('')
   const [userMessage, setUserMessage] = useState('')
   const isConnectingRef = useRef(false)
