@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+
+import React, { useState, useRef } from 'react'
 import { useConversation } from '@11labs/react'
 import { cn } from '@/lib/utils'
 import { InfoOverlay } from './InfoOverlay'
@@ -9,20 +10,24 @@ export const VoiceAgent: React.FC = () => {
   const [agentId] = useState('KEDmMmG6lxQTa92htFqb')
   const [lastMessage, setLastMessage] = useState('')
   const [userMessage, setUserMessage] = useState('')
+  const isConnectingRef = useRef(false)
   
   const conversation = useConversation({
     onConnect: () => {
-      console.log('Connected to voice agent')
+      console.log('Connected to voice agent:', agentId)
       setIsConnected(true)
+      isConnectingRef.current = false
     },
     onDisconnect: () => {
       console.log('Disconnected from voice agent')
       setIsConnected(false)
       setLastMessage('')
       setUserMessage('')
+      isConnectingRef.current = false
     },
     onError: (error) => {
       console.error('Voice agent error:', error)
+      isConnectingRef.current = false
     },
     onMessage: (message) => {
       console.log('Message received:', message)
@@ -41,13 +46,24 @@ export const VoiceAgent: React.FC = () => {
   const handleClick = async () => {
     try {
       if (isConnected) {
+        console.log('Disconnecting from agent...')
         await conversation.endSession()
       } else {
+        if (isConnectingRef.current) {
+          console.log('Already connecting, please wait...')
+          return
+        }
+        
+        isConnectingRef.current = true
+        console.log('Requesting microphone access...')
         await navigator.mediaDevices.getUserMedia({ audio: true })
+        
+        console.log('Starting session with agent:', agentId)
         await conversation.startSession({ agentId })
       }
     } catch (error) {
       console.error('Error with conversation:', error)
+      isConnectingRef.current = false
     }
   }
 
@@ -84,6 +100,11 @@ export const VoiceAgent: React.FC = () => {
             )}>
               {isConnected ? "Click to disconnect" : "Click to connect"}
             </div>
+            {agentId && (
+              <div className="text-xs text-cyan-400 mt-1 font-mono">
+                Agent: {agentId.substring(0, 8)}...
+              </div>
+            )}
           </div>
 
           {/* Animated rings when speaking */}
