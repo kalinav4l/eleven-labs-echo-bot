@@ -1,20 +1,9 @@
 
 import React, { useState, useEffect } from 'react'
-import { JarvisCore } from '@/components/JarvisCore'
-import { JarvisChat } from '@/components/JarvisChat'
-import { useJarvis } from '@/hooks/useJarvis'
+import { VoiceAgent } from '@/components/VoiceAgent'
 
 const Index = () => {
   const [isActive, setIsActive] = useState(false)
-  const { 
-    messages, 
-    isPlaying, 
-    isLoading, 
-    isListening,
-    sendMessage,
-    startListening,
-    stopListening
-  } = useJarvis()
 
   useEffect(() => {
     setIsActive(true)
@@ -42,7 +31,7 @@ const Index = () => {
       {/* Main content */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-8">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-12">
           <h1 className="text-6xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent mb-4 font-mono">
             JARVIS
           </h1>
@@ -55,34 +44,17 @@ const Index = () => {
             <div className="h-px w-20 bg-gradient-to-l from-transparent to-cyan-400" />
           </div>
           <p className="text-cyan-400/60 text-sm font-mono mt-4">
-            VOICE INTERFACE ENABLED | GLAS MASCULIN ACTIV
+            CONVERSATIONAL AI | INTERFAȚĂ VOCALĂ DIRECTĂ
           </p>
         </div>
 
-        {/* Jarvis Core */}
-        <div className="mb-12">
-          <JarvisCore 
-            isActive={isActive}
-            isPlaying={isPlaying}
-            isLoading={isLoading || isListening}
-          />
-        </div>
-
-        {/* Voice Chat Interface */}
-        <JarvisChat
-          messages={messages}
-          onSendMessage={sendMessage}
-          isLoading={isLoading}
-          isPlaying={isPlaying}
-          isListening={isListening}
-          onStartListening={startListening}
-          onStopListening={stopListening}
-        />
+        {/* Voice Agent Interface */}
+        <VoiceAgent />
 
         {/* Footer */}
-        <div className="mt-8 text-center">
+        <div className="mt-12 text-center">
           <p className="text-cyan-400/60 text-sm font-mono">
-            STARK INDUSTRIES © 2024 | СИСТЕМ VOCAL АКТИВИРОВАН
+            STARK INDUSTRIES © 2024 | CONVERSAȚIE VOCALĂ ACTIVĂ
           </p>
         </div>
       </div>
