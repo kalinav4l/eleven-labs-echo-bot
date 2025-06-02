@@ -1,14 +1,79 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useState, useEffect } from 'react'
+import { JarvisCore } from '@/components/JarvisCore'
+import { JarvisChat } from '@/components/JarvisChat'
+import { useJarvis } from '@/hooks/useJarvis'
 
 const Index = () => {
+  const [isActive, setIsActive] = useState(false)
+  const { messages, isPlaying, isLoading, sendMessage } = useJarvis()
+
+  useEffect(() => {
+    setIsActive(true)
+  }, [])
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-black relative overflow-hidden">
+      {/* Background effects */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,211,238,0.1),transparent_70%)]" />
+      <div className="absolute inset-0">
+        {[...Array(50)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-cyan-400/30 rounded-full animate-pulse"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${2 + Math.random() * 3}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Main content */}
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-6xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent mb-4 font-mono">
+            JARVIS
+          </h1>
+          <p className="text-cyan-300/80 text-xl font-mono">
+            Just A Rather Very Intelligent System
+          </p>
+          <div className="mt-4 flex items-center justify-center gap-4">
+            <div className="h-px w-20 bg-gradient-to-r from-transparent to-cyan-400" />
+            <div className={`w-3 h-3 rounded-full ${isActive ? 'bg-green-400 animate-pulse' : 'bg-gray-500'}`} />
+            <div className="h-px w-20 bg-gradient-to-l from-transparent to-cyan-400" />
+          </div>
+        </div>
+
+        {/* Jarvis Core */}
+        <div className="mb-12">
+          <JarvisCore 
+            isActive={isActive}
+            isPlaying={isPlaying}
+            isLoading={isLoading}
+          />
+        </div>
+
+        {/* Chat Interface */}
+        <JarvisChat
+          messages={messages}
+          onSendMessage={sendMessage}
+          isLoading={isLoading}
+          isPlaying={isPlaying}
+        />
+
+        {/* Footer */}
+        <div className="mt-8 text-center">
+          <p className="text-cyan-400/60 text-sm font-mono">
+            STARK INDUSTRIES © 2024 | СИСТЕМЫ АКТИВИРОВАНЫ
+          </p>
+        </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Index;
+export default Index
