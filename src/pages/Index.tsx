@@ -8,9 +8,6 @@ const Index = () => {
     <div className="min-h-screen bg-black flex items-center justify-center relative">
       <HamburgerMenu />
       <VoiceAgent />
-      
-      {/* ElevenLabs Conversational AI Widget */}
-      <elevenlabs-convai agent-id="agent_01jwtnqwkteha801e4e1kyr8yz"></elevenlabs-convai>
     </div>
   )
 }
