@@ -1,126 +1,181 @@
 
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
-import { Navigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { MessageSquare, Clock, User, Download } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { MessageSquare, Clock, Coins, Bot } from 'lucide-react';
+import { format } from 'date-fns';
 
 const AccountChatHistory = () => {
   const { user } = useAuth();
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
+  const { data: conversations, isLoading } = useQuery({
+    queryKey: ['user-conversations', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-  const conversations = [
-    {
-      id: 1,
-      title: 'Test cu Borea',
-      date: '2024-06-03 14:30',
-      duration: '5 min',
-      messages: 12,
-      agent: 'Borea',
-      status: 'completed'
+      if (error) throw error;
+      return data;
     },
-    {
-      id: 2,
-      title: 'Conversație cu Jesica',
-      date: '2024-06-03 10:15',
-      duration: '8 min',
-      messages: 18,
-      agent: 'Jesica',
-      status: 'completed'
+    enabled: !!user,
+  });
+
+  const { data: totalStats } = useQuery({
+    queryKey: ['conversation-stats', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('message_count, duration_minutes, credits_used')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      const totalMessages = data.reduce((sum, conv) => sum + conv.message_count, 0);
+      const totalMinutes = data.reduce((sum, conv) => sum + (conv.duration_minutes || 0), 0);
+      const totalCreditsUsed = data.reduce((sum, conv) => sum + conv.credits_used, 0);
+
+      return {
+        totalConversations: data.length,
+        totalMessages,
+        totalMinutes,
+        totalCreditsUsed
+      };
     },
-    {
-      id: 3,
-      title: 'Test cu Ana',
-      date: '2024-06-02 16:45',
-      duration: '3 min',
-      messages: 7,
-      agent: 'Ana',
-      status: 'completed'
-    },
-    {
-      id: 4,
-      title: 'Sesiune cu Borea',
-      date: '2024-06-02 09:20',
-      duration: '12 min',
-      messages: 25,
-      agent: 'Borea',
-      status: 'completed'
-    },
-    {
-      id: 5,
-      title: 'Test cu Jesica',
-      date: '2024-06-01 18:30',
-      duration: '6 min',
-      messages: 14,
-      agent: 'Jesica',
-      status: 'completed'
-    }
-  ];
+    enabled: !!user,
+  });
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="p-6">
+          <div className="text-center">Se încarcă...</div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
       <div className="p-6">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-black mb-2">Istoric Chat</h1>
-            <p className="text-gray-600">Toate conversațiile tale cu agenții AI</p>
-          </div>
-          <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-100">
-            <Download className="w-4 h-4 mr-2" />
-            Exportă Istoric
-          </Button>
-        </div>
-
-        <div className="space-y-4">
-          {conversations.map((conversation) => (
-            <Card key={conversation.id} className="bg-white border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <MessageSquare className="w-8 h-8 text-gray-700" />
-                    <div>
-                      <h3 className="text-black font-medium text-lg">{conversation.title}</h3>
-                      <div className="flex items-center space-x-4 mt-1">
-                        <div className="flex items-center text-gray-600 text-sm">
-                          <Clock className="w-4 h-4 mr-1" />
-                          {conversation.date}
-                        </div>
-                        <div className="flex items-center text-gray-600 text-sm">
-                          <User className="w-4 h-4 mr-1" />
-                          {conversation.agent}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="text-right">
-                    <div className="text-black font-medium">{conversation.duration}</div>
-                    <div className="text-gray-600 text-sm">{conversation.messages} mesaje</div>
+        <h1 className="text-2xl font-bold text-black mb-6">Istoric Conversații</h1>
+        
+        {/* Statistics Cards */}
+        {totalStats && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center">
+                  <MessageSquare className="w-8 h-8 text-blue-600 mr-3" />
+                  <div>
+                    <p className="text-sm text-gray-600">Total Conversații</p>
+                    <p className="text-2xl font-bold text-black">{totalStats.totalConversations}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
-
-        {/* Pagination */}
-        <div className="flex justify-center mt-8">
-          <div className="flex space-x-2">
-            <Button variant="outline" size="sm" className="border-gray-300 text-gray-700 hover:bg-gray-100">
-              Anterior
-            </Button>
-            <Button size="sm" className="bg-black hover:bg-gray-800 text-white">1</Button>
-            <Button variant="outline" size="sm" className="border-gray-300 text-gray-700 hover:bg-gray-100">2</Button>
-            <Button variant="outline" size="sm" className="border-gray-300 text-gray-700 hover:bg-gray-100">3</Button>
-            <Button variant="outline" size="sm" className="border-gray-300 text-gray-700 hover:bg-gray-100">
-              Următor
-            </Button>
+            
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center">
+                  <Clock className="w-8 h-8 text-green-600 mr-3" />
+                  <div>
+                    <p className="text-sm text-gray-600">Minute Totale</p>
+                    <p className="text-2xl font-bold text-black">{Math.round(totalStats.totalMinutes)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center">
+                  <MessageSquare className="w-8 h-8 text-purple-600 mr-3" />
+                  <div>
+                    <p className="text-sm text-gray-600">Mesaje Totale</p>
+                    <p className="text-2xl font-bold text-black">{totalStats.totalMessages}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center">
+                  <Coins className="w-8 h-8 text-yellow-600 mr-3" />
+                  <div>
+                    <p className="text-sm text-gray-600">Credite Folosite</p>
+                    <p className="text-2xl font-bold text-black">{totalStats.totalCreditsUsed.toLocaleString()}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
+        )}
+
+        {/* Conversations List */}
+        <div className="space-y-4">
+          {conversations && conversations.length > 0 ? (
+            conversations.map((conversation) => (
+              <Card key={conversation.id} className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg text-black flex items-center">
+                      <Bot className="w-5 h-5 mr-2 text-gray-600" />
+                      {conversation.agent_name}
+                    </CardTitle>
+                    <Badge variant="outline">
+                      {format(new Date(conversation.created_at), 'dd MMM yyyy, HH:mm')}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                    <div className="flex items-center text-gray-600">
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      <span>{conversation.message_count} mesaje</span>
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <Clock className="w-4 h-4 mr-2" />
+                      <span>{Math.round(conversation.duration_minutes || 0)} minute</span>
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <Coins className="w-4 h-4 mr-2" />
+                      <span>{conversation.credits_used.toLocaleString()} credite</span>
+                    </div>
+                    <div className="text-gray-600">
+                      ID: {conversation.agent_id}
+                    </div>
+                  </div>
+                  {conversation.title && (
+                    <p className="text-gray-700 mt-2">{conversation.title}</p>
+                  )}
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-black mb-2">
+                  Nicio conversație încă
+                </h3>
+                <p className="text-gray-600">
+                  Conversațiile tale cu asistenții AI vor apărea aici.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </DashboardLayout>

@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +13,7 @@ import AccountChatHistory from "./pages/AccountChatHistory";
 import AccountSettings from "./pages/AccountSettings";
 import Pricing from "./pages/Pricing";
 import Info from "./pages/Info";
+import Calls from "./pages/Calls";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +34,7 @@ const App = () => (
             <Route path="/account/settings" element={<AccountSettings />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/info" element={<Info />} />
+            <Route path="/calls" element={<Calls />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

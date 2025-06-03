@@ -270,6 +270,21 @@ export type Database = {
         }
         Returns: boolean
       }
+      admin_add_credits: {
+        Args: { p_user_email: string; p_amount: number; p_description?: string }
+        Returns: boolean
+      }
+      admin_get_user_credits: {
+        Args: { p_user_email: string }
+        Returns: {
+          user_id: string
+          email: string
+          total_credits: number
+          used_credits: number
+          remaining_credits: number
+          created_at: string
+        }[]
+      }
       deduct_credits: {
         Args: {
           p_user_id: string
