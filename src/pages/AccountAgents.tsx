@@ -4,14 +4,17 @@ import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bot, Settings, Play, MessageSquare } from 'lucide-react';
+import { Bot, Settings, Play, MessageSquare, Code, Copy, Check } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import AgentTestModal from '@/components/AgentTestModal';
+import EmbedCodeModal from '@/components/EmbedCodeModal';
 
 const AccountAgents = () => {
   const { user } = useAuth();
   const [selectedAgent, setSelectedAgent] = useState<any>(null);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
+  const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -50,6 +53,20 @@ const AccountAgents = () => {
   const handleTestAgent = (agent: any) => {
     setSelectedAgent(agent);
     setIsTestModalOpen(true);
+  };
+
+  const handleShowEmbedCode = (agent: any) => {
+    setSelectedAgent(agent);
+    setIsEmbedModalOpen(true);
+  };
+
+  const copyEmbedCode = (agentId: string) => {
+    const embedCode = `<elevenlabs-convai agent-id="${agentId}"></elevenlabs-convai>
+<script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>`;
+    
+    navigator.clipboard.writeText(embedCode);
+    setCopiedId(agentId);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   return (
@@ -106,6 +123,28 @@ const AccountAgents = () => {
                   </div>
                 </div>
 
+                {/* Embed Code Section */}
+                <div className="mb-4 p-3 bg-gray-50 rounded border">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-700">Cod Embed:</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyEmbedCode(agent.id)}
+                      className="text-gray-600 hover:text-black p-1"
+                    >
+                      {copiedId === agent.id ? (
+                        <Check className="w-4 h-4 text-black" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <code className="text-xs text-gray-600 bg-white p-2 rounded border block overflow-hidden">
+                    &lt;elevenlabs-convai agent-id="{agent.id}"&gt;&lt;/elevenlabs-convai&gt;
+                  </code>
+                </div>
+
                 <div className="flex space-x-2">
                   <Button 
                     variant="outline" 
@@ -117,10 +156,13 @@ const AccountAgents = () => {
                     Testează
                   </Button>
                   <Button 
+                    variant="outline"
                     size="sm" 
-                    className="flex-1 bg-black hover:bg-gray-800 text-white"
+                    className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-100"
+                    onClick={() => handleShowEmbedCode(agent)}
                   >
-                    Configurează
+                    <Code className="w-4 h-4 mr-2" />
+                    Embed
                   </Button>
                 </div>
               </CardContent>
@@ -133,6 +175,12 @@ const AccountAgents = () => {
         agent={selectedAgent}
         isOpen={isTestModalOpen}
         onClose={() => setIsTestModalOpen(false)}
+      />
+
+      <EmbedCodeModal
+        agent={selectedAgent}
+        isOpen={isEmbedModalOpen}
+        onClose={() => setIsEmbedModalOpen(false)}
       />
     </DashboardLayout>
   );
