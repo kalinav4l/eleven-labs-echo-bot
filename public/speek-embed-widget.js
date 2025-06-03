@@ -8,6 +8,7 @@ class SpeekConvai extends HTMLElement {
     this.isListening = false;
     this.mediaRecorder = null;
     this.audioContext = null;
+    this.apiBaseUrl = 'https://pwfczzxwjfxomqzhhwvj.functions.supabase.co';
   }
 
   connectedCallback() {
@@ -18,6 +19,8 @@ class SpeekConvai extends HTMLElement {
       <style>
         * {
           box-sizing: border-box;
+          margin: 0;
+          padding: 0;
         }
         
         #widget {
@@ -31,33 +34,39 @@ class SpeekConvai extends HTMLElement {
           display: flex;
           align-items: center;
           gap: 12px;
-          z-index: 9999;
-          font-family: Arial, sans-serif;
+          z-index: 999999;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
           max-width: 320px;
           cursor: pointer;
-          transition: transform 0.2s;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+          border: 1px solid rgba(0, 0, 0, 0.1);
         }
         
         #widget:hover {
           transform: scale(1.02);
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
         }
         
         #widget img {
-          width: 32px;
-          height: 32px;
+          width: 40px;
+          height: 40px;
           border-radius: 50%;
           object-fit: cover;
+          flex-shrink: 0;
         }
         
         .text {
           display: flex;
           flex-direction: column;
           font-size: 14px;
+          min-width: 0;
+          flex: 1;
         }
         
         .text strong {
-          color: black;
+          color: #1a1a1a;
           margin-bottom: 2px;
+          font-weight: 600;
         }
         
         .text span {
@@ -66,26 +75,31 @@ class SpeekConvai extends HTMLElement {
         }
         
         button {
-          background-color: black;
+          background-color: #1a1a1a;
           color: white;
           border: none;
           border-radius: 8px;
-          padding: 8px 14px;
+          padding: 10px 16px;
           cursor: pointer;
-          font-size: 14px;
+          font-size: 13px;
           display: flex;
           align-items: center;
-          gap: 6px;
-          transition: background-color 0.2s;
+          gap: 8px;
+          transition: all 0.2s ease;
+          font-weight: 500;
+          flex-shrink: 0;
+          font-family: inherit;
         }
         
         button:hover {
-          background-color: #222;
+          background-color: #333;
+          transform: translateY(-1px);
         }
         
         button:disabled {
           background-color: #ccc;
           cursor: not-allowed;
+          transform: none;
         }
         
         /* Modal Styles */
@@ -95,12 +109,13 @@ class SpeekConvai extends HTMLElement {
           left: 0;
           width: 100%;
           height: 100%;
-          background: rgba(0, 0, 0, 0.5);
-          z-index: 10000;
+          background: rgba(0, 0, 0, 0.6);
+          z-index: 1000000;
           display: none;
           align-items: center;
           justify-content: center;
-          font-family: Arial, sans-serif;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          backdrop-filter: blur(4px);
         }
         
         #modal.open {
@@ -109,27 +124,31 @@ class SpeekConvai extends HTMLElement {
         
         .modal-content {
           background: white;
-          border-radius: 12px;
+          border-radius: 16px;
           width: 90%;
           max-width: 500px;
-          height: 600px;
+          height: 80vh;
+          max-height: 650px;
           display: flex;
           flex-direction: column;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+          overflow: hidden;
         }
         
         .modal-header {
-          padding: 20px;
+          padding: 24px;
           border-bottom: 1px solid #eee;
           display: flex;
           justify-content: space-between;
           align-items: center;
+          background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
         }
         
         .modal-header h3 {
           margin: 0;
-          color: black;
+          color: #1a1a1a;
           font-size: 18px;
+          font-weight: 600;
         }
         
         .close-btn {
@@ -137,19 +156,20 @@ class SpeekConvai extends HTMLElement {
           border: none;
           font-size: 24px;
           cursor: pointer;
-          padding: 0;
+          padding: 8px;
           color: #666;
-          width: 30px;
-          height: 30px;
+          width: 40px;
+          height: 40px;
           display: flex;
           align-items: center;
           justify-content: center;
+          border-radius: 50%;
+          transition: all 0.2s ease;
         }
         
         .close-btn:hover {
-          color: black;
-          background: #f5f5f5;
-          border-radius: 4px;
+          color: #1a1a1a;
+          background: rgba(0, 0, 0, 0.1);
         }
         
         .messages-container {
@@ -158,35 +178,51 @@ class SpeekConvai extends HTMLElement {
           padding: 20px;
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 16px;
+          background: #fafbfc;
         }
         
         .message {
-          max-width: 80%;
-          padding: 12px 16px;
-          border-radius: 12px;
+          max-width: 85%;
+          padding: 14px 18px;
+          border-radius: 18px;
           font-size: 14px;
-          line-height: 1.4;
+          line-height: 1.5;
+          word-wrap: break-word;
+          animation: messageSlide 0.3s ease-out;
+        }
+        
+        @keyframes messageSlide {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
         
         .message.user {
-          background: black;
+          background: #1a1a1a;
           color: white;
           align-self: flex-end;
-          border-bottom-right-radius: 4px;
+          border-bottom-right-radius: 6px;
         }
         
         .message.assistant {
-          background: #f1f1f1;
-          color: black;
+          background: white;
+          color: #1a1a1a;
           align-self: flex-start;
-          border-bottom-left-radius: 4px;
+          border-bottom-left-radius: 6px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          border: 1px solid rgba(0, 0, 0, 0.05);
         }
         
         .message-time {
           font-size: 11px;
           opacity: 0.7;
-          margin-top: 4px;
+          margin-top: 6px;
         }
         
         .input-container {
@@ -194,20 +230,26 @@ class SpeekConvai extends HTMLElement {
           border-top: 1px solid #eee;
           display: flex;
           gap: 12px;
+          background: white;
         }
         
         .text-input {
           flex: 1;
-          padding: 12px 16px;
-          border: 1px solid #ddd;
-          border-radius: 24px;
+          padding: 14px 18px;
+          border: 2px solid #e1e5e9;
+          border-radius: 25px;
           font-size: 14px;
           outline: none;
-          font-family: Arial, sans-serif;
+          font-family: inherit;
+          transition: border-color 0.2s ease;
         }
         
         .text-input:focus {
-          border-color: black;
+          border-color: #1a1a1a;
+        }
+        
+        .text-input::placeholder {
+          color: #999;
         }
         
         .voice-controls {
@@ -215,39 +257,45 @@ class SpeekConvai extends HTMLElement {
           justify-content: center;
           padding: 20px;
           border-top: 1px solid #eee;
+          background: white;
         }
         
         .voice-btn {
-          width: 60px;
-          height: 60px;
+          width: 64px;
+          height: 64px;
           border-radius: 50%;
           border: none;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 24px;
-          transition: all 0.2s;
+          font-size: 28px;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
         }
         
         .voice-btn.listening {
-          background: #ff4444;
-          animation: pulse 1.5s infinite;
+          background: linear-gradient(135deg, #ff4757 0%, #ff3838 100%);
+          color: white;
+          animation: pulse 2s infinite;
+          box-shadow: 0 4px 20px rgba(255, 71, 87, 0.4);
         }
         
         .voice-btn:not(.listening) {
-          background: black;
+          background: linear-gradient(135deg, #1a1a1a 0%, #333 100%);
           color: white;
         }
         
         .voice-btn:not(.listening):hover {
-          background: #333;
+          background: linear-gradient(135deg, #333 0%, #555 100%);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
         }
         
         @keyframes pulse {
-          0% { transform: scale(1); }
-          50% { transform: scale(1.1); }
-          100% { transform: scale(1); }
+          0% { transform: scale(1); box-shadow: 0 4px 20px rgba(255, 71, 87, 0.4); }
+          50% { transform: scale(1.05); box-shadow: 0 6px 25px rgba(255, 71, 87, 0.6); }
+          100% { transform: scale(1); box-shadow: 0 4px 20px rgba(255, 71, 87, 0.4); }
         }
         
         .empty-state {
@@ -261,28 +309,72 @@ class SpeekConvai extends HTMLElement {
           padding: 40px;
         }
         
+        .empty-state p {
+          margin-bottom: 8px;
+        }
+        
         .loading {
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 12px 16px;
-          background: #f1f1f1;
-          border-radius: 12px;
+          padding: 14px 18px;
+          background: white;
+          border-radius: 18px;
           align-self: flex-start;
           font-size: 14px;
           color: #666;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          border: 1px solid rgba(0, 0, 0, 0.05);
+          animation: messageSlide 0.3s ease-out;
         }
         
-        .loading::after {
-          content: '...';
-          animation: dots 1.5s infinite;
+        .loading-dots {
+          display: flex;
+          gap: 4px;
         }
         
-        @keyframes dots {
-          0%, 20% { content: ''; }
-          40% { content: '.'; }
-          60% { content: '..'; }
-          80%, 100% { content: '...'; }
+        .loading-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background-color: #1a1a1a;
+          animation: loadingDot 1.4s infinite ease-in-out;
+        }
+        
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+        .loading-dot:nth-child(3) { animation-delay: 0s; }
+        
+        @keyframes loadingDot {
+          0%, 80%, 100% { transform: scale(0); }
+          40% { transform: scale(1); }
+        }
+        
+        @media (max-width: 640px) {
+          #widget {
+            bottom: 15px;
+            right: 15px;
+            max-width: 280px;
+            padding: 12px;
+          }
+          
+          .modal-content {
+            width: 95%;
+            height: 85vh;
+            margin: 10px;
+          }
+          
+          .modal-header {
+            padding: 20px;
+          }
+          
+          .messages-container {
+            padding: 15px;
+          }
+          
+          .input-container {
+            padding: 15px;
+          }
         }
       </style>
       
@@ -304,13 +396,13 @@ class SpeekConvai extends HTMLElement {
           
           <div class="messages-container" id="messagesContainer">
             <div class="empty-state">
-              <p>Începe o conversație cu ${agentName}</p>
-              <p style="font-size: 12px; margin-top: 8px;">Folosește microfonul sau scrie un mesaj</p>
+              <p>🎙️ Începe o conversație cu ${agentName}</p>
+              <p style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Folosește microfonul sau scrie un mesaj</p>
             </div>
           </div>
           
           <div class="voice-controls">
-            <button class="voice-btn" id="voiceBtn">🎤</button>
+            <button class="voice-btn" id="voiceBtn" title="Apasă pentru a vorbi">🎤</button>
           </div>
           
           <div class="input-container">
@@ -322,6 +414,7 @@ class SpeekConvai extends HTMLElement {
     `;
 
     this.setupEventListeners(agentId, agentName);
+    console.log(`Speek Widget initialized for agent: ${agentId} (${agentName})`);
   }
 
   setupEventListeners(agentId, agentName) {
@@ -356,11 +449,13 @@ class SpeekConvai extends HTMLElement {
     modal.classList.add('open');
     this.isOpen = true;
     
-    // Focus pe input
+    // Focus pe input după o scurtă întârziere
     setTimeout(() => {
       const textInput = this.shadowRoot.querySelector('#textInput');
       textInput?.focus();
-    }, 100);
+    }, 150);
+    
+    console.log('Modal opened');
   }
 
   closeModal() {
@@ -372,6 +467,8 @@ class SpeekConvai extends HTMLElement {
     if (this.isListening) {
       this.stopVoiceRecording();
     }
+    
+    console.log('Modal closed');
   }
 
   addMessage(text, isUser, agentName) {
@@ -383,17 +480,17 @@ class SpeekConvai extends HTMLElement {
     }
 
     const messageEl = document.createElement('div');
-    messageEl.className = \`message \${isUser ? 'user' : 'assistant'}\`;
+    messageEl.className = `message ${isUser ? 'user' : 'assistant'}`;
     
     const time = new Date().toLocaleTimeString('ro-RO', { 
       hour: '2-digit', 
       minute: '2-digit' 
     });
 
-    messageEl.innerHTML = \`
-      <div>\${text}</div>
-      <div class="message-time">\${time}</div>
-    \`;
+    messageEl.innerHTML = `
+      <div>${text}</div>
+      <div class="message-time">${time}</div>
+    `;
 
     messagesContainer.appendChild(messageEl);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -403,6 +500,8 @@ class SpeekConvai extends HTMLElement {
       isUser,
       timestamp: new Date()
     });
+
+    console.log(`Message added: ${isUser ? 'User' : agentName} - ${text.substring(0, 50)}...`);
   }
 
   showLoading() {
@@ -410,7 +509,14 @@ class SpeekConvai extends HTMLElement {
     const loadingEl = document.createElement('div');
     loadingEl.className = 'loading';
     loadingEl.id = 'loadingMessage';
-    loadingEl.textContent = 'Scriu răspunsul';
+    loadingEl.innerHTML = `
+      <span>Scriu răspunsul</span>
+      <div class="loading-dots">
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+      </div>
+    `;
     
     messagesContainer.appendChild(loadingEl);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -437,17 +543,23 @@ class SpeekConvai extends HTMLElement {
     this.showLoading();
 
     try {
-      // Simulează răspuns AI cu GPT
-      const response = await fetch('https://pwfczzxwjfxomqzhhwvj.functions.supabase.co/chat-with-gpt', {
+      console.log(`Sending message to agent ${agentId}: ${message}`);
+      
+      const response = await fetch(`${this.apiBaseUrl}/chat-with-gpt`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           message: message,
-          agentName: agentName
+          agentName: agentName,
+          agentId: agentId
         })
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const data = await response.json();
       
@@ -457,11 +569,12 @@ class SpeekConvai extends HTMLElement {
         this.addMessage(data.response, false, agentName);
       } else {
         this.addMessage('Scuze, am întâmpinat o problemă. Te rog încearcă din nou.', false, agentName);
+        console.error('No response from API:', data);
       }
     } catch (error) {
       this.hideLoading();
       console.error('Error sending message:', error);
-      this.addMessage('Scuze, am întâmpinat o problemă de conexiune.', false, agentName);
+      this.addMessage('Scuze, am întâmpinat o problemă de conexiune. Verifică conexiunea la internet.', false, agentName);
     }
   }
 
@@ -475,6 +588,8 @@ class SpeekConvai extends HTMLElement {
 
   async startVoiceRecording(agentId, agentName) {
     try {
+      console.log('Starting voice recording...');
+      
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           sampleRate: 24000,
@@ -511,10 +626,13 @@ class SpeekConvai extends HTMLElement {
       const voiceBtn = this.shadowRoot.querySelector('#voiceBtn');
       voiceBtn.classList.add('listening');
       voiceBtn.textContent = '🛑';
+      voiceBtn.title = 'Apasă pentru a opri înregistrarea';
+
+      console.log('Voice recording started');
 
     } catch (error) {
       console.error('Error starting voice recording:', error);
-      alert('Nu pot accesa microfonul. Te rog verifică permisiunile.');
+      alert('Nu pot accesa microfonul. Te rog verifică permisiunile browserului pentru microfon.');
     }
   }
 
@@ -527,12 +645,17 @@ class SpeekConvai extends HTMLElement {
     const voiceBtn = this.shadowRoot.querySelector('#voiceBtn');
     voiceBtn.classList.remove('listening');
     voiceBtn.textContent = '🎤';
+    voiceBtn.title = 'Apasă pentru a vorbi';
+    
+    console.log('Voice recording stopped');
   }
 
   async processVoiceInput(audioBlob, agentId, agentName) {
     this.showLoading();
 
     try {
+      console.log('Processing voice input...');
+      
       // Convert audioBlob to base64
       const reader = new FileReader();
       reader.onload = async () => {
@@ -540,7 +663,8 @@ class SpeekConvai extends HTMLElement {
         
         try {
           // Speech to text
-          const sttResponse = await fetch('https://pwfczzxwjfxomqzhhwvj.functions.supabase.co/speech-to-text', {
+          console.log('Converting speech to text...');
+          const sttResponse = await fetch(`${this.apiBaseUrl}/speech-to-text`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -548,24 +672,37 @@ class SpeekConvai extends HTMLElement {
             body: JSON.stringify({ audio: base64Audio })
           });
 
+          if (!sttResponse.ok) {
+            throw new Error(`STT error! status: ${sttResponse.status}`);
+          }
+
           const sttData = await sttResponse.json();
           const userText = sttData.text || 'Nu am înțeles';
+          
+          console.log('Transcribed text:', userText);
           
           this.hideLoading();
           this.addMessage(userText, true, agentName);
 
           // Generate AI response
+          console.log('Generating AI response...');
           this.showLoading();
-          const chatResponse = await fetch('https://pwfczzxwjfxomqzhhwvj.functions.supabase.co/chat-with-gpt', {
+          
+          const chatResponse = await fetch(`${this.apiBaseUrl}/chat-with-gpt`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
               message: userText,
-              agentName: agentName
+              agentName: agentName,
+              agentId: agentId
             })
           });
+
+          if (!chatResponse.ok) {
+            throw new Error(`Chat error! status: ${chatResponse.status}`);
+          }
 
           const chatData = await chatResponse.json();
           this.hideLoading();
@@ -575,7 +712,8 @@ class SpeekConvai extends HTMLElement {
             
             // Text to speech
             try {
-              const ttsResponse = await fetch('https://pwfczzxwjfxomqzhhwvj.functions.supabase.co/text-to-speech', {
+              console.log('Converting text to speech...');
+              const ttsResponse = await fetch(`${this.apiBaseUrl}/text-to-speech`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -586,19 +724,26 @@ class SpeekConvai extends HTMLElement {
                 })
               });
 
-              const ttsData = await ttsResponse.json();
-              if (ttsData.audioContent) {
-                this.playAudio(ttsData.audioContent);
+              if (ttsResponse.ok) {
+                const ttsData = await ttsResponse.json();
+                if (ttsData.audioContent) {
+                  this.playAudio(ttsData.audioContent);
+                }
+              } else {
+                console.warn('TTS failed, but continuing without audio');
               }
             } catch (ttsError) {
               console.error('TTS Error:', ttsError);
+              // Nu afișăm eroare utilizatorului pentru TTS
             }
+          } else {
+            this.addMessage('Scuze, am întâmpinat o problemă cu generarea răspunsului.', false, agentName);
           }
 
         } catch (error) {
           this.hideLoading();
           console.error('Voice processing error:', error);
-          this.addMessage('Scuze, am întâmpinat o problemă cu procesarea vocii.', false, agentName);
+          this.addMessage('Scuze, am întâmpinat o problemă cu procesarea vocii. Încearcă din nou.', false, agentName);
         }
       };
       
@@ -613,6 +758,8 @@ class SpeekConvai extends HTMLElement {
 
   playAudio(base64Audio) {
     try {
+      console.log('Playing audio response...');
+      
       const binaryString = atob(base64Audio);
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
@@ -625,10 +772,16 @@ class SpeekConvai extends HTMLElement {
       
       audio.onended = () => {
         URL.revokeObjectURL(audioUrl);
+        console.log('Audio playback completed');
+      };
+      
+      audio.onerror = (error) => {
+        console.error('Audio playback error:', error);
+        URL.revokeObjectURL(audioUrl);
       };
       
       audio.play().catch(error => {
-        console.error('Audio playback error:', error);
+        console.error('Audio play error:', error);
         URL.revokeObjectURL(audioUrl);
       });
     } catch (error) {
@@ -640,4 +793,12 @@ class SpeekConvai extends HTMLElement {
 // Verifică dacă elementul nu este deja definit
 if (!customElements.get('speek-convai')) {
   customElements.define('speek-convai', SpeekConvai);
+  console.log('Speek Convai widget registered successfully');
+} else {
+  console.log('Speek Convai widget already registered');
 }
+
+// Adaugă un event listener pentru a confirma că scriptul s-a încărcat
+window.addEventListener('load', () => {
+  console.log('Speek Convai widget script loaded successfully');
+});
