@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -34,7 +33,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
     }
   }, [selectedValue, items])
 
-  // Create tick sound effect
+  // Create iPhone-style tick sound
   const playTickSound = useCallback(() => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
@@ -44,20 +43,22 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
       oscillator.connect(gainNode)
       gainNode.connect(audioContext.destination)
       
-      oscillator.frequency.setValueAtTime(1000, audioContext.currentTime)
-      oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.1)
+      // iPhone-style tick: quick high frequency burst
+      oscillator.frequency.setValueAtTime(1200, audioContext.currentTime)
+      oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.05)
       
-      gainNode.gain.setValueAtTime(0.03, audioContext.currentTime)
-      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1)
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05)
       
       oscillator.start(audioContext.currentTime)
-      oscillator.stop(audioContext.currentTime + 0.1)
+      oscillator.stop(audioContext.currentTime + 0.05)
     } catch (error) {
+      // Fallback for browsers without audio context
       console.log('tick')
     }
   }, [])
 
-  // Snap to nearest item
+  // Snap to nearest item with animation
   const snapToNearest = useCallback((targetScrollTop: number) => {
     const targetIndex = Math.round(targetScrollTop / itemHeight)
     const clampedIndex = Math.max(0, Math.min(items.length - 1, targetIndex))
@@ -69,47 +70,76 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
       playTickSound()
     }
     
-    setScrollTop(finalScrollTop)
+    // Smooth animation to final position
+    const startScroll = scrollTop
+    const distance = finalScrollTop - startScroll
+    const duration = 200
+    const startTime = Date.now()
+    
+    const animateScroll = () => {
+      const elapsed = Date.now() - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      
+      // Ease out animation
+      const easeOut = 1 - Math.pow(1 - progress, 3)
+      const currentScroll = startScroll + (distance * easeOut)
+      
+      setScrollTop(currentScroll)
+      
+      if (progress < 1) {
+        requestAnimationFrame(animateScroll)
+      }
+    }
+    
+    requestAnimationFrame(animateScroll)
     return finalScrollTop
-  }, [currentIndex, items, onSelectionChange, playTickSound])
+  }, [currentIndex, items, onSelectionChange, playTickSound, scrollTop])
 
-  // Handle wheel scroll
+  // Handle wheel scroll - slower sensitivity
   const handleWheel = useCallback((e: WheelEvent) => {
     e.preventDefault()
-    const delta = e.deltaY > 0 ? 1 : -1
-    const newIndex = Math.max(0, Math.min(items.length - 1, currentIndex + delta))
     
-    if (newIndex !== currentIndex) {
-      setCurrentIndex(newIndex)
-      setScrollTop(newIndex * itemHeight)
-      onSelectionChange(items[newIndex].id)
-      playTickSound()
-    }
-  }, [currentIndex, items, onSelectionChange, playTickSound])
+    // Much slower scroll sensitivity
+    const scrollSensitivity = 0.3
+    const deltaY = e.deltaY * scrollSensitivity
+    const newScrollTop = Math.max(0, Math.min((items.length - 1) * itemHeight, scrollTop + deltaY))
+    
+    setScrollTop(newScrollTop)
+    
+    // Debounced snapping after wheel stops
+    clearTimeout((window as any).wheelTimeout)
+    ;(window as any).wheelTimeout = setTimeout(() => {
+      snapToNearest(newScrollTop)
+    }, 150)
+  }, [scrollTop, items.length, snapToNearest])
 
   // Handle mouse/touch start
   const handleStart = (clientY: number) => {
     setIsDragging(true)
     setStartY(clientY)
     setVelocity(0)
+    // Clear any pending wheel timeout
+    clearTimeout((window as any).wheelTimeout)
   }
 
   // Handle mouse/touch move
   const handleMove = useCallback((clientY: number) => {
     if (!isDragging) return
     
-    const deltaY = startY - clientY
+    // Slower drag sensitivity
+    const dragSensitivity = 0.5
+    const deltaY = (startY - clientY) * dragSensitivity
     const newScrollTop = Math.max(0, Math.min((items.length - 1) * itemHeight, scrollTop + deltaY))
     setScrollTop(newScrollTop)
-    setVelocity(deltaY)
+    setVelocity(deltaY * 0.3) // Reduced velocity for slower momentum
   }, [isDragging, startY, scrollTop, items.length])
 
   // Handle mouse/touch end
   const handleEnd = useCallback(() => {
     setIsDragging(false)
     
-    // Apply momentum and snap
-    let finalScrollTop = scrollTop + velocity * 3
+    // Apply reduced momentum and snap
+    let finalScrollTop = scrollTop + velocity * 2 // Reduced momentum multiplier
     finalScrollTop = snapToNearest(finalScrollTop)
   }, [scrollTop, velocity, snapToNearest])
 
@@ -151,20 +181,31 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
 
     // Add global drag listeners when dragging
     if (isDragging) {
+      const handleMouseMove = (e: MouseEvent) => handleMove(e.clientY)
+      const handleMouseUp = () => handleEnd()
+      const handleTouchMove = (e: TouchEvent) => {
+        e.preventDefault()
+        handleMove(e.touches[0].clientY)
+      }
+      const handleTouchEnd = () => handleEnd()
+
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
       document.addEventListener('touchmove', handleTouchMove, { passive: false })
       document.addEventListener('touchend', handleTouchEnd)
+
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('mouseup', handleMouseUp)
+        document.removeEventListener('touchmove', handleTouchMove)
+        document.removeEventListener('touchend', handleTouchEnd)
+      }
     }
 
     return () => {
       container.removeEventListener('wheel', handleWheel)
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-      document.removeEventListener('touchmove', handleTouchMove)
-      document.removeEventListener('touchend', handleTouchEnd)
     }
-  }, [isDragging, handleWheel, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd])
+  }, [isDragging, handleWheel, handleMove, handleEnd])
 
   // Render items with iPhone-style fade effect
   const renderItems = () => {
@@ -226,8 +267,13 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
           background: 'rgba(0, 0, 0, 0.95)',
           borderRadius: '16px'
         }}
-        onMouseDown={handleMouseDown}
-        onTouchStart={handleTouchStart}
+        onMouseDown={(e) => {
+          e.preventDefault()
+          handleStart(e.clientY)
+        }}
+        onTouchStart={(e) => {
+          handleStart(e.touches[0].clientY)
+        }}
       >
         {/* Selection indicator line - subtle like iPhone */}
         <div
