@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -8,6 +7,7 @@ import { Bot, Settings, Play, MessageSquare, Code, Copy, Check } from 'lucide-re
 import DashboardLayout from '@/components/DashboardLayout';
 import AgentTestModal from '@/components/AgentTestModal';
 import EmbedCodeModal from '@/components/EmbedCodeModal';
+import WidgetTestSection from '@/components/WidgetTestSection';
 
 const AccountAgents = () => {
   const { user } = useAuth();
@@ -15,6 +15,7 @@ const AccountAgents = () => {
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [widgetTestAgent, setWidgetTestAgent] = useState<any>(null);
 
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -79,6 +80,11 @@ const AccountAgents = () => {
             <p className="text-gray-600">Gestionează și testează agenții tăi AI</p>
           </div>
         </div>
+
+        {/* Widget Test Section */}
+        {widgetTestAgent && (
+          <WidgetTestSection agent={widgetTestAgent} />
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {agents.map((agent) => (
@@ -149,23 +155,32 @@ const AccountAgents = () => {
                   </p>
                 </div>
 
-                <div className="flex space-x-2">
+                <div className="grid grid-cols-3 gap-2">
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-100"
+                    className="border-gray-300 text-gray-700 hover:bg-gray-100"
                     onClick={() => handleTestAgent(agent)}
                   >
-                    <Play className="w-4 h-4 mr-2" />
-                    Testează
+                    <Play className="w-4 h-4 mr-1" />
+                    Test
                   </Button>
                   <Button 
                     variant="outline"
                     size="sm" 
-                    className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-100"
+                    className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                    onClick={() => setWidgetTestAgent(agent)}
+                  >
+                    <MessageSquare className="w-4 h-4 mr-1" />
+                    Widget
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    size="sm" 
+                    className="border-gray-300 text-gray-700 hover:bg-gray-100"
                     onClick={() => handleShowEmbedCode(agent)}
                   >
-                    <Code className="w-4 h-4 mr-2" />
+                    <Code className="w-4 h-4 mr-1" />
                     Embed
                   </Button>
                 </div>
