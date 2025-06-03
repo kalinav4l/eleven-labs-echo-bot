@@ -36,7 +36,7 @@ const Calls = () => {
       <HamburgerMenu />
       
       <div className="container mx-auto px-4 py-20">
-        <div className="text-center mb-12">
+        <div className="text-center mb-12 animate-fade-in">
           <h1 className="text-4xl font-bold text-white mb-4">
             Telefonie Inteligentă
           </h1>
@@ -47,7 +47,7 @@ const Calls = () => {
 
         {/* Demo Section */}
         <div className="max-w-4xl mx-auto">
-          <Card className="bg-gray-900 border-gray-800 mb-8">
+          <Card className="bg-black border-gray-800 mb-8 animate-scale-in">
             <CardHeader>
               <CardTitle className="text-white text-center text-2xl">
                 Demonstrație Live Agent AI
@@ -57,7 +57,7 @@ const Calls = () => {
               {/* Agent Avatar with Animation */}
               <div className="flex justify-center mb-8">
                 <div className={`relative ${callAnimation ? 'animate-pulse' : ''}`}>
-                  <div className="w-32 h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <div className="w-32 h-32 bg-gradient-to-br from-gray-800 to-gray-900 rounded-full flex items-center justify-center border border-gray-700">
                     <Bot className="w-16 h-16 text-white" />
                   </div>
                   
@@ -68,7 +68,7 @@ const Calls = () => {
                         {soundWaves.map((height, index) => (
                           <div
                             key={index}
-                            className="w-1 bg-blue-400 rounded-full transition-all duration-200"
+                            className="w-1 bg-white rounded-full transition-all duration-200"
                             style={{
                               height: `${height * 40}px`,
                               transform: `translateY(${(1 - height) * 20}px)`
@@ -85,7 +85,7 @@ const Calls = () => {
               <div className="text-center mb-8">
                 {isCallActive ? (
                   <div>
-                    <div className="text-green-500 text-lg font-semibold mb-2 flex items-center justify-center">
+                    <div className="text-white text-lg font-semibold mb-2 flex items-center justify-center">
                       <PhoneCall className="w-5 h-5 mr-2" />
                       Apel în desfășurare...
                     </div>
@@ -110,7 +110,7 @@ const Calls = () => {
                 {!isCallActive ? (
                   <Button
                     onClick={startCall}
-                    className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 text-lg"
+                    className="bg-white text-black hover:bg-gray-200 px-8 py-3 text-lg"
                   >
                     <Phone className="w-5 h-5 mr-2" />
                     Începe Apelul Demo
@@ -118,7 +118,7 @@ const Calls = () => {
                 ) : (
                   <Button
                     onClick={endCall}
-                    className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 text-lg"
+                    className="bg-gray-800 text-white hover:bg-gray-700 px-8 py-3 text-lg border border-gray-600"
                   >
                     <Phone className="w-5 h-5 mr-2" />
                     Închide Apelul
@@ -130,21 +130,21 @@ const Calls = () => {
 
           {/* Call Scenarios */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <Card className="bg-gray-900 border-gray-800">
+            <Card className="bg-black border-gray-800 animate-fade-in hover:border-gray-700 transition-colors">
               <CardHeader>
                 <CardTitle className="text-white">Apeluri de Vânzări</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="bg-gray-800 p-4 rounded-lg">
-                    <div className="text-green-500 font-semibold mb-2">Scenariul 1: Prospectare</div>
-                    <p className="text-gray-300 text-sm">
+                  <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+                    <div className="text-white font-semibold mb-2">Scenariul 1: Prospectare</div>
+                    <p className="text-gray-400 text-sm">
                       "Bună ziua! Sunt Ana de la compania XYZ. V-am sunat pentru a vă prezenta noua noastră soluție care vă poate reduce costurile cu 30%..."
                     </p>
                   </div>
-                  <div className="bg-gray-800 p-4 rounded-lg">
-                    <div className="text-blue-500 font-semibold mb-2">Scenariul 2: Follow-up</div>
-                    <p className="text-gray-300 text-sm">
+                  <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+                    <div className="text-white font-semibold mb-2">Scenariul 2: Follow-up</div>
+                    <p className="text-gray-400 text-sm">
                       "Îmi amintesc că v-am trimis o ofertă săptămâna trecută. Ați avut timp să o analizați? Aș dori să discutăm despre beneficiile pentru compania dumneavoastră..."
                     </p>
                   </div>
@@ -152,21 +152,21 @@ const Calls = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-gray-900 border-gray-800">
+            <Card className="bg-black border-gray-800 animate-fade-in hover:border-gray-700 transition-colors">
               <CardHeader>
                 <CardTitle className="text-white">Suport Clienți</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="bg-gray-800 p-4 rounded-lg">
-                    <div className="text-purple-500 font-semibold mb-2">Scenariul 1: Asistență Tehnică</div>
-                    <p className="text-gray-300 text-sm">
+                  <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+                    <div className="text-white font-semibold mb-2">Scenariul 1: Asistență Tehnică</div>
+                    <p className="text-gray-400 text-sm">
                       "Înțeleg că întâmpinați probleme cu aplicația. Vă voi ghida pas cu pas pentru a rezolva această situație rapid și eficient..."
                     </p>
                   </div>
-                  <div className="bg-gray-800 p-4 rounded-lg">
-                    <div className="text-orange-500 font-semibold mb-2">Scenariul 2: Informații Comandă</div>
-                    <p className="text-gray-300 text-sm">
+                  <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+                    <div className="text-white font-semibold mb-2">Scenariul 2: Informații Comandă</div>
+                    <p className="text-gray-400 text-sm">
                       "Comanda dumneavoastră #12345 a fost expediată ieri și va ajunge în 2-3 zile lucrătoare. Puteți urmări progresul în timp real..."
                     </p>
                   </div>
@@ -176,7 +176,7 @@ const Calls = () => {
           </div>
 
           {/* Features */}
-          <Card className="bg-gray-900 border-gray-800">
+          <Card className="bg-black border-gray-800 animate-fade-in">
             <CardHeader>
               <CardTitle className="text-white text-center">
                 Caracteristici Tehnice
@@ -185,7 +185,7 @@ const Calls = () => {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-gray-900 border border-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Volume2 className="w-8 h-8 text-white" />
                   </div>
                   <h3 className="text-white font-semibold mb-2">Voce Naturală</h3>
@@ -195,7 +195,7 @@ const Calls = () => {
                 </div>
                 
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-gray-900 border border-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Phone className="w-8 h-8 text-white" />
                   </div>
                   <h3 className="text-white font-semibold mb-2">Răspuns Instant</h3>
@@ -205,7 +205,7 @@ const Calls = () => {
                 </div>
                 
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-gray-900 border border-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Bot className="w-8 h-8 text-white" />
                   </div>
                   <h3 className="text-white font-semibold mb-2">AI Inteligent</h3>

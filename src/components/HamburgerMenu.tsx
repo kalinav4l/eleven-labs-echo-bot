@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Menu, X, User, Info, Phone, DollarSign } from 'lucide-react';
+import { Menu, X, User, Info, Phone, DollarSign, Home } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const HamburgerMenu = () => {
@@ -45,6 +45,15 @@ const HamburgerMenu = () => {
         </div>
 
         <nav className="mt-8">
+          <Link
+            to="/"
+            className="flex items-center px-6 py-4 text-white hover:bg-gray-900 transition-colors"
+            onClick={toggleMenu}
+          >
+            <Home size={20} className="mr-3" />
+            <span>Acasă</span>
+          </Link>
+
           <Link
             to="/account"
             className="flex items-center px-6 py-4 text-white hover:bg-gray-900 transition-colors"
