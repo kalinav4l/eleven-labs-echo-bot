@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +40,8 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({ agentId, agentName = "Agent A
     setIsLoading(true);
 
     try {
+      console.log('Sending message to chat API...', { agentId, agentName, message: text });
+      
       const response = await fetch('https://pwfczzxwjfxomqzhhwvj.functions.supabase.co/chat-with-gpt', {
         method: 'POST',
         headers: {
@@ -53,20 +54,27 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({ agentId, agentName = "Agent A
         })
       });
 
+      console.log('Response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('API Error:', response.status, errorText);
+        throw new Error(`Eroare API: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log('API Response:', data);
       
       if (data.response) {
         addMessage(data.response, false);
+      } else if (data.error) {
+        addMessage(`Eroare: ${data.error}`, false);
       } else {
-        addMessage('Scuze, am întâmpinat o problemă. Te rog încearcă din nou.', false);
+        addMessage('Nu am primit un răspuns valid de la server.', false);
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      addMessage('Scuze, am întâmpinat o problemă de conexiune.', false);
+      addMessage('Conexiunea cu serverul a eșuat. Verifică conexiunea la internet și încearcă din nou.', false);
     } finally {
       setIsLoading(false);
     }
@@ -74,14 +82,16 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({ agentId, agentName = "Agent A
 
   const handleVoiceToggle = async () => {
     if (isListening) {
-      // Stop listening logic would go here
       setIsListening(false);
     } else {
       try {
         await navigator.mediaDevices.getUserMedia({ audio: true });
         setIsListening(true);
-        // Voice recording logic would go here
-        setTimeout(() => setIsListening(false), 3000); // Demo: stop after 3 seconds
+        // Demo - oprește după 3 secunde
+        setTimeout(() => {
+          setIsListening(false);
+          addMessage("Funcția vocală este în dezvoltare.", true);
+        }, 3000);
       } catch (error) {
         console.error('Microphone access denied:', error);
         alert('Pentru funcția vocală, te rog să permiți accesul la microfon.');
@@ -145,7 +155,7 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({ agentId, agentName = "Agent A
           <div className="text-center text-gray-500 mt-8">
             <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
             <p>Începe o conversație cu {agentName}</p>
-            <p className="text-sm mt-1">Scrie un mesaj sau folosește microfonul</p>
+            <p className="text-sm mt-1">Scrie un mesaj pentru a începe</p>
           </div>
         ) : (
           messages.map((message) => (
