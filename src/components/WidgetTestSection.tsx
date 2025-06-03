@@ -11,11 +11,11 @@ interface WidgetTestSectionProps {
 
 const WidgetTestSection: React.FC<WidgetTestSectionProps> = ({ agent }) => {
   const [isWidgetVisible, setIsWidgetVisible] = useState(false);
-  const [isElevenLabsVisible, setIsElevenLabsVisible] = useState(false);
+  const [isBoreaVoiceVisible, setIsBoreaVoiceVisible] = useState(false);
 
-  // Load ElevenLabs script
+  // Load ElevenLabs script for Borea Voice Widget
   useEffect(() => {
-    if (isElevenLabsVisible) {
+    if (isBoreaVoiceVisible) {
       const script = document.createElement('script');
       script.src = 'https://unpkg.com/@elevenlabs/convai-widget-embed';
       script.async = true;
@@ -30,14 +30,14 @@ const WidgetTestSection: React.FC<WidgetTestSectionProps> = ({ agent }) => {
         }
       };
     }
-  }, [isElevenLabsVisible]);
+  }, [isBoreaVoiceVisible]);
 
   const toggleWidget = () => {
     setIsWidgetVisible(!isWidgetVisible);
   };
 
-  const toggleElevenLabsWidget = () => {
-    setIsElevenLabsVisible(!isElevenLabsVisible);
+  const toggleBoreaVoiceWidget = () => {
+    setIsBoreaVoiceVisible(!isBoreaVoiceVisible);
   };
 
   return (
@@ -92,38 +92,42 @@ const WidgetTestSection: React.FC<WidgetTestSectionProps> = ({ agent }) => {
             </Button>
           </div>
 
-          {/* ElevenLabs Official Widget */}
+          {/* Borea Voice Widget */}
           <div className="border border-gray-200 rounded-lg p-4">
             <h3 className="font-semibold text-black mb-3 flex items-center">
-              <Mic className="w-5 h-5 mr-2" />
-              Widget ElevenLabs Official
+              <img 
+                src="https://ik.imagekit.io/2eeuoo797/Group%2064.png?updatedAt=1748951277306" 
+                alt="Borea Logo" 
+                className="w-5 h-5 mr-2 rounded-full object-cover"
+              />
+              Widget Borea Voice
             </h3>
             <div className="bg-green-50 border border-green-200 rounded p-3 mb-4">
-              <h4 className="font-medium text-green-800 mb-2">⭐ Funcții avansate:</h4>
+              <h4 className="font-medium text-green-800 mb-2">⭐ Funcții avansate Borea:</h4>
               <ul className="text-green-700 text-sm space-y-1">
                 <li>• Conversații vocale complete</li>
                 <li>• Recunoaștere vocală în timp real</li>
                 <li>• Răspunsuri audio naturale</li>
-                <li>• Tehnologie ElevenLabs</li>
+                <li>• Tehnologie Borea AI</li>
               </ul>
             </div>
             <Button
-              onClick={toggleElevenLabsWidget}
+              onClick={toggleBoreaVoiceWidget}
               className={`w-full ${
-                isElevenLabsVisible 
+                isBoreaVoiceVisible 
                   ? 'bg-red-600 hover:bg-red-700' 
                   : 'bg-green-600 hover:bg-green-700'
               } text-white`}
             >
-              {isElevenLabsVisible ? (
+              {isBoreaVoiceVisible ? (
                 <>
                   <X className="w-4 h-4 mr-2" />
-                  Închide Widget ElevenLabs
+                  Închide Widget Borea Voice
                 </>
               ) : (
                 <>
                   <Mic className="w-4 h-4 mr-2" />
-                  Testează Widget ElevenLabs
+                  Testează Widget Borea Voice
                 </>
               )}
             </Button>
@@ -143,18 +147,22 @@ const WidgetTestSection: React.FC<WidgetTestSectionProps> = ({ agent }) => {
           </div>
         )}
 
-        {isElevenLabsVisible && (
+        {isBoreaVoiceVisible && (
           <div className="bg-green-50 border border-green-200 rounded p-4 mb-4">
             <div className="flex items-center mb-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-              <span className="text-green-800 font-medium">Widget ElevenLabs activ în colțul din dreapta jos</span>
+              <img 
+                src="https://ik.imagekit.io/2eeuoo797/Group%2064.png?updatedAt=1748951277306" 
+                alt="Borea Logo" 
+                className="w-3 h-3 mr-2 rounded-full object-cover"
+              />
+              <span className="text-green-800 font-medium">Widget Borea Voice activ în colțul din dreapta jos</span>
             </div>
             <p className="text-green-700 text-sm">
-              Widget-ul oficial ElevenLabs este acum funcțional. Poți avea conversații vocale complete cu agentul {agent.name}.
+              Widget-ul Borea Voice este acum funcțional. Poți avea conversații vocale complete cu agentul {agent.name}.
             </p>
             <div className="mt-3 p-3 bg-white border border-green-200 rounded">
               <p className="text-sm text-gray-600">
-                <strong>Cum să testezi widget-ul ElevenLabs:</strong><br/>
+                <strong>Cum să testezi widget-ul Borea Voice:</strong><br/>
                 1. Caută widget-ul în colțul din dreapta jos<br/>
                 2. Apasă pentru a începe conversația<br/>
                 3. Permite accesul la microfon când este solicitat<br/>
@@ -169,8 +177,8 @@ const WidgetTestSection: React.FC<WidgetTestSectionProps> = ({ agent }) => {
           <EmbedWidget agentId={agent.id} agentName={agent.name} />
         )}
 
-        {/* Widget-ul ElevenLabs oficial */}
-        {isElevenLabsVisible && (
+        {/* Widget-ul Borea Voice (cu tehnologie avansată) */}
+        {isBoreaVoiceVisible && (
           <div 
             dangerouslySetInnerHTML={{
               __html: `<elevenlabs-convai agent-id="${agent.id}"></elevenlabs-convai>`
