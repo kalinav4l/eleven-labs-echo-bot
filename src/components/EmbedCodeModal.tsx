@@ -15,8 +15,8 @@ const EmbedCodeModal: React.FC<EmbedCodeModalProps> = ({ agent, isOpen, onClose 
 
   if (!agent) return null;
 
-  const embedCode = `<speek-convai agent-id="${agent.id}"></speek-convai>
-<script src="${window.location.origin}/embed-widget.js" async type="text/javascript"></script>`;
+  const embedCode = `<elevenlabs-convai agent-id="${agent.id}"></elevenlabs-convai>
+<script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>`;
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(embedCode);
@@ -30,13 +30,13 @@ const EmbedCodeModal: React.FC<EmbedCodeModalProps> = ({ agent, isOpen, onClose 
         <DialogHeader>
           <DialogTitle className="text-black flex items-center">
             <Code className="w-5 h-5 mr-2" />
-            Cod Embed Speek pentru {agent.name}
+            Cod Embed pentru {agent.name}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <p className="text-gray-600 text-sm">
-            Copiază codul de mai jos și plasează-l pe site-ul tău pentru a integra widget-ul Speek cu agentul {agent.name}.
+            Copiază codul de mai jos și plasează-l pe site-ul tău pentru a integra agentul {agent.name}.
           </p>
 
           <div className="bg-gray-50 border rounded p-4 relative">
@@ -67,10 +67,9 @@ const EmbedCodeModal: React.FC<EmbedCodeModalProps> = ({ agent, isOpen, onClose 
             <h3 className="text-black font-medium mb-2">Instrucțiuni de integrare:</h3>
             <ol className="text-sm text-gray-600 space-y-2">
               <li>1. Copiază codul embed de mai sus</li>
-              <li>2. Plasează codul în orice pagină HTML unde vrei să apară widget-ul</li>
-              <li>3. Widget-ul Speek va apărea automat în colțul din dreapta jos</li>
+              <li>2. Plasează codul în orice pagină HTML unde vrei să apară agentul</li>
+              <li>3. Widgetul va apărea automat și va fi funcțional</li>
               <li>4. Agentul {agent.name} va fi disponibil pentru conversații pe site-ul tău</li>
-              <li>5. Widget-ul folosește logo-ul și stilul Speek pentru o experiență consistentă</li>
             </ol>
           </div>
 
@@ -93,19 +92,6 @@ const EmbedCodeModal: React.FC<EmbedCodeModalProps> = ({ agent, isOpen, onClose 
                 <span className="text-gray-600">Voce:</span>
                 <span className="text-black">{agent.voice}</span>
               </div>
-            </div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded p-4">
-            <h3 className="text-black font-medium mb-2">Preview Widget:</h3>
-            <div className="border-2 border-dashed border-gray-300 rounded p-4 text-center">
-              <div className="inline-flex items-center space-x-2 bg-white border-2 border-black rounded-full px-4 py-2">
-                <div className="w-6 h-6 bg-black rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">S</span>
-                </div>
-                <span className="text-black font-medium">Need help?</span>
-              </div>
-              <p className="text-xs text-gray-500 mt-2">Așa va arăta widget-ul pe site-ul tău</p>
             </div>
           </div>
         </div>
