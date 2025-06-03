@@ -47,7 +47,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-gray-900 border-gray-800">
+      <Card className="w-full max-w-md bg-black border-gray-800 animate-fade-in">
         <CardHeader>
           <CardTitle className="text-white text-center">
             {isLogin ? 'Conectare' : 'Înregistrare'}
@@ -68,14 +68,14 @@ const Auth = () => {
                   placeholder="Prenume"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="bg-gray-800 border-gray-700 text-white"
+                  className="bg-black border-gray-800 text-white placeholder-gray-500"
                 />
                 <Input
                   type="text"
                   placeholder="Nume"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="bg-gray-800 border-gray-700 text-white"
+                  className="bg-black border-gray-800 text-white placeholder-gray-500"
                 />
               </>
             )}
@@ -85,7 +85,7 @@ const Auth = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-gray-800 border-gray-700 text-white"
+              className="bg-black border-gray-800 text-white placeholder-gray-500"
             />
             <Input
               type="password"
@@ -93,7 +93,7 @@ const Auth = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-gray-800 border-gray-700 text-white"
+              className="bg-black border-gray-800 text-white placeholder-gray-500"
             />
             
             {error && (
@@ -103,7 +103,7 @@ const Auth = () => {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-white text-black hover:bg-gray-200"
+              className="w-full bg-white text-black hover:bg-gray-200 transition-colors"
             >
               {loading ? 'Se încarcă...' : (isLogin ? 'Conectare' : 'Înregistrare')}
             </Button>
@@ -112,7 +112,7 @@ const Auth = () => {
           <div className="mt-4 text-center">
             <button
               onClick={() => setIsLogin(!isLogin)}
-              className="text-gray-400 hover:text-white text-sm"
+              className="text-gray-400 hover:text-white text-sm transition-colors"
             >
               {isLogin 
                 ? 'Nu ai cont? Înregistrează-te' 

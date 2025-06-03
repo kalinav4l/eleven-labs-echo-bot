@@ -14,7 +14,6 @@ const Account = () => {
   const [loading, setLoading] = useState(true);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [phone, setPhone] = useState('');
 
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -40,7 +39,6 @@ const Account = () => {
         setProfile(data);
         setFirstName(data.first_name || '');
         setLastName(data.last_name || '');
-        setPhone(data.phone || '');
       }
     } catch (error) {
       console.error('Error:', error);
@@ -57,7 +55,6 @@ const Account = () => {
         user_id: user.id,
         first_name: firstName,
         last_name: lastName,
-        phone: phone,
         email: user.email,
         updated_at: new Date().toISOString(),
       };
@@ -93,58 +90,46 @@ const Account = () => {
     <div className="min-h-screen bg-black">
       <HamburgerMenu />
       
-      <div className="container mx-auto px-4 py-20">
-        <Card className="max-w-2xl mx-auto bg-gray-900 border-gray-800">
+      <div className="container mx-auto px-4 py-20 animate-fade-in">
+        <Card className="max-w-2xl mx-auto bg-black border-gray-800">
           <CardHeader>
             <CardTitle className="text-white text-center">Cabinetul Personal</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-400 mb-2">
                   Prenume
                 </label>
                 <Input
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="bg-gray-800 border-gray-700 text-white"
+                  className="bg-black border-gray-800 text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-400 mb-2">
                   Nume
                 </label>
                 <Input
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="bg-gray-800 border-gray-700 text-white"
+                  className="bg-black border-gray-800 text-white"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-400 mb-2">
                 Email
               </label>
               <Input
                 type="email"
                 value={user.email || ''}
                 disabled
-                className="bg-gray-800 border-gray-700 text-gray-400"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Telefon
-              </label>
-              <Input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="bg-gray-800 border-gray-700 text-white"
+                className="bg-black border-gray-800 text-gray-500"
               />
             </div>
 
@@ -158,7 +143,7 @@ const Account = () => {
               <Button
                 onClick={handleSignOut}
                 variant="outline"
-                className="border-gray-700 text-white hover:bg-gray-800"
+                className="border-gray-800 text-white hover:bg-gray-900"
               >
                 Deconectare
               </Button>
@@ -167,19 +152,19 @@ const Account = () => {
             <div className="mt-8 pt-6 border-t border-gray-800">
               <h3 className="text-lg font-semibold text-white mb-4">Funcții Disponibile</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-800 p-4 rounded-lg">
+                <div className="bg-black border border-gray-800 p-4 rounded-lg hover:border-gray-700 transition-colors">
                   <h4 className="text-white font-medium">Istoricul Apelurilor</h4>
                   <p className="text-gray-400 text-sm mt-1">Vezi toate apelurile efectuate</p>
                 </div>
-                <div className="bg-gray-800 p-4 rounded-lg">
+                <div className="bg-black border border-gray-800 p-4 rounded-lg hover:border-gray-700 transition-colors">
                   <h4 className="text-white font-medium">Statistici</h4>
                   <p className="text-gray-400 text-sm mt-1">Analizează performanța agentului</p>
                 </div>
-                <div className="bg-gray-800 p-4 rounded-lg">
+                <div className="bg-black border border-gray-800 p-4 rounded-lg hover:border-gray-700 transition-colors">
                   <h4 className="text-white font-medium">Setări Avansate</h4>
                   <p className="text-gray-400 text-sm mt-1">Personalizează experiența</p>
                 </div>
-                <div className="bg-gray-800 p-4 rounded-lg">
+                <div className="bg-black border border-gray-800 p-4 rounded-lg hover:border-gray-700 transition-colors">
                   <h4 className="text-white font-medium">Suport</h4>
                   <p className="text-gray-400 text-sm mt-1">Obține ajutor rapid</p>
                 </div>

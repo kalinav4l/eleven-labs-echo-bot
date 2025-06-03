@@ -59,7 +59,7 @@ const Pricing = () => {
       <HamburgerMenu />
       
       <div className="container mx-auto px-4 py-20">
-        <div className="text-center mb-12">
+        <div className="text-center mb-12 animate-fade-in">
           <h1 className="text-4xl font-bold text-white mb-4">
             Alege Planul Potrivit
           </h1>
@@ -72,13 +72,14 @@ const Pricing = () => {
           {plans.map((plan, index) => (
             <Card 
               key={index} 
-              className={`bg-gray-900 border-gray-800 relative ${
-                plan.popular ? 'border-blue-500 scale-105' : ''
+              className={`bg-black border-gray-800 relative transition-all duration-300 hover:scale-105 ${
+                plan.popular ? 'border-white scale-105' : ''
               }`}
+              style={{ animationDelay: `${index * 0.2}s` }}
             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                  <span className="bg-white text-black px-4 py-1 rounded-full text-sm font-medium">
                     Cel mai popular
                   </span>
                 </div>
@@ -102,17 +103,17 @@ const Pricing = () => {
                 <ul className="space-y-3 mb-6">
                   {plan.features.map((feature, featureIndex) => (
                     <li key={featureIndex} className="flex items-center text-gray-300">
-                      <Check size={16} className="text-green-500 mr-3 flex-shrink-0" />
+                      <Check size={16} className="text-white mr-3 flex-shrink-0" />
                       <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
                 
                 <Button 
-                  className={`w-full ${
+                  className={`w-full transition-all duration-300 ${
                     plan.popular 
-                      ? 'bg-blue-500 hover:bg-blue-600 text-white' 
-                      : 'bg-white text-black hover:bg-gray-200'
+                      ? 'bg-white text-black hover:bg-gray-200' 
+                      : 'bg-transparent border border-gray-800 text-white hover:bg-gray-900'
                   }`}
                 >
                   Începe Acum
@@ -122,13 +123,13 @@ const Pricing = () => {
           ))}
         </div>
 
-        <div className="mt-16 text-center">
+        <div className="mt-16 text-center animate-fade-in">
           <h2 className="text-2xl font-bold text-white mb-8">
             Întrebări Frecvente despre Prețuri
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <div className="bg-gray-900 p-6 rounded-lg">
+            <div className="bg-black border border-gray-800 p-6 rounded-lg hover:border-gray-700 transition-colors">
               <h3 className="text-white font-semibold mb-2">
                 Pot să-mi schimb planul oricând?
               </h3>
@@ -137,7 +138,7 @@ const Pricing = () => {
               </p>
             </div>
             
-            <div className="bg-gray-900 p-6 rounded-lg">
+            <div className="bg-black border border-gray-800 p-6 rounded-lg hover:border-gray-700 transition-colors">
               <h3 className="text-white font-semibold mb-2">
                 Există o perioadă de testare gratuită?
               </h3>
@@ -146,7 +147,7 @@ const Pricing = () => {
               </p>
             </div>
             
-            <div className="bg-gray-900 p-6 rounded-lg">
+            <div className="bg-black border border-gray-800 p-6 rounded-lg hover:border-gray-700 transition-colors">
               <h3 className="text-white font-semibold mb-2">
                 Ce se întâmplă dacă depășesc minutele incluse?
               </h3>
@@ -155,7 +156,7 @@ const Pricing = () => {
               </p>
             </div>
             
-            <div className="bg-gray-900 p-6 rounded-lg">
+            <div className="bg-black border border-gray-800 p-6 rounded-lg hover:border-gray-700 transition-colors">
               <h3 className="text-white font-semibold mb-2">
                 Pot să anulez oricând?
               </h3>
