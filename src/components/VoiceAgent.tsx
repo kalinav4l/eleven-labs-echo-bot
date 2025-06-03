@@ -1,8 +1,10 @@
+
 import React, { useState, useRef } from 'react'
 import { useConversation } from '@11labs/react'
 import { cn } from '@/lib/utils'
 import { InfoOverlay } from './InfoOverlay'
 import { FloatingWords } from './FloatingWords'
+import { WheelPicker } from './WheelPicker'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 
 const availableAgents = [
@@ -77,7 +79,6 @@ export const VoiceAgent: React.FC = () => {
   const handleAgentSelect = (agentId: string) => {
     if (!isConnected) {
       setSelectedAgentId(agentId)
-      setIsAgentSelectorOpen(false)
     }
   }
 
@@ -135,31 +136,21 @@ export const VoiceAgent: React.FC = () => {
         </div>
       </div>
 
-      {/* Agent Selector Button - Show only when not connected and not speaking */}
+      {/* Agent Selector - Show only when not connected and not speaking */}
       {!isConnected && !isSpeaking && (
         <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2">
-          {/* Expandable Agent Selection */}
+          {/* Expandable Agent Selection with iPhone-style wheel */}
           {isAgentSelectorOpen && (
-            <div className="mb-4 flex flex-col gap-2">
-              {availableAgents.map((agent) => (
-                <div
-                  key={agent.id}
-                  onClick={() => handleAgentSelect(agent.id)}
-                  className={cn(
-                    "px-6 py-3 rounded-full border-2 cursor-pointer transition-all duration-200 text-sm font-medium",
-                    selectedAgentId === agent.id 
-                      ? "bg-gray-600 border-gray-500 text-white" 
-                      : "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500"
-                  )}
-                  style={{
-                    background: selectedAgentId === agent.id 
-                      ? 'linear-gradient(135deg, rgba(75, 85, 99, 0.9) 0%, rgba(55, 65, 81, 0.9) 100%)'
-                      : 'rgba(31, 41, 55, 0.8)'
-                  }}
-                >
-                  {agent.name}
-                </div>
-              ))}
+            <div className="mb-4 bg-gray-900/95 backdrop-blur-sm rounded-2xl p-6 border border-gray-700 shadow-2xl">
+              <div className="text-center mb-4">
+                <h3 className="text-white text-lg font-semibold">Alege Agentul</h3>
+              </div>
+              <WheelPicker
+                items={availableAgents}
+                selectedValue={selectedAgentId}
+                onSelectionChange={handleAgentSelect}
+                className="w-64"
+              />
             </div>
           )}
           
