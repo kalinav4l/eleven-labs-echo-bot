@@ -5,7 +5,6 @@ import { cn } from '@/lib/utils'
 import { InfoOverlay } from './InfoOverlay'
 import { FloatingWords } from './FloatingWords'
 import { WheelPicker } from './WheelPicker'
-import { ChevronUp, ChevronDown } from 'lucide-react'
 
 const availableAgents = [
   { id: 'agent_01jwryy4w5e8fsta9v9j304zzq', name: 'Borea' },
@@ -18,7 +17,6 @@ export const VoiceAgent: React.FC = () => {
   const [selectedAgentId, setSelectedAgentId] = useState('agent_01jwryy4w5e8fsta9v9j304zzq')
   const [lastMessage, setLastMessage] = useState('')
   const [userMessage, setUserMessage] = useState('')
-  const [isAgentSelectorOpen, setIsAgentSelectorOpen] = useState(false)
   const isConnectingRef = useRef(false)
   
   const conversation = useConversation({
@@ -82,12 +80,6 @@ export const VoiceAgent: React.FC = () => {
     }
   }
 
-  const toggleAgentSelector = () => {
-    if (!isConnected && !isSpeaking) {
-      setIsAgentSelectorOpen(!isAgentSelectorOpen)
-    }
-  }
-
   return (
     <>
       <div className="flex flex-col items-center space-y-8">
@@ -136,35 +128,15 @@ export const VoiceAgent: React.FC = () => {
         </div>
       </div>
 
-      {/* Agent Selector - Show only when not connected and not speaking */}
-      {!isConnected && !isSpeaking && (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2">
-          {/* iPhone-style Agent Selection */}
-          {isAgentSelectorOpen && (
-            <div className="mb-4 bg-gray-900/95 backdrop-blur-sm rounded-2xl p-6 border border-gray-700 shadow-2xl">
-              <div className="text-center mb-4">
-                <h3 className="text-white text-lg font-semibold">Alege Agentul</h3>
-              </div>
-              <WheelPicker
-                items={availableAgents}
-                selectedValue={selectedAgentId}
-                onSelectionChange={handleAgentSelect}
-                className="w-64"
-              />
-            </div>
-          )}
-          
-          {/* Toggle Button */}
-          <div
-            onClick={toggleAgentSelector}
-            className="w-12 h-12 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center cursor-pointer hover:bg-gray-600 transition-all duration-200"
-          >
-            {isAgentSelectorOpen ? (
-              <ChevronDown className="w-6 h-6 text-gray-300" />
-            ) : (
-              <ChevronUp className="w-6 h-6 text-gray-300" />
-            )}
-          </div>
+      {/* Agent Selector - Show only when not connected */}
+      {!isConnected && (
+        <div className="fixed bottom-12 left-1/2 transform -translate-x-1/2">
+          <WheelPicker
+            items={availableAgents}
+            selectedValue={selectedAgentId}
+            onSelectionChange={handleAgentSelect}
+            className="w-72"
+          />
         </div>
       )}
 

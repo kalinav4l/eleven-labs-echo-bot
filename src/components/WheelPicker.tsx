@@ -21,7 +21,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
   const [scrollTop, setScrollTop] = useState(0)
   const [velocity, setVelocity] = useState(0)
   const [currentIndex, setCurrentIndex] = useState(0)
-  const itemHeight = 44
+  const itemHeight = 60
   const visibleItems = 5
   const containerHeight = itemHeight * visibleItems
 
@@ -45,15 +45,14 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
       gainNode.connect(audioContext.destination)
       
       oscillator.frequency.setValueAtTime(1000, audioContext.currentTime)
-      oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.05)
+      oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.1)
       
-      gainNode.gain.setValueAtTime(0.05, audioContext.currentTime)
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05)
+      gainNode.gain.setValueAtTime(0.03, audioContext.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1)
       
       oscillator.start(audioContext.currentTime)
-      oscillator.stop(audioContext.currentTime + 0.05)
+      oscillator.stop(audioContext.currentTime + 0.1)
     } catch (error) {
-      // Fallback if AudioContext fails
       console.log('tick')
     }
   }, [])
@@ -110,7 +109,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
     setIsDragging(false)
     
     // Apply momentum and snap
-    let finalScrollTop = scrollTop + velocity * 5
+    let finalScrollTop = scrollTop + velocity * 3
     finalScrollTop = snapToNearest(finalScrollTop)
   }, [scrollTop, velocity, snapToNearest])
 
@@ -167,7 +166,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
     }
   }, [isDragging, handleWheel, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd])
 
-  // Render items with iPhone-style appearance
+  // Render items with iPhone-style fade effect
   const renderItems = () => {
     const centerIndex = scrollTop / itemHeight
     const extendedItems = []
@@ -176,16 +175,29 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
     for (let i = -2; i < items.length + 2; i++) {
       const item = items[i] || { id: '', name: '' }
       const distance = Math.abs(i - centerIndex)
-      const opacity = Math.max(0.3, 1 - distance * 0.4)
-      const scale = Math.max(0.8, 1 - distance * 0.1)
       const isSelected = Math.round(centerIndex) === i
+      
+      // Calculate opacity and scale based on distance from center
+      let opacity = 1
+      let scale = 1
+      
+      if (distance <= 1) {
+        opacity = 1 - (distance * 0.7)
+        scale = 1 - (distance * 0.2)
+      } else if (distance <= 2) {
+        opacity = 0.3 - ((distance - 1) * 0.3)
+        scale = 0.8 - ((distance - 1) * 0.2)
+      } else {
+        opacity = 0
+        scale = 0.6
+      }
       
       extendedItems.push(
         <div
           key={`${item.id}-${i}`}
           className={cn(
-            "absolute inset-x-0 flex items-center justify-center text-2xl font-light transition-all duration-150",
-            isSelected ? "text-white font-normal" : "text-gray-400"
+            "absolute inset-x-0 flex items-center justify-center font-light transition-all duration-150",
+            isSelected ? "text-white text-3xl font-normal" : "text-gray-400 text-2xl"
           )}
           style={{
             height: `${itemHeight}px`,
@@ -211,23 +223,20 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
         className="relative overflow-hidden cursor-grab active:cursor-grabbing select-none"
         style={{
           height: `${containerHeight}px`,
-          background: 'linear-gradient(to bottom, rgba(55,65,81,0.8) 0%, rgba(31,41,55,0.9) 20%, rgba(17,24,39,0.95) 50%, rgba(31,41,55,0.9) 80%, rgba(55,65,81,0.8) 100%)',
-          borderRadius: '12px',
-          border: '1px solid rgba(75,85,99,0.3)'
+          background: 'rgba(0, 0, 0, 0.95)',
+          borderRadius: '16px'
         }}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
       >
-        {/* Selection indicator - iPhone style */}
+        {/* Selection indicator line - subtle like iPhone */}
         <div
-          className="absolute inset-x-0 pointer-events-none z-20"
+          className="absolute inset-x-4 pointer-events-none z-20"
           style={{
             top: `${containerHeight / 2 - itemHeight / 2}px`,
             height: `${itemHeight}px`,
-            background: 'rgba(255,255,255,0.05)',
             borderTop: '1px solid rgba(255,255,255,0.1)',
-            borderBottom: '1px solid rgba(255,255,255,0.1)',
-            backdropFilter: 'blur(1px)'
+            borderBottom: '1px solid rgba(255,255,255,0.1)'
           }}
         />
         
