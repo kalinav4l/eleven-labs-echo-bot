@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -7,7 +8,6 @@ import { Bot, Settings, Play, MessageSquare, Code, Copy, Check } from 'lucide-re
 import DashboardLayout from '@/components/DashboardLayout';
 import AgentTestModal from '@/components/AgentTestModal';
 import EmbedCodeModal from '@/components/EmbedCodeModal';
-import WidgetTestSection from '@/components/WidgetTestSection';
 
 const AccountAgents = () => {
   const { user } = useAuth();
@@ -15,7 +15,6 @@ const AccountAgents = () => {
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [widgetTestAgent, setWidgetTestAgent] = useState<any>(null);
 
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -62,9 +61,8 @@ const AccountAgents = () => {
   };
 
   const copyEmbedCode = (agentId: string, agentName: string) => {
-    const scriptUrl = `${window.location.origin}/speek-embed-widget.js`;
     const embedCode = `<speek-convai agent-id="${agentId}" agent-name="${agentName}"></speek-convai>
-<script src="${scriptUrl}" async type="text/javascript"></script>`;
+<script src="https://your-domain.com/speek-embed-widget.js" async type="text/javascript"></script>`;
     
     navigator.clipboard.writeText(embedCode);
     setCopiedId(agentId);
@@ -80,11 +78,6 @@ const AccountAgents = () => {
             <p className="text-gray-600">Gestionează și testează agenții tăi AI</p>
           </div>
         </div>
-
-        {/* Widget Test Section */}
-        {widgetTestAgent && (
-          <WidgetTestSection agent={widgetTestAgent} />
-        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {agents.map((agent) => (
@@ -150,37 +143,25 @@ const AccountAgents = () => {
                   <code className="text-xs text-gray-600 bg-white p-2 rounded border block overflow-hidden">
                     &lt;speek-convai agent-id="{agent.id}" agent-name="{agent.name}"&gt;&lt;/speek-convai&gt;
                   </code>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Script URL: {window.location.origin}/speek-embed-widget.js
-                  </p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
+                <div className="flex space-x-2">
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                    className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-100"
                     onClick={() => handleTestAgent(agent)}
                   >
-                    <Play className="w-4 h-4 mr-1" />
-                    Test
+                    <Play className="w-4 h-4 mr-2" />
+                    Testează
                   </Button>
                   <Button 
                     variant="outline"
                     size="sm" 
-                    className="border-gray-300 text-gray-700 hover:bg-gray-100"
-                    onClick={() => setWidgetTestAgent(agent)}
-                  >
-                    <MessageSquare className="w-4 h-4 mr-1" />
-                    Widget
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    size="sm" 
-                    className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                    className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-100"
                     onClick={() => handleShowEmbedCode(agent)}
                   >
-                    <Code className="w-4 h-4 mr-1" />
+                    <Code className="w-4 h-4 mr-2" />
                     Embed
                   </Button>
                 </div>

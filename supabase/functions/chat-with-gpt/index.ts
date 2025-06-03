@@ -15,21 +15,13 @@ serve(async (req) => {
   }
 
   try {
-    const { message, agentName, agentId } = await req.json();
-
-    console.log(`Received message: ${message} for agent: ${agentName} (${agentId})`);
+    const { message, agentName } = await req.json();
 
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not configured');
     }
 
-    if (!message) {
-      throw new Error('Message is required');
-    }
-
-    const systemPrompt = `Tu ești ${agentName}, un agent AI conversațional prietenos și util. Răspunde în română într-un mod natural și empatic. Păstrează răspunsurile concise și clare, maxim 2-3 propoziții. Fii întotdeauna politicos și profesional.`;
-
-    console.log('Calling OpenAI API...');
+    const systemPrompt = `Tu ești ${agentName}, un agent AI conversațional. Răspunde în română într-un mod prietenos și util. Păstrează răspunsurile scurte și clare.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -43,31 +35,25 @@ serve(async (req) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message }
         ],
-        max_tokens: 300,
+        max_tokens: 500,
         temperature: 0.7,
       }),
     });
 
+    const data = await response.json();
+    
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('OpenAI API error:', errorData);
-      throw new Error(errorData.error?.message || 'OpenAI API error');
+      throw new Error(data.error?.message || 'OpenAI API error');
     }
 
-    const data = await response.json();
     const aiResponse = data.choices[0].message.content;
-
-    console.log('OpenAI response received:', aiResponse.substring(0, 100) + '...');
 
     return new Response(JSON.stringify({ response: aiResponse }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error in chat-with-gpt function:', error);
-    return new Response(JSON.stringify({ 
-      error: error.message,
-      details: 'Chat function error'
-    }), {
+    return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
