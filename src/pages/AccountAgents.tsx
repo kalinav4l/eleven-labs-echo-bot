@@ -4,7 +4,7 @@ import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bot, Settings, Play, MessageSquare, Code, Copy, Check } from 'lucide-react';
+import { Bot, Settings, Play, Code, Copy, Check } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import AgentTestModal from '@/components/AgentTestModal';
 import EmbedCodeModal from '@/components/EmbedCodeModal';
@@ -61,8 +61,8 @@ const AccountAgents = () => {
   };
 
   const copyEmbedCode = (agentId: string) => {
-    const embedCode = `<elevenlabs-convai agent-id="${agentId}"></elevenlabs-convai>
-<script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>`;
+    const embedCode = `<speek-convai agent-id="${agentId}"></speek-convai>
+<script src="${window.location.origin}/embed-widget.js" async type="text/javascript"></script>`;
     
     navigator.clipboard.writeText(embedCode);
     setCopiedId(agentId);
@@ -126,7 +126,7 @@ const AccountAgents = () => {
                 {/* Embed Code Section */}
                 <div className="mb-4 p-3 bg-gray-50 rounded border">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">Cod Embed:</span>
+                    <span className="text-sm font-medium text-gray-700">Cod Embed Speek:</span>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -141,7 +141,7 @@ const AccountAgents = () => {
                     </Button>
                   </div>
                   <code className="text-xs text-gray-600 bg-white p-2 rounded border block overflow-hidden">
-                    &lt;elevenlabs-convai agent-id="{agent.id}"&gt;&lt;/elevenlabs-convai&gt;
+                    &lt;speek-convai agent-id="{agent.id}"&gt;&lt;/speek-convai&gt;
                   </code>
                 </div>
 
