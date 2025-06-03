@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Menu } from 'lucide-react';
 import Sidebar from './Sidebar';
+import CreditsDisplay from './CreditsDisplay';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -24,6 +25,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <Menu size={24} />
           </button>
           <h1 className="text-black text-lg font-semibold">Cabinet Personal</h1>
+          <CreditsDisplay />
+        </div>
+
+        {/* Desktop header */}
+        <div className="hidden lg:flex items-center justify-end p-4 border-b border-gray-200 bg-white">
+          <CreditsDisplay />
         </div>
 
         {/* Main content */}

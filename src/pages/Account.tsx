@@ -1,31 +1,36 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity, Bot, MessageSquare } from 'lucide-react';
+import { Activity, Bot, MessageSquare, Phone, Clock } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
+import { useUserStats } from '@/hooks/useUserStats';
 
 const Account = () => {
   const { user } = useAuth();
-  const [stats, setStats] = useState({
-    totalConversations: 0,
-    activeAgents: 0,
-    messagesThisMonth: 0
-  });
-
-  useEffect(() => {
-    if (user) {
-      setStats({
-        totalConversations: 45,
-        activeAgents: 3,
-        messagesThisMonth: 234
-      });
-    }
-  }, [user]);
+  const { data: stats, isLoading } = useUserStats();
 
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="p-6">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-32 bg-gray-200 rounded"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
   }
 
   return (
@@ -37,26 +42,14 @@ const Account = () => {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="bg-white border-gray-200">
             <CardContent className="p-6">
               <div className="flex items-center">
                 <MessageSquare className="h-8 w-8 text-gray-700" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Conversații Totale</p>
-                  <p className="text-2xl font-bold text-black">{stats.totalConversations}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border-gray-200">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Bot className="h-8 w-8 text-gray-700" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Agenți Activi</p>
-                  <p className="text-2xl font-bold text-black">{stats.activeAgents}</p>
+                  <p className="text-2xl font-bold text-black">{stats?.total_conversations || 0}</p>
                 </div>
               </div>
             </CardContent>
@@ -67,15 +60,39 @@ const Account = () => {
               <div className="flex items-center">
                 <Activity className="h-8 w-8 text-gray-700" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Mesaje Luna Aceasta</p>
-                  <p className="text-2xl font-bold text-black">{stats.messagesThisMonth}</p>
+                  <p className="text-sm font-medium text-gray-600">Mesaje Totale</p>
+                  <p className="text-2xl font-bold text-black">{stats?.total_messages || 0}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border-gray-200">
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <Phone className="h-8 w-8 text-gray-700" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Apeluri Vocale</p>
+                  <p className="text-2xl font-bold text-black">{stats?.total_voice_calls || 0}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border-gray-200">
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <Clock className="h-8 w-8 text-gray-700" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Minute Vorbite</p>
+                  <p className="text-2xl font-bold text-black">{Math.round(stats?.total_minutes_talked || 0)}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Recent Activity */}
+        {/* Recent Activity and Agents */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="bg-white border-gray-200">
             <CardHeader>

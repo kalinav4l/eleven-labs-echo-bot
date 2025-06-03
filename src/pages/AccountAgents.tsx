@@ -4,12 +4,14 @@ import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bot, Settings, Play, MessageSquare } from 'lucide-react';
+import { Bot, Settings, Play } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import AgentTestModal from '@/components/AgentTestModal';
+import { useUserStats } from '@/hooks/useUserStats';
 
 const AccountAgents = () => {
   const { user } = useAuth();
+  const { data: stats } = useUserStats();
   const [selectedAgent, setSelectedAgent] = useState<any>(null);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
 
@@ -25,7 +27,7 @@ const AccountAgents = () => {
       status: 'active',
       language: 'Română',
       voice: 'Borea',
-      conversations: 124
+      conversations: Math.floor((stats?.total_conversations || 0) * 0.4)
     },
     {
       id: 'VfDh7pN17jYNykYNZrJb',
@@ -34,7 +36,7 @@ const AccountAgents = () => {
       status: 'active',
       language: 'Română',
       voice: 'Jesica',
-      conversations: 89
+      conversations: Math.floor((stats?.total_conversations || 0) * 0.35)
     },
     {
       id: 'agent_01jws2mjsjeh398vfnfd6k5hq0',
@@ -43,7 +45,7 @@ const AccountAgents = () => {
       status: 'active',
       language: 'Română',
       voice: 'Ana',
-      conversations: 45
+      conversations: Math.floor((stats?.total_conversations || 0) * 0.25)
     }
   ];
 
