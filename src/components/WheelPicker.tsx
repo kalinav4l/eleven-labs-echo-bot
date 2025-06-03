@@ -22,7 +22,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
   const [velocity, setVelocity] = useState(0)
   const [currentIndex, setCurrentIndex] = useState(0)
   const itemHeight = 60
-  const visibleItems = 5
+  const visibleItems = 7
   const containerHeight = itemHeight * visibleItems
 
   // Find initial index
@@ -36,21 +36,25 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
 
   // Create tick sound effect
   const playTickSound = useCallback(() => {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
-    const oscillator = audioContext.createOscillator()
-    const gainNode = audioContext.createGain()
-    
-    oscillator.connect(gainNode)
-    gainNode.connect(audioContext.destination)
-    
-    oscillator.frequency.setValueAtTime(800, audioContext.currentTime)
-    oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1)
-    
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
-    
-    oscillator.start(audioContext.currentTime)
-    oscillator.stop(audioContext.currentTime + 0.1)
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+      
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+      
+      oscillator.frequency.setValueAtTime(1000, audioContext.currentTime)
+      oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.1)
+      
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
+      
+      oscillator.start(audioContext.currentTime)
+      oscillator.stop(audioContext.currentTime + 0.1)
+    } catch (error) {
+      console.log('Audio context not available')
+    }
   }, [])
 
   // Snap to nearest item
@@ -68,6 +72,19 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
     setScrollTop(finalScrollTop)
     return finalScrollTop
   }, [currentIndex, items, onSelectionChange, playTickSound])
+
+  // Handle wheel scroll
+  const handleWheel = useCallback((e: WheelEvent) => {
+    e.preventDefault()
+    const delta = e.deltaY > 0 ? itemHeight : -itemHeight
+    const newScrollTop = Math.max(0, Math.min((items.length - 1) * itemHeight, scrollTop + delta))
+    setScrollTop(newScrollTop)
+    
+    // Debounce snap to prevent too many sounds
+    setTimeout(() => {
+      snapToNearest(newScrollTop)
+    }, 100)
+  }, [scrollTop, items.length, snapToNearest])
 
   // Handle mouse/touch start
   const handleStart = (clientY: number) => {
@@ -91,7 +108,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
     setIsDragging(false)
     
     // Apply momentum
-    let finalScrollTop = scrollTop + velocity * 10
+    let finalScrollTop = scrollTop + velocity * 5
     finalScrollTop = snapToNearest(finalScrollTop)
   }, [scrollTop, velocity, snapToNearest])
 
@@ -125,6 +142,9 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
 
   // Add global event listeners
   useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
@@ -132,13 +152,17 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
       document.addEventListener('touchend', handleTouchEnd)
     }
 
+    // Add wheel listener
+    container.addEventListener('wheel', handleWheel, { passive: false })
+
     return () => {
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
       document.removeEventListener('touchmove', handleTouchMove)
       document.removeEventListener('touchend', handleTouchEnd)
+      container.removeEventListener('wheel', handleWheel)
     }
-  }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd])
+  }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd, handleWheel])
 
   // Render items with 3D effect
   const renderItems = () => {
@@ -146,40 +170,42 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
     const extendedItems = []
     
     // Add padding items for smooth scrolling
-    for (let i = -2; i < items.length + 2; i++) {
+    for (let i = -3; i < items.length + 3; i++) {
       const item = items[i] || { id: '', name: '' }
       const distance = Math.abs(i - centerIndex)
-      const opacity = Math.max(0.2, 1 - distance * 0.3)
-      const scale = Math.max(0.7, 1 - distance * 0.1)
-      const rotateX = (i - centerIndex) * 15 // 3D rotation effect
+      const opacity = Math.max(0.1, 1 - distance * 0.4)
+      const scale = Math.max(0.6, 1 - distance * 0.15)
+      const rotateX = (i - centerIndex) * 8 // 3D rotation effect
       const isSelected = Math.round(centerIndex) === i
       
-      extendedItems.push(
-        <div
-          key={`${item.id}-${i}`}
-          className={cn(
-            "absolute inset-x-0 flex items-center justify-center text-2xl font-medium transition-all duration-100",
-            isSelected ? "text-white" : "text-gray-400"
-          )}
-          style={{
-            height: `${itemHeight}px`,
-            top: `${i * itemHeight - scrollTop + containerHeight / 2 - itemHeight / 2}px`,
-            opacity,
-            transform: `scale(${scale}) rotateX(${rotateX}deg)`,
-            transformOrigin: 'center center',
-            zIndex: isSelected ? 10 : 1
-          }}
-        >
-          {item.name}
-        </div>
-      )
+      if (item.name) { // Only render items that have content
+        extendedItems.push(
+          <div
+            key={`${item.id}-${i}`}
+            className={cn(
+              "absolute inset-x-0 flex items-center justify-center text-3xl font-medium transition-all duration-150",
+              isSelected ? "text-white font-bold" : "text-gray-400"
+            )}
+            style={{
+              height: `${itemHeight}px`,
+              top: `${i * itemHeight - scrollTop + containerHeight / 2 - itemHeight / 2}px`,
+              opacity,
+              transform: `scale(${scale}) rotateX(${rotateX}deg)`,
+              transformOrigin: 'center center',
+              zIndex: isSelected ? 10 : 1
+            }}
+          >
+            {item.name}
+          </div>
+        )
+      }
     }
     
     return extendedItems
   }
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative bg-gray-900/50 rounded-2xl border border-gray-700", className)}>
       <div
         ref={containerRef}
         className="relative overflow-hidden cursor-grab active:cursor-grabbing"
@@ -192,7 +218,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
       >
         {/* Selection indicator */}
         <div
-          className="absolute inset-x-0 border-t border-b border-gray-600 bg-gray-800/30 pointer-events-none z-20"
+          className="absolute inset-x-4 border-t border-b border-gray-600 bg-gray-800/40 backdrop-blur-sm pointer-events-none z-20 rounded-lg"
           style={{
             top: `${containerHeight / 2 - itemHeight / 2}px`,
             height: `${itemHeight}px`
