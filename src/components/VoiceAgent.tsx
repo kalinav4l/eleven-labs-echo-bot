@@ -139,7 +139,7 @@ export const VoiceAgent: React.FC = () => {
       {/* Agent Selector - Show only when not connected and not speaking */}
       {!isConnected && !isSpeaking && (
         <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2">
-          {/* Expandable Agent Selection with iPhone-style wheel */}
+          {/* iPhone-style Agent Selection */}
           {isAgentSelectorOpen && (
             <div className="mb-4 bg-gray-900/95 backdrop-blur-sm rounded-2xl p-6 border border-gray-700 shadow-2xl">
               <div className="text-center mb-4">
