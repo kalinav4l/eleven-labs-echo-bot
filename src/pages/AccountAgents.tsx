@@ -61,8 +61,9 @@ const AccountAgents = () => {
   };
 
   const copyEmbedCode = (agentId: string, agentName: string) => {
+    const scriptUrl = `${window.location.origin}/speek-embed-widget.js`;
     const embedCode = `<speek-convai agent-id="${agentId}" agent-name="${agentName}"></speek-convai>
-<script src="https://your-domain.com/speek-embed-widget.js" async type="text/javascript"></script>`;
+<script src="${scriptUrl}" async type="text/javascript"></script>`;
     
     navigator.clipboard.writeText(embedCode);
     setCopiedId(agentId);
@@ -143,6 +144,9 @@ const AccountAgents = () => {
                   <code className="text-xs text-gray-600 bg-white p-2 rounded border block overflow-hidden">
                     &lt;speek-convai agent-id="{agent.id}" agent-name="{agent.name}"&gt;&lt;/speek-convai&gt;
                   </code>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Script URL: {window.location.origin}/speek-embed-widget.js
+                  </p>
                 </div>
 
                 <div className="flex space-x-2">

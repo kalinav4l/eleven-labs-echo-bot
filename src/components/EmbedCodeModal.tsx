@@ -16,8 +16,11 @@ const EmbedCodeModal: React.FC<EmbedCodeModalProps> = ({ agent, isOpen, onClose 
 
   if (!agent) return null;
 
+  // URL-ul corect pentru script-ul Speek embed widget
+  const scriptUrl = `${window.location.origin}/speek-embed-widget.js`;
+  
   const embedCode = `<speek-convai agent-id="${agent.id}" agent-name="${agent.name}"></speek-convai>
-<script src="https://your-domain.com/speek-embed-widget.js" async type="text/javascript"></script>`;
+<script src="${scriptUrl}" async type="text/javascript"></script>`;
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(embedCode);
@@ -73,6 +76,7 @@ const EmbedCodeModal: React.FC<EmbedCodeModalProps> = ({ agent, isOpen, onClose 
                 <li>2. Plasează codul în orice pagină HTML unde vrei să apară agentul</li>
                 <li>3. Widgetul va apărea automat în colțul din dreapta jos</li>
                 <li>4. Agentul {agent.name} va fi disponibil pentru conversații pe site-ul tău</li>
+                <li>5. Script-ul se încarcă de la: <code className="text-xs bg-gray-100 px-1 rounded">{scriptUrl}</code></li>
               </ol>
             </div>
 
@@ -96,6 +100,25 @@ const EmbedCodeModal: React.FC<EmbedCodeModalProps> = ({ agent, isOpen, onClose 
                   <span className="text-black">{agent.voice}</span>
                 </div>
               </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded p-4">
+              <h3 className="text-blue-800 font-medium mb-2">📋 Exemplu complet de integrare:</h3>
+              <pre className="text-xs text-blue-700 bg-blue-100 p-2 rounded overflow-x-auto">
+{`<!DOCTYPE html>
+<html>
+<head>
+  <title>Site-ul meu</title>
+</head>
+<body>
+  <!-- Conținutul site-ului tău -->
+  
+  <!-- Embed widget Speek -->
+  <speek-convai agent-id="${agent.id}" agent-name="${agent.name}"></speek-convai>
+  <script src="${scriptUrl}" async type="text/javascript"></script>
+</body>
+</html>`}
+              </pre>
             </div>
           </div>
 
