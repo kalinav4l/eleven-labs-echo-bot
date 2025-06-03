@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useConversation } from '@11labs/react';
 import { cn } from '@/lib/utils';
 import { Phone } from 'lucide-react';
@@ -10,6 +10,7 @@ const ChatWidget = () => {
   const conversation = useConversation({
     onConnect: () => {
       console.log('Connected to chat widget agent');
+      setIsActive(true);
     },
     onDisconnect: () => {
       console.log('Disconnected from chat widget agent');
@@ -23,10 +24,48 @@ const ChatWidget = () => {
     }
   });
 
+  // Persist conversation state across route changes
+  useEffect(() => {
+    const savedConversationState = sessionStorage.getItem('chatWidgetActive');
+    if (savedConversationState === 'true' && conversation.status !== 'connected') {
+      setIsActive(true);
+      conversation.startSession({
+        agentId: 'agent_01jwvb1kq9f2wss361kfwj0p5n'
+      }).catch(error => {
+        console.error('Failed to restore chat widget conversation:', error);
+        setIsActive(false);
+        sessionStorage.removeItem('chatWidgetActive');
+      });
+    }
+  }, []);
+
+  // Save conversation state
+  useEffect(() => {
+    if (conversation.status === 'connected') {
+      sessionStorage.setItem('chatWidgetActive', 'true');
+    } else {
+      sessionStorage.removeItem('chatWidgetActive');
+    }
+  }, [conversation.status]);
+
+  // Clean up on page unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (conversation.status === 'connected') {
+        conversation.endSession();
+      }
+      sessionStorage.removeItem('chatWidgetActive');
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [conversation]);
+
   const handleStartConversation = async () => {
     if (conversation.status === 'connected') {
       await conversation.endSession();
       setIsActive(false);
+      sessionStorage.removeItem('chatWidgetActive');
     } else {
       try {
         setIsActive(true);
@@ -36,6 +75,7 @@ const ChatWidget = () => {
       } catch (error) {
         console.error('Failed to start chat widget conversation:', error);
         setIsActive(false);
+        sessionStorage.removeItem('chatWidgetActive');
       }
     }
   };
