@@ -20,7 +20,7 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({ agentId, agentName = "Agent A
   return (
     <div className="fixed bottom-5 right-5 bg-white rounded-2xl shadow-lg p-4 flex items-center gap-3 z-50 font-sans">
       <img 
-        src="/lovable-uploads/f8295e99-79cd-45f2-ab8e-6b306829413e.png" 
+        src="https://ik.imagekit.io/2eeuoo797/Group%2064.png?updatedAt=1748951277306" 
         alt="Speek Logo" 
         className="w-8 h-8 rounded-full"
       />
