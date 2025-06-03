@@ -60,9 +60,9 @@ const AccountAgents = () => {
     setIsEmbedModalOpen(true);
   };
 
-  const copyEmbedCode = (agentId: string) => {
-    const embedCode = `<elevenlabs-convai agent-id="${agentId}"></elevenlabs-convai>
-<script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>`;
+  const copyEmbedCode = (agentId: string, agentName: string) => {
+    const embedCode = `<speek-convai agent-id="${agentId}" agent-name="${agentName}"></speek-convai>
+<script src="https://your-domain.com/speek-embed-widget.js" async type="text/javascript"></script>`;
     
     navigator.clipboard.writeText(embedCode);
     setCopiedId(agentId);
@@ -130,7 +130,7 @@ const AccountAgents = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => copyEmbedCode(agent.id)}
+                      onClick={() => copyEmbedCode(agent.id, agent.name)}
                       className="text-gray-600 hover:text-black p-1"
                     >
                       {copiedId === agent.id ? (
@@ -141,7 +141,7 @@ const AccountAgents = () => {
                     </Button>
                   </div>
                   <code className="text-xs text-gray-600 bg-white p-2 rounded border block overflow-hidden">
-                    &lt;elevenlabs-convai agent-id="{agent.id}"&gt;&lt;/elevenlabs-convai&gt;
+                    &lt;speek-convai agent-id="{agent.id}" agent-name="{agent.name}"&gt;&lt;/speek-convai&gt;
                   </code>
                 </div>
 
