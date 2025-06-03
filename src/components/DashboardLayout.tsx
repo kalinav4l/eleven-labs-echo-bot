@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Menu } from 'lucide-react';
 import Sidebar from './Sidebar';
 import CreditsDisplay from './CreditsDisplay';
+import ChatWidget from './ChatWidget';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -38,6 +39,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           {children}
         </main>
       </div>
+
+      {/* Chat Widget */}
+      <ChatWidget />
     </div>
   );
 };
