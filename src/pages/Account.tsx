@@ -5,7 +5,7 @@ import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Mail, Phone, LogOut } from 'lucide-react';
+import { User, Mail, LogOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import HamburgerMenu from '@/components/HamburgerMenu';
 
@@ -14,8 +14,7 @@ const Account = () => {
   const [profile, setProfile] = useState({
     firstName: '',
     lastName: '',
-    email: '',
-    phone: ''
+    email: ''
   });
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +29,7 @@ const Account = () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('id', user?.id)
         .single();
 
       if (error) throw error;
@@ -39,8 +38,7 @@ const Account = () => {
         setProfile({
           firstName: data.first_name || '',
           lastName: data.last_name || '',
-          email: data.email || '',
-          phone: data.phone || ''
+          email: data.email || ''
         });
       }
     } catch (error) {
@@ -54,11 +52,10 @@ const Account = () => {
       const { error } = await supabase
         .from('profiles')
         .upsert({
-          user_id: user?.id,
+          id: user?.id,
           first_name: profile.firstName,
           last_name: profile.lastName,
           email: profile.email,
-          phone: profile.phone,
           updated_at: new Date().toISOString()
         });
 
@@ -123,18 +120,6 @@ const Account = () => {
                 <Input
                   value={profile.email}
                   onChange={(e) => setProfile({...profile, email: e.target.value})}
-                  className="bg-black border-gray-800 text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-400 text-sm mb-2 flex items-center">
-                  <Phone className="w-4 h-4 mr-2" />
-                  Telefon
-                </label>
-                <Input
-                  value={profile.phone}
-                  onChange={(e) => setProfile({...profile, phone: e.target.value})}
                   className="bg-black border-gray-800 text-white"
                 />
               </div>
