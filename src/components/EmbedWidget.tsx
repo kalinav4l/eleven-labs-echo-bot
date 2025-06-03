@@ -13,16 +13,16 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({ agentId, agentName = "Agent A
 
   const startSpeekCall = () => {
     setIsOpen(true);
-    // Aici se poate integra cu sistemul de chat/video
-    console.log(`Starting call with agent: ${agentId}`);
+    // Demonstrativ - în realitate se deschide modal-ul de chat
+    console.log(`Starting chat with agent: ${agentId}`);
   };
 
   return (
-    <div className="fixed bottom-5 right-5 bg-white rounded-2xl shadow-lg p-4 flex items-center gap-3 z-50 font-sans">
+    <div className="fixed bottom-5 right-5 bg-white rounded-2xl shadow-lg p-4 flex items-center gap-3 z-50 font-sans hover:scale-105 transition-transform cursor-pointer">
       <img 
         src="https://ik.imagekit.io/2eeuoo797/Group%2064.png?updatedAt=1748951277306" 
         alt="Speek Logo" 
-        className="w-8 h-8 rounded-full"
+        className="w-8 h-8 rounded-full object-cover"
       />
       <div className="flex flex-col text-sm">
         <strong className="text-black">Ai nevoie de ajutor?</strong>
