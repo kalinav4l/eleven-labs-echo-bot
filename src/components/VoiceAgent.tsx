@@ -1,8 +1,10 @@
+
 import React, { useState, useRef } from 'react'
 import { useConversation } from '@11labs/react'
 import { cn } from '@/lib/utils'
 import { InfoOverlay } from './InfoOverlay'
 import { FloatingWords } from './FloatingWords'
+import { WheelPicker } from './WheelPicker'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 
 const availableAgents = [
@@ -17,6 +19,7 @@ export const VoiceAgent: React.FC = () => {
   const [lastMessage, setLastMessage] = useState('')
   const [userMessage, setUserMessage] = useState('')
   const [isAgentSelectorOpen, setIsAgentSelectorOpen] = useState(false)
+  const [showWheelPicker, setShowWheelPicker] = useState(false)
   const isConnectingRef = useRef(false)
   
   const conversation = useConversation({
@@ -87,6 +90,25 @@ export const VoiceAgent: React.FC = () => {
     }
   }
 
+  const openWheelPicker = () => {
+    if (!isConnected && !isSpeaking) {
+      setShowWheelPicker(true)
+    }
+  }
+
+  const closeWheelPicker = () => {
+    setShowWheelPicker(false)
+  }
+
+  const handleWheelAgentSelect = (agentId: string) => {
+    setSelectedAgentId(agentId)
+  }
+
+  const getSelectedAgentName = () => {
+    const agent = availableAgents.find(a => a.id === selectedAgentId)
+    return agent ? agent.name : 'Unknown'
+  }
+
   return (
     <>
       <div className="flex flex-col items-center space-y-8">
@@ -138,43 +160,27 @@ export const VoiceAgent: React.FC = () => {
       {/* Agent Selector Button - Show only when not connected and not speaking */}
       {!isConnected && !isSpeaking && (
         <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2">
-          {/* Expandable Agent Selection */}
-          {isAgentSelectorOpen && (
-            <div className="mb-4 flex flex-col gap-2">
-              {availableAgents.map((agent) => (
-                <div
-                  key={agent.id}
-                  onClick={() => handleAgentSelect(agent.id)}
-                  className={cn(
-                    "px-6 py-3 rounded-full border-2 cursor-pointer transition-all duration-200 text-sm font-medium",
-                    selectedAgentId === agent.id 
-                      ? "bg-gray-600 border-gray-500 text-white" 
-                      : "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500"
-                  )}
-                  style={{
-                    background: selectedAgentId === agent.id 
-                      ? 'linear-gradient(135deg, rgba(75, 85, 99, 0.9) 0%, rgba(55, 65, 81, 0.9) 100%)'
-                      : 'rgba(31, 41, 55, 0.8)'
-                  }}
-                >
-                  {agent.name}
-                </div>
-              ))}
-            </div>
-          )}
-          
-          {/* Toggle Button */}
-          <div
-            onClick={toggleAgentSelector}
-            className="w-12 h-12 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center cursor-pointer hover:bg-gray-600 transition-all duration-200"
-          >
-            {isAgentSelectorOpen ? (
-              <ChevronDown className="w-6 h-6 text-gray-300" />
-            ) : (
-              <ChevronUp className="w-6 h-6 text-gray-300" />
-            )}
+          {/* Selected Agent Display */}
+          <div className="mb-4 text-center">
+            <button
+              onClick={openWheelPicker}
+              className="px-6 py-3 bg-gray-800 border-2 border-gray-600 rounded-full text-white hover:bg-gray-700 transition-all duration-200 flex items-center gap-2"
+            >
+              <span className="text-sm font-medium">{getSelectedAgentName()}</span>
+              <ChevronUp className="w-4 h-4" />
+            </button>
           </div>
         </div>
+      )}
+
+      {/* Wheel Picker Modal */}
+      {showWheelPicker && (
+        <WheelPicker
+          items={availableAgents}
+          selectedId={selectedAgentId}
+          onSelect={handleWheelAgentSelect}
+          onClose={closeWheelPicker}
+        />
       )}
 
       {/* Floating Words for User Input */}
