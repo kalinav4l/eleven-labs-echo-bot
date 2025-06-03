@@ -13,31 +13,37 @@ import AccountSettings from "./pages/AccountSettings";
 import Pricing from "./pages/Pricing";
 import Info from "./pages/Info";
 import NotFound from "./pages/NotFound";
+import WidgetDemo from "./pages/WidgetDemo";
+import WidgetChat from "./pages/WidgetChat";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/account" element={<Account />} />
-            <Route path="/account/agents" element={<AccountAgents />} />
-            <Route path="/account/chat-history" element={<AccountChatHistory />} />
-            <Route path="/account/settings" element={<AccountSettings />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/info" element={<Info />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/account" element={<Account />} />
+              <Route path="/account/agents" element={<AccountAgents />} />
+              <Route path="/account/chat-history" element={<AccountChatHistory />} />
+              <Route path="/account/settings" element={<AccountSettings />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/info" element={<Info />} />
+              <Route path="/widget-demo" element={<WidgetDemo />} />
+              <Route path="/widget-chat" element={<WidgetChat />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
