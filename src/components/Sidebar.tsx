@@ -6,8 +6,6 @@ import {
   MessageSquare, 
   Bot, 
   Settings, 
-  Phone, 
-  Database,
   User,
   LogOut
 } from 'lucide-react';
@@ -26,8 +24,6 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/account' },
     { icon: Bot, label: 'Agenți', path: '/account/agents' },
     { icon: MessageSquare, label: 'Istoric Chat', path: '/account/chat-history' },
-    { icon: Phone, label: 'Apeluri', path: '/account/calls' },
-    { icon: Database, label: 'Baza de Cunoștințe', path: '/account/knowledge' },
     { icon: Settings, label: 'Setări', path: '/account/settings' },
   ];
 
@@ -50,18 +46,18 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
       {/* Sidebar */}
       <div className={`
-        fixed top-0 left-0 h-full w-64 bg-gray-900 border-r border-gray-800 
+        fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 
         transform transition-transform duration-300 ease-in-out z-50
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 lg:static lg:z-auto
       `}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-800">
-            <h2 className="text-xl font-bold text-white">Cabinet Personal</h2>
+          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <h2 className="text-xl font-bold text-black">Cabinet Personal</h2>
             <button 
               onClick={onClose}
-              className="lg:hidden text-gray-400 hover:text-white"
+              className="lg:hidden text-gray-500 hover:text-black"
             >
               ×
             </button>
@@ -75,9 +71,9 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                 to={item.path}
                 onClick={onClose}
                 className={`
-                  flex items-center px-6 py-3 text-gray-300 hover:bg-gray-800 hover:text-white 
+                  flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100 hover:text-black 
                   transition-colors border-l-4 border-transparent
-                  ${isActive(item.path) ? 'bg-gray-800 text-white border-blue-500' : ''}
+                  ${isActive(item.path) ? 'bg-gray-100 text-black border-black' : ''}
                 `}
               >
                 <item.icon size={20} className="mr-3" />
@@ -87,17 +83,17 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           </nav>
 
           {/* Profile section */}
-          <div className="border-t border-gray-800 p-4">
+          <div className="border-t border-gray-200 p-4">
             <Link
               to="/account/profile"
-              className="flex items-center px-2 py-3 text-gray-300 hover:bg-gray-800 hover:text-white transition-colors rounded"
+              className="flex items-center px-2 py-3 text-gray-600 hover:bg-gray-100 hover:text-black transition-colors rounded"
             >
               <User size={20} className="mr-3" />
               <span>Profilul Meu</span>
             </Link>
             <button
               onClick={signOut}
-              className="flex items-center w-full px-2 py-3 text-gray-300 hover:bg-gray-800 hover:text-white transition-colors rounded"
+              className="flex items-center w-full px-2 py-3 text-gray-600 hover:bg-gray-100 hover:text-black transition-colors rounded"
             >
               <LogOut size={20} className="mr-3" />
               <span>Deconectare</span>
