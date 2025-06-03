@@ -7,10 +7,10 @@ const WidgetDemo = () => {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Demo Widget Chat Borea
+            Demo Widget Vocal Borea AI
           </h1>
           <p className="text-xl text-gray-600 mb-8">
-            Testează widget-ul de chat pe această pagină
+            Testează widget-ul de apel vocal pe această pagină
           </p>
           
           <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
@@ -25,13 +25,14 @@ const WidgetDemo = () => {
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h3 className="text-xl font-semibold mb-4">Caracteristici:</h3>
             <ul className="space-y-2 text-gray-600">
-              <li>✅ Widget plutitor în colțul dreapta-jos</li>
-              <li>✅ Interfață modernă și responsive</li>
-              <li>✅ Integrare cu AI (OpenAI/ElevenLabs)</li>
+              <li>✅ Widget vocal plutitor în colțul dreapta-jos</li>
+              <li>✅ Apel vocal real-time cu Borea AI</li>
+              <li>✅ Interfață modernă și intuitivă</li>
+              <li>✅ Integrare cu ElevenLabs Conversational AI</li>
+              <li>✅ Detectare automată a vocii</li>
               <li>✅ Fără dependințe externe</li>
               <li>✅ Funcționează pe orice domeniu</li>
-              <li>✅ Auto-resize pentru textarea</li>
-              <li>✅ Indicatori de typing</li>
+              <li>✅ Animații vizuale pentru interacțiune</li>
             </ul>
           </div>
 
@@ -40,19 +41,30 @@ const WidgetDemo = () => {
             <ol className="space-y-2 text-gray-600">
               <li>1. Copiază codul JavaScript</li>
               <li>2. Adaugă-l în HTML-ul site-ului tău</li>
-              <li>3. Widget-ul va apărea automat</li>
-              <li>4. Configurează agentId în widget.js</li>
-              <li>5. Testează funcționalitatea</li>
+              <li>3. Apasă butonul de apel pentru a începe</li>
+              <li>4. Permite accesul la microfon când se solicită</li>
+              <li>5. Vorbește natural cu Borea AI</li>
+              <li>6. Ascultă răspunsurile vocale ale asistentului</li>
             </ol>
           </div>
         </div>
 
         <div className="mt-12 text-center">
+          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h3 className="text-xl font-semibold mb-4">Instrucțiuni de testare:</h3>
+            <div className="text-left space-y-2 text-gray-600">
+              <p>📞 <strong>Inițierea apelului:</strong> Apasă butonul circular din colțul dreapta-jos</p>
+              <p>🎤 <strong>Permisiuni:</strong> Acceptă accesul la microfon când se solicită</p>
+              <p>🗣️ <strong>Conversația:</strong> Vorbește natural și așteaptă răspunsul lui Borea AI</p>
+              <p>🔴 <strong>Închiderea:</strong> Apasă "Închide" pentru a termina apelul</p>
+            </div>
+          </div>
+          
           <p className="text-gray-600 mb-4">
-            Widget-ul ar trebui să apară în colțul dreapta-jos al acestei pagini.
+            Widget-ul vocal ar trebui să apară în colțul dreapta-jos al acestei pagini.
           </p>
           <p className="text-sm text-gray-500">
-            Dacă nu îl vezi, verifică consola pentru erori.
+            Dacă nu îl vezi, verifică consola pentru erori sau refresh pagina.
           </p>
         </div>
       </div>

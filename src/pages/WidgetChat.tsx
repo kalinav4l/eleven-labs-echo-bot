@@ -16,15 +16,17 @@ const WidgetChat = () => {
 
           if (error) throw error;
 
-          // Trimite răspunsul înapoi
-          event.source?.postMessage({
+          // Trimite răspunsul înapoi cu targetOrigin specific
+          const targetWindow = event.source as Window;
+          targetWindow.postMessage({
             type: 'BOREA_CHAT_RESPONSE',
             requestId: event.data.requestId,
             response: data.response
           }, event.origin);
 
         } catch (error) {
-          event.source?.postMessage({
+          const targetWindow = event.source as Window;
+          targetWindow.postMessage({
             type: 'BOREA_CHAT_ERROR',
             requestId: event.data.requestId,
             error: error.message
