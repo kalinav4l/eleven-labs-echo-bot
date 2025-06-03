@@ -122,11 +122,6 @@ export const VoiceAgent: React.FC = () => {
               )}>
                 {isConnected ? "Click to disconnect" : "Click to connect"}
               </div>
-              {selectedAgentId && (
-                <div className="text-xs text-cyan-400 mt-1 font-mono">
-                  Agent: {selectedAgentId.substring(0, 8)}...
-                </div>
-              )}
             </div>
 
             {/* Animated rings when speaking */}
