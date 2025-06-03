@@ -9,6 +9,140 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      conversations: {
+        Row: {
+          agent_id: string
+          agent_name: string
+          created_at: string
+          credits_used: number
+          duration_minutes: number | null
+          id: string
+          ip_address: unknown | null
+          message_count: number
+          title: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          agent_id: string
+          agent_name: string
+          created_at?: string
+          credits_used?: number
+          duration_minutes?: number | null
+          id?: string
+          ip_address?: unknown | null
+          message_count?: number
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          agent_id?: string
+          agent_name?: string
+          created_at?: string
+          credits_used?: number
+          duration_minutes?: number | null
+          id?: string
+          ip_address?: unknown | null
+          message_count?: number
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      credit_packages: {
+        Row: {
+          created_at: string
+          credits: number
+          id: string
+          name: string
+          price_usd: number
+          stripe_price_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          credits: number
+          id?: string
+          name: string
+          price_usd: number
+          stripe_price_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          credits?: number
+          id?: string
+          name?: string
+          price_usd?: number
+          stripe_price_id?: string | null
+        }
+        Relationships: []
+      }
+      credit_transactions: {
+        Row: {
+          amount: number
+          conversation_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          stripe_session_id: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          conversation_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          stripe_session_id?: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          conversation_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          stripe_session_id?: string | null
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_transactions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guest_usage: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: unknown
+          last_usage: string
+          usage_count: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address: unknown
+          last_usage?: string
+          usage_count?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          last_usage?: string
+          usage_count?: number
+        }
+        Relationships: []
+      }
       kalina: {
         Row: {
           created_at: string
@@ -128,7 +262,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      add_credits: {
+        Args: {
+          p_user_id: string
+          p_amount: number
+          p_stripe_session_id?: string
+        }
+        Returns: boolean
+      }
+      deduct_credits: {
+        Args: {
+          p_user_id: string
+          p_amount: number
+          p_description?: string
+          p_conversation_id?: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

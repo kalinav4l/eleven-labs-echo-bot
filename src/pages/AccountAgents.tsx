@@ -4,10 +4,11 @@ import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bot, Settings, Play } from 'lucide-react';
+import { Bot, Settings, Play, Copy, ExternalLink } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import AgentTestModal from '@/components/AgentTestModal';
 import { useUserStats } from '@/hooks/useUserStats';
+import { toast } from '@/components/ui/use-toast';
 
 const AccountAgents = () => {
   const { user } = useAuth();
@@ -27,7 +28,9 @@ const AccountAgents = () => {
       status: 'active',
       language: 'Română',
       voice: 'Borea',
-      conversations: Math.floor((stats?.total_conversations || 0) * 0.4)
+      conversations: Math.floor((stats?.total_conversations || 0) * 0.4),
+      widgetCode: `<elevenlabs-convai agent-id="agent_01jwryy4w5e8fsta9v9j304zzq"></elevenlabs-convai>
+<script src="https://elevenlabs.io/convai-widget/legacy.js" async type="text/javascript"></script>`
     },
     {
       id: 'VfDh7pN17jYNykYNZrJb',
@@ -36,7 +39,9 @@ const AccountAgents = () => {
       status: 'active',
       language: 'Română',
       voice: 'Jesica',
-      conversations: Math.floor((stats?.total_conversations || 0) * 0.35)
+      conversations: Math.floor((stats?.total_conversations || 0) * 0.35),
+      widgetCode: `<elevenlabs-convai agent-id="VfDh7pN17jYNykYNZrJb"></elevenlabs-convai>
+<script src="https://elevenlabs.io/convai-widget/legacy.js" async type="text/javascript"></script>`
     },
     {
       id: 'agent_01jws2mjsjeh398vfnfd6k5hq0',
@@ -45,13 +50,23 @@ const AccountAgents = () => {
       status: 'active',
       language: 'Română',
       voice: 'Ana',
-      conversations: Math.floor((stats?.total_conversations || 0) * 0.25)
+      conversations: Math.floor((stats?.total_conversations || 0) * 0.25),
+      widgetCode: `<elevenlabs-convai agent-id="agent_01jws2mjsjeh398vfnfd6k5hq0"></elevenlabs-convai>
+<script src="https://elevenlabs.io/convai-widget/legacy.js" async type="text/javascript"></script>`
     }
   ];
 
   const handleTestAgent = (agent: any) => {
     setSelectedAgent(agent);
     setIsTestModalOpen(true);
+  };
+
+  const copyWidgetCode = (widgetCode: string, agentName: string) => {
+    navigator.clipboard.writeText(widgetCode);
+    toast({
+      title: "Cod copiat!",
+      description: `Codul widget pentru ${agentName} a fost copiat în clipboard.`,
+    });
   };
 
   return (
@@ -108,6 +123,24 @@ const AccountAgents = () => {
                   </div>
                 </div>
 
+                <div className="border-t pt-4 mb-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Widget pentru Site-ul Tău</h4>
+                  <div className="bg-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
+                    <code className="text-gray-800">
+                      {agent.widgetCode}
+                    </code>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 w-full"
+                    onClick={() => copyWidgetCode(agent.widgetCode, agent.name)}
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copiază Codul Widget
+                  </Button>
+                </div>
+
                 <div className="flex space-x-2">
                   <Button 
                     variant="outline" 
@@ -128,6 +161,20 @@ const AccountAgents = () => {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="text-blue-900 font-semibold mb-2 flex items-center">
+            <ExternalLink className="w-5 h-5 mr-2" />
+            Integrare Widget pe Site-ul Tău
+          </h3>
+          <p className="text-blue-800 text-sm mb-3">
+            Copiază codul widget de mai sus și adaugă-l pe site-ul tău pentru a permite vizitatorilor să vorbească cu asistenții AI. 
+            Creditele se vor deduce automat din contul tău.
+          </p>
+          <div className="text-blue-700 text-sm">
+            <strong>Important:</strong> 1 minut de convorbire = 1.000 credite deduse din contul tău.
+          </div>
         </div>
       </div>
 
