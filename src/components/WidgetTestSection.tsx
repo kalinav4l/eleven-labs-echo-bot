@@ -13,21 +13,85 @@ const WidgetTestSection: React.FC<WidgetTestSectionProps> = ({ agent }) => {
   const [isWidgetVisible, setIsWidgetVisible] = useState(false);
   const [isBoreaVoiceVisible, setIsBoreaVoiceVisible] = useState(false);
 
-  // Load ElevenLabs script for Borea Voice Widget
+  // Load ElevenLabs script for Borea Voice Widget and apply custom styling
   useEffect(() => {
     if (isBoreaVoiceVisible) {
       const script = document.createElement('script');
       script.src = 'https://unpkg.com/@elevenlabs/convai-widget-embed';
       script.async = true;
       script.type = 'text/javascript';
+      
+      script.onload = () => {
+        // Apply custom styling to override ElevenLabs branding with Borea
+        const style = document.createElement('style');
+        style.textContent = `
+          elevenlabs-convai {
+            --elevenlabs-primary-color: #000000 !important;
+            --elevenlabs-background-color: #ffffff !important;
+          }
+          
+          elevenlabs-convai .widget-button {
+            background-color: #000000 !important;
+            border-color: #000000 !important;
+          }
+          
+          elevenlabs-convai .widget-button:hover {
+            background-color: #333333 !important;
+          }
+          
+          /* Override logo */
+          elevenlabs-convai img[src*="elevenlabs"] {
+            content: url('https://ik.imagekit.io/2eeuoo797/Group%2064.png?updatedAt=1748951277306') !important;
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 50% !important;
+          }
+          
+          /* Change text content */
+          elevenlabs-convai .call-text::before {
+            content: "Davai" !important;
+          }
+          
+          elevenlabs-convai .call-text {
+            font-size: 0 !important;
+          }
+          
+          /* Hide ElevenLabs branding */
+          elevenlabs-convai [class*="elevenlabs"],
+          elevenlabs-convai [class*="ElevenLabs"] {
+            display: none !important;
+          }
+          
+          /* Custom Borea styling */
+          elevenlabs-convai::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 1000;
+          }
+        `;
+        document.head.appendChild(style);
+      };
+      
       document.head.appendChild(script);
 
       return () => {
-        // Cleanup script when component unmounts or widget is hidden
+        // Cleanup script and styles when component unmounts or widget is hidden
         const existingScript = document.querySelector('script[src="https://unpkg.com/@elevenlabs/convai-widget-embed"]');
         if (existingScript) {
           document.head.removeChild(existingScript);
         }
+        
+        const customStyles = document.querySelectorAll('style');
+        customStyles.forEach(style => {
+          if (style.textContent?.includes('elevenlabs-convai')) {
+            document.head.removeChild(style);
+          }
+        });
       };
     }
   }, [isBoreaVoiceVisible]);
