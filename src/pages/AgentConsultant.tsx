@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -149,42 +148,18 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          conversation_config: {
-            asr: {
-              quality: "high",
-              provider: "elevenlabs",
-              user_input_audio_format: "pcm_16000",
-              keywords: []
-            },
-            language_presets: {
-              [agentLanguage]: {
-                enabled: true
-              }
-            },
-            turn: {
-              turn_timeout: 7,
-              silence_end_call_timeout: -1,
-              mode: "turn"
-            },
-            tts: {
-              model_id: "eleven_turbo_v2_5",
-              voice_id: selectedVoice
-            },
-            conversation: {
-              text_only: false,
-              max_duration_seconds: 600,
-              client_events: ["conversation_started"]
-            },
-            agent: {
-              prompt: {
-                prompt: agentPrompt
+          "conversation_config": {
+            "asr": {},
+            "turn": {},
+            "tts": {},
+            "conversation": {},
+            "agent": {
+              "prompt": {
+                "prompt": agentPrompt
               }
             }
           },
-          platform_settings: {
-            call_limits: {}
-          },
-          name: agentName
+          "name": agentName
         })
       });
 
