@@ -22,8 +22,8 @@ const Account = () => {
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-1/4 mb-2"></div>
             <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {[1, 2, 3, 4].map((i) => (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
                 <div key={i} className="h-32 bg-gray-200 rounded"></div>
               ))}
             </div>
@@ -92,7 +92,7 @@ const Account = () => {
           </Card>
         </div>
 
-        {/* Two-column layout for Recent Activity and Configured Agents */}
+        {/* Recent Activity and Agents */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="bg-white border-gray-200">
             <CardHeader>
@@ -132,31 +132,25 @@ const Account = () => {
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 bg-gray-100 rounded">
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 bg-black rounded-full mr-3"></div>
-                    <div>
-                      <p className="text-black font-medium">Borea</p>
-                      <p className="text-gray-600 text-sm">Activ • Agent Conversational</p>
-                    </div>
+                  <div>
+                    <p className="text-black font-medium">Borea</p>
+                    <p className="text-gray-600 text-sm">Activ • Agent Conversational</p>
                   </div>
+                  <div className="w-3 h-3 bg-black rounded-full"></div>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-100 rounded">
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 bg-black rounded-full mr-3"></div>
-                    <div>
-                      <p className="text-black font-medium">Jesica</p>
-                      <p className="text-gray-600 text-sm">Activ • Assistant Personal</p>
-                    </div>
+                  <div>
+                    <p className="text-black font-medium">Jesica</p>
+                    <p className="text-gray-600 text-sm">Activ • Assistant Personal</p>
                   </div>
+                  <div className="w-3 h-3 bg-black rounded-full"></div>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-100 rounded">
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 bg-black rounded-full mr-3"></div>
-                    <div>
-                      <p className="text-black font-medium">Ana</p>
-                      <p className="text-gray-600 text-sm">Activ • Support Client</p>
-                    </div>
+                  <div>
+                    <p className="text-black font-medium">Ana</p>
+                    <p className="text-gray-600 text-sm">Activ • Support Client</p>
                   </div>
+                  <div className="w-3 h-3 bg-black rounded-full"></div>
                 </div>
               </div>
             </CardContent>
