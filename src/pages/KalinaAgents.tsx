@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -120,7 +119,7 @@ const KalinaAgents = () => {
   const copyEmbedCode = (agentId: string, agentName: string) => {
     const embedCode = `<!-- Kalina AI Widget pentru ${agentName} -->
 <kalina-chat-widget agent-id="${agentId}"></kalina-chat-widget>
-<script src="https://pwfczzxwjfxomqzhhwvj.supabase.co/functions/v1/kalina-widget" async defer></script>`;
+<script src="https://pwfczzxwjfxomqzhhwvj.supabase.co/storage/v1/object/public/widgets/kalina-widget.js" async defer></script>`;
 
     navigator.clipboard.writeText(embedCode);
     toast({
@@ -236,7 +235,7 @@ const KalinaAgents = () => {
                       <script>
                         if (!window.kalinaWidgetLoaded) {
                           const script = document.createElement('script');
-                          script.src = 'https://pwfczzxwjfxomqzhhwvj.supabase.co/functions/v1/kalina-widget';
+                          script.src = 'https://pwfczzxwjfxomqzhhwvj.supabase.co/storage/v1/object/public/widgets/kalina-widget.js';
                           script.async = true;
                           script.defer = true;
                           document.head.appendChild(script);
@@ -377,7 +376,7 @@ const KalinaAgents = () => {
                     <div className="bg-white p-2 rounded border text-xs font-mono text-gray-600 overflow-x-auto">
 {`<!-- Kalina AI Widget pentru ${agent.name} -->
 <kalina-chat-widget agent-id="${agent.agent_id}"></kalina-chat-widget>
-<script src="https://pwfczzxwjfxomqzhhwvj.supabase.co/functions/v1/kalina-widget" async defer></script>`}
+<script src="https://pwfczzxwjfxomqzhhwvj.supabase.co/storage/v1/object/public/widgets/kalina-widget.js" async defer></script>`}
                     </div>
                   </div>
                   
