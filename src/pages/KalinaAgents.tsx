@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Bot, Plus, Copy, Settings, Code } from 'lucide-react';
+import { Bot, Plus, Copy, Settings, Code, Play, TestTube } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
@@ -94,7 +94,7 @@ const KalinaAgents = () => {
       if (error) throw error;
 
       toast({
-        title: "Success!",
+        title: "Succes!",
         description: `Agentul "${formData.name}" a fost creat cu succes.`
       });
 
@@ -119,7 +119,7 @@ const KalinaAgents = () => {
 
   const copyEmbedCode = (agentId: string, agentName: string) => {
     const embedCode = `<!-- Kalina AI Widget pentru ${agentName} -->
-<kalina-widget agent-id="${agentId}"></kalina-widget>
+<kalina-chat-widget agent-id="${agentId}"></kalina-chat-widget>
 <script src="https://pwfczzxwjfxomqzhhwvj.supabase.co/functions/v1/kalina-widget" async defer></script>`;
 
     navigator.clipboard.writeText(embedCode);
@@ -127,6 +127,40 @@ const KalinaAgents = () => {
       title: "Cod copiat!",
       description: `Codul pentru ${agentName} a fost copiat în clipboard.`
     });
+  };
+
+  const createTestAgent = async () => {
+    try {
+      const testAgentId = `kalina_demo_${Date.now()}`;
+      
+      const { error } = await supabase
+        .from('kalina_agents')
+        .insert([{
+          agent_id: testAgentId,
+          user_id: user.id,
+          name: 'Demo Kalina',
+          description: 'Agent demonstrativ pentru testare',
+          system_prompt: 'Tu ești Demo Kalina, un asistent AI demonstrativ. Ești foarte prietenos și răspunzi în română. Explici că ești o demonstrație a tehnologiei Kalina AI și îți place să ajuți utilizatorii să înțeleagă cum funcționezi.',
+          voice_id: '21m00Tcm4TlvDq8ikWAM',
+          provider: 'custom'
+        }]);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Agent demo creat!",
+        description: "Agentul demonstrativ a fost adăugat în lista ta."
+      });
+      
+      fetchAgents();
+    } catch (error) {
+      console.error('Error creating test agent:', error);
+      toast({
+        title: "Eroare",
+        description: "Nu am putut crea agentul demo.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (loading) {
@@ -152,16 +186,70 @@ const KalinaAgents = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-black mb-2">Kalina AI Agents</h1>
-            <p className="text-gray-600">Creează și gestionează agenții tăi AI personalizați</p>
+            <p className="text-gray-600">Creează și gestionează agenții tăi AI conversaționali</p>
           </div>
-          <Button 
-            onClick={() => setShowCreateForm(true)}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Agent Nou
-          </Button>
+          <div className="flex gap-3">
+            <Button 
+              onClick={createTestAgent}
+              variant="outline"
+              className="border-blue-200 text-blue-700 hover:bg-blue-50"
+            >
+              <TestTube className="w-4 h-4 mr-2" />
+              Agent Demo
+            </Button>
+            <Button 
+              onClick={() => setShowCreateForm(true)}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Agent Nou
+            </Button>
+          </div>
         </div>
+
+        {/* Demo Section */}
+        {agents.length > 0 && (
+          <Card className="mb-8 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="text-blue-800 flex items-center">
+                <Play className="w-5 h-5 mr-2" />
+                Demo Live Widget
+              </CardTitle>
+              <p className="text-blue-600 text-sm">
+                Testează widget-ul direct aici! Folosește primul agent din lista ta.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-white p-6 rounded-lg border border-blue-200 relative min-h-[200px]">
+                <p className="text-gray-700 mb-4">
+                  Aceasta este o simulare a unei pagini web. Widget-ul Kalina va apărea în colțul din dreapta jos.
+                </p>
+                <div className="text-sm text-gray-500">
+                  <code>Agent ID în folosire: {agents[0]?.agent_id}</code>
+                </div>
+                
+                {/* Widget Integration */}
+                <div 
+                  dangerouslySetInnerHTML={{
+                    __html: `
+                      <kalina-chat-widget agent-id="${agents[0]?.agent_id}"></kalina-chat-widget>
+                      <script>
+                        if (!window.kalinaWidgetLoaded) {
+                          const script = document.createElement('script');
+                          script.src = 'https://pwfczzxwjfxomqzhhwvj.supabase.co/functions/v1/kalina-widget';
+                          script.async = true;
+                          script.defer = true;
+                          document.head.appendChild(script);
+                          window.kalinaWidgetLoaded = true;
+                        }
+                      </script>
+                    `
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Create Agent Form */}
         {showCreateForm && (
@@ -275,7 +363,7 @@ const KalinaAgents = () => {
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-blue-800 flex items-center">
                         <Code className="w-4 h-4 mr-1" />
-                        Cod Embed
+                        Cod de Integrare
                       </span>
                       <Button
                         size="sm"
@@ -288,7 +376,7 @@ const KalinaAgents = () => {
                     </div>
                     <div className="bg-white p-2 rounded border text-xs font-mono text-gray-600 overflow-x-auto">
 {`<!-- Kalina AI Widget pentru ${agent.name} -->
-<kalina-widget agent-id="${agent.agent_id}"></kalina-widget>
+<kalina-chat-widget agent-id="${agent.agent_id}"></kalina-chat-widget>
 <script src="https://pwfczzxwjfxomqzhhwvj.supabase.co/functions/v1/kalina-widget" async defer></script>`}
                     </div>
                   </div>
@@ -310,15 +398,25 @@ const KalinaAgents = () => {
               Niciun agent creat încă
             </h3>
             <p className="text-gray-600 mb-4">
-              Creează primul tău agent Kalina AI pentru a începe.
+              Creează primul tău agent Kalina AI pentru a începe să oferi asistență conversațională pe site-urile tale.
             </p>
-            <Button 
-              onClick={() => setShowCreateForm(true)}
-              className="bg-purple-600 hover:bg-purple-700 text-white"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Creează Primul Agent
-            </Button>
+            <div className="flex justify-center gap-3">
+              <Button 
+                onClick={createTestAgent}
+                variant="outline"
+                className="border-blue-200 text-blue-700 hover:bg-blue-50"
+              >
+                <TestTube className="w-4 h-4 mr-2" />
+                Creează Agent Demo
+              </Button>
+              <Button 
+                onClick={() => setShowCreateForm(true)}
+                className="bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Creează Primul Agent
+              </Button>
+            </div>
           </div>
         )}
       </div>
