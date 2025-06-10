@@ -28,6 +28,7 @@ const AgentConsultant = () => {
   
   // Phone call section
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [customAgentId, setCustomAgentId] = useState('');
   const [isInitiatingCall, setIsInitiatingCall] = useState(false);
 
   if (!user) {
@@ -207,10 +208,12 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
   };
 
   const initiateCall = async () => {
-    if (!createdAgentId || !phoneNumber.trim()) {
+    const agentIdToUse = customAgentId.trim() || createdAgentId;
+    
+    if (!agentIdToUse || !phoneNumber.trim()) {
       toast({
         title: "Eroare",
-        description: "Te rog creează mai întâi un agent și introdu numărul de telefon",
+        description: "Te rog introdu ID-ul agentului și numărul de telefon",
         variant: "destructive"
       });
       return;
@@ -225,7 +228,7 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          agent_id: createdAgentId,
+          agent_id: agentIdToUse,
           agent_phone_number_id: "phnum_01jxaeyg3feh3tmx39d4ky63rd",
           to_number: phoneNumber
         })
@@ -417,6 +420,19 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
+                <Label htmlFor="custom-agent-id">ID Agent (opțional)</Label>
+                <Input
+                  id="custom-agent-id"
+                  value={customAgentId}
+                  onChange={(e) => setCustomAgentId(e.target.value)}
+                  placeholder="agent_01xxx... (sau folosește agentul creat mai sus)"
+                  className="border-gray-300"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Dacă nu completezi, se va folosi agentul creat în secțiunea de mai sus
+                </p>
+              </div>
+              <div>
                 <Label htmlFor="phone-number">Numărul de Telefon</Label>
                 <Input
                   id="phone-number"
@@ -428,7 +444,7 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
               </div>
               <Button 
                 onClick={initiateCall}
-                disabled={isInitiatingCall || !createdAgentId}
+                disabled={isInitiatingCall || (!createdAgentId && !customAgentId)}
                 className="bg-black hover:bg-gray-800 text-white"
               >
                 {isInitiatingCall && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
