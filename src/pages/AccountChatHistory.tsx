@@ -11,15 +11,17 @@ import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Conversation {
-  conversation_id: string;
+  id: string;
+  conversation_id?: string;
   agent_id: string;
   agent_name?: string;
   user_id: string;
   created_at: string;
   updated_at: string;
-  status: string;
   duration_minutes?: number;
   cost_usd?: number;
+  message_count?: number;
+  status?: string;
 }
 
 const AccountChatHistory = () => {
@@ -106,7 +108,7 @@ const AccountChatHistory = () => {
       const { error } = await supabase
         .from('conversations')
         .delete()
-        .eq('conversation_id', conversationId)
+        .eq('id', conversationId)
         .eq('user_id', user.id);
 
       if (error) {
@@ -114,10 +116,10 @@ const AccountChatHistory = () => {
       }
 
       // Remove from local state
-      setConversations(prev => prev.filter(conv => conv.conversation_id !== conversationId));
+      setConversations(prev => prev.filter(conv => conv.id !== conversationId));
       
       // Recalculate total spent
-      const updatedConversations = conversations.filter(conv => conv.conversation_id !== conversationId);
+      const updatedConversations = conversations.filter(conv => conv.id !== conversationId);
       const total = updatedConversations.reduce((sum, conv) => sum + (conv.cost_usd || 0), 0);
       setTotalSpent(total);
       
@@ -204,7 +206,7 @@ const AccountChatHistory = () => {
   };
 
   const filteredConversations = conversations.filter(conversation =>
-    conversation.conversation_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    conversation.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     conversation.agent_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -270,7 +272,7 @@ const AccountChatHistory = () => {
 
         <div className="space-y-4">
           {filteredConversations.map((conversation) => (
-            <Card key={conversation.conversation_id} className="bg-white border-gray-200 hover:bg-gray-50 transition-colors">
+            <Card key={conversation.id} className="bg-white border-gray-200 hover:bg-gray-50 transition-colors">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
@@ -302,7 +304,7 @@ const AccountChatHistory = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => viewConversationDetails(conversation.conversation_id)}
+                      onClick={() => viewConversationDetails(conversation.conversation_id || conversation.id)}
                       className="text-gray-600 hover:text-blue-600 hover:bg-blue-50"
                       title="Vezi detalii"
                     >
@@ -311,7 +313,7 @@ const AccountChatHistory = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => downloadConversationAudio(conversation.conversation_id)}
+                      onClick={() => downloadConversationAudio(conversation.conversation_id || conversation.id)}
                       className="text-gray-600 hover:text-green-600 hover:bg-green-50"
                       title="Descarcă audio"
                     >
@@ -320,7 +322,7 @@ const AccountChatHistory = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => sendFeedback(conversation.conversation_id, 'like')}
+                      onClick={() => sendFeedback(conversation.conversation_id || conversation.id, 'like')}
                       className="text-gray-600 hover:text-green-600 hover:bg-green-50"
                       title="Like"
                     >
@@ -329,7 +331,7 @@ const AccountChatHistory = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => sendFeedback(conversation.conversation_id, 'dislike')}
+                      onClick={() => sendFeedback(conversation.conversation_id || conversation.id, 'dislike')}
                       className="text-gray-600 hover:text-red-600 hover:bg-red-50"
                       title="Dislike"
                     >
@@ -338,7 +340,7 @@ const AccountChatHistory = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => deleteConversation(conversation.conversation_id)}
+                      onClick={() => deleteConversation(conversation.id)}
                       className="text-gray-600 hover:text-red-600 hover:bg-red-50"
                       title="Șterge"
                     >
