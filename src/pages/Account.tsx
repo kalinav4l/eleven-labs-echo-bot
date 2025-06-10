@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Activity, Bot, MessageSquare, Phone, Clock } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useUserStats } from '@/hooks/useUserStats';
+import MyChatWidget from '@/components/MyChatWidget';
 
 const Account = () => {
   const { user } = useAuth();
@@ -157,6 +158,8 @@ const Account = () => {
           </Card>
         </div>
       </div>
+
+      <MyChatWidget />
     </DashboardLayout>
   );
 };
