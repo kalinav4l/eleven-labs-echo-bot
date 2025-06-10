@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -8,7 +7,8 @@ import {
   Settings, 
   LogOut, 
   CreditCard,
-  Sparkles
+  Sparkles,
+  Volume2
 } from 'lucide-react';
 import { useAuth } from '@/components/AuthContext';
 import { cn } from '@/lib/utils';
@@ -26,6 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/account' },
     { icon: Bot, label: 'ChatWidget', path: '/account/agents' },
     { icon: Sparkles, label: 'Kalina Agents', path: '/account/kalina-agents' },
+    { icon: Volume2, label: 'Voices', path: '/account/voices' },
     { icon: MessageSquare, label: 'Istoric Chat', path: '/account/chat-history' },
     { icon: CreditCard, label: 'Prețuri', path: '/pricing' },
     { icon: Settings, label: 'Setări', path: '/account/settings' },

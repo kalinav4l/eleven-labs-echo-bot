@@ -14,6 +14,7 @@ import AccountSettings from "./pages/AccountSettings";
 import Info from "./pages/Info";
 import Pricing from "./pages/Pricing";
 import Calls from "./pages/Calls";
+import Voices from "./pages/Voices";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ function App() {
               <Route path="/account/kalina-agents" element={<KalinaAgents />} />
               <Route path="/account/chat-history" element={<AccountChatHistory />} />
               <Route path="/account/settings" element={<AccountSettings />} />
+              <Route path="/account/voices" element={<Voices />} />
               <Route path="/info" element={<Info />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/calls" element={<Calls />} />
