@@ -11,7 +11,15 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-interface KalinaAgent {
+interface ElevenLabsAgent {
+  agent_id: string;
+  name: string;
+  conversation_config?: any;
+  platform_settings?: any;
+  created_at?: string;
+}
+
+interface UserAgent {
   id: string;
   agent_id: string;
   elevenlabs_agent_id: string;
@@ -21,41 +29,75 @@ interface KalinaAgent {
   user_id: string;
 }
 
+const ELEVENLABS_API_KEY = "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873";
+
 const KalinaAgents = () => {
   const { user } = useAuth();
-  const [agents, setAgents] = useState<KalinaAgent[]>([]);
+  const [agents, setAgents] = useState<UserAgent[]>([]);
+  const [elevenLabsAgents, setElevenLabsAgents] = useState<ElevenLabsAgent[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<KalinaAgent | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<UserAgent | null>(null);
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [agentName, setAgentName] = useState('');
+  const [showTestModal, setShowTestModal] = useState(false);
+  const [testingAgent, setTestingAgent] = useState<UserAgent | null>(null);
+  const [calculating, setCalculating] = useState<string | null>(null);
 
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
   useEffect(() => {
-    fetchAgents();
+    fetchUserAgents();
   }, [user]);
 
-  const fetchAgents = async () => {
+  // 1. Listarea Agenților - GET /v1/convai/agents
+  const fetchElevenLabsAgents = async (): Promise<ElevenLabsAgent[]> => {
     try {
-      // Încărcăm agenții din Supabase pentru utilizatorul curent
+      const response = await fetch("https://api.elevenlabs.io/v1/convai/agents", {
+        method: "GET",
+        headers: { "Xi-Api-Key": ELEVENLABS_API_KEY },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('ElevenLabs agents:', data);
+      return data.agents || [];
+    } catch (error) {
+      console.error('Error fetching ElevenLabs agents:', error);
+      return [];
+    }
+  };
+
+  const fetchUserAgents = async () => {
+    try {
+      setLoading(true);
+      
+      // Încărcăm agenții utilizatorului din Supabase
       const { data: supabaseAgents, error } = await supabase
         .from('kalina_agents')
         .select('*')
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Error fetching agents from Supabase:', error);
+        console.error('Error fetching user agents from Supabase:', error);
         setAgents([]);
       } else {
         setAgents(supabaseAgents || []);
       }
+
+      // Încărcăm și agenții din ElevenLabs pentru referință
+      const elevenLabsData = await fetchElevenLabsAgents();
+      setElevenLabsAgents(elevenLabsData);
+      
     } catch (error) {
       console.error('Error fetching agents:', error);
       setAgents([]);
@@ -64,6 +106,7 @@ const KalinaAgents = () => {
     }
   };
 
+  // 2. Crearea unui Agent Nou - POST /v1/convai/agents/create
   const createAgent = async () => {
     if (!agentName.trim()) {
       toast({
@@ -80,7 +123,7 @@ const KalinaAgents = () => {
       const response = await fetch("https://api.elevenlabs.io/v1/convai/agents/create", {
         method: "POST",
         headers: {
-          "Xi-Api-Key": "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873",
+          "Xi-Api-Key": ELEVENLABS_API_KEY,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
@@ -99,7 +142,7 @@ const KalinaAgents = () => {
       const elevenlabsAgent = await response.json();
       console.log('ElevenLabs agent created:', elevenlabsAgent);
 
-      // Salvăm agentul în Supabase
+      // Salvăm agentul în Supabase pentru utilizatorul curent
       const { data: supabaseAgent, error: supabaseError } = await supabase
         .from('kalina_agents')
         .insert({
@@ -124,7 +167,7 @@ const KalinaAgents = () => {
 
       setAgentName('');
       setShowCreateModal(false);
-      fetchAgents();
+      fetchUserAgents();
       
     } catch (error) {
       console.error('Error creating agent:', error);
@@ -138,6 +181,28 @@ const KalinaAgents = () => {
     }
   };
 
+  // 3. Obținerea Detaliilor unui Agent Specific - GET /v1/convai/agents/:agent_id
+  const getAgentDetails = async (elevenlabsAgentId: string) => {
+    try {
+      const response = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${elevenlabsAgentId}`, {
+        method: "GET",
+        headers: { "Xi-Api-Key": ELEVENLABS_API_KEY },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const agentDetails = await response.json();
+      console.log('Agent details:', agentDetails);
+      return agentDetails;
+    } catch (error) {
+      console.error('Error fetching agent details:', error);
+      throw error;
+    }
+  };
+
+  // 4. Actualizarea unui Agent Existent - PATCH /v1/convai/agents/:agent_id
   const updateAgent = async () => {
     if (!selectedAgent || !agentName.trim()) {
       return;
@@ -149,7 +214,7 @@ const KalinaAgents = () => {
       const response = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${selectedAgent.elevenlabs_agent_id}`, {
         method: "PATCH",
         headers: {
-          "Xi-Api-Key": "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873",
+          "Xi-Api-Key": ELEVENLABS_API_KEY,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
@@ -168,7 +233,8 @@ const KalinaAgents = () => {
       const { error: supabaseError } = await supabase
         .from('kalina_agents')
         .update({ name: agentName })
-        .eq('id', selectedAgent.id);
+        .eq('id', selectedAgent.id)
+        .eq('user_id', user.id); // Asigurăm că updatăm doar agenții utilizatorului
 
       if (supabaseError) {
         console.error('Error updating agent in Supabase:', supabaseError);
@@ -183,7 +249,7 @@ const KalinaAgents = () => {
       setShowEditModal(false);
       setSelectedAgent(null);
       setAgentName('');
-      fetchAgents();
+      fetchUserAgents();
       
     } catch (error) {
       console.error('Error updating agent:', error);
@@ -197,23 +263,29 @@ const KalinaAgents = () => {
     }
   };
 
-  const deleteAgent = async (agent: KalinaAgent) => {
+  // 5. Ștergerea unui Agent - DELETE /v1/convai/agents/:agent_id
+  const deleteAgent = async (agent: UserAgent) => {
+    if (!window.confirm(`Ești sigur că vrei să ștergi agentul "${agent.name}"?`)) {
+      return;
+    }
+
     setDeleting(agent.id);
     try {
       // Ștergem agentul din ElevenLabs
       const response = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${agent.elevenlabs_agent_id}`, {
         method: "DELETE",
         headers: {
-          "Xi-Api-Key": "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873"
+          "Xi-Api-Key": ELEVENLABS_API_KEY
         },
       });
 
       if (response.ok) {
-        // Ștergem agentul din Supabase
+        // Ștergem agentul din Supabase (doar pentru utilizatorul curent)
         const { error: supabaseError } = await supabase
           .from('kalina_agents')
           .delete()
-          .eq('id', agent.id);
+          .eq('id', agent.id)
+          .eq('user_id', user.id);
 
         if (supabaseError) {
           console.error('Error deleting agent from Supabase:', supabaseError);
@@ -224,7 +296,7 @@ const KalinaAgents = () => {
           title: "Succes!",
           description: "Agentul a fost șters cu succes."
         });
-        fetchAgents();
+        fetchUserAgents();
       } else {
         throw new Error('Failed to delete agent from ElevenLabs');
       }
@@ -240,12 +312,13 @@ const KalinaAgents = () => {
     }
   };
 
+  // 6. Simularea unei Conversații - POST /v1/convai/agents/:agent_id/simulate-conversation
   const simulateConversation = async (elevenlabsAgentId: string) => {
     try {
       const response = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${elevenlabsAgentId}/simulate-conversation`, {
         method: "POST",
         headers: {
-          "Xi-Api-Key": "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873",
+          "Xi-Api-Key": ELEVENLABS_API_KEY,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({}),
@@ -268,12 +341,14 @@ const KalinaAgents = () => {
     }
   };
 
+  // 7. Calcularea Utilizării Estimate - POST /v1/convai/agent/:agent_id/llm-usage/calculate
   const calculateLLMUsage = async (elevenlabsAgentId: string) => {
+    setCalculating(elevenlabsAgentId);
     try {
       const response = await fetch(`https://api.elevenlabs.io/v1/convai/agent/${elevenlabsAgentId}/llm-usage/calculate`, {
         method: "POST",
         headers: {
-          "Xi-Api-Key": "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873",
+          "Xi-Api-Key": ELEVENLABS_API_KEY,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({}),
@@ -284,7 +359,7 @@ const KalinaAgents = () => {
       
       toast({
         title: "Calcul finalizat",
-        description: "Utilizarea LLM a fost calculată."
+        description: `Utilizarea LLM: ${JSON.stringify(body, null, 2)}`
       });
     } catch (error) {
       console.error('Error calculating LLM usage:', error);
@@ -293,13 +368,30 @@ const KalinaAgents = () => {
         description: "Nu am putut calcula utilizarea LLM.",
         variant: "destructive"
       });
+    } finally {
+      setCalculating(null);
     }
   };
 
-  const handleEditAgent = (agent: KalinaAgent) => {
-    setSelectedAgent(agent);
-    setAgentName(agent.name);
-    setShowEditModal(true);
+  const handleEditAgent = async (agent: UserAgent) => {
+    try {
+      // Încărcăm detaliile complete ale agentului din ElevenLabs
+      const agentDetails = await getAgentDetails(agent.elevenlabs_agent_id);
+      setSelectedAgent(agent);
+      setAgentName(agentDetails.name || agent.name);
+      setShowEditModal(true);
+    } catch (error) {
+      toast({
+        title: "Eroare",
+        description: "Nu am putut încărca detaliile agentului.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleTestAgent = (agent: UserAgent) => {
+    setTestingAgent(agent);
+    setShowTestModal(true);
   };
 
   const filteredAgents = agents.filter(agent =>
@@ -372,7 +464,7 @@ const KalinaAgents = () => {
         <div className="mb-6">
           <Button variant="outline" size="sm" className="border-gray-300 text-gray-700">
             <Plus className="w-4 h-4 mr-2" />
-            Creator
+            Creator: {user.email}
           </Button>
         </div>
 
@@ -384,7 +476,7 @@ const KalinaAgents = () => {
                 <TableHead className="text-gray-700 font-medium">Name</TableHead>
                 <TableHead className="text-gray-700 font-medium">Created by</TableHead>
                 <TableHead className="text-gray-700 font-medium">Created at</TableHead>
-                <TableHead className="w-32"></TableHead>
+                <TableHead className="w-48">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -403,9 +495,9 @@ const KalinaAgents = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => simulateConversation(agent.elevenlabs_agent_id)}
+                        onClick={() => handleTestAgent(agent)}
                         className="text-gray-600 hover:text-green-600 hover:bg-green-50"
-                        title="Simulate Conversation"
+                        title="Test Agent"
                       >
                         <Play className="w-4 h-4" />
                       </Button>
@@ -413,6 +505,7 @@ const KalinaAgents = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => calculateLLMUsage(agent.elevenlabs_agent_id)}
+                        disabled={calculating === agent.elevenlabs_agent_id}
                         className="text-gray-600 hover:text-blue-600 hover:bg-blue-50"
                         title="Calculate LLM Usage"
                       >
@@ -449,7 +542,7 @@ const KalinaAgents = () => {
 
           {filteredAgents.length === 0 && !loading && (
             <div className="p-8 text-center">
-              <p className="text-gray-500">No agents found</p>
+              <p className="text-gray-500">No agents found for your account</p>
             </div>
           )}
         </div>
@@ -546,6 +639,48 @@ const KalinaAgents = () => {
                   className="bg-black hover:bg-gray-800 text-white"
                 >
                   {updating ? 'Updating...' : 'Update agent'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Test Agent Modal */}
+        {showTestModal && testingAgent && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-black">Test Agent: {testingAgent.name}</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowTestModal(false)}
+                  className="text-gray-500 hover:text-black"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                <p className="text-gray-600 mb-4">
+                  Test your agent with simulated conversations. Click the button below to start a simulation.
+                </p>
+                <Button
+                  onClick={() => simulateConversation(testingAgent.elevenlabs_agent_id)}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  Start Simulation
+                </Button>
+              </div>
+
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowTestModal(false)}
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  Close
                 </Button>
               </div>
             </div>
