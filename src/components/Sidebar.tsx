@@ -1,106 +1,115 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Bot, 
-  MessageSquare, 
-  Settings, 
-  LogOut, 
-  CreditCard,
-  Sparkles,
-  Volume2
-} from 'lucide-react';
-import { useAuth } from '@/components/AuthContext';
-import { cn } from '@/lib/utils';
+import { User, Settings, Phone, Volume2, Bot, MessageSquare } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
-  const { signOut } = useAuth();
+const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const location = useLocation();
 
-  const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/account' },
-    { icon: Bot, label: 'ChatWidget', path: '/account/agents' },
-    { icon: Sparkles, label: 'Kalina Agents', path: '/account/kalina-agents' },
-    { icon: Volume2, label: 'Voices', path: '/account/voices' },
-    { icon: MessageSquare, label: 'Istoric Chat', path: '/account/chat-history' },
-    { icon: CreditCard, label: 'Prețuri', path: '/pricing' },
-    { icon: Settings, label: 'Setări', path: '/account/settings' },
-  ];
-
-  const handleSignOut = async () => {
-    await signOut();
-    onClose();
-  };
-
   return (
-    <>
-      {/* Overlay */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+    <div
+      className={`fixed inset-y-0 left-0 z-40 w-64 bg-sidebar border-r border-sidebar-border transition-transform duration-300 transform ${
+        isOpen ? 'translate-x-0' : '-translate-x-full'
+      } lg:translate-x-0 lg:static`}
+    >
+      <div className="flex items-center justify-between px-4 py-3">
+        <Link to="/account" className="flex items-center text-xl font-bold text-sidebar-foreground">
+          <Avatar className="mr-2 w-8 h-8">
+            <AvatarImage src="https://avatars.githubusercontent.com/u/8898634?v=4" alt="@shadcn" />
+            <AvatarFallback>SC</AvatarFallback>
+          </Avatar>
+          Kalina AI
+        </Link>
+        <button
           onClick={onClose}
-        />
-      )}
-      
-      {/* Sidebar */}
-      <div className={cn(
-        "fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 z-50 transform transition-transform duration-300 ease-in-out",
-        isOpen ? "translate-x-0" : "-translate-x-full",
-        "lg:translate-x-0 lg:static lg:z-auto"
-      )}>
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-black">Kalina AI</h2>
-            <p className="text-sm text-gray-600">Dashboard</p>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 p-4">
-            <ul className="space-y-2">
-              {menuItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.path;
-                
-                return (
-                  <li key={item.path}>
-                    <Link
-                      to={item.path}
-                      onClick={onClose}
-                      className={cn(
-                        "flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors",
-                        isActive
-                          ? "bg-black text-white"
-                          : "text-gray-700 hover:bg-gray-100"
-                      )}
-                    >
-                      <Icon className="w-5 h-5 mr-3" />
-                      {item.label}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-
-          {/* Footer */}
-          <div className="p-4 border-t border-gray-200">
-            <button
-              onClick={handleSignOut}
-              className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <LogOut className="w-5 h-5 mr-3" />
-              Deconectare
-            </button>
-          </div>
-        </div>
+          className="lg:hidden text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+        >
+          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
-    </>
+          <div className="px-3 py-2">
+            <div className="space-y-1">
+              <Link
+                to="/account"
+                className={`${
+                  location.pathname === '/account' 
+                    ? 'bg-orange-50 text-orange-600 border-r-2 border-orange-600' 
+                    : 'text-gray-600 hover:bg-gray-50'
+                } group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors`}
+              >
+                <User className="mr-3 h-6 w-6" />
+                Acasă
+              </Link>
+              
+              <Link
+                to="/account/kalina-agents"
+                className={`${
+                  location.pathname === '/account/kalina-agents' 
+                    ? 'bg-orange-50 text-orange-600 border-r-2 border-orange-600' 
+                    : 'text-gray-600 hover:bg-gray-50'
+                } group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors`}
+              >
+                <Bot className="mr-3 h-6 w-6" />
+                Agents
+              </Link>
+
+              <Link
+                to="/account/agent-consultant"
+                className={`${
+                  location.pathname === '/account/agent-consultant' 
+                    ? 'bg-orange-50 text-orange-600 border-r-2 border-orange-600' 
+                    : 'text-gray-600 hover:bg-gray-50'
+                } group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors`}
+              >
+                <MessageSquare className="mr-3 h-6 w-6" />
+                Agent Consultant
+              </Link>
+
+              <Link
+                to="/account/calls"
+                className={`${
+                  location.pathname === '/account/calls' 
+                    ? 'bg-orange-50 text-orange-600 border-r-2 border-orange-600' 
+                    : 'text-gray-600 hover:bg-gray-50'
+                } group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors`}
+              >
+                <Phone className="mr-3 h-6 w-6" />
+                Calls
+              </Link>
+
+              <Link
+                to="/account/voices"
+                className={`${
+                  location.pathname === '/account/voices' 
+                    ? 'bg-orange-50 text-orange-600 border-r-2 border-orange-600' 
+                    : 'text-gray-600 hover:bg-gray-50'
+                } group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors`}
+              >
+                <Volume2 className="mr-3 h-6 w-6" />
+                Voices
+              </Link>
+
+              <Link
+                to="/account/settings"
+                className={`${
+                  location.pathname === '/account/settings' 
+                    ? 'bg-orange-50 text-orange-600 border-r-2 border-orange-600' 
+                    : 'text-gray-600 hover:bg-gray-50'
+                } group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors`}
+              >
+                <Settings className="mr-3 h-6 w-6" />
+                Setări
+              </Link>
+            </div>
+          </div>
+    </div>
   );
 };
 
