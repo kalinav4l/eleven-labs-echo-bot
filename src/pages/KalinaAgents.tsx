@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -5,34 +6,30 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Bot, Plus, Copy, Settings, Code, Play, TestTube } from 'lucide-react';
+import { Bot, Plus, Copy, Settings, Code, Play, TestTube, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 
-interface KalinaAgent {
-  id: string;
+interface ElevenLabsAgent {
   agent_id: string;
   name: string;
-  description: string | null;
-  system_prompt: string | null;
-  voice_id: string | null;
-  provider: string | null;
-  elevenlabs_agent_id?: string | null;
-  created_at: string;
+  conversation_config: {
+    language_presets: Record<string, any>;
+  };
+  platform_settings: Record<string, any>;
+  created_at?: string;
 }
 
 const KalinaAgents = () => {
   const { user } = useAuth();
-  const [agents, setAgents] = useState<KalinaAgent[]>([]);
+  const [agents, setAgents] = useState<ElevenLabsAgent[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    system_prompt: '',
-    voice_id: '21m00Tcm4TlvDq8ikWAM',
-    provider: 'custom' as 'custom' | 'elevenlabs'
+    language: 'romanian'
   });
 
   if (!user) {
@@ -45,14 +42,8 @@ const KalinaAgents = () => {
 
   const fetchAgents = async () => {
     try {
-      const { data, error } = await supabase
-        .from('kalina_agents')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setAgents(data || []);
+      // Pentru moment vom simula date până când implementăm API-ul de listare
+      setAgents([]);
     } catch (error) {
       console.error('Error fetching agents:', error);
       toast({
@@ -75,51 +66,61 @@ const KalinaAgents = () => {
       return;
     }
 
+    setCreating(true);
     try {
-      const agentId = `kalina_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      const { error } = await supabase
-        .from('kalina_agents')
-        .insert([{
-          agent_id: agentId,
-          user_id: user.id,
-          name: formData.name,
-          description: formData.description,
-          system_prompt: formData.system_prompt || `Tu ești ${formData.name}, un asistent AI prietenos și util. Răspunde în română într-un mod profesional și empatic.`,
-          voice_id: formData.voice_id,
-          provider: formData.provider
-        }]);
+      const response = await fetch("https://api.elevenlabs.io/v1/convai/agents/create", {
+        method: "POST",
+        headers: {
+          "Xi-Api-Key": "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          "conversation_config": {
+            "language_presets": {}
+          },
+          "name": formData.name,
+          "platform_settings": {}
+        }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const body = await response.json();
+      console.log('Agent created:', body);
 
       toast({
         title: "Succes!",
-        description: `Agentul "${formData.name}" a fost creat cu succes.`
+        description: `Agentul "${formData.name}" a fost creat cu succes în ElevenLabs.`
       });
 
       setFormData({
         name: '',
         description: '',
-        system_prompt: '',
-        voice_id: '21m00Tcm4TlvDq8ikWAM',
-        provider: 'custom'
+        language: 'romanian'
       });
       setShowCreateForm(false);
-      fetchAgents();
+      
+      // Adăugăm agentul nou în lista locală
+      setAgents(prev => [...prev, body]);
+      
     } catch (error) {
       console.error('Error creating agent:', error);
       toast({
         title: "Eroare",
-        description: "Nu am putut crea agentul. Încearcă din nou.",
+        description: "Nu am putut crea agentul în ElevenLabs. Verifică API key-ul.",
         variant: "destructive"
       });
+    } finally {
+      setCreating(false);
     }
   };
 
   const copyEmbedCode = (agentId: string, agentName: string) => {
-    const embedCode = `<!-- Kalina AI Widget pentru ${agentName} -->
-<kalina-chat-widget agent-id="${agentId}"></kalina-chat-widget>
-<script src="https://pwfczzxwjfxomqzhhwvj.supabase.co/storage/v1/object/public/widgets/kalina-widget.js" async defer></script>`;
+    const embedCode = `<!-- ElevenLabs Widget pentru ${agentName} -->
+<elevenlabs-convai agent-id="${agentId}"></elevenlabs-convai>
+<script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>`;
 
     navigator.clipboard.writeText(embedCode);
     toast({
@@ -128,37 +129,47 @@ const KalinaAgents = () => {
     });
   };
 
-  const createTestAgent = async () => {
+  const createDemoAgent = async () => {
+    setCreating(true);
     try {
-      const testAgentId = `kalina_demo_${Date.now()}`;
-      
-      const { error } = await supabase
-        .from('kalina_agents')
-        .insert([{
-          agent_id: testAgentId,
-          user_id: user.id,
-          name: 'Demo Kalina',
-          description: 'Agent demonstrativ pentru testare',
-          system_prompt: 'Tu ești Demo Kalina, un asistent AI demonstrativ. Ești foarte prietenos și răspunzi în română. Explici că ești o demonstrație a tehnologiei Kalina AI și îți place să ajuți utilizatorii să înțeleagă cum funcționezi.',
-          voice_id: '21m00Tcm4TlvDq8ikWAM',
-          provider: 'custom'
-        }]);
+      const response = await fetch("https://api.elevenlabs.io/v1/convai/agents/create", {
+        method: "POST",
+        headers: {
+          "Xi-Api-Key": "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          "conversation_config": {
+            "language_presets": {}
+          },
+          "name": "Demo Assistant",
+          "platform_settings": {}
+        }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const body = await response.json();
+      console.log('Demo agent created:', body);
       
       toast({
         title: "Agent demo creat!",
-        description: "Agentul demonstrativ a fost adăugat în lista ta."
+        description: "Agentul demonstrativ a fost creat în ElevenLabs."
       });
       
-      fetchAgents();
+      setAgents(prev => [...prev, body]);
+      
     } catch (error) {
-      console.error('Error creating test agent:', error);
+      console.error('Error creating demo agent:', error);
       toast({
         title: "Eroare",
         description: "Nu am putut crea agentul demo.",
         variant: "destructive"
       });
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -184,20 +195,26 @@ const KalinaAgents = () => {
       <div className="p-6">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-black mb-2">Kalina AI Agents</h1>
-            <p className="text-gray-600">Creează și gestionează agenții tăi AI conversaționali</p>
+            <h1 className="text-3xl font-bold text-black mb-2">ElevenLabs Agents</h1>
+            <p className="text-gray-600">Creează și gestionează agenții tăi AI folosind ElevenLabs API</p>
           </div>
           <div className="flex gap-3">
             <Button 
-              onClick={createTestAgent}
+              onClick={createDemoAgent}
               variant="outline"
+              disabled={creating}
               className="border-blue-200 text-blue-700 hover:bg-blue-50"
             >
-              <TestTube className="w-4 h-4 mr-2" />
+              {creating ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <TestTube className="w-4 h-4 mr-2" />
+              )}
               Agent Demo
             </Button>
             <Button 
               onClick={() => setShowCreateForm(true)}
+              disabled={creating}
               className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -206,55 +223,11 @@ const KalinaAgents = () => {
           </div>
         </div>
 
-        {/* Demo Section */}
-        {agents.length > 0 && (
-          <Card className="mb-8 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
-            <CardHeader>
-              <CardTitle className="text-blue-800 flex items-center">
-                <Play className="w-5 h-5 mr-2" />
-                Demo Live Widget
-              </CardTitle>
-              <p className="text-blue-600 text-sm">
-                Testează widget-ul direct aici! Folosește primul agent din lista ta.
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-white p-6 rounded-lg border border-blue-200 relative min-h-[200px]">
-                <p className="text-gray-700 mb-4">
-                  Aceasta este o simulare a unei pagini web. Widget-ul Kalina va apărea în colțul din dreapta jos.
-                </p>
-                <div className="text-sm text-gray-500">
-                  <code>Agent ID în folosire: {agents[0]?.agent_id}</code>
-                </div>
-                
-                {/* Widget Integration */}
-                <div 
-                  dangerouslySetInnerHTML={{
-                    __html: `
-                      <kalina-chat-widget agent-id="${agents[0]?.agent_id}"></kalina-chat-widget>
-                      <script>
-                        if (!window.kalinaWidgetLoaded) {
-                          const script = document.createElement('script');
-                          script.src = 'https://pwfczzxwjfxomqzhhwvj.supabase.co/storage/v1/object/public/widgets/kalina-widget.js';
-                          script.async = true;
-                          script.defer = true;
-                          document.head.appendChild(script);
-                          window.kalinaWidgetLoaded = true;
-                        }
-                      </script>
-                    `
-                  }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Create Agent Form */}
         {showCreateForm && (
           <Card className="mb-8 border-purple-200">
             <CardHeader>
-              <CardTitle className="text-purple-800">Creează Agent Nou</CardTitle>
+              <CardTitle className="text-purple-800">Creează Agent ElevenLabs</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -264,7 +237,7 @@ const KalinaAgents = () => {
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  placeholder="ex: Kalina Assistant"
+                  placeholder="ex: Customer Support Assistant"
                   className="w-full"
                 />
               </div>
@@ -273,46 +246,34 @@ const KalinaAgents = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Descriere
                 </label>
-                <Input
+                <Textarea
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  placeholder="ex: Asistent pentru customer support"
-                  className="w-full"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  System Prompt (opțional)
-                </label>
-                <Textarea
-                  value={formData.system_prompt}
-                  onChange={(e) => setFormData({...formData, system_prompt: e.target.value})}
-                  placeholder="Definește personalitatea și comportamentul agentului..."
+                  placeholder="Descrie rolul și funcționalitatea agentului..."
                   rows={3}
                   className="w-full"
                 />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Voice ID (ElevenLabs)
-                </label>
-                <Input
-                  value={formData.voice_id}
-                  onChange={(e) => setFormData({...formData, voice_id: e.target.value})}
-                  placeholder="21m00Tcm4TlvDq8ikWAM"
-                  className="w-full"
-                />
-              </div>
-              
               <div className="flex space-x-3">
-                <Button onClick={createAgent} className="bg-purple-600 hover:bg-purple-700">
-                  Creează Agent
+                <Button 
+                  onClick={createAgent} 
+                  disabled={creating}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  {creating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Creez Agent...
+                    </>
+                  ) : (
+                    'Creează Agent'
+                  )}
                 </Button>
                 <Button 
                   variant="outline" 
                   onClick={() => setShowCreateForm(false)}
+                  disabled={creating}
                 >
                   Anulează
                 </Button>
@@ -324,14 +285,14 @@ const KalinaAgents = () => {
         {/* Agents List */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {agents.map((agent) => (
-            <Card key={agent.id} className="border-gray-200 hover:border-purple-300 transition-colors">
+            <Card key={agent.agent_id} className="border-gray-200 hover:border-purple-300 transition-colors">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <Bot className="w-8 h-8 text-purple-600 mr-3" />
                     <div>
                       <CardTitle className="text-lg text-black">{agent.name}</CardTitle>
-                      <p className="text-sm text-gray-600">{agent.description}</p>
+                      <p className="text-sm text-gray-600">ElevenLabs Agent</p>
                     </div>
                   </div>
                   <Button variant="ghost" size="sm">
@@ -374,15 +335,15 @@ const KalinaAgents = () => {
                       </Button>
                     </div>
                     <div className="bg-white p-2 rounded border text-xs font-mono text-gray-600 overflow-x-auto">
-{`<!-- Kalina AI Widget pentru ${agent.name} -->
-<kalina-chat-widget agent-id="${agent.agent_id}"></kalina-chat-widget>
-<script src="https://pwfczzxwjfxomqzhhwvj.supabase.co/storage/v1/object/public/widgets/kalina-widget.js" async defer></script>`}
+{`<!-- ElevenLabs Widget pentru ${agent.name} -->
+<elevenlabs-convai agent-id="${agent.agent_id}"></elevenlabs-convai>
+<script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>`}
                     </div>
                   </div>
                   
                   <div className="flex justify-between text-sm text-gray-500">
-                    <span>Provider: {agent.provider}</span>
-                    <span>Creat: {new Date(agent.created_at).toLocaleDateString()}</span>
+                    <span>Provider: ElevenLabs</span>
+                    <span>Status: Activ</span>
                   </div>
                 </div>
               </CardContent>
@@ -390,26 +351,32 @@ const KalinaAgents = () => {
           ))}
         </div>
 
-        {agents.length === 0 && (
+        {agents.length === 0 && !loading && (
           <div className="text-center py-12">
             <Bot className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               Niciun agent creat încă
             </h3>
             <p className="text-gray-600 mb-4">
-              Creează primul tău agent Kalina AI pentru a începe să oferi asistență conversațională pe site-urile tale.
+              Creează primul tău agent ElevenLabs pentru conversații AI avansate.
             </p>
             <div className="flex justify-center gap-3">
               <Button 
-                onClick={createTestAgent}
+                onClick={createDemoAgent}
                 variant="outline"
+                disabled={creating}
                 className="border-blue-200 text-blue-700 hover:bg-blue-50"
               >
-                <TestTube className="w-4 h-4 mr-2" />
+                {creating ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <TestTube className="w-4 h-4 mr-2" />
+                )}
                 Creează Agent Demo
               </Button>
               <Button 
                 onClick={() => setShowCreateForm(true)}
+                disabled={creating}
                 className="bg-purple-600 hover:bg-purple-700 text-white"
               >
                 <Plus className="w-4 h-4 mr-2" />
