@@ -1,3 +1,4 @@
+
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./components/AuthContext";
@@ -11,15 +12,17 @@ import AccountSettings from "./pages/AccountSettings";
 import KalinaAgents from "./pages/KalinaAgents";
 import Calls from "./pages/Calls";
 import Voices from "./pages/Voices";
-import { QueryClient } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import AgentConsultant from "./pages/AgentConsultant";
+
+const queryClient = new QueryClient();
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <QueryClient>
+        <QueryClientProvider client={queryClient}>
           <Toaster />
           <Routes>
             <Route path="/" element={<Index />} />
@@ -34,7 +37,7 @@ function App() {
             <Route path="/account/settings" element={<AccountSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </QueryClient>
+        </QueryClientProvider>
       </AuthProvider>
     </BrowserRouter>
   );
