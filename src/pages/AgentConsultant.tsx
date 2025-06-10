@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Globe, Bot, Phone } from 'lucide-react';
+import { Loader2, Globe, Bot, Phone, Copy } from 'lucide-react';
 
 const AgentConsultant = () => {
   const { user } = useAuth();
@@ -21,6 +21,7 @@ const AgentConsultant = () => {
   
   // Agent creation form
   const [agentName, setAgentName] = useState('');
+  const [agentPrompt, setAgentPrompt] = useState('');
   const [agentLanguage, setAgentLanguage] = useState('ro');
   const [selectedVoice, setSelectedVoice] = useState('cjVigY5qzO86Huf0OWal');
   const [isCreatingAgent, setIsCreatingAgent] = useState(false);
@@ -76,6 +77,7 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
       if (error) throw error;
 
       setGeneratedPrompt(data.response);
+      setAgentPrompt(data.response); // Auto-populate agent prompt field
       toast({
         title: "Succes!",
         description: "Promptul a fost generat cu succes"
@@ -92,11 +94,29 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
     }
   };
 
-  const createAgent = async () => {
-    if (!agentName.trim() || !generatedPrompt.trim()) {
+  const copyPrompt = async () => {
+    if (!generatedPrompt) return;
+    
+    try {
+      await navigator.clipboard.writeText(generatedPrompt);
+      toast({
+        title: "Copiat!",
+        description: "Promptul a fost copiat în clipboard"
+      });
+    } catch (error) {
       toast({
         title: "Eroare",
-        description: "Te rog completează numele agentului și generează un prompt",
+        description: "Nu am putut copia promptul",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const createAgent = async () => {
+    if (!agentName.trim() || !agentPrompt.trim()) {
+      toast({
+        title: "Eroare",
+        description: "Te rog completează numele agentului și promptul",
         variant: "destructive"
       });
       return;
@@ -137,7 +157,7 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
             },
             agent: {
               prompt: {
-                prompt: generatedPrompt
+                prompt: agentPrompt
               }
             }
           },
@@ -160,7 +180,7 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
           elevenlabs_agent_id: agentData.agent_id,
           name: agentName,
           description: `Agent consultant generat automat pentru ${websiteUrl}`,
-          system_prompt: generatedPrompt,
+          system_prompt: agentPrompt,
           voice_id: selectedVoice,
           user_id: user.id
         });
@@ -269,7 +289,18 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
               </Button>
               {generatedPrompt && (
                 <div>
-                  <Label htmlFor="generated-prompt">Prompt Generat</Label>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label htmlFor="generated-prompt">Prompt Generat</Label>
+                    <Button
+                      onClick={copyPrompt}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <Copy className="w-4 h-4" />
+                      Copiază
+                    </Button>
+                  </div>
                   <Textarea
                     id="generated-prompt"
                     value={generatedPrompt}
@@ -298,6 +329,17 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
                   value={agentName}
                   onChange={(e) => setAgentName(e.target.value)}
                   placeholder="Agent Consultant Site"
+                  className="border-gray-300"
+                />
+              </div>
+              <div>
+                <Label htmlFor="agent-prompt">Promptul Agentului</Label>
+                <Textarea
+                  id="agent-prompt"
+                  value={agentPrompt}
+                  onChange={(e) => setAgentPrompt(e.target.value)}
+                  placeholder="Introdu promptul pentru agent sau generează unul din secțiunea de mai sus..."
+                  rows={6}
                   className="border-gray-300"
                 />
               </div>
@@ -332,7 +374,7 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
               </div>
               <Button 
                 onClick={createAgent}
-                disabled={isCreatingAgent || !generatedPrompt}
+                disabled={isCreatingAgent || !agentPrompt}
                 className="bg-black hover:bg-gray-800 text-white"
               >
                 {isCreatingAgent && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
