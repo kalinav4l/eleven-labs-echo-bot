@@ -5,23 +5,18 @@ import { Navigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MessageSquare, Clock, User, Download, Trash2, Eye, Search, DollarSign } from 'lucide-react';
+import { MessageSquare, Clock, User, Download, Trash2, Eye, Search } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 interface Conversation {
-  id: string;
-  conversation_id?: string;
+  conversation_id: string;
   agent_id: string;
   agent_name?: string;
   user_id: string;
   created_at: string;
   updated_at: string;
-  duration_minutes?: number;
-  cost_usd?: number;
-  message_count?: number;
-  status?: string;
+  status: string;
 }
 
 const AccountChatHistory = () => {
@@ -29,44 +24,38 @@ const AccountChatHistory = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [totalSpent, setTotalSpent] = useState(0);
 
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
   useEffect(() => {
-    fetchUserConversations();
-  }, [user?.id]);
+    fetchConversations();
+  }, []);
 
-  const fetchUserConversations = async () => {
+  const fetchConversations = async () => {
     try {
-      // Fetch user's conversations from Supabase
-      const { data: userConversations, error } = await supabase
-        .from('conversations')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      const response = await fetch("https://api.elevenlabs.io/v1/convai/conversations", {
+        method: "GET",
+        headers: {
+          "Xi-Api-Key": "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873"
+        },
+      });
 
-      if (error) {
-        console.error('Error fetching user conversations:', error);
-        // Fallback to empty array if no conversations found
-        setConversations([]);
-        setTotalSpent(0);
-        return;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      console.log('User conversations:', userConversations);
-      setConversations(userConversations || []);
-      
-      // Calculate total spent
-      const total = userConversations?.reduce((sum, conv) => sum + (conv.cost_usd || 0), 0) || 0;
-      setTotalSpent(total);
-
+      const body = await response.json();
+      console.log('Conversations:', body);
+      setConversations(body.conversations || []);
     } catch (error) {
       console.error('Error fetching conversations:', error);
-      setConversations([]);
-      setTotalSpent(0);
+      toast({
+        title: "Eroare",
+        description: "Nu am putut încărca conversațiile.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -104,24 +93,19 @@ const AccountChatHistory = () => {
 
   const deleteConversation = async (conversationId: string) => {
     try {
-      // Delete from Supabase first
-      const { error } = await supabase
-        .from('conversations')
-        .delete()
-        .eq('id', conversationId)
-        .eq('user_id', user.id);
+      const response = await fetch(`https://api.elevenlabs.io/v1/convai/conversations/${conversationId}`, {
+        method: "DELETE",
+        headers: {
+          "Xi-Api-Key": "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873"
+        },
+      });
 
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       // Remove from local state
-      setConversations(prev => prev.filter(conv => conv.id !== conversationId));
-      
-      // Recalculate total spent
-      const updatedConversations = conversations.filter(conv => conv.id !== conversationId);
-      const total = updatedConversations.reduce((sum, conv) => sum + (conv.cost_usd || 0), 0);
-      setTotalSpent(total);
+      setConversations(prev => prev.filter(conv => conv.conversation_id !== conversationId));
       
       toast({
         title: "Șters",
@@ -206,16 +190,12 @@ const AccountChatHistory = () => {
   };
 
   const filteredConversations = conversations.filter(conversation =>
-    conversation.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    conversation.conversation_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     conversation.agent_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('ro-RO');
-  };
-
-  const formatCost = (cost: number) => {
-    return `$${cost.toFixed(4)}`;
   };
 
   if (loading) {
@@ -237,24 +217,16 @@ const AccountChatHistory = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-black mb-2">Istoric Chat</h1>
-            <p className="text-gray-600">Toate conversațiile tale cu agenții AI</p>
+            <p className="text-gray-600">Toate conversațiile tale cu agenții AI ElevenLabs</p>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg">
-              <DollarSign className="w-5 h-5 text-green-600" />
-              <span className="text-lg font-semibold text-gray-700">
-                Total cheltuit: {formatCost(totalSpent)}
-              </span>
-            </div>
-            <Button 
-              variant="outline" 
-              className="border-gray-300 text-gray-700 hover:bg-gray-100"
-              onClick={fetchUserConversations}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Reîncarcă
-            </Button>
-          </div>
+          <Button 
+            variant="outline" 
+            className="border-gray-300 text-gray-700 hover:bg-gray-100"
+            onClick={fetchConversations}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Reîncarcă
+          </Button>
         </div>
 
         {/* Search */}
@@ -272,14 +244,14 @@ const AccountChatHistory = () => {
 
         <div className="space-y-4">
           {filteredConversations.map((conversation) => (
-            <Card key={conversation.id} className="bg-white border-gray-200 hover:bg-gray-50 transition-colors">
+            <Card key={conversation.conversation_id} className="bg-white border-gray-200 hover:bg-gray-50 transition-colors">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <MessageSquare className="w-8 h-8 text-gray-700" />
                     <div>
                       <h3 className="text-black font-medium text-lg">
-                        {conversation.agent_name || `Agent ${conversation.agent_id.slice(-8)}`}
+                        Conversație {conversation.conversation_id.slice(-8)}
                       </h3>
                       <div className="flex items-center space-x-4 mt-1">
                         <div className="flex items-center text-gray-600 text-sm">
@@ -288,14 +260,8 @@ const AccountChatHistory = () => {
                         </div>
                         <div className="flex items-center text-gray-600 text-sm">
                           <User className="w-4 h-4 mr-1" />
-                          {conversation.duration_minutes ? `${conversation.duration_minutes} min` : 'Chat'}
+                          Agent: {conversation.agent_id.slice(-8)}
                         </div>
-                        {conversation.cost_usd && (
-                          <div className="flex items-center text-green-600 text-sm font-medium">
-                            <DollarSign className="w-4 h-4 mr-1" />
-                            {formatCost(conversation.cost_usd)}
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -304,7 +270,7 @@ const AccountChatHistory = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => viewConversationDetails(conversation.conversation_id || conversation.id)}
+                      onClick={() => viewConversationDetails(conversation.conversation_id)}
                       className="text-gray-600 hover:text-blue-600 hover:bg-blue-50"
                       title="Vezi detalii"
                     >
@@ -313,7 +279,7 @@ const AccountChatHistory = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => downloadConversationAudio(conversation.conversation_id || conversation.id)}
+                      onClick={() => downloadConversationAudio(conversation.conversation_id)}
                       className="text-gray-600 hover:text-green-600 hover:bg-green-50"
                       title="Descarcă audio"
                     >
@@ -322,7 +288,7 @@ const AccountChatHistory = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => sendFeedback(conversation.conversation_id || conversation.id, 'like')}
+                      onClick={() => sendFeedback(conversation.conversation_id, 'like')}
                       className="text-gray-600 hover:text-green-600 hover:bg-green-50"
                       title="Like"
                     >
@@ -331,7 +297,7 @@ const AccountChatHistory = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => sendFeedback(conversation.conversation_id || conversation.id, 'dislike')}
+                      onClick={() => sendFeedback(conversation.conversation_id, 'dislike')}
                       className="text-gray-600 hover:text-red-600 hover:bg-red-50"
                       title="Dislike"
                     >
@@ -340,7 +306,7 @@ const AccountChatHistory = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => deleteConversation(conversation.id)}
+                      onClick={() => deleteConversation(conversation.conversation_id)}
                       className="text-gray-600 hover:text-red-600 hover:bg-red-50"
                       title="Șterge"
                     >
