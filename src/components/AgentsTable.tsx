@@ -19,33 +19,33 @@ const AgentsTable = () => {
   ];
 
   return (
-    <Card className="bg-white border-2 border-[#FFBB00] shadow-md">
-      <CardHeader className="flex flex-row items-center justify-between bg-gradient-primary">
-        <CardTitle className="text-black text-lg font-bold">Most called agents</CardTitle>
-        <Button variant="ghost" className="text-black hover:text-gray-700 text-sm font-medium hover:bg-[#FFD666]">
+    <Card className="bg-[#181A1F] border-[#2A2D35]">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-white text-lg font-medium">Most called agents</CardTitle>
+        <Button variant="ghost" className="text-gray-400 hover:text-white text-sm">
           See all 38 agents
         </Button>
       </CardHeader>
-      <CardContent className="p-6">
+      <CardContent>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b-2 border-[#FFBB00]">
-                <th className="text-left py-3 text-gray-600 font-bold text-sm">Agent name</th>
-                <th className="text-left py-3 text-gray-600 font-bold text-sm">Number of calls</th>
-                <th className="text-left py-3 text-gray-600 font-bold text-sm">Call minutes</th>
-                <th className="text-left py-3 text-gray-600 font-bold text-sm">LLM cost</th>
-                <th className="text-left py-3 text-gray-600 font-bold text-sm">Credits spent</th>
+              <tr className="border-b border-[#2A2D35]">
+                <th className="text-left py-3 text-gray-400 font-medium text-sm">Agent name</th>
+                <th className="text-left py-3 text-gray-400 font-medium text-sm">Number of calls</th>
+                <th className="text-left py-3 text-gray-400 font-medium text-sm">Call minutes</th>
+                <th className="text-left py-3 text-gray-400 font-medium text-sm">LLM cost</th>
+                <th className="text-left py-3 text-gray-400 font-medium text-sm">Credits spent</th>
               </tr>
             </thead>
             <tbody>
               {agents.map((agent, index) => (
-                <tr key={index} className="border-b border-gray-200 last:border-b-0 hover:bg-[#FFD666] transition-colors">
-                  <td className="py-3 text-black font-bold">{agent.name}</td>
-                  <td className="py-3 text-black">{agent.calls}</td>
-                  <td className="py-3 text-black">{agent.minutes}</td>
-                  <td className="py-3 text-black">{agent.cost}</td>
-                  <td className="py-3 text-black font-medium">{agent.credits.toLocaleString()}</td>
+                <tr key={index} className="border-b border-[#2A2D35] last:border-b-0">
+                  <td className="py-3 text-white font-medium">{agent.name}</td>
+                  <td className="py-3 text-white">{agent.calls}</td>
+                  <td className="py-3 text-white">{agent.minutes}</td>
+                  <td className="py-3 text-white">{agent.cost}</td>
+                  <td className="py-3 text-white">{agent.credits.toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>

@@ -22,11 +22,11 @@ const CallsChart = () => {
   ];
 
   return (
-    <Card className="bg-white border-2 border-[#FFBB00] col-span-2 shadow-md">
-      <CardHeader className="bg-gradient-primary">
-        <CardTitle className="text-black text-lg font-bold">Call Volume</CardTitle>
+    <Card className="bg-[#181A1F] border-[#2A2D35] col-span-2">
+      <CardHeader>
+        <CardTitle className="text-white text-lg font-medium">Call Volume</CardTitle>
       </CardHeader>
-      <CardContent className="p-6">
+      <CardContent>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data}>
@@ -34,29 +34,28 @@ const CallsChart = () => {
                 dataKey="date" 
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: '#6C757D', fontSize: 12 }}
+                tick={{ fill: '#6B7280', fontSize: 12 }}
               />
               <YAxis 
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: '#6C757D', fontSize: 12 }}
+                tick={{ fill: '#6B7280', fontSize: 12 }}
               />
               <Tooltip 
                 contentStyle={{
-                  backgroundColor: '#FFFFFF',
-                  border: '2px solid #FFBB00',
+                  backgroundColor: '#1F2128',
+                  border: '1px solid #2A2D35',
                   borderRadius: '8px',
-                  color: '#000000',
-                  fontWeight: 'bold'
+                  color: '#FFFFFF'
                 }}
               />
               <Line 
                 type="monotone" 
                 dataKey="calls" 
-                stroke="#FFBB00" 
-                strokeWidth={3}
-                dot={{ fill: '#FFBB00', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, fill: '#E6A600', stroke: '#000000', strokeWidth: 2 }}
+                stroke="#FFFFFF" 
+                strokeWidth={2}
+                dot={{ fill: '#FFFFFF', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, fill: '#FFFFFF' }}
               />
             </LineChart>
           </ResponsiveContainer>

@@ -16,21 +16,21 @@ const LanguageStats = () => {
   ];
 
   return (
-    <Card className="bg-white border-2 border-[#FFBB00] shadow-md">
+    <Card className="bg-[#181A1F] border-[#2A2D35]">
       <CardHeader>
-        <CardTitle className="text-black text-lg font-bold">Language</CardTitle>
+        <CardTitle className="text-white text-lg font-medium">Language</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {languages.map((language, index) => (
             <div key={index} className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-black text-sm font-medium">{language.name}</span>
-                <span className="text-gray-600 text-sm">{language.percentage}%</span>
+                <span className="text-white text-sm">{language.name}</span>
+                <span className="text-gray-400 text-sm">{language.percentage}%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-[#2A2D35] rounded-full h-2">
                 <div 
-                  className="bg-[#FFBB00] h-2 rounded-full transition-all duration-300"
+                  className="bg-green-500 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${language.percentage}%` }}
                 ></div>
               </div>
