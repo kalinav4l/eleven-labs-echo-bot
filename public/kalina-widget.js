@@ -1,21 +1,4 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-};
-
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
-
-  try {
-    // Read the widget JavaScript file
-    const widgetJs = `
 (function() {
   'use strict';
 
@@ -26,7 +9,7 @@ serve(async (req) => {
 
   // Configuration
   const SUPABASE_URL = 'https://pwfczzxwjfxomqzhhwvj.supabase.co';
-  const CHAT_ENDPOINT = \`\${SUPABASE_URL}/functions/v1/kalina-chat\`;
+  const CHAT_ENDPOINT = `${SUPABASE_URL}/functions/v1/kalina-chat`;
 
   // Widget class
   class KalinaWidget {
@@ -58,7 +41,7 @@ serve(async (req) => {
 
       const styles = document.createElement('style');
       styles.id = 'kalina-widget-styles';
-      styles.textContent = \`
+      styles.textContent = `
         .kalina-widget-container {
           position: fixed;
           bottom: 20px;
@@ -332,14 +315,14 @@ serve(async (req) => {
             right: 20px;
           }
         }
-      \`;
+      `;
       document.head.appendChild(styles);
     }
 
     createWidget() {
       const container = document.createElement('div');
       container.className = 'kalina-widget-container';
-      container.innerHTML = \`
+      container.innerHTML = `
         <button class="kalina-widget-button" id="kalina-toggle-btn">
           💬
         </button>
@@ -369,7 +352,7 @@ serve(async (req) => {
             <button class="kalina-widget-send" id="kalina-send-btn">➤</button>
           </div>
         </div>
-      \`;
+      `;
 
       this.element.appendChild(container);
       
@@ -453,7 +436,7 @@ serve(async (req) => {
         });
 
         if (!response.ok) {
-          throw new Error(\`HTTP error! status: \${response.status}\`);
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
@@ -483,14 +466,14 @@ serve(async (req) => {
 
     addMessage(role, content) {
       const messageDiv = document.createElement('div');
-      messageDiv.className = \`kalina-widget-message \${role}\`;
+      messageDiv.className = `kalina-widget-message ${role}`;
       
       const avatar = role === 'user' ? '👤' : '🤖';
       
-      messageDiv.innerHTML = \`
-        <div class="kalina-widget-message-avatar">\${avatar}</div>
-        <div class="kalina-widget-message-content">\${this.escapeHtml(content)}</div>
-      \`;
+      messageDiv.innerHTML = `
+        <div class="kalina-widget-message-avatar">${avatar}</div>
+        <div class="kalina-widget-message-content">${this.escapeHtml(content)}</div>
+      `;
       
       this.messagesContainer.appendChild(messageDiv);
       this.scrollToBottom();
@@ -505,14 +488,14 @@ serve(async (req) => {
       const typingDiv = document.createElement('div');
       typingDiv.className = 'kalina-widget-typing';
       typingDiv.id = 'kalina-typing-indicator';
-      typingDiv.innerHTML = \`
+      typingDiv.innerHTML = `
         <div class="kalina-widget-typing-avatar">🤖</div>
         <div class="kalina-widget-typing-dots">
           <div class="kalina-widget-typing-dot"></div>
           <div class="kalina-widget-typing-dot"></div>
           <div class="kalina-widget-typing-dot"></div>
         </div>
-      \`;
+      `;
       
       this.messagesContainer.appendChild(typingDiv);
       this.scrollToBottom();
@@ -583,21 +566,3 @@ serve(async (req) => {
   // Export for manual initialization
   window.KalinaWidget = KalinaWidget;
 })();
-`;
-
-    return new Response(widgetJs, {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/javascript',
-        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
-      },
-    });
-
-  } catch (error) {
-    console.error('Error serving widget:', error);
-    return new Response(JSON.stringify({ error: 'Failed to serve widget' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-});
