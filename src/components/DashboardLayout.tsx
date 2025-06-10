@@ -1,47 +1,43 @@
 
 import React, { useState } from 'react';
 import { Menu } from 'lucide-react';
-import Sidebar from './Sidebar';
-import CreditsDisplay from './CreditsDisplay';
-import ChatWidget from './ChatWidget';
+import Sidebar from '@/components/Sidebar';
+import DollarsDisplay from '@/components/DollarsDisplay';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
-      <div className="flex-1 lg:ml-0">
-        {/* Mobile header */}
-        <div className="lg:hidden flex items-center justify-between p-4 border-b border-gray-200 bg-white">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="text-black p-2 hover:bg-gray-100 rounded"
-          >
-            <Menu size={24} />
-          </button>
-          <h1 className="text-black text-lg font-semibold">Cabinet Personal</h1>
-          <CreditsDisplay />
+      {/* Main content area */}
+      <div className="lg:ml-64">
+        {/* Top bar */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            
+            <div className="ml-auto">
+              <DollarsDisplay />
+            </div>
+          </div>
         </div>
-
-        {/* Desktop header */}
-        <div className="hidden lg:flex items-center justify-end p-4 border-b border-gray-200 bg-white">
-          <CreditsDisplay />
-        </div>
-
-        {/* Main content */}
-        <main className="flex-1 overflow-y-auto">
+        
+        {/* Page content */}
+        <main className="flex-1">
           {children}
         </main>
       </div>
-
-      {/* Chat Widget */}
-      <ChatWidget />
     </div>
   );
 };
