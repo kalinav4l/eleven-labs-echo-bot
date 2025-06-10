@@ -72,7 +72,7 @@ export const useDollarTracking = () => {
       if (error) throw error;
 
       // Deduct cost from user balance
-      await deductCost(costUsd, `Conversație cu ${agentName}`, data.id);
+      await deductCost(costUsd, `Conversație cu ${agentName}`, data.conversation_id);
 
       return data;
     } catch (error) {

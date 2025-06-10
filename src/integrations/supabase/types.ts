@@ -13,8 +13,6 @@ export type Database = {
         Row: {
           agent_id: string
           agent_name: string
-          conversation_id: string | null
-          cost_usd: number | null
           created_at: string
           credits_used: number
           duration_minutes: number | null
@@ -28,8 +26,6 @@ export type Database = {
         Insert: {
           agent_id: string
           agent_name: string
-          conversation_id?: string | null
-          cost_usd?: number | null
           created_at?: string
           credits_used?: number
           duration_minutes?: number | null
@@ -43,8 +39,6 @@ export type Database = {
         Update: {
           agent_id?: string
           agent_name?: string
-          conversation_id?: string | null
-          cost_usd?: number | null
           created_at?: string
           credits_used?: number
           duration_minutes?: number | null
@@ -386,30 +380,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_balance: {
-        Row: {
-          balance_usd: number
-          created_at: string
-          id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          balance_usd?: number
-          created_at?: string
-          id?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          balance_usd?: number
-          created_at?: string
-          id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_credits: {
         Row: {
           created_at: string
@@ -503,15 +473,6 @@ export type Database = {
           remaining_credits: number
           created_at: string
         }[]
-      }
-      deduct_balance: {
-        Args: {
-          p_user_id: string
-          p_amount: number
-          p_description?: string
-          p_conversation_id?: string
-        }
-        Returns: boolean
       }
       deduct_credits: {
         Args: {
