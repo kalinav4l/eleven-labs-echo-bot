@@ -44,19 +44,19 @@ const AgentsList = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-8 bg-[#111217] min-h-screen">
+      <div className="p-8 bg-white min-h-screen">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-semibold text-white mb-2">Agents</h1>
-              <p className="text-gray-400 text-sm">Create and manage your AI agents</p>
+              <h1 className="text-3xl font-bold text-black mb-2">Agents</h1>
+              <p className="text-gray-600 text-sm">Create and manage your AI agents</p>
             </div>
             <div className="flex gap-3">
-              <Button variant="outline" className="bg-transparent border-[#2A2D35] text-white hover:bg-[#1F2128] hover:border-white">
+              <Button variant="outline" className="bg-white border-2 border-[#FFBB00] text-black hover:bg-[#FFD666] hover:border-[#E6A600]">
                 Playground
               </Button>
-              <Button className="bg-white text-black hover:bg-gray-100 font-medium">
+              <Button className="bg-[#FFBB00] text-black hover:bg-[#E6A600] font-bold border-2 border-black">
                 <Plus className="w-4 h-4 mr-2" />
                 New agent
               </Button>
@@ -66,40 +66,40 @@ const AgentsList = () => {
           {/* Search and Filters */}
           <div className="flex gap-4 mb-6">
             <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
               <Input
                 placeholder="Search agents..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-[#1F2128] border-[#2A2D35] text-white placeholder-gray-400 focus:border-white"
+                className="pl-10 bg-white border-2 border-[#FFBB00] text-black placeholder-gray-500 focus:border-[#E6A600]"
               />
             </div>
-            <Button variant="outline" className="bg-transparent border-[#2A2D35] text-white hover:bg-[#1F2128] hover:border-white">
+            <Button variant="outline" className="bg-white border-2 border-[#FFBB00] text-black hover:bg-[#FFD666] hover:border-[#E6A600]">
               Creator
             </Button>
           </div>
 
           {/* Table */}
-          <Card className="bg-[#181A1F] border-[#2A2D35]">
+          <Card className="bg-white border-2 border-[#FFBB00] shadow-lg">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-[#2A2D35]">
-                      <th className="text-left py-4 px-6 text-gray-400 font-medium text-sm">Name</th>
-                      <th className="text-left py-4 px-6 text-gray-400 font-medium text-sm">Created by</th>
-                      <th className="text-left py-4 px-6 text-gray-400 font-medium text-sm">Created at</th>
+                    <tr className="border-b-2 border-[#FFBB00] bg-gradient-primary">
+                      <th className="text-left py-4 px-6 text-black font-bold text-sm">Name</th>
+                      <th className="text-left py-4 px-6 text-black font-bold text-sm">Created by</th>
+                      <th className="text-left py-4 px-6 text-black font-bold text-sm">Created at</th>
                       <th className="w-12 py-4 px-6"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredAgents.map((agent) => (
-                      <tr key={agent.id} className="border-b border-[#2A2D35] hover:bg-[#1F2128] transition-colors">
-                        <td className="py-4 px-6 text-white font-medium">{agent.name}</td>
-                        <td className="py-4 px-6 text-white">{agent.createdBy}</td>
-                        <td className="py-4 px-6 text-gray-400">{agent.createdAt}</td>
+                      <tr key={agent.id} className="border-b border-gray-200 hover:bg-[#FFD666] transition-colors">
+                        <td className="py-4 px-6 text-black font-bold">{agent.name}</td>
+                        <td className="py-4 px-6 text-black">{agent.createdBy}</td>
+                        <td className="py-4 px-6 text-gray-600">{agent.createdAt}</td>
                         <td className="py-4 px-6">
-                          <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white hover:bg-[#2A2D35]">
+                          <Button variant="ghost" size="sm" className="text-gray-600 hover:text-black hover:bg-[#FFBB00]">
                             <MoreHorizontal className="w-4 h-4" />
                           </Button>
                         </td>

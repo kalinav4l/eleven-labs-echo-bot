@@ -46,20 +46,20 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-black border-gray-800 animate-fade-in">
-        <CardHeader>
-          <CardTitle className="text-white text-center">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-white border-2 border-[#FFBB00] shadow-lg animate-fade-in">
+        <CardHeader className="bg-gradient-primary text-center">
+          <CardTitle className="text-black font-bold">
             {isLogin ? 'Conectare' : 'Înregistrare'}
           </CardTitle>
-          <CardDescription className="text-gray-400 text-center">
+          <CardDescription className="text-gray-700">
             {isLogin 
               ? 'Conectează-te la contul tău' 
               : 'Creează un cont nou'
             }
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <>
@@ -68,14 +68,14 @@ const Auth = () => {
                   placeholder="Prenume"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="bg-black border-gray-800 text-white placeholder-gray-500"
+                  className="bg-white border-2 border-[#FFBB00] text-black placeholder-gray-500 focus:border-[#E6A600]"
                 />
                 <Input
                   type="text"
                   placeholder="Nume"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="bg-black border-gray-800 text-white placeholder-gray-500"
+                  className="bg-white border-2 border-[#FFBB00] text-black placeholder-gray-500 focus:border-[#E6A600]"
                 />
               </>
             )}
@@ -85,7 +85,7 @@ const Auth = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-black border-gray-800 text-white placeholder-gray-500"
+              className="bg-white border-2 border-[#FFBB00] text-black placeholder-gray-500 focus:border-[#E6A600]"
             />
             <Input
               type="password"
@@ -93,17 +93,17 @@ const Auth = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-black border-gray-800 text-white placeholder-gray-500"
+              className="bg-white border-2 border-[#FFBB00] text-black placeholder-gray-500 focus:border-[#E6A600]"
             />
             
             {error && (
-              <p className="text-red-400 text-sm text-center">{error}</p>
+              <p className="text-red-600 text-sm text-center font-medium">{error}</p>
             )}
             
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-white text-black hover:bg-gray-200 transition-colors"
+              className="w-full bg-[#FFBB00] text-black hover:bg-[#E6A600] transition-colors font-bold border-2 border-black"
             >
               {loading ? 'Se încarcă...' : (isLogin ? 'Conectare' : 'Înregistrare')}
             </Button>
@@ -112,7 +112,7 @@ const Auth = () => {
           <div className="mt-4 text-center">
             <button
               onClick={() => setIsLogin(!isLogin)}
-              className="text-gray-400 hover:text-white text-sm transition-colors"
+              className="text-gray-600 hover:text-black text-sm transition-colors font-medium"
             >
               {isLogin 
                 ? 'Nu ai cont? Înregistrează-te' 

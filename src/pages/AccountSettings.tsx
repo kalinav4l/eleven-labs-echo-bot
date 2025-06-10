@@ -27,29 +27,29 @@ const AccountSettings = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6">
+      <div className="p-6 bg-white min-h-screen">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Setări</h1>
-          <p className="text-gray-400">Configurează preferințele tale pentru agenții AI</p>
+          <h1 className="text-3xl font-bold text-black mb-2">Setări</h1>
+          <p className="text-gray-600">Configurează preferințele tale pentru agenții AI</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* General Settings */}
-          <Card className="bg-gray-900 border-gray-800">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center">
+          <Card className="bg-white border-2 border-[#FFBB00] shadow-md">
+            <CardHeader className="bg-gradient-primary">
+              <CardTitle className="text-black font-bold flex items-center">
                 <Settings className="w-5 h-5 mr-2" />
                 Setări Generale
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 p-6">
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Limbă Implicită</label>
+                <label className="block text-gray-600 text-sm mb-2 font-medium">Limbă Implicită</label>
                 <Select value={settings.defaultLanguage} onValueChange={(value) => setSettings({...settings, defaultLanguage: value})}>
-                  <SelectTrigger className="bg-black border-gray-700 text-white">
+                  <SelectTrigger className="bg-white border-2 border-[#FFBB00] text-black focus:border-[#E6A600]">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white border-2 border-[#FFBB00]">
                     <SelectItem value="ro">Română</SelectItem>
                     <SelectItem value="en">English</SelectItem>
                     <SelectItem value="es">Español</SelectItem>
@@ -59,12 +59,12 @@ const AccountSettings = () => {
               </div>
 
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Voce Implicită</label>
+                <label className="block text-gray-600 text-sm mb-2 font-medium">Voce Implicită</label>
                 <Select value={settings.defaultVoice} onValueChange={(value) => setSettings({...settings, defaultVoice: value})}>
-                  <SelectTrigger className="bg-black border-gray-700 text-white">
+                  <SelectTrigger className="bg-white border-2 border-[#FFBB00] text-black focus:border-[#E6A600]">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white border-2 border-[#FFBB00]">
                     <SelectItem value="aria">Aria</SelectItem>
                     <SelectItem value="sarah">Sarah</SelectItem>
                     <SelectItem value="george">George</SelectItem>
@@ -75,8 +75,8 @@ const AccountSettings = () => {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <label className="text-white text-sm font-medium">Pornire Automată</label>
-                  <p className="text-gray-400 text-xs">Pornește automat conversația când intri pe site</p>
+                  <label className="text-black text-sm font-bold">Pornire Automată</label>
+                  <p className="text-gray-600 text-xs">Pornește automat conversația când intri pe site</p>
                 </div>
                 <Switch 
                   checked={settings.autoStart}
@@ -86,8 +86,8 @@ const AccountSettings = () => {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <label className="text-white text-sm font-medium">Notificări</label>
-                  <p className="text-gray-400 text-xs">Primește notificări pentru mesaje noi</p>
+                  <label className="text-black text-sm font-bold">Notificări</label>
+                  <p className="text-gray-600 text-xs">Primește notificări pentru mesaje noi</p>
                 </div>
                 <Switch 
                   checked={settings.notifications}
@@ -98,33 +98,36 @@ const AccountSettings = () => {
           </Card>
 
           {/* Audio Settings */}
-          <Card className="bg-gray-900 border-gray-800">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center">
+          <Card className="bg-white border-2 border-[#FFBB00] shadow-md">
+            <CardHeader className="bg-gradient-primary">
+              <CardTitle className="text-black font-bold flex items-center">
                 <Volume2 className="w-5 h-5 mr-2" />
                 Setări Audio
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 p-6">
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Volum ({settings.volume}%)</label>
+                <label className="block text-gray-600 text-sm mb-2 font-medium">Volum ({settings.volume}%)</label>
                 <input
                   type="range"
                   min="0"
                   max="100"
                   value={settings.volume}
                   onChange={(e) => setSettings({...settings, volume: parseInt(e.target.value)})}
-                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #FFBB00 0%, #FFBB00 ${settings.volume}%, #E9ECEF ${settings.volume}%, #E9ECEF 100%)`
+                  }}
                 />
               </div>
 
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Calitate Audio</label>
+                <label className="block text-gray-600 text-sm mb-2 font-medium">Calitate Audio</label>
                 <Select defaultValue="high">
-                  <SelectTrigger className="bg-black border-gray-700 text-white">
+                  <SelectTrigger className="bg-white border-2 border-[#FFBB00] text-black focus:border-[#E6A600]">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white border-2 border-[#FFBB00]">
                     <SelectItem value="low">Scăzută (mai rapid)</SelectItem>
                     <SelectItem value="medium">Medie</SelectItem>
                     <SelectItem value="high">Înaltă (recomandat)</SelectItem>
@@ -133,12 +136,12 @@ const AccountSettings = () => {
               </div>
 
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Viteză Vorbire</label>
+                <label className="block text-gray-600 text-sm mb-2 font-medium">Viteză Vorbire</label>
                 <Select defaultValue="normal">
-                  <SelectTrigger className="bg-black border-gray-700 text-white">
+                  <SelectTrigger className="bg-white border-2 border-[#FFBB00] text-black focus:border-[#E6A600]">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white border-2 border-[#FFBB00]">
                     <SelectItem value="slow">Încet</SelectItem>
                     <SelectItem value="normal">Normal</SelectItem>
                     <SelectItem value="fast">Rapid</SelectItem>
@@ -149,34 +152,34 @@ const AccountSettings = () => {
           </Card>
 
           {/* Privacy & Security */}
-          <Card className="bg-gray-900 border-gray-800">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center">
+          <Card className="bg-white border-2 border-[#FFBB00] shadow-md">
+            <CardHeader className="bg-gradient-primary">
+              <CardTitle className="text-black font-bold flex items-center">
                 <Shield className="w-5 h-5 mr-2" />
                 Confidențialitate & Securitate
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <label className="text-white text-sm font-medium">Salvează Conversațiile</label>
-                  <p className="text-gray-400 text-xs">Stochează conversațiile pentru istoric</p>
+                  <label className="text-black text-sm font-bold">Salvează Conversațiile</label>
+                  <p className="text-gray-600 text-xs">Stochează conversațiile pentru istoric</p>
                 </div>
                 <Switch defaultChecked />
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <label className="text-white text-sm font-medium">Analiză Conversații</label>
-                  <p className="text-gray-400 text-xs">Permite analiza pentru îmbunătățiri</p>
+                  <label className="text-black text-sm font-bold">Analiză Conversații</label>
+                  <p className="text-gray-600 text-xs">Permite analiza pentru îmbunătățiri</p>
                 </div>
                 <Switch defaultChecked />
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <label className="text-white text-sm font-medium">Partajare Date</label>
-                  <p className="text-gray-400 text-xs">Partajează date anonime pentru cercetare</p>
+                  <label className="text-black text-sm font-bold">Partajare Date</label>
+                  <p className="text-gray-600 text-xs">Partajează date anonime pentru cercetare</p>
                 </div>
                 <Switch />
               </div>
@@ -184,28 +187,28 @@ const AccountSettings = () => {
           </Card>
 
           {/* Account Info */}
-          <Card className="bg-gray-900 border-gray-800">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center">
+          <Card className="bg-white border-2 border-[#FFBB00] shadow-md">
+            <CardHeader className="bg-gradient-primary">
+              <CardTitle className="text-black font-bold flex items-center">
                 <User className="w-5 h-5 mr-2" />
                 Informații Cont
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-6">
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Email</label>
+                <label className="block text-gray-600 text-sm mb-2 font-medium">Email</label>
                 <Input
                   value={user?.email || ''}
                   disabled
-                  className="bg-black border-gray-700 text-white"
+                  className="bg-gray-100 border-2 border-[#FFBB00] text-black"
                 />
               </div>
 
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Plan Curent</label>
-                <div className="flex items-center justify-between p-3 bg-gray-800 rounded">
-                  <span className="text-white">Plan Starter</span>
-                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                <label className="block text-gray-600 text-sm mb-2 font-medium">Plan Curent</label>
+                <div className="flex items-center justify-between p-3 bg-[#FFD666] rounded border border-[#FFBB00]">
+                  <span className="text-black font-bold">Plan Starter</span>
+                  <Button size="sm" className="bg-[#FFBB00] hover:bg-[#E6A600] text-black font-bold border border-black">
                     Upgrade
                   </Button>
                 </div>
@@ -216,7 +219,7 @@ const AccountSettings = () => {
 
         {/* Save Button */}
         <div className="mt-8 flex justify-end">
-          <Button className="bg-blue-600 hover:bg-blue-700">
+          <Button className="bg-[#FFBB00] hover:bg-[#E6A600] text-black font-bold border-2 border-black px-8 py-2">
             Salvează Setările
           </Button>
         </div>

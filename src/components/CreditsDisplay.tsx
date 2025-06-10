@@ -44,16 +44,16 @@ const CreditsDisplay = () => {
 
   return (
     <div className="flex items-center space-x-2">
-      <div className="flex items-center space-x-2 px-3 py-2 bg-gray-100 rounded-lg">
-        <Coins className="w-4 h-4 text-gray-600" />
-        <span className="text-sm text-gray-700 font-medium">
+      <div className="flex items-center space-x-2 px-3 py-2 bg-[#FFD666] border border-[#FFBB00] rounded-lg">
+        <Coins className="w-4 h-4 text-[#FFBB00]" />
+        <span className="text-sm text-black font-bold">
           {remainingCredits.toLocaleString()} credite
         </span>
       </div>
       <Button
         onClick={handleUpgrade}
         size="sm"
-        className="bg-black hover:bg-gray-800 text-white px-3 py-2"
+        className="bg-[#FFBB00] hover:bg-[#E6A600] text-black px-3 py-2 font-bold border border-black"
       >
         <Plus className="w-4 h-4 mr-1" />
         Upgrade

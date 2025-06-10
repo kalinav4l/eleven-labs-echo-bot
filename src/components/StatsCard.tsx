@@ -10,12 +10,12 @@ interface StatsCardProps {
 
 const StatsCard: React.FC<StatsCardProps> = ({ title, value, subtitle }) => {
   return (
-    <Card className="bg-[#181A1F] border-[#2A2D35] hover:border-[#3A3D45] transition-colors">
+    <Card className="bg-white border-2 border-[#FFBB00] hover:border-[#E6A600] transition-colors shadow-md">
       <CardContent className="p-6">
-        <div className="text-gray-400 text-sm font-medium mb-2">{title}</div>
-        <div className="text-3xl font-bold text-white mb-1">{value}</div>
+        <div className="text-gray-600 text-sm font-medium mb-2">{title}</div>
+        <div className="text-3xl font-bold text-black mb-1">{value}</div>
         {subtitle && (
-          <div className="text-gray-400 text-sm">{subtitle}</div>
+          <div className="text-gray-500 text-sm">{subtitle}</div>
         )}
       </CardContent>
     </Card>

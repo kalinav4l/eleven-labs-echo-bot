@@ -39,24 +39,25 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
       {/* Sidebar */}
       <div className={`
-        fixed top-0 left-0 h-full w-64 bg-[#111217] border-r border-[#2A2D35] z-50
+        fixed top-0 left-0 h-full w-64 bg-white border-r-2 border-[#FFBB00] z-50
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 lg:static lg:z-auto
+        shadow-lg
       `}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-[#2A2D35]">
-          <h2 className="text-white text-xl font-semibold">ElevenLabs</h2>
+        <div className="flex items-center justify-between p-6 border-b-2 border-[#FFBB00] bg-gradient-primary">
+          <h2 className="text-black text-xl font-bold">ElevenLabs</h2>
           <button
             onClick={onClose}
-            className="lg:hidden text-gray-400 hover:text-white"
+            className="lg:hidden text-black hover:text-gray-700"
           >
             <X size={24} />
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex flex-col h-full">
+        <nav className="flex flex-col h-full bg-white">
           <div className="flex-1 py-6">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -68,8 +69,8 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                   className={`
                     flex items-center px-6 py-3 text-sm font-medium transition-colors
                     ${isActive(item.path)
-                      ? 'text-white bg-[#1F2128] border-r-2 border-white'
-                      : 'text-gray-400 hover:text-white hover:bg-[#1F2128]'
+                      ? 'text-black bg-[#FFBB00] border-r-4 border-black font-bold'
+                      : 'text-gray-700 hover:text-black hover:bg-[#FFD666]'
                     }
                   `}
                 >
@@ -81,7 +82,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           </div>
 
           {/* Bottom menu */}
-          <div className="border-t border-[#2A2D35] py-4">
+          <div className="border-t-2 border-[#FFBB00] py-4">
             {bottomMenuItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -92,8 +93,8 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                   className={`
                     flex items-center px-6 py-3 text-sm font-medium transition-colors
                     ${isActive(item.path)
-                      ? 'text-white bg-[#1F2128] border-r-2 border-white'
-                      : 'text-gray-400 hover:text-white hover:bg-[#1F2128]'
+                      ? 'text-black bg-[#FFBB00] border-r-4 border-black font-bold'
+                      : 'text-gray-700 hover:text-black hover:bg-[#FFD666]'
                     }
                   `}
                 >
