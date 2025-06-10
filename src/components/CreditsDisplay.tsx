@@ -36,7 +36,7 @@ const CreditsDisplay = () => {
     return null;
   }
 
-  const remainingCredits = credits?.remaining_credits ?? 0;
+  const remainingCredits = credits?.remaining_credits ?? 10000;
 
   const handleUpgrade = () => {
     navigate('/pricing');
