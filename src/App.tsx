@@ -3,7 +3,7 @@ import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/components/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -17,6 +17,7 @@ import Info from "./pages/Info";
 import Pricing from "./pages/Pricing";
 import Voices from "./pages/Voices";
 import NotFound from "./pages/NotFound";
+import Account from "./pages/Account";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +39,7 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/account" element={<Account />} />
               <Route path="/agents" element={<AgentsList />} />
               <Route path="/call-history" element={<CallHistory />} />
               <Route path="/knowledge-base" element={<KnowledgeBase />} />
