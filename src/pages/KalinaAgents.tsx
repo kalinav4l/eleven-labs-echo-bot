@@ -15,11 +15,11 @@ interface KalinaAgent {
   id: string;
   agent_id: string;
   name: string;
-  description: string;
-  system_prompt: string;
-  voice_id: string;
-  provider: 'custom' | 'elevenlabs';
-  elevenlabs_agent_id?: string;
+  description: string | null;
+  system_prompt: string | null;
+  voice_id: string | null;
+  provider: string | null;
+  elevenlabs_agent_id?: string | null;
   created_at: string;
 }
 

@@ -158,6 +158,48 @@ export type Database = {
         }
         Relationships: []
       }
+      kalina_agents: {
+        Row: {
+          agent_id: string
+          created_at: string
+          description: string | null
+          elevenlabs_agent_id: string | null
+          id: string
+          name: string
+          provider: string | null
+          system_prompt: string | null
+          updated_at: string
+          user_id: string
+          voice_id: string | null
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          description?: string | null
+          elevenlabs_agent_id?: string | null
+          id?: string
+          name: string
+          provider?: string | null
+          system_prompt?: string | null
+          updated_at?: string
+          user_id: string
+          voice_id?: string | null
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          description?: string | null
+          elevenlabs_agent_id?: string | null
+          id?: string
+          name?: string
+          provider?: string | null
+          system_prompt?: string | null
+          updated_at?: string
+          user_id?: string
+          voice_id?: string | null
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string
