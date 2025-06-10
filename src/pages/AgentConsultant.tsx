@@ -112,6 +112,24 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
     }
   };
 
+  const copyAgentId = async () => {
+    if (!createdAgentId) return;
+    
+    try {
+      await navigator.clipboard.writeText(createdAgentId);
+      toast({
+        title: "Copiat!",
+        description: "ID-ul agentului a fost copiat în clipboard"
+      });
+    } catch (error) {
+      toast({
+        title: "Eroare",
+        description: "Nu am putut copia ID-ul agentului",
+        variant: "destructive"
+      });
+    }
+  };
+
   const createAgent = async () => {
     if (!agentName.trim() || !agentPrompt.trim()) {
       toast({
@@ -381,10 +399,26 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
                 Creează Agent
               </Button>
               {createdAgentId && (
-                <div className="p-3 bg-green-50 border border-green-200 rounded">
-                  <p className="text-green-800">
-                    ✅ Agent creat cu succes! ID: {createdAgentId}
-                  </p>
+                <div className="p-4 bg-green-50 border border-green-200 rounded">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-green-800 font-medium">
+                        ✅ Agent creat cu succes!
+                      </p>
+                      <p className="text-sm text-green-600 mt-1">
+                        ID Agent: {createdAgentId}
+                      </p>
+                    </div>
+                    <Button
+                      onClick={copyAgentId}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2 border-green-300 text-green-700 hover:bg-green-100"
+                    >
+                      <Copy className="w-4 h-4" />
+                      Copiază ID
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>
