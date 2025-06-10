@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -6,9 +7,9 @@ import {
   MessageSquare, 
   Settings, 
   LogOut, 
-  CreditCard,
-  Sparkles,
-  Volume2
+  Phone,
+  Database,
+  PhoneCall
 } from 'lucide-react';
 import { useAuth } from '@/components/AuthContext';
 import { cn } from '@/lib/utils';
@@ -23,13 +24,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const location = useLocation();
 
   const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/account' },
-    { icon: Bot, label: 'ChatWidget', path: '/account/agents' },
-    { icon: Sparkles, label: 'Kalina Agents', path: '/account/kalina-agents' },
-    { icon: Volume2, label: 'Voices', path: '/account/voices' },
-    { icon: MessageSquare, label: 'Istoric Chat', path: '/account/chat-history' },
-    { icon: CreditCard, label: 'Prețuri', path: '/pricing' },
-    { icon: Settings, label: 'Setări', path: '/account/settings' },
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
+    { icon: Bot, label: 'Agents', path: '/agents' },
+    { icon: PhoneCall, label: 'Call History', path: '/call-history' },
+    { icon: Database, label: 'Knowledge Base', path: '/knowledge-base' },
+    { icon: Phone, label: 'Phone Numbers', path: '/phone-numbers' },
+    { icon: Settings, label: 'Settings', path: '/account/settings' },
   ];
 
   const handleSignOut = async () => {
@@ -49,20 +49,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       
       {/* Sidebar */}
       <div className={cn(
-        "fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 z-50 transform transition-transform duration-300 ease-in-out",
+        "fixed top-0 left-0 h-full w-64 bg-[#0F1419] border-r border-[#2A2D35] z-50 transform transition-transform duration-300 ease-in-out",
         isOpen ? "translate-x-0" : "-translate-x-full",
         "lg:translate-x-0 lg:static lg:z-auto"
       )}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-black">Kalina AI</h2>
-            <p className="text-sm text-gray-600">Dashboard</p>
+          <div className="p-6 border-b border-[#2A2D35]">
+            <h2 className="text-xl font-bold text-white">ElevenLabs</h2>
+            <p className="text-sm text-gray-400">Conversational AI</p>
           </div>
 
           {/* Navigation */}
           <nav className="flex-1 p-4">
-            <ul className="space-y-2">
+            <ul className="space-y-1">
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
@@ -73,13 +73,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                       to={item.path}
                       onClick={onClose}
                       className={cn(
-                        "flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors",
+                        "flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors",
                         isActive
-                          ? "bg-black text-white"
-                          : "text-gray-700 hover:bg-gray-100"
+                          ? "bg-[#1F2128] text-white"
+                          : "text-gray-400 hover:bg-[#1F2128] hover:text-white"
                       )}
                     >
-                      <Icon className="w-5 h-5 mr-3" />
+                      <Icon className="w-4 h-4 mr-3" />
                       {item.label}
                     </Link>
                   </li>
@@ -89,13 +89,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-gray-200">
+          <div className="p-4 border-t border-[#2A2D35]">
             <button
               onClick={handleSignOut}
-              className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+              className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-400 rounded-lg hover:bg-[#1F2128] hover:text-white transition-colors"
             >
-              <LogOut className="w-5 h-5 mr-3" />
-              Deconectare
+              <LogOut className="w-4 h-4 mr-3" />
+              Back to ElevenLabs
             </button>
           </div>
         </div>
