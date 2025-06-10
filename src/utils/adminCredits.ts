@@ -5,8 +5,8 @@ export const addAdminCredits = async () => {
   try {
     const { data, error } = await supabase.rpc('admin_add_credits', {
       p_user_email: 'mariusvilran103@gmail.com',
-      p_amount: 1000000,
-      p_description: 'Admin bonus - 1,000,000 credits added'
+      p_amount: 10000,
+      p_description: 'Admin bonus - 1,000 credits added'
     });
 
     if (error) {
