@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Plus, MoreHorizontal, Trash2, X } from 'lucide-react';
+import { Search, Plus, MoreHorizontal, Trash2, X, Settings, Play, Calculator } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/components/ui/use-toast';
 
@@ -18,6 +18,7 @@ interface ElevenLabsAgent {
   };
   platform_settings?: Record<string, any>;
   created_at?: string;
+  tags?: string[];
 }
 
 const KalinaAgents = () => {
@@ -25,7 +26,10 @@ const KalinaAgents = () => {
   const [agents, setAgents] = useState<ElevenLabsAgent[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<ElevenLabsAgent | null>(null);
   const [creating, setCreating] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [agentName, setAgentName] = useState('');
@@ -113,6 +117,56 @@ const KalinaAgents = () => {
     }
   };
 
+  const updateAgent = async () => {
+    if (!selectedAgent || !agentName.trim()) {
+      return;
+    }
+
+    setUpdating(true);
+    try {
+      const response = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${selectedAgent.agent_id}`, {
+        method: "PATCH",
+        headers: {
+          "Xi-Api-Key": "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          "platform_settings": selectedAgent.platform_settings || {},
+          "name": agentName,
+          "tags": selectedAgent.tags || [],
+          "conversation_config": selectedAgent.conversation_config || {}
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const body = await response.json();
+      console.log('Agent updated:', body);
+
+      toast({
+        title: "Succes!",
+        description: `Agentul a fost actualizat cu succes.`
+      });
+
+      setShowEditModal(false);
+      setSelectedAgent(null);
+      setAgentName('');
+      fetchAgents();
+      
+    } catch (error) {
+      console.error('Error updating agent:', error);
+      toast({
+        title: "Eroare",
+        description: "Nu am putut actualiza agentul.",
+        variant: "destructive"
+      });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const deleteAgent = async (agentId: string) => {
     setDeleting(agentId);
     try {
@@ -142,6 +196,68 @@ const KalinaAgents = () => {
     } finally {
       setDeleting(null);
     }
+  };
+
+  const simulateConversation = async (agentId: string) => {
+    try {
+      const response = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${agentId}/simulate-conversation`, {
+        method: "POST",
+        headers: {
+          "Xi-Api-Key": "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({}),
+      });
+
+      const body = await response.json();
+      console.log('Conversation simulation:', body);
+      
+      toast({
+        title: "Simulare pornită",
+        description: "Conversația a fost simulată cu succes."
+      });
+    } catch (error) {
+      console.error('Error simulating conversation:', error);
+      toast({
+        title: "Eroare",
+        description: "Nu am putut simula conversația.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const calculateLLMUsage = async (agentId: string) => {
+    try {
+      const response = await fetch(`https://api.elevenlabs.io/v1/convai/agent/${agentId}/llm-usage/calculate`, {
+        method: "POST",
+        headers: {
+          "Xi-Api-Key": "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({}),
+      });
+
+      const body = await response.json();
+      console.log('LLM usage calculation:', body);
+      
+      toast({
+        title: "Calcul finalizat",
+        description: "Utilizarea LLM a fost calculată."
+      });
+    } catch (error) {
+      console.error('Error calculating LLM usage:', error);
+      toast({
+        title: "Eroare",
+        description: "Nu am putut calcula utilizarea LLM.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEditAgent = (agent: ElevenLabsAgent) => {
+    setSelectedAgent(agent);
+    setAgentName(agent.name);
+    setShowEditModal(true);
   };
 
   const filteredAgents = agents.filter(agent =>
@@ -227,23 +343,56 @@ const KalinaAgents = () => {
                 <TableHead className="text-gray-700 font-medium">Name</TableHead>
                 <TableHead className="text-gray-700 font-medium">Created by</TableHead>
                 <TableHead className="text-gray-700 font-medium">Created at</TableHead>
-                <TableHead className="w-12"></TableHead>
+                <TableHead className="w-32"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredAgents.map((agent) => (
                 <TableRow key={agent.agent_id} className="border-b border-gray-100 hover:bg-gray-50">
-                  <TableCell className="font-medium text-black">{agent.name}</TableCell>
+                  <TableCell 
+                    className="font-medium text-black cursor-pointer hover:text-blue-600"
+                    onClick={() => handleEditAgent(agent)}
+                  >
+                    {agent.name}
+                  </TableCell>
                   <TableCell className="text-gray-600">Mega Promoting</TableCell>
                   <TableCell className="text-gray-600">{formatDate(agent.created_at)}</TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => simulateConversation(agent.agent_id)}
+                        className="text-gray-600 hover:text-green-600 hover:bg-green-50"
+                        title="Simulate Conversation"
+                      >
+                        <Play className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => calculateLLMUsage(agent.agent_id)}
+                        className="text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                        title="Calculate LLM Usage"
+                      >
+                        <Calculator className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditAgent(agent)}
+                        className="text-gray-600 hover:text-yellow-600 hover:bg-yellow-50"
+                        title="Edit Agent"
+                      >
+                        <Settings className="w-4 h-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => deleteAgent(agent.agent_id)}
                         disabled={deleting === agent.agent_id}
                         className="text-gray-600 hover:text-red-600 hover:bg-red-50"
+                        title="Delete Agent"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -307,6 +456,55 @@ const KalinaAgents = () => {
                   className="bg-black hover:bg-gray-800 text-white"
                 >
                   {creating ? 'Creating...' : 'Create agent'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Agent Modal */}
+        {showEditModal && selectedAgent && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-black">Edit AI agent</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowEditModal(false)}
+                  className="text-gray-500 hover:text-black"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-black mb-2">
+                  AI Agent name
+                </label>
+                <Input
+                  value={agentName}
+                  onChange={(e) => setAgentName(e.target.value)}
+                  placeholder="Customer support agent"
+                  className="w-full border-gray-300"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowEditModal(false)}
+                  disabled={updating}
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={updateAgent}
+                  disabled={updating || !agentName.trim()}
+                  className="bg-black hover:bg-gray-800 text-white"
+                >
+                  {updating ? 'Updating...' : 'Update agent'}
                 </Button>
               </div>
             </div>

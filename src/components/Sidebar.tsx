@@ -24,7 +24,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/account' },
-    { icon: Bot, label: 'Agenți', path: '/account/agents' },
+    { icon: Bot, label: 'ChatWidget', path: '/account/agents' },
     { icon: Sparkles, label: 'Kalina Agents', path: '/account/kalina-agents' },
     { icon: MessageSquare, label: 'Istoric Chat', path: '/account/chat-history' },
     { icon: CreditCard, label: 'Prețuri', path: '/pricing' },
