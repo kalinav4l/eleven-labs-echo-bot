@@ -153,25 +153,27 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
             asr: {
               quality: "high",
               provider: "elevenlabs",
-              user_input_audio_format: "",
+              user_input_audio_format: "pcm_16000",
               keywords: []
             },
             language_presets: {
-              [agentLanguage]: true
+              [agentLanguage]: {
+                enabled: true
+              }
             },
             turn: {
               turn_timeout: 7,
               silence_end_call_timeout: -1,
-              mode: ""
+              mode: "turn"
             },
             tts: {
-              model_id: "",
+              model_id: "eleven_turbo_v2_5",
               voice_id: selectedVoice
             },
             conversation: {
               text_only: false,
               max_duration_seconds: 600,
-              client_events: []
+              client_events: ["conversation_started"]
             },
             agent: {
               prompt: {
@@ -179,15 +181,21 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
               }
             }
           },
+          platform_settings: {
+            call_limits: {}
+          },
           name: agentName
         })
       });
 
       if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error creating agent:', errorData);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const agentData = await response.json();
+      console.log('Agent created:', agentData);
       setCreatedAgentId(agentData.agent_id);
 
       // Save to Supabase
