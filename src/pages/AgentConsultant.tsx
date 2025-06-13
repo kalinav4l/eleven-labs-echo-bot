@@ -152,7 +152,7 @@ try {
     body: JSON.stringify({
       "conversation_config": {
         "asr": {
-          "language": "en" // Aici adaugi limba. Poți folosi coduri ISO 639-1, de exemplu "en" pentru engleză, "ro" pentru română.
+          "language": "ro" // Aici adaugi limba. Poți folosi coduri ISO 639-1, de exemplu "en" pentru engleză, "ro" pentru română.
         },
         "turn": {},
         "tts": {},
