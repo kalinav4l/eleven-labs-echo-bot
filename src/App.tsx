@@ -10,7 +10,6 @@ import Pricing from "./pages/Pricing";
 import Info from "./pages/Info";
 import AccountSettings from "./pages/AccountSettings";
 import KalinaAgents from "./pages/KalinaAgents";
-import Calls from "./pages/Calls";
 import Voices from "./pages/Voices";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -32,7 +31,6 @@ function App() {
             <Route path="/account" element={<Account />} />
             <Route path="/account/kalina-agents" element={<KalinaAgents />} />
             <Route path="/account/agent-consultant" element={<AgentConsultant />} />
-            <Route path="/account/calls" element={<Calls />} />
             <Route path="/account/voices" element={<Voices />} />
             <Route path="/account/settings" element={<AccountSettings />} />
             <Route path="*" element={<NotFound />} />
