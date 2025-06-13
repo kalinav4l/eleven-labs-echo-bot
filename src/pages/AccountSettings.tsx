@@ -29,27 +29,27 @@ const AccountSettings = () => {
     <DashboardLayout>
       <div className="p-6">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Setări</h1>
-          <p className="text-gray-400">Configurează preferințele tale pentru agenții AI</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Setări</h1>
+          <p className="text-muted-foreground">Configurează preferințele tale pentru agenții AI</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* General Settings */}
-          <Card className="bg-gray-900 border-gray-800">
+          <Card className="liquid-glass">
             <CardHeader>
-              <CardTitle className="text-white flex items-center">
+              <CardTitle className="text-foreground flex items-center">
                 <Settings className="w-5 h-5 mr-2" />
                 Setări Generale
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Limbă Implicită</label>
+                <label className="block text-muted-foreground text-sm mb-2">Limbă Implicită</label>
                 <Select value={settings.defaultLanguage} onValueChange={(value) => setSettings({...settings, defaultLanguage: value})}>
-                  <SelectTrigger className="bg-black border-gray-700 text-white">
+                  <SelectTrigger className="liquid-glass border-gray-200/50 text-foreground">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="liquid-glass border-gray-200/50">
                     <SelectItem value="ro">Română</SelectItem>
                     <SelectItem value="en">English</SelectItem>
                     <SelectItem value="es">Español</SelectItem>
@@ -59,12 +59,12 @@ const AccountSettings = () => {
               </div>
 
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Voce Implicită</label>
+                <label className="block text-muted-foreground text-sm mb-2">Voce Implicită</label>
                 <Select value={settings.defaultVoice} onValueChange={(value) => setSettings({...settings, defaultVoice: value})}>
-                  <SelectTrigger className="bg-black border-gray-700 text-white">
+                  <SelectTrigger className="liquid-glass border-gray-200/50 text-foreground">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="liquid-glass border-gray-200/50">
                     <SelectItem value="aria">Aria</SelectItem>
                     <SelectItem value="sarah">Sarah</SelectItem>
                     <SelectItem value="george">George</SelectItem>
@@ -75,8 +75,8 @@ const AccountSettings = () => {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <label className="text-white text-sm font-medium">Pornire Automată</label>
-                  <p className="text-gray-400 text-xs">Pornește automat conversația când intri pe site</p>
+                  <label className="text-foreground text-sm font-medium">Pornire Automată</label>
+                  <p className="text-muted-foreground text-xs">Pornește automat conversația când intri pe site</p>
                 </div>
                 <Switch 
                   checked={settings.autoStart}
@@ -86,8 +86,8 @@ const AccountSettings = () => {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <label className="text-white text-sm font-medium">Notificări</label>
-                  <p className="text-gray-400 text-xs">Primește notificări pentru mesaje noi</p>
+                  <label className="text-foreground text-sm font-medium">Notificări</label>
+                  <p className="text-muted-foreground text-xs">Primește notificări pentru mesaje noi</p>
                 </div>
                 <Switch 
                   checked={settings.notifications}
@@ -98,33 +98,33 @@ const AccountSettings = () => {
           </Card>
 
           {/* Audio Settings */}
-          <Card className="bg-gray-900 border-gray-800">
+          <Card className="liquid-glass">
             <CardHeader>
-              <CardTitle className="text-white flex items-center">
+              <CardTitle className="text-foreground flex items-center">
                 <Volume2 className="w-5 h-5 mr-2" />
                 Setări Audio
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Volum ({settings.volume}%)</label>
+                <label className="block text-muted-foreground text-sm mb-2">Volum ({settings.volume}%)</label>
                 <input
                   type="range"
                   min="0"
                   max="100"
                   value={settings.volume}
                   onChange={(e) => setSettings({...settings, volume: parseInt(e.target.value)})}
-                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                  className="w-full h-2 bg-gray-200/50 rounded-lg appearance-none cursor-pointer accent-accent"
                 />
               </div>
 
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Calitate Audio</label>
+                <label className="block text-muted-foreground text-sm mb-2">Calitate Audio</label>
                 <Select defaultValue="high">
-                  <SelectTrigger className="bg-black border-gray-700 text-white">
+                  <SelectTrigger className="liquid-glass border-gray-200/50 text-foreground">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="liquid-glass border-gray-200/50">
                     <SelectItem value="low">Scăzută (mai rapid)</SelectItem>
                     <SelectItem value="medium">Medie</SelectItem>
                     <SelectItem value="high">Înaltă (recomandat)</SelectItem>
@@ -133,12 +133,12 @@ const AccountSettings = () => {
               </div>
 
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Viteză Vorbire</label>
+                <label className="block text-muted-foreground text-sm mb-2">Viteză Vorbire</label>
                 <Select defaultValue="normal">
-                  <SelectTrigger className="bg-black border-gray-700 text-white">
+                  <SelectTrigger className="liquid-glass border-gray-200/50 text-foreground">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="liquid-glass border-gray-200/50">
                     <SelectItem value="slow">Încet</SelectItem>
                     <SelectItem value="normal">Normal</SelectItem>
                     <SelectItem value="fast">Rapid</SelectItem>
@@ -149,9 +149,9 @@ const AccountSettings = () => {
           </Card>
 
           {/* Privacy & Security */}
-          <Card className="bg-gray-900 border-gray-800">
+          <Card className="liquid-glass">
             <CardHeader>
-              <CardTitle className="text-white flex items-center">
+              <CardTitle className="text-foreground flex items-center">
                 <Shield className="w-5 h-5 mr-2" />
                 Confidențialitate & Securitate
               </CardTitle>
@@ -159,24 +159,24 @@ const AccountSettings = () => {
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <label className="text-white text-sm font-medium">Salvează Conversațiile</label>
-                  <p className="text-gray-400 text-xs">Stochează conversațiile pentru istoric</p>
+                  <label className="text-foreground text-sm font-medium">Salvează Conversațiile</label>
+                  <p className="text-muted-foreground text-xs">Stochează conversațiile pentru istoric</p>
                 </div>
                 <Switch defaultChecked />
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <label className="text-white text-sm font-medium">Analiză Conversații</label>
-                  <p className="text-gray-400 text-xs">Permite analiza pentru îmbunătățiri</p>
+                  <label className="text-foreground text-sm font-medium">Analiză Conversații</label>
+                  <p className="text-muted-foreground text-xs">Permite analiza pentru îmbunătățiri</p>
                 </div>
                 <Switch defaultChecked />
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <label className="text-white text-sm font-medium">Partajare Date</label>
-                  <p className="text-gray-400 text-xs">Partajează date anonime pentru cercetare</p>
+                  <label className="text-foreground text-sm font-medium">Partajare Date</label>
+                  <p className="text-muted-foreground text-xs">Partajează date anonime pentru cercetare</p>
                 </div>
                 <Switch />
               </div>
@@ -184,28 +184,28 @@ const AccountSettings = () => {
           </Card>
 
           {/* Account Info */}
-          <Card className="bg-gray-900 border-gray-800">
+          <Card className="liquid-glass">
             <CardHeader>
-              <CardTitle className="text-white flex items-center">
+              <CardTitle className="text-foreground flex items-center">
                 <User className="w-5 h-5 mr-2" />
                 Informații Cont
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Email</label>
+                <label className="block text-muted-foreground text-sm mb-2">Email</label>
                 <Input
                   value={user?.email || ''}
                   disabled
-                  className="bg-black border-gray-700 text-white"
+                  className="liquid-glass border-gray-200/50 text-foreground bg-gray-50/50"
                 />
               </div>
 
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Plan Curent</label>
-                <div className="flex items-center justify-between p-3 bg-gray-800 rounded">
-                  <span className="text-white">Plan Starter</span>
-                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                <label className="block text-muted-foreground text-sm mb-2">Plan Curent</label>
+                <div className="flex items-center justify-between p-3 liquid-glass rounded border border-gray-200/50">
+                  <span className="text-foreground">Plan Starter</span>
+                  <Button size="sm" className="glass-button bg-accent/90 hover:bg-accent text-white">
                     Upgrade
                   </Button>
                 </div>
@@ -216,7 +216,7 @@ const AccountSettings = () => {
 
         {/* Save Button */}
         <div className="mt-8 flex justify-end">
-          <Button className="bg-blue-600 hover:bg-blue-700">
+          <Button className="glass-button bg-accent/90 hover:bg-accent text-white">
             Salvează Setările
           </Button>
         </div>
