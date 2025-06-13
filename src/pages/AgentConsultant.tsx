@@ -141,30 +141,31 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
       return;
     }
 
-    setIsCreatingAgent(true);
-    try {
-      const response = await fetch("https://api.elevenlabs.io/v1/convai/agents/create", {
-        method: "POST",
-        headers: {
-          "Xi-Api-Key": "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873",
-          "Content-Type": "application/json"
+setIsCreatingAgent(true);
+try {
+  const response = await fetch("https://api.elevenlabs.io/v1/convai/agents/create", {
+    method: "POST",
+    headers: {
+      "Xi-Api-Key": "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      "conversation_config": {
+        "asr": {
+          "language": "en" // Aici adaugi limba. Poți folosi coduri ISO 639-1, de exemplu "en" pentru engleză, "ro" pentru română.
         },
-        body: JSON.stringify({
-          "conversation_config": {
-            "asr": {},
-            "turn": {},
-            "tts": {},
-            "conversation": {},
-            "agent": {
-              "prompt": {
-                "prompt": agentPrompt
-              }
-            }
-          },
-          "name": agentName
-        })
-      });
-
+        "turn": {},
+        "tts": {},
+        "conversation": {},
+        "agent": {
+          "prompt": {
+            "prompt": agentPrompt
+          }
+        }
+      },
+      "name": agentName
+    })
+  });
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Error creating agent:', errorData);
