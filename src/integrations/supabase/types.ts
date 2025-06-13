@@ -353,6 +353,27 @@ export type Database = {
         }
         Relationships: []
       }
+      produse_sushi: {
+        Row: {
+          descriere: string | null
+          id: number
+          nume_sushi: string
+          pret: number | null
+        }
+        Insert: {
+          descriere?: string | null
+          id?: number
+          nume_sushi: string
+          pret?: number | null
+        }
+        Update: {
+          descriere?: string | null
+          id?: number
+          nume_sushi?: string
+          pret?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -383,6 +404,21 @@ export type Database = {
           last_name?: string | null
           plan?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      telefonie: {
+        Row: {
+          id: number
+          number: number | null
+        }
+        Insert: {
+          id?: number
+          number?: number | null
+        }
+        Update: {
+          id?: number
+          number?: number | null
         }
         Relationships: []
       }

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -256,37 +257,37 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
 
   return (
     <DashboardLayout>
-      <div className="p-6 bg-white min-h-screen">
+      <div className="p-6">
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Header */}
           <div>
-            <h1 className="text-3xl font-bold text-black mb-2">Agent Consultant AI</h1>
-            <p className="text-gray-600">Creează automat un agent consultant pentru orice site web</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Agent Consultant AI</h1>
+            <p className="text-muted-foreground">Creează automat un agent consultant pentru orice site web</p>
           </div>
 
           {/* Section 1: Generate Prompt */}
-          <Card>
+          <Card className="liquid-glass">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="w-5 h-5" />
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <Globe className="w-5 h-5 text-accent" />
                 Pas 1: Generează Prompt din Site Web
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="website-url">URL Site Web</Label>
+                <Label htmlFor="website-url" className="text-foreground">URL Site Web</Label>
                 <Input
                   id="website-url"
                   value={websiteUrl}
                   onChange={(e) => setWebsiteUrl(e.target.value)}
                   placeholder="https://example.com"
-                  className="border-gray-300"
+                  className="glass-input"
                 />
               </div>
               <Button 
                 onClick={generatePrompt}
                 disabled={isGeneratingPrompt}
-                className="bg-black hover:bg-gray-800 text-white"
+                className="bg-foreground text-background hover:bg-foreground/90"
               >
                 {isGeneratingPrompt && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Generează Prompt
@@ -294,12 +295,12 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
               {generatedPrompt && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <Label htmlFor="generated-prompt">Prompt Generat</Label>
+                    <Label htmlFor="generated-prompt" className="text-foreground">Prompt Generat</Label>
                     <Button
                       onClick={copyPrompt}
                       variant="outline"
                       size="sm"
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 glass-button"
                     >
                       <Copy className="w-4 h-4" />
                       Copiază
@@ -310,7 +311,7 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
                     value={generatedPrompt}
                     onChange={(e) => setGeneratedPrompt(e.target.value)}
                     rows={8}
-                    className="border-gray-300"
+                    className="glass-input"
                   />
                 </div>
               )}
@@ -318,42 +319,42 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
           </Card>
 
           {/* Section 2: Create Agent */}
-          <Card>
+          <Card className="liquid-glass">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bot className="w-5 h-5" />
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <Bot className="w-5 h-5 text-accent" />
                 Pas 2: Creează Agentul AI
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="agent-name">Numele Agentului</Label>
+                <Label htmlFor="agent-name" className="text-foreground">Numele Agentului</Label>
                 <Input
                   id="agent-name"
                   value={agentName}
                   onChange={(e) => setAgentName(e.target.value)}
                   placeholder="Agent Consultant Site"
-                  className="border-gray-300"
+                  className="glass-input"
                 />
               </div>
               <div>
-                <Label htmlFor="agent-prompt">Promptul Agentului</Label>
+                <Label htmlFor="agent-prompt" className="text-foreground">Promptul Agentului</Label>
                 <Textarea
                   id="agent-prompt"
                   value={agentPrompt}
                   onChange={(e) => setAgentPrompt(e.target.value)}
                   placeholder="Introdu promptul pentru agent sau generează unul din secțiunea de mai sus..."
                   rows={6}
-                  className="border-gray-300"
+                  className="glass-input"
                 />
               </div>
               <div>
-                <Label htmlFor="agent-language">Limba</Label>
+                <Label htmlFor="agent-language" className="text-foreground">Limba</Label>
                 <Select value={agentLanguage} onValueChange={setAgentLanguage}>
-                  <SelectTrigger className="border-gray-300">
+                  <SelectTrigger className="glass-input">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white border border-gray-200">
                     <SelectItem value="ro">Română</SelectItem>
                     <SelectItem value="en">English</SelectItem>
                     <SelectItem value="es">Español</SelectItem>
@@ -362,12 +363,12 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
                 </Select>
               </div>
               <div>
-                <Label htmlFor="voice-select">Vocea Agentului</Label>
+                <Label htmlFor="voice-select" className="text-foreground">Vocea Agentului</Label>
                 <Select value={selectedVoice} onValueChange={setSelectedVoice}>
-                  <SelectTrigger className="border-gray-300">
+                  <SelectTrigger className="glass-input">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white border border-gray-200">
                     {voices.map((voice) => (
                       <SelectItem key={voice.id} value={voice.id}>
                         {voice.name}
@@ -379,19 +380,19 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
               <Button 
                 onClick={createAgent}
                 disabled={isCreatingAgent || !agentPrompt}
-                className="bg-black hover:bg-gray-800 text-white"
+                className="bg-foreground text-background hover:bg-foreground/90"
               >
                 {isCreatingAgent && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Creează Agent
               </Button>
               {createdAgentId && (
-                <div className="p-4 bg-green-50 border border-green-200 rounded">
+                <div className="p-4 bg-accent/10 border border-accent/20 rounded-lg">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-green-800 font-medium">
+                      <p className="text-accent font-medium">
                         ✅ Agent creat cu succes!
                       </p>
-                      <p className="text-sm text-green-600 mt-1">
+                      <p className="text-sm text-muted-foreground mt-1">
                         ID Agent: {createdAgentId}
                       </p>
                     </div>
@@ -399,7 +400,7 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
                       onClick={copyAgentId}
                       variant="outline"
                       size="sm"
-                      className="flex items-center gap-2 border-green-300 text-green-700 hover:bg-green-100"
+                      className="flex items-center gap-2 border-accent/30 text-accent hover:bg-accent/10"
                     >
                       <Copy className="w-4 h-4" />
                       Copiază ID
@@ -411,46 +412,46 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
           </Card>
 
           {/* Section 3: Phone Call */}
-          <Card>
+          <Card className="liquid-glass">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Phone className="w-5 h-5" />
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <Phone className="w-5 h-5 text-accent" />
                 Pas 3: Inițiază Apel Telefonic
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="custom-agent-id">ID Agent (opțional)</Label>
+                <Label htmlFor="custom-agent-id" className="text-foreground">ID Agent (opțional)</Label>
                 <Input
                   id="custom-agent-id"
                   value={customAgentId}
                   onChange={(e) => setCustomAgentId(e.target.value)}
                   placeholder="agent_01xxx... (sau folosește agentul creat mai sus)"
-                  className="border-gray-300"
+                  className="glass-input"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Dacă nu completezi, se va folosi agentul creat în secțiunea de mai sus
                 </p>
               </div>
               <div>
-                <Label htmlFor="phone-number">Numărul de Telefon</Label>
+                <Label htmlFor="phone-number" className="text-foreground">Numărul de Telefon</Label>
                 <Input
                   id="phone-number"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="+40712345678"
-                  className="border-gray-300"
+                  className="glass-input"
                 />
               </div>
               <Button 
                 onClick={initiateCall}
                 disabled={isInitiatingCall || (!createdAgentId && !customAgentId)}
-                className="bg-black hover:bg-gray-800 text-white"
+                className="bg-foreground text-background hover:bg-foreground/90"
               >
                 {isInitiatingCall && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Inițiază Apel
               </Button>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 Agentul te va suna la numărul specificat și va funcționa ca un consultant pentru site-ul analizat.
               </p>
             </CardContent>

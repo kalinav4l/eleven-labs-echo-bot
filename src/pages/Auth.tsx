@@ -46,13 +46,19 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-black border-gray-800 animate-fade-in">
-        <CardHeader>
-          <CardTitle className="text-white text-center">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Glass Effects */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/3 left-1/3 w-72 h-72 bg-gradient-to-r from-green-200/30 to-emerald-200/30 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/3 right-1/3 w-72 h-72 bg-gradient-to-r from-blue-200/30 to-cyan-200/30 rounded-full blur-3xl"></div>
+      </div>
+
+      <Card className="w-full max-w-md liquid-glass relative z-10 animate-fade-in">
+        <CardHeader className="text-center">
+          <CardTitle className="text-foreground text-2xl font-semibold">
             {isLogin ? 'Conectare' : 'Înregistrare'}
           </CardTitle>
-          <CardDescription className="text-gray-400 text-center">
+          <CardDescription className="text-muted-foreground">
             {isLogin 
               ? 'Conectează-te la contul tău' 
               : 'Creează un cont nou'
@@ -68,14 +74,14 @@ const Auth = () => {
                   placeholder="Prenume"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="bg-black border-gray-800 text-white placeholder-gray-500"
+                  className="glass-input"
                 />
                 <Input
                   type="text"
                   placeholder="Nume"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="bg-black border-gray-800 text-white placeholder-gray-500"
+                  className="glass-input"
                 />
               </>
             )}
@@ -85,7 +91,7 @@ const Auth = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-black border-gray-800 text-white placeholder-gray-500"
+              className="glass-input"
             />
             <Input
               type="password"
@@ -93,17 +99,17 @@ const Auth = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-black border-gray-800 text-white placeholder-gray-500"
+              className="glass-input"
             />
             
             {error && (
-              <p className="text-red-400 text-sm text-center">{error}</p>
+              <p className="text-destructive text-sm text-center">{error}</p>
             )}
             
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-white text-black hover:bg-gray-200 transition-colors"
+              className="w-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
             >
               {loading ? 'Se încarcă...' : (isLogin ? 'Conectare' : 'Înregistrare')}
             </Button>
@@ -112,7 +118,7 @@ const Auth = () => {
           <div className="mt-4 text-center">
             <button
               onClick={() => setIsLogin(!isLogin)}
-              className="text-gray-400 hover:text-white text-sm transition-colors"
+              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
             >
               {isLogin 
                 ? 'Nu ai cont? Înregistrează-te' 

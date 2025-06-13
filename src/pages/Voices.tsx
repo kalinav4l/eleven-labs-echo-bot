@@ -118,8 +118,8 @@ const Voices = () => {
       <DashboardLayout>
         <div className="p-6">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-            <div className="h-64 bg-gray-200 rounded"></div>
+            <div className="h-8 bg-gray-200/50 rounded w-1/4 mb-4"></div>
+            <div className="h-64 bg-gray-200/50 rounded-xl"></div>
           </div>
         </div>
       </DashboardLayout>
@@ -128,53 +128,53 @@ const Voices = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6 bg-white min-h-screen">
+      <div className="p-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-black mb-2">Voices</h1>
-            <p className="text-gray-600">Browse and preview available ElevenLabs voices</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Voices</h1>
+            <p className="text-muted-foreground">Browse and preview available ElevenLabs voices</p>
           </div>
         </div>
 
         {/* Search */}
         <div className="mb-6">
           <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search voices..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border-gray-300"
+              className="pl-10 glass-input"
             />
           </div>
         </div>
 
         {/* Voices Table */}
-        <div className="border border-gray-200 rounded-lg bg-white">
+        <div className="liquid-glass rounded-xl overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow className="border-b border-gray-200">
-                <TableHead className="text-gray-700 font-medium">Name</TableHead>
-                <TableHead className="text-gray-700 font-medium">Category</TableHead>
-                <TableHead className="text-gray-700 font-medium">Description</TableHead>
-                <TableHead className="text-gray-700 font-medium">Verified</TableHead>
+              <TableRow className="border-b border-gray-200/50">
+                <TableHead className="text-foreground font-medium">Name</TableHead>
+                <TableHead className="text-foreground font-medium">Category</TableHead>
+                <TableHead className="text-foreground font-medium">Description</TableHead>
+                <TableHead className="text-foreground font-medium">Verified</TableHead>
                 <TableHead className="w-32">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredVoices.map((voice) => (
-                <TableRow key={voice.voice_id} className="border-b border-gray-100 hover:bg-gray-50">
-                  <TableCell className="font-medium text-black">{voice.name}</TableCell>
-                  <TableCell className="text-gray-600">{voice.category || 'General'}</TableCell>
-                  <TableCell className="text-gray-600">
+                <TableRow key={voice.voice_id} className="border-b border-gray-100/50 hover:bg-gray-50/50">
+                  <TableCell className="font-medium text-foreground">{voice.name}</TableCell>
+                  <TableCell className="text-muted-foreground">{voice.category || 'General'}</TableCell>
+                  <TableCell className="text-muted-foreground">
                     {voice.description || 'No description available'}
                   </TableCell>
-                  <TableCell className="text-gray-600">
+                  <TableCell className="text-muted-foreground">
                     {voice.voice_verification?.is_verified ? (
-                      <span className="text-green-600">✓ Verified</span>
+                      <span className="text-accent">✓ Verified</span>
                     ) : (
-                      <span className="text-gray-400">Not verified</span>
+                      <span className="text-muted-foreground">Not verified</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -183,7 +183,7 @@ const Voices = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => playVoice(voice.preview_url, voice.name)}
-                        className="text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                        className="text-muted-foreground hover:text-accent hover:bg-accent/10"
                         title="Play Preview"
                       >
                         <Play className="w-4 h-4" />
@@ -197,14 +197,14 @@ const Voices = () => {
 
           {filteredVoices.length === 0 && !loading && (
             <div className="p-8 text-center">
-              <Volume2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No voices found</p>
+              <Volume2 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No voices found</p>
             </div>
           )}
         </div>
 
         {/* Voice Count */}
-        <div className="mt-4 text-sm text-gray-600">
+        <div className="mt-4 text-sm text-muted-foreground">
           Showing {filteredVoices.length} of {voices.length} voices
         </div>
       </div>
