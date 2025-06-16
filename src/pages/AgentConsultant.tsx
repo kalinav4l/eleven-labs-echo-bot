@@ -132,6 +132,33 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
     }
   };
 
+  interface BaseTTSConfig {
+    voice_id: string;
+  }
+
+  interface TTSConfigWithModel extends BaseTTSConfig {
+    model_id: string;
+  }
+
+  type TTSConfig = BaseTTSConfig | TTSConfigWithModel;
+
+  interface AgentConfig {
+    language: string;
+    prompt: {
+      prompt: string;
+    };
+  }
+
+  interface ConversationConfig {
+    agent: AgentConfig;
+    tts: TTSConfig;
+  }
+
+  interface CreateAgentRequest {
+    conversation_config: ConversationConfig;
+    name: string;
+  }
+
   const createAgent = async () => {
     if (!agentName.trim() || !agentPrompt.trim()) {
       toast({
@@ -142,30 +169,37 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
       return;
     }
 
-
     setIsCreatingAgent(true);
     try {
+      const ttsConfig: TTSConfig = agentLanguage !== "en"
+          ? {
+            voice_id: selectedVoice,
+            model_id: defaultModelId
+          } as TTSConfigWithModel
+          : {
+            voice_id: selectedVoice
+          } as BaseTTSConfig;
+
+      const requestBody: CreateAgentRequest = {
+        conversation_config: {
+          agent: {
+            language: agentLanguage,
+            prompt: {
+              prompt: agentPrompt
+            }
+          },
+          tts: ttsConfig
+        },
+        name: agentName
+      };
+
       const response = await fetch("https://api.elevenlabs.io/v1/convai/agents/create", {
         method: "POST",
         headers: {
           "Xi-Api-Key": "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873",
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          "conversation_config": {
-            "agent": {
-              "language": agentLanguage,
-              "prompt": {
-                "prompt": agentPrompt
-              }
-            },
-            "tts": {
-              "voice_id": selectedVoice,
-              "model_id": defaultModelId
-            }
-          },
-          "name": agentName
-        })
+        body: JSON.stringify(requestBody)
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -179,16 +213,16 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
 
       // Save to Supabase
       const { error: supabaseError } = await supabase
-        .from('kalina_agents')
-        .insert({
-          agent_id: `agent_${Date.now()}`,
-          elevenlabs_agent_id: agentData.agent_id,
-          name: agentName,
-          description: `Agent consultant generat automat pentru ${websiteUrl}`,
-          system_prompt: agentPrompt,
-          voice_id: selectedVoice,
-          user_id: user.id
-        });
+          .from('kalina_agents')
+          .insert({
+            agent_id: `agent_${Date.now()}`,
+            elevenlabs_agent_id: agentData.agent_id,
+            name: agentName,
+            description: `Agent consultant generat automat pentru ${websiteUrl}`,
+            system_prompt: agentPrompt,
+            voice_id: selectedVoice,
+            user_id: user.id
+          });
 
       if (supabaseError) {
         console.error('Error saving to Supabase:', supabaseError);
