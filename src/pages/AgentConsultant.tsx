@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Globe, Bot, Phone, Copy } from 'lucide-react';
 
 const AgentConsultant = () => {
+  const defaultModelId = "eleven_flash_v2_5";
   const { user } = useAuth();
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [generatedPrompt, setGeneratedPrompt] = useState('');
@@ -141,6 +142,7 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
       return;
     }
 
+
     setIsCreatingAgent(true);
     try {
       const response = await fetch("https://api.elevenlabs.io/v1/convai/agents/create", {
@@ -151,24 +153,20 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
         },
         body: JSON.stringify({
           "conversation_config": {
-            "asr": {
-              "language": agentLanguage
-            },
-            "turn": {},
-            "tts": {
-              "model": "eleven_flash_v2_5"
-            },
-            "conversation": {},
             "agent": {
+              "language": agentLanguage,
               "prompt": {
                 "prompt": agentPrompt
               }
+            },
+            "tts": {
+              "voice_id": selectedVoice,
+              "model_id": defaultModelId
             }
           },
           "name": agentName
         })
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Error creating agent:', errorData);
