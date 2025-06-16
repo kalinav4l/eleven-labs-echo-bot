@@ -38,11 +38,11 @@ const AgentConsultant = () => {
   }
 
   const voices = [
-    { id: 'cjVigY5qzO86Huf0OWal', name: 'Eric (Romanian)' },
-    { id: '9BWtsMINqrJLrRacOk9x', name: 'Aria (English)' },
-    { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah (English)' },
-    { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura (English)' },
-    { id: 'IKne3meq5aSn9XLyUdCD', name: 'Charlie (English)' }
+    { id: 'cjVigY5qzO86Huf0OWal', name: 'Eric' },
+    { id: '9BWtsMINqrJLrRacOk9x', name: 'Aria' },
+    { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah' },
+    { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura' },
+    { id: 'IKne3meq5aSn9XLyUdCD', name: 'Charlie' }
   ];
 
   const generatePrompt = async () => {
