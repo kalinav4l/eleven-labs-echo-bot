@@ -21,7 +21,7 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    const systemPrompt = `Tu ești ${agentName}, un agent AI conversațional. Răspunde în română într-un mod prietenos și util. Păstrează răspunsurile scurte și clare.`;
+    const systemPrompt = `You are ${agentName}, a conversational AI agent. Respond in a friendly and helpful way. Keep your responses short and clear.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',

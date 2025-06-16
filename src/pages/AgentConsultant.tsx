@@ -19,6 +19,7 @@ const AgentConsultant = () => {
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [generatedPrompt, setGeneratedPrompt] = useState('');
   const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
+  const [additionalPrompt, setAdditionalPrompt] = useState('');
   
   // Agent creation form
   const [agentName, setAgentName] = useState('');
@@ -45,45 +46,65 @@ const AgentConsultant = () => {
     { id: 'IKne3meq5aSn9XLyUdCD', name: 'Charlie' }
   ];
 
-  const generatePrompt = async () => {
+  const generatePrompt = async (): Promise<string | null> => {
     if (!websiteUrl.trim()) {
       toast({
         title: "Eroare",
         description: "Te rog introdu un URL valid",
         variant: "destructive"
       });
-      return;
+      return null;
     }
 
     setIsGeneratingPrompt(true);
     try {
       const { data, error } = await supabase.functions.invoke('chat-with-gpt', {
         body: {
-          message: `Analizează următorul site web: ${websiteUrl}
+          message:
+              `You are an expert AI Prompt Engineer. Your task is to analyze the content of the website at the URL provided below and generate a comprehensive system prompt for a new conversational AI agent.
 
-Te rog să extragi informațiile principale despre compania/serviciile oferite și să creezi un prompt detaliat pentru un agent AI conversațional care va funcționa ca un consultant pentru această companie.
-
-Promptul trebuie să includă:
-1. Prezentarea companiei/serviciului
-2. Principalele produse/servicii oferite
-3. Avantajele competitive
-4. Informații de contact și proceduri
-5. Tonul de conversație (prietenos, profesional, etc.)
-6. Instrucțiuni pentru răspunsurile la întrebări frecvente
-
-Răspunde doar cu promptul final, fără explicații suplimentare.`,
+              **Website to Analyze:**
+              ${websiteUrl}
+              
+              **System Prompt Structure:**
+              Based on your analysis, create the agent's system prompt using the following Markdown structure.
+              
+              ## Persona & Goal
+              - **Role:** Define the agent's persona (e.g., "a friendly and professional customer support consultant").
+              - **Primary Goal:** State the main objective (e.g., "to assist users by answering questions about the company's services, providing contact information, and capturing leads").
+              
+              ## Core Knowledge Base
+              - **Company/Service Introduction:** A brief summary of what the company does.
+              - **Main Products/Services:** A list or detailed description of the offerings.
+              - **Competitive Advantages:** What makes the company unique or better than competitors.
+              - **Contact Information & Procedures:** How users can contact the company (email, phone, form) and what the procedure is.
+              
+              ## Priority Directives
+              Incorporate the following user-provided directive. This is the most important instruction and must be followed. If the text for the directive is empty or just whitespace, you can omit this entire "Priority Directives" section.
+              - **User Directive:** ${additionalPrompt}
+              
+              ## Conversational Style
+              - **Tone:** Describe the tone (e.g., "Friendly, professional, helpful, and slightly informal").
+              - **Answering FAQs:** Instruct the agent on how to handle frequently asked questions based on the knowledge base.
+              
+              **Final Instruction:**
+              Your output must be ONLY the generated system prompt in Markdown format, ready to be used. Do not include any of your own commentary, introductions, or explanations.`,
           agentName: 'GPT-4 Consultant Generator'
         }
       });
 
       if (error) throw error;
 
-      setGeneratedPrompt(data.response);
-      setAgentPrompt(data.response); // Auto-populate agent prompt field
+      const newPrompt = data.response;
+      setGeneratedPrompt(newPrompt);
+      setAgentPrompt(newPrompt);
       toast({
         title: "Succes!",
         description: "Promptul a fost generat cu succes"
       });
+
+      return newPrompt;
+
     } catch (error) {
       console.error('Error generating prompt:', error);
       toast({
@@ -91,38 +112,27 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
         description: "Nu am putut genera promptul",
         variant: "destructive"
       });
+      return null;
     } finally {
       setIsGeneratingPrompt(false);
     }
   };
 
-  const copyPrompt = async () => {
-    if (!generatedPrompt) return;
-    
-    try {
-      await navigator.clipboard.writeText(generatedPrompt);
-      toast({
-        title: "Copiat!",
-        description: "Promptul a fost copiat în clipboard"
-      });
-    } catch (error) {
-      toast({
-        title: "Eroare",
-        description: "Nu am putut copia promptul",
-        variant: "destructive"
-      });
-    }
-  };
+  const copyAgentIdToClipboard = async() => {
+    await copyAgentId(true, createdAgentId)
+  }
 
-  const copyAgentId = async () => {
-    if (!createdAgentId) return;
-    
+  const copyAgentId = async (showCopiedMessage: boolean, agentId: string) => {
+    if (!agentId) return;
+
     try {
-      await navigator.clipboard.writeText(createdAgentId);
-      toast({
-        title: "Copiat!",
-        description: "ID-ul agentului a fost copiat în clipboard"
-      });
+      await navigator.clipboard.writeText(agentId);
+      if (showCopiedMessage) {
+        toast({
+          title: "Copiat!",
+          description: "ID-ul agentului a fost copiat în clipboard"
+        });
+      }
     } catch (error) {
       toast({
         title: "Eroare",
@@ -160,14 +170,28 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
   }
 
   const createAgent = async () => {
-    if (!agentName.trim() || !agentPrompt.trim()) {
+    if (!agentName.trim()) {
       toast({
         title: "Eroare",
-        description: "Te rog completează numele agentului și promptul",
+        description: "Te rog completează numele agentului.",
         variant: "destructive"
       });
       return;
     }
+
+    setCreatedAgentId('');
+
+    const newlyGeneratedPrompt = await generatePrompt();
+
+    // If it returned null, stop the process. The toast is already shown inside generatePrompt.
+    if (!newlyGeneratedPrompt) {
+      console.log("Prompt generation failed, stopping agent creation.");
+      return;
+    }
+
+    // 3. Now you have both pieces of data, guaranteed to be up-to-date.
+    console.log("Creating agent with Name:", agentName); // From state
+    console.log("Creating agent with Prompt:", newlyGeneratedPrompt); // From function return
 
     setIsCreatingAgent(true);
     try {
@@ -209,7 +233,6 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
 
       const agentData = await response.json();
       console.log('Agent created:', agentData);
-      setCreatedAgentId(agentData.agent_id);
 
       // Save to Supabase
       const { error: supabaseError } = await supabase
@@ -228,10 +251,13 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
         console.error('Error saving to Supabase:', supabaseError);
       }
 
+      setCreatedAgentId(agentData.agent_id);
       toast({
         title: "Succes!",
-        description: `Agentul "${agentName}" a fost creat cu succes`
+        description: `Agentul "${agentName}" a fost creat cu succes și a fost copiat în clipboard`
       });
+      await copyAgentId(false, agentData.agent_id);
+
     } catch (error) {
       console.error('Error creating agent:', error);
       toast({
@@ -291,6 +317,28 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
     }
   };
 
+  const renderButtonContent = (): React.ReactNode => {
+    if (isCreatingAgent) {
+      return (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Se Generează Agent
+          </>
+      );
+    }
+
+    if (isGeneratingPrompt) {
+      return (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Se Generează Prompt
+          </>
+      );
+    }
+
+    return 'Generează Agent';
+  };
+
   return (
     <DashboardLayout>
       <div className="p-6">
@@ -306,7 +354,7 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-foreground">
                 <Globe className="w-5 h-5 text-accent" />
-                Pas 1: Generează Prompt din Site Web
+                Pas 1: Generează Agent
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -320,68 +368,24 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
                   className="glass-input"
                 />
               </div>
-              <Button 
-                onClick={generatePrompt}
-                disabled={isGeneratingPrompt}
-                className="bg-foreground text-background hover:bg-foreground/90"
-              >
-                {isGeneratingPrompt && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Generează Prompt
-              </Button>
-              {generatedPrompt && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Label htmlFor="generated-prompt" className="text-foreground">Prompt Generat</Label>
-                    <Button
-                      onClick={copyPrompt}
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-2 glass-button"
-                    >
-                      <Copy className="w-4 h-4" />
-                      Copiază
-                    </Button>
-                  </div>
-                  <Textarea
-                    id="generated-prompt"
-                    value={generatedPrompt}
-                    onChange={(e) => setGeneratedPrompt(e.target.value)}
-                    rows={8}
-                    className="glass-input"
-                  />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Section 2: Create Agent */}
-          <Card className="liquid-glass">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-foreground">
-                <Bot className="w-5 h-5 text-accent" />
-                Pas 2: Creează Agentul AI
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="agent-name" className="text-foreground">Numele Agentului</Label>
+                <Label htmlFor="prompt-aditional" className="text-foreground">Prompt Aditional</Label>
                 <Input
-                  id="agent-name"
-                  value={agentName}
-                  onChange={(e) => setAgentName(e.target.value)}
-                  placeholder="Agent Consultant Site"
-                  className="glass-input"
+                    id="prompt-aditional"
+                    value={additionalPrompt}
+                    onChange={(e) => setAdditionalPrompt(e.target.value)}
+                    placeholder="De exemplu: Atrage atentia ca in urmatoarele 3 luni avem reducere 30%"
+                    className="glass-input"
                 />
               </div>
               <div>
-                <Label htmlFor="agent-prompt" className="text-foreground">Promptul Agentului</Label>
-                <Textarea
-                  id="agent-prompt"
-                  value={agentPrompt}
-                  onChange={(e) => setAgentPrompt(e.target.value)}
-                  placeholder="Introdu promptul pentru agent sau generează unul din secțiunea de mai sus..."
-                  rows={6}
-                  className="glass-input"
+                <Label htmlFor="agent-name" className="text-foreground">Numele Agentului</Label>
+                <Input
+                    id="agent-name"
+                    value={agentName}
+                    onChange={(e) => setAgentName(e.target.value)}
+                    placeholder="Agent Consultant Site"
+                    className="glass-input"
                 />
               </div>
               <div>
@@ -392,6 +396,7 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
                   </SelectTrigger>
                   <SelectContent className="bg-white border border-gray-200">
                     <SelectItem value="ro">Română</SelectItem>
+                    <SelectItem value="ru">Русский</SelectItem>
                     <SelectItem value="en">English</SelectItem>
                     <SelectItem value="es">Español</SelectItem>
                     <SelectItem value="fr">Français</SelectItem>
@@ -406,53 +411,51 @@ Răspunde doar cu promptul final, fără explicații suplimentare.`,
                   </SelectTrigger>
                   <SelectContent className="bg-white border border-gray-200">
                     {voices.map((voice) => (
-                      <SelectItem key={voice.id} value={voice.id}>
-                        {voice.name}
-                      </SelectItem>
+                        <SelectItem key={voice.id} value={voice.id}>
+                          {voice.name}
+                        </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <Button 
-                onClick={createAgent}
-                disabled={isCreatingAgent || !agentPrompt}
-                className="bg-foreground text-background hover:bg-foreground/90"
+              <Button
+                  onClick={createAgent}
+                  disabled={isCreatingAgent || isGeneratingPrompt || !websiteUrl || !agentName}
+                  className="bg-foreground text-background hover:bg-foreground/90 flex items-center justify-center"
               >
-                {isCreatingAgent && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Creează Agent
+                {renderButtonContent()}
               </Button>
               {createdAgentId && (
-                <div className="p-4 bg-accent/10 border border-accent/20 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-accent font-medium">
-                        ✅ Agent creat cu succes!
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        ID Agent: {createdAgentId}
-                      </p>
+                  <div className="p-4 bg-accent/10 border border-accent/20 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-accent font-medium">
+                          ✅ Agent creat cu succes!
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          ID Agent: {createdAgentId}
+                        </p>
+                      </div>
+                      <Button
+                          onClick={copyAgentIdToClipboard}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2 border-accent/30 text-accent hover:bg-accent/10"
+                      >
+                        <Copy className="w-4 h-4" />
+                        Copiază ID
+                      </Button>
                     </div>
-                    <Button
-                      onClick={copyAgentId}
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-2 border-accent/30 text-accent hover:bg-accent/10"
-                    >
-                      <Copy className="w-4 h-4" />
-                      Copiază ID
-                    </Button>
                   </div>
-                </div>
               )}
             </CardContent>
           </Card>
-
           {/* Section 3: Phone Call */}
           <Card className="liquid-glass">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-foreground">
                 <Phone className="w-5 h-5 text-accent" />
-                Pas 3: Inițiază Apel Telefonic
+                Pas 2: Inițiază Apel Telefonic
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
