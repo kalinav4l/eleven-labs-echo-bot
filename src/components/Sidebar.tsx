@@ -36,7 +36,7 @@ const Sidebar = ({
           
           <Link to="/account/kalina-agents" className={`${location.pathname === '/account/kalina-agents' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors`}>
             <Bot className="mr-3 h-6 w-6" />
-            Agents
+            Agenți
           </Link>
 
           <Link to="/account/agent-consultant" className={`${location.pathname === '/account/agent-consultant' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors`}>
@@ -46,7 +46,7 @@ const Sidebar = ({
 
           <Link to="/account/voices" className={`${location.pathname === '/account/voices' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors`}>
             <Volume2 className="mr-3 h-6 w-6" />
-            Voices
+            Voci
           </Link>
 
           <Link to="/account/settings" className={`${location.pathname === '/account/settings' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors`}>

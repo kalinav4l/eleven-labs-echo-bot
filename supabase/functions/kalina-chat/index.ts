@@ -76,8 +76,7 @@ serve(async (req) => {
       console.log('Using custom agent with OpenAI + TTS');
       
       // Build conversation context
-      const systemPrompt = agent.system_prompt || `Tu ești ${agent.name}, un asistent AI prietenos și util. Răspunde în română într-un mod profesional și empatic.`;
-      
+      const systemPrompt = agent.system_prompt || `You are ${agent.name}, a conversational AI agent. Respond in a friendly and helpful way. Keep your responses short and clear.`;
       // Build messages array with conversation history
       const messages = [
         { role: 'system', content: systemPrompt }
