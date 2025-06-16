@@ -40,12 +40,12 @@ const HamburgerMenu = () => {
 
           <Link to="/pricing" className="flex items-center px-6 py-4 text-foreground hover:bg-muted/50 transition-colors" onClick={toggleMenu}>
             <DollarSign size={20} className="mr-3" />
-            <span>praincing</span>
+            <span>pricing</span>
           </Link>
 
           <Link to="/info" className="flex items-center px-6 py-4 text-foreground hover:bg-muted/50 transition-colors" onClick={toggleMenu}>
             <Info size={20} className="mr-3" />
-            <span>ingo</span>
+            <span>info</span>
           </Link>
         </nav>
       </div>
