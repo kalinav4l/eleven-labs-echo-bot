@@ -53,7 +53,7 @@ const Auth = () => {
         <div className="absolute bottom-1/3 right-1/3 w-72 h-72 bg-gradient-to-r from-blue-200/30 to-cyan-200/30 rounded-full blur-3xl"></div>
       </div>
 
-      <Card className="w-full max-w-md liquid-glass relative z-10 animate-fade-in">
+      <Card className="w-full max-w-md liquid-glass relative z-10 animate-fade-in border border-white/20 backdrop-blur-xl bg-white/80 shadow-xl">
         <CardHeader className="text-center">
           <CardTitle className="text-foreground text-2xl font-semibold">
             {isLogin ? 'Conectare' : 'Înregistrare'}
@@ -74,14 +74,14 @@ const Auth = () => {
                   placeholder="Prenume"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="glass-input"
+                  className="liquid-glass border border-white/20 backdrop-blur-xl bg-white/80"
                 />
                 <Input
                   type="text"
                   placeholder="Nume"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="glass-input"
+                  className="liquid-glass border border-white/20 backdrop-blur-xl bg-white/80"
                 />
               </>
             )}
@@ -91,7 +91,7 @@ const Auth = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="glass-input"
+              className="liquid-glass border border-white/20 backdrop-blur-xl bg-white/80"
             />
             <Input
               type="password"
@@ -99,7 +99,7 @@ const Auth = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="glass-input"
+              className="liquid-glass border border-white/20 backdrop-blur-xl bg-white/80"
             />
             
             {error && (
