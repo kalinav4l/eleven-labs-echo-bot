@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Globe, Bot, Phone, Copy } from 'lucide-react';
 
 const AgentConsultant = () => {
+  const defaultModelId = "eleven_flash_v2_5";
   const { user } = useAuth();
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [generatedPrompt, setGeneratedPrompt] = useState('');
@@ -151,16 +152,15 @@ try {
     },
     body: JSON.stringify({
       "conversation_config": {
-        "asr": {
-          "language": "ro" // Aici adaugi limba. Poți folosi coduri ISO 639-1, de exemplu "en" pentru engleză, "ro" pentru română.
-        },
-        "turn": {},
-        "tts": {},
-        "conversation": {},
         "agent": {
+          "language": agentLanguage,
           "prompt": {
             "prompt": agentPrompt
           }
+        },
+        "tts": {
+          "voice_id": selectedVoice,
+          "model_id": defaultModelId
         }
       },
       "name": agentName
