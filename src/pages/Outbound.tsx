@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Upload, Phone, FileText, Play, Users, Globe, MapPin, User, Search, Clock, DollarSign, MessageSquare, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Pause } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Upload, Phone, FileText, Play, Users, Globe, MapPin, User, Search, Clock, DollarSign, MessageSquare, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Pause, Trash2, Trash } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -42,6 +43,7 @@ const Outbound = () => {
   const [isUploadingCsv, setIsUploadingCsv] = useState(false);
   const [customAgentId, setCustomAgentId] = useState('');
   const [selectedContactIds, setSelectedContactIds] = useState<Set<string>>(new Set());
+  const [selectedCallIds, setSelectedCallIds] = useState<Set<string>>(new Set());
   const [isCallingAll, setIsCallingAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedDialog, setExpandedDialog] = useState<Set<string>>(new Set());
@@ -50,7 +52,7 @@ const Outbound = () => {
   const [processedContacts, setProcessedContacts] = useState<Set<string>>(new Set());
   const [isPaused, setIsPaused] = useState(false);
 
-  const { callHistory, isLoading, saveCallResults, refetch } = useCallHistory();
+  const { callHistory, isLoading, saveCallResults, deleteCallHistory, deleteAllCallHistory, refetch } = useCallHistory();
 
   const WEBHOOK_URL = 'https://zuckerberg.aichat.md/webhook/telefonie-sunat';
 
@@ -378,6 +380,68 @@ const Outbound = () => {
       setSelectedContactIds(new Set());
     } else {
       setSelectedContactIds(new Set(contacts.map(c => c.id)));
+    }
+  };
+
+  const handleSelectAllCalls = () => {
+    if (selectedCallIds.size === filteredCallHistory.length) {
+      setSelectedCallIds(new Set());
+    } else {
+      setSelectedCallIds(new Set(filteredCallHistory.map(call => call.id)));
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedCallIds.size === 0) {
+      toast({
+        title: "Eroare",
+        description: "Te rog selectează cel puțin un apel pentru ștergere.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await deleteCallHistory.mutateAsync(Array.from(selectedCallIds));
+      setSelectedCallIds(new Set());
+      toast({
+        title: "Succes",
+        description: `${selectedCallIds.size} apeluri au fost șterse cu succes.`
+      });
+    } catch (error) {
+      console.error('Error deleting calls:', error);
+      toast({
+        title: "Eroare",
+        description: "Nu s-au putut șterge apelurile selectate.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    if (callHistory.length === 0) {
+      toast({
+        title: "Eroare",
+        description: "Nu există apeluri pentru ștergere.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await deleteAllCallHistory.mutateAsync();
+      setSelectedCallIds(new Set());
+      toast({
+        title: "Succes",
+        description: "Toate apelurile au fost șterse cu succes."
+      });
+    } catch (error) {
+      console.error('Error deleting all calls:', error);
+      toast({
+        title: "Eroare",
+        description: "Nu s-au putut șterge toate apelurile.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -758,10 +822,47 @@ const Outbound = () => {
         {/* Call History Section */}
         <Card className="liquid-glass mt-8">
           <CardHeader>
-            <CardTitle className="flex items-center gap-3">
-              <Clock className="w-6 h-6 text-accent" />
-              Istoric Apeluri ({callHistory.length})
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-3">
+                <Clock className="w-6 h-6 text-accent" />
+                Istoric Apeluri ({callHistory.length})
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                {selectedCallIds.size > 0 && (
+                  <Button
+                    onClick={handleDeleteSelected}
+                    variant="destructive"
+                    size="sm"
+                    disabled={deleteCallHistory.isPending}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Șterge Selectate ({selectedCallIds.size})
+                  </Button>
+                )}
+                {callHistory.length > 0 && (
+                  <Button
+                    onClick={handleDeleteAll}
+                    variant="destructive"
+                    size="sm"
+                    disabled={deleteAllCallHistory.isPending}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash className="w-4 h-4" />
+                    Șterge Tot
+                  </Button>
+                )}
+                <Button 
+                  onClick={() => refetch()}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Clock className="w-4 h-4" />
+                  Reîmprospătează
+                </Button>
+              </div>
+            </div>
             <div className="flex items-center gap-4 mt-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -780,6 +881,12 @@ const Outbound = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={selectedCallIds.size === filteredCallHistory.length && filteredCallHistory.length > 0}
+                          onCheckedChange={handleSelectAllCalls}
+                        />
+                      </TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>
                         <div className="flex items-center gap-2">
@@ -817,6 +924,12 @@ const Outbound = () => {
                   <TableBody>
                     {filteredCallHistory.map((call) => (
                       <TableRow key={call.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedCallIds.has(call.id)}
+                            onCheckedChange={() => handleCallSelect(call.id)}
+                          />
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             {getStatusIcon(call.call_status)}

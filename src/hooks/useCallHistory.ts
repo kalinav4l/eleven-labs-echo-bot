@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
@@ -107,11 +106,45 @@ export const useCallHistory = () => {
     },
   });
 
+  const deleteCallHistory = useMutation({
+    mutationFn: async (callIds: string[]) => {
+      if (!user) throw new Error('User not authenticated');
+
+      const { error } = await supabase
+        .from('call_history')
+        .delete()
+        .in('id', callIds);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['call-history', user?.id] });
+    },
+  });
+
+  const deleteAllCallHistory = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error('User not authenticated');
+
+      const { error } = await supabase
+        .from('call_history')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['call-history', user?.id] });
+    },
+  });
+
   return {
     callHistory: callHistoryQuery.data || [],
     isLoading: callHistoryQuery.isLoading,
     error: callHistoryQuery.error,
     saveCallResults,
+    deleteCallHistory,
+    deleteAllCallHistory,
     refetch: callHistoryQuery.refetch,
   };
 };
