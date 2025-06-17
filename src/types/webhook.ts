@@ -13,8 +13,10 @@ export interface WebhookCallResult {
       message?: string;
     }>;
     summary?: string;
-    cost_info?: {
-      total_cost?: number;
+    ''?: {
+      cost_info?: {
+        total_cost?: number;
+      };
     };
     timestamps?: string;
   };
@@ -24,4 +26,9 @@ export interface WebhookResponse {
   completed?: boolean;
   calls?: WebhookCallResult[];
   batch_id?: string;
+  response?: {
+    body?: WebhookCallResult[];
+    headers?: any;
+    statusCode?: number;
+  };
 }

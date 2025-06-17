@@ -320,29 +320,56 @@ const Outbound = () => {
       const recordsToInsert = callResults.map((result, index) => {
         console.log(`Processing call result ${index}:`, result);
         
-        // Construiește dialogul ca text
+        // Defensive access to nested properties using optional chaining and nullish coalescing
+        const cleanConversations = result?.clean_conversations || {};
+        const callInfo = cleanConversations?.call_info || {};
+        const phoneNumbers = callInfo?.phone_numbers || {};
+        const dialog = cleanConversations?.dialog || [];
+        const costInfo = cleanConversations?.['']?.cost_info || {}; // Fixed the empty key access
+        
+        // Safely extract phone number
+        const phone = phoneNumbers?.user ?? '';
+        
+        // Safely extract cost and convert from cents to dollars
+        const cost = (costInfo?.total_cost ?? 0) / 100;
+        
+        // Safely extract status
+        const status = cleanConversations?.status ?? 'unknown';
+        
+        // Safely extract summary
+        const summary = cleanConversations?.summary ?? '';
+        
+        // Safely extract timestamps
+        const timestamps = cleanConversations?.timestamps ?? '';
+        
+        // Safely construct dialog text
         let dialogText = '';
-        if (result.dialog && Array.isArray(result.dialog)) {
-          dialogText = result.dialog
+        if (Array.isArray(dialog) && dialog.length > 0) {
+          dialogText = dialog
             .filter(d => d && (d.speaker || d.message))
-            .map(d => `${d.speaker || 'Unknown'}: ${d.message || ''}`)
+            .map(d => `${d.speaker ?? 'Unknown'}: ${d.message ?? ''}`)
             .join('\n');
         }
         
-        const phone = result.phone || '';
-        const cost = result.cost || 0;
-        const timestamp = result.timestamps 
-          ? result.timestamps.split('-')[0] 
-          : new Date().toISOString();
+        // Parse timestamp safely
+        let timestamp = new Date().toISOString();
+        if (timestamps) {
+          try {
+            const timestampPart = timestamps.split('-')[0];
+            timestamp = new Date(timestampPart).toISOString();
+          } catch (timestampError) {
+            console.warn('Error parsing timestamp:', timestampError);
+          }
+        }
         
         const record = {
-          Status: result.status === 'done' ? 'success' : 'failed',
+          Status: status === 'done' ? 'success' : 'failed',
           Number: phone ? parseFloat(phone.replace(/[^\d]/g, '')) || null : null,
           Telefon: phone,
-          Concluzie: result.summary || '',
+          Concluzie: summary,
           Dialog: dialogText,
           Data: new Date(timestamp).getTime(),
-          Cost: cost / 100 // Convert from cents to dollars
+          Cost: cost
         };
         
         console.log(`Record ${index} to insert:`, record);
@@ -403,13 +430,17 @@ const Outbound = () => {
       // Check if the result contains call results directly
       let callResults: WebhookCallResult[] = [];
       
-      if (Array.isArray(result)) {
+      // Handle nested response structure with defensive access
+      if (result?.response?.body && Array.isArray(result.response.body)) {
+        callResults = result.response.body;
+        console.log('Found call results in response.body');
+      } else if (Array.isArray(result)) {
         callResults = result;
         console.log('Result is array, using directly');
-      } else if (result.calls && Array.isArray(result.calls)) {
+      } else if (result?.calls && Array.isArray(result.calls)) {
         callResults = result.calls;
         console.log('Found calls array in result');
-      } else if (result.completed && result.calls) {
+      } else if (result?.completed && result?.calls) {
         callResults = result.calls;
         console.log('Result is completed with calls');
       } else {
@@ -478,14 +509,14 @@ const Outbound = () => {
             results = await response.json();
             console.log('Polling response received:', results);
           } catch (jsonError) {
-            // Improved error diagnostics - log raw response text
+            // Enhanced error diagnostics - log raw response text
             const rawResponseText = await responseClone.text();
             console.error('Failed to parse JSON response:', jsonError);
             console.error('Raw response text:', rawResponseText);
             
             toast({
               title: "Eroare de parsare",
-              description: "Răspunsul de la webhook nu poate fi procesat.",
+              description: "Răspunsul de la webhook nu poate fi procesat ca JSON.",
               variant: "destructive"
             });
             return;
