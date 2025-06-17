@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -200,45 +201,148 @@ const Outbound = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const result = await response.json();
-      console.log('Webhook response result:', result);
+      // Verifică dacă răspunsul este CSV sau JSON
+      const contentType = response.headers.get('content-type');
+      console.log('Response content type:', contentType);
       
-      return result;
+      const responseText = await response.text();
+      console.log('Response body (raw):', responseText);
+
+      // Dacă răspunsul începe cu header-ul CSV
+      if (responseText.includes('clean_conversations.status,')) {
+        console.log('Processing CSV response');
+        await processCsvResponse(responseText);
+        return { processed: true, type: 'csv' };
+      } else {
+        // Încearcă să parsezi ca JSON
+        try {
+          const result = JSON.parse(responseText);
+          console.log('Processing JSON response:', result);
+          return result;
+        } catch (jsonError) {
+          console.error('Error parsing JSON:', jsonError);
+          console.log('Raw response that failed JSON parsing:', responseText);
+          throw new Error('Răspunsul nu este nici CSV nici JSON valid');
+        }
+      }
     } catch (error) {
       console.error('Error sending to webhook:', error);
       throw error;
     }
   };
 
-  const saveCallResultsToSupabase = async (callResults: WebhookCallResult[]) => {
+  const processCsvResponse = async (csvText: string) => {
     try {
-      console.log('Processing call results for Supabase:', callResults);
+      console.log('Processing CSV response:', csvText);
+      
+      const lines = csvText.split('\n').filter(line => line.trim());
+      if (lines.length < 2) {
+        console.log('CSV has no data rows');
+        return;
+      }
+
+      const headers = lines[0].split(',');
+      console.log('CSV Headers:', headers);
+
+      const callResults: any[] = [];
+
+      // Procesează fiecare linie de date (skip header)
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',');
+        console.log(`Processing CSV row ${i}:`, values);
+
+        if (values.length >= headers.length) {
+          const callResult: any = {};
+          
+          // Mapează valorile la header-uri
+          headers.forEach((header, index) => {
+            const cleanHeader = header.trim().replace(/"/g, '');
+            const value = values[index] ? values[index].trim().replace(/"/g, '') : '';
+            
+            // Creează structura nested pentru datele de apel
+            if (cleanHeader === 'clean_conversations.status') {
+              callResult.status = value;
+            } else if (cleanHeader === 'clean_conversations.call_info.language') {
+              callResult.language = value;
+            } else if (cleanHeader === 'clean_conversations.call_info.phone_numbers.user') {
+              callResult.phone = value;
+            } else if (cleanHeader === 'clean_conversations.summary') {
+              callResult.summary = value;
+            } else if (cleanHeader === 'clean_conversations..cost_info.total_cost') {
+              callResult.cost = parseFloat(value) || 0;
+            } else if (cleanHeader === 'clean_conversations.timestamps') {
+              callResult.timestamps = value;
+            } else if (cleanHeader.includes('dialog')) {
+              // Construiește dialogul
+              if (!callResult.dialog) callResult.dialog = [];
+              
+              if (cleanHeader.includes('speaker')) {
+                const dialogIndex = parseInt(cleanHeader.split('.')[3]) || 0;
+                if (!callResult.dialog[dialogIndex]) callResult.dialog[dialogIndex] = {};
+                callResult.dialog[dialogIndex].speaker = value;
+              } else if (cleanHeader.includes('message')) {
+                const dialogIndex = parseInt(cleanHeader.split('.')[3]) || 0;
+                if (!callResult.dialog[dialogIndex]) callResult.dialog[dialogIndex] = {};
+                callResult.dialog[dialogIndex].message = value;
+              }
+            }
+          });
+
+          callResults.push(callResult);
+        }
+      }
+
+      console.log('Parsed call results from CSV:', callResults);
+
+      if (callResults.length > 0) {
+        await saveCallResultsToSupabase(callResults);
+        await refreshCallHistory();
+        
+        toast({
+          title: "Apeluri finalizate",
+          description: `S-au primit și salvat rezultatele pentru ${callResults.length} apeluri din CSV.`
+        });
+      }
+    } catch (error) {
+      console.error('Error processing CSV response:', error);
+      toast({
+        title: "Eroare la procesarea CSV",
+        description: "Nu s-au putut procesa datele CSV primite.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const saveCallResultsToSupabase = async (callResults: any[]) => {
+    try {
+      console.log('Saving call results to Supabase:', callResults);
       
       const recordsToInsert = callResults.map((result, index) => {
         console.log(`Processing call result ${index}:`, result);
         
-        const cleanConversations = result.clean_conversations;
+        // Construiește dialogul ca text
+        let dialogText = '';
+        if (result.dialog && Array.isArray(result.dialog)) {
+          dialogText = result.dialog
+            .filter(d => d && (d.speaker || d.message))
+            .map(d => `${d.speaker || 'Unknown'}: ${d.message || ''}`)
+            .join('\n');
+        }
         
-        // Defensive data extraction using optional chaining and nullish coalescing
-        const phone = cleanConversations?.call_info?.phone_numbers?.user ?? '';
-        const dialogArray = cleanConversations?.dialog ?? [];
-        const dialogText = dialogArray
-          .map((d) => `${d.speaker ?? 'Unknown'}: ${d.message ?? ''}`)
-          .join('\n');
-        
-        const cost = cleanConversations?.cost_info?.total_cost ?? 0;
-        const timestamp = cleanConversations?.timestamps 
-          ? cleanConversations.timestamps.split('-')[0] 
+        const phone = result.phone || '';
+        const cost = result.cost || 0;
+        const timestamp = result.timestamps 
+          ? result.timestamps.split('-')[0] 
           : new Date().toISOString();
         
         const record = {
-          Status: cleanConversations?.status === 'done' ? 'success' : 'failed',
+          Status: result.status === 'done' ? 'success' : 'failed',
           Number: phone ? parseFloat(phone.replace(/[^\d]/g, '')) || null : null,
           Telefon: phone,
-          Concluzie: cleanConversations?.summary ?? '',
+          Concluzie: result.summary || '',
           Dialog: dialogText,
           Data: new Date(timestamp).getTime(),
-          Cost: cost / 100 // Convert from cents to dollars assuming cost is in cents
+          Cost: cost / 100 // Convert from cents to dollars
         };
         
         console.log(`Record ${index} to insert:`, record);
@@ -458,15 +562,7 @@ const Outbound = () => {
         description: `Apelul către ${contact.name} a fost trimis pentru procesare.`
       });
 
-      // Process the result immediately if it contains data
-      if (result) {
-        await processWebhookResponse(result);
-      }
-
-      // Also try polling if there's a batch_id
-      if (result.batch_id) {
-        pollForResults(result.batch_id);
-      }
+      console.log('Single call result:', result);
     } catch (error) {
       console.error('Error initiating call:', error);
       toast({
@@ -507,15 +603,7 @@ const Outbound = () => {
         description: `${selectedContacts.length} apeluri au fost trimise pentru procesare.`
       });
 
-      // Process the result immediately if it contains data
-      if (result) {
-        await processWebhookResponse(result);
-      }
-
-      // Also try polling if there's a batch_id
-      if (result.batch_id) {
-        pollForResults(result.batch_id);
-      }
+      console.log('Bulk call result:', result);
     } catch (error) {
       console.error('Error initiating calls:', error);
       toast({
