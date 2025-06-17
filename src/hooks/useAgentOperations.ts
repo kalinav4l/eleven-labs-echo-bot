@@ -24,8 +24,16 @@ export const useAgentOperations = () => {
       },
     });
 
+    // If agent is not found (404), we consider it already deleted
+    if (response.status === 404) {
+      console.log(`Agent ${agentId} not found in ElevenLabs, considering it already deleted`);
+      return { success: true, alreadyDeleted: true };
+    }
+
     if (!response.ok) {
-      throw new Error('Failed to delete agent from ElevenLabs');
+      const errorData = await response.json().catch(() => ({}));
+      console.error('ElevenLabs API Error:', errorData);
+      throw new Error(`Failed to delete agent from ElevenLabs: ${response.status}`);
     }
 
     return response.json();
@@ -97,9 +105,15 @@ export const useAgentOperations = () => {
 
   const deleteAgentMutation = useMutation({
     mutationFn: async (agent: { id: string; agent_id: string }) => {
-      // First delete from ElevenLabs
-      await deleteAgentFromElevenLabs({ agentId: agent.agent_id });
-      // Then delete from database
+      // Try to delete from ElevenLabs first, but don't fail if agent doesn't exist
+      try {
+        await deleteAgentFromElevenLabs({ agentId: agent.agent_id });
+      } catch (error) {
+        console.warn('Could not delete agent from ElevenLabs, but continuing with database deletion:', error);
+        // Continue with database deletion even if ElevenLabs deletion fails
+      }
+      
+      // Always delete from database
       await deleteAgentFromDatabase(agent.id);
     },
     onSuccess: () => {
@@ -113,7 +127,7 @@ export const useAgentOperations = () => {
       console.error('Error deleting agent:', error);
       toast({
         title: "Eroare",
-        description: "Nu s-a putut șterge agentul",
+        description: "Nu s-a putut șterge agentul complet. Verifică lista pentru a vedea dacă a fost șters din baza de date.",
         variant: "destructive",
       });
     },
