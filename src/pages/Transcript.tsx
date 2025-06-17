@@ -53,7 +53,7 @@ const Transcript = () => {
       // Create a new FormData instance
       const formData = new FormData();
       formData.append("file", audioFile);
-      formData.append("model_id", JSON.stringify("scribe_v1"));
+      formData.append("model_id", "scribe_v1");
 
       // Create transcript (POST /v1/speech-to-text)
       const response = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
