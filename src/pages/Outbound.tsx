@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Upload, Phone, FileText, Play, Users, Globe, MapPin, User, Search, Clock, DollarSign, MessageSquare, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Pause, Trash2, Trash } from 'lucide-react';
+import { Upload, Phone, FileText, Play, Users, Globe, MapPin, User, Search, Clock, DollarSign, MessageSquare, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Pause, Trash2, Trash, Eye } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -36,9 +36,7 @@ interface CallHistory {
   language?: string;
 }
 const Outbound = () => {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [isUploadingCsv, setIsUploadingCsv] = useState(false);
@@ -47,23 +45,17 @@ const Outbound = () => {
   const [selectedCallIds, setSelectedCallIds] = useState<Set<string>>(new Set());
   const [isCallingAll, setIsCallingAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [expandedDialog, setExpandedDialog] = useState<Set<string>>(new Set());
   const [expandedSummary, setExpandedSummary] = useState<Set<string>>(new Set());
   const [currentCallIndex, setCurrentCallIndex] = useState(0);
   const [processedContacts, setProcessedContacts] = useState<Set<string>>(new Set());
   const [isPaused, setIsPaused] = useState(false);
-  const {
-    callHistory,
-    isLoading,
-    saveCallResults,
-    deleteCallHistory,
-    deleteAllCallHistory,
-    refetch
-  } = useCallHistory();
+  const [selectedCallForDialog, setSelectedCallForDialog] = useState<CallHistory | null>(null);
+  const [isDialogSectionOpen, setIsDialogSectionOpen] = useState(false);
+
+  const { callHistory, isLoading, saveCallResults, deleteCallHistory, deleteAllCallHistory, refetch } = useCallHistory();
+
   const WEBHOOK_URL = 'https://zuckerberg.aichat.md/webhook/telefonie-sunat';
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
+
   const formatObjectAsJson = (obj: any): string => {
     try {
       return JSON.stringify(obj, null, 2);
@@ -480,16 +472,6 @@ const Outbound = () => {
     }
   };
 
-  const toggleExpandedDialog = (callId: string) => {
-    const newExpanded = new Set(expandedDialog);
-    if (newExpanded.has(callId)) {
-      newExpanded.delete(callId);
-    } else {
-      newExpanded.add(callId);
-    }
-    setExpandedDialog(newExpanded);
-  };
-
   const toggleExpandedSummary = (callId: string) => {
     const newExpanded = new Set(expandedSummary);
     if (newExpanded.has(callId)) {
@@ -514,6 +496,15 @@ const Outbound = () => {
     }
     setSelectedCallIds(newSelected);
   };
+
+  const handleViewDialog = (call: CallHistory) => {
+    setSelectedCallForDialog(call);
+    setIsDialogSectionOpen(true);
+  };
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
 
   return (
     <DashboardLayout>
@@ -815,7 +806,6 @@ const Outbound = () => {
                           Rezumat
                         </div>
                       </TableHead>
-                      <TableHead>Dialog</TableHead>
                       <TableHead>
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4" />
@@ -870,55 +860,43 @@ const Outbound = () => {
                             </CollapsibleContent>
                           </Collapsible>
                         </TableCell>
-                        <TableCell className="text-sm">
-                          <Collapsible>
-                            <CollapsibleTrigger 
-                              className="flex items-center gap-2 hover:text-accent cursor-pointer"
-                              onClick={() => toggleExpandedDialog(call.id)}
-                            >
-                              <span className="text-blue-600 underline">Vezi Dialog</span>
-                              {expandedDialog.has(call.id) ? (
-                                <ChevronUp className="w-4 h-4" />
-                              ) : (
-                                <ChevronDown className="w-4 h-4" />
-                              )}
-                            </CollapsibleTrigger>
-                            <CollapsibleContent className="mt-2">
-                              <div className="bg-gray-50 p-3 rounded max-w-sm max-h-64 overflow-auto">
-                                <pre className="whitespace-pre-wrap text-xs">
-                                  {extractDialogFromJson(call.dialog_json)}
-                                </pre>
-                              </div>
-                            </CollapsibleContent>
-                          </Collapsible>
-                        </TableCell>
                         <TableCell className="text-sm">{call.call_date}</TableCell>
                         <TableCell className="text-sm font-mono">{call.cost_usd}</TableCell>
                         <TableCell>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="destructive" size="sm" className="p-2">
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Confirmare ștergere</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Ești sigur că vrei să ștergi acest apel din istoric? Această acțiune nu poate fi anulată.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Anulează</AlertDialogCancel>
-                                <AlertDialogAction 
-                                  onClick={() => handleDeleteSingleCall(call.id)}
-                                  className="bg-red-600 hover:bg-red-700"
-                                >
-                                  Da, șterge
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => handleViewDialog(call)}
+                              className="p-2"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm" className="p-2">
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Confirmare ștergere</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Ești sigur că vrei să ștergi acest apel din istoric? Această acțiune nu poate fi anulată.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Anulează</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => handleDeleteSingleCall(call.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Da, șterge
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -940,6 +918,70 @@ const Outbound = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Dialog Viewer Section */}
+        {isDialogSectionOpen && selectedCallForDialog && (
+          <Card className="liquid-glass mt-8">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-3">
+                  <MessageSquare className="w-6 h-6 text-accent" />
+                  Dialog Complet - {selectedCallForDialog.contact_name}
+                </CardTitle>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsDialogSectionOpen(false)}
+                  className="flex items-center gap-2"
+                >
+                  <XCircle className="w-4 h-4" />
+                  Închide
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Telefon</p>
+                  <p className="font-mono">{selectedCallForDialog.phone_number}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Status</p>
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(selectedCallForDialog.call_status)}
+                    <span>{getStatusText(selectedCallForDialog.call_status)}</span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Cost</p>
+                  <p className="font-mono">${selectedCallForDialog.cost_usd}</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {selectedCallForDialog.summary && (
+                <div className="mb-6">
+                  <h3 className="font-semibold mb-2 flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    Rezumat
+                  </h3>
+                  <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
+                    <p className="whitespace-pre-wrap">{selectedCallForDialog.summary}</p>
+                  </div>
+                </div>
+              )}
+              
+              <div>
+                <h3 className="font-semibold mb-4 flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4" />
+                  Dialog Complet
+                </h3>
+                <div className="bg-gray-50 p-6 rounded-lg max-h-none overflow-auto border">
+                  <pre className="whitespace-pre-wrap text-sm font-mono leading-relaxed">
+                    {extractDialogFromJson(selectedCallForDialog.dialog_json)}
+                  </pre>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Info Section */}
         <Card className="liquid-glass mt-8">
