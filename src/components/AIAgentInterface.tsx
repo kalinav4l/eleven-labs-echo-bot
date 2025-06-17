@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useConversation } from '@11labs/react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/utils/utils.ts';
 
 const AIAgentInterface = () => {
   const [isActive, setIsActive] = useState(false);

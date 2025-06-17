@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useConversation } from '@11labs/react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/utils/utils.ts';
 import { Phone } from 'lucide-react';
 
 const ChatWidget = () => {
