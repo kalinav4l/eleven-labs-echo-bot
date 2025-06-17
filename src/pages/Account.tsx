@@ -108,7 +108,7 @@ const Account = () => {
               <TrendingUp className="h-4 w-4 text-gray-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-black">94%</div>
+              <div className="text-2xl font-bold text-black">0%</div>
               <p className="text-xs text-gray-600">
                 Satisfacția clienților
               </p>
