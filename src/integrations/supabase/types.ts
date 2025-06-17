@@ -171,6 +171,7 @@ export type Database = {
           description: string | null
           elevenlabs_agent_id: string | null
           id: string
+          is_active: boolean
           name: string
           provider: string | null
           system_prompt: string | null
@@ -184,6 +185,7 @@ export type Database = {
           description?: string | null
           elevenlabs_agent_id?: string | null
           id?: string
+          is_active?: boolean
           name: string
           provider?: string | null
           system_prompt?: string | null
@@ -197,6 +199,7 @@ export type Database = {
           description?: string | null
           elevenlabs_agent_id?: string | null
           id?: string
+          is_active?: boolean
           name?: string
           provider?: string | null
           system_prompt?: string | null

@@ -83,7 +83,7 @@ const KalinaAgents = () => {
                       <div>
                         <CardTitle className="text-foreground">{agent.name}</CardTitle>
                         <p className="text-sm text-muted-foreground">
-                          {agent.is_active !== false ? 'Activ' : 'Inactiv'}
+                          {agent.is_active ? 'Activ' : 'Inactiv'}
                         </p>
                       </div>
                     </div>
@@ -98,7 +98,7 @@ const KalinaAgents = () => {
                           onClick={() => handleToggleAgentStatus(agent)}
                           className="cursor-pointer"
                         >
-                          {agent.is_active !== false ? (
+                          {agent.is_active ? (
                             <>
                               <PowerOff className="w-4 h-4 mr-2" />
                               Dezactivează
@@ -165,7 +165,7 @@ const KalinaAgents = () => {
                       <Button 
                         size="sm" 
                         className="flex-1 glass-button"
-                        disabled={agent.is_active === false}
+                        disabled={!agent.is_active}
                       >
                         <Phone className="w-4 h-4 mr-2" />
                         Test Apel
