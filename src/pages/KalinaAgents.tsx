@@ -4,11 +4,43 @@ import { Link } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bot, Plus, Settings, Phone } from 'lucide-react';
+import { Bot, Plus, Settings, Phone, Trash2, Power, PowerOff } from 'lucide-react';
 import { useUserAgents } from '@/hooks/useUserAgents';
+import { useAgentOperations } from '@/hooks/useAgentOperations';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const KalinaAgents = () => {
   const { data: userAgents, isLoading } = useUserAgents();
+  const { deactivateAgent, activateAgent, deleteAgent, isDeleting } = useAgentOperations();
+
+  const handleToggleAgentStatus = (agent: any) => {
+    if (agent.is_active) {
+      deactivateAgent({ id: agent.id, isActive: false });
+    } else {
+      activateAgent({ id: agent.id, isActive: true });
+    }
+  };
+
+  const handleDeleteAgent = (agent: any) => {
+    deleteAgent({ id: agent.id, agent_id: agent.agent_id });
+  };
 
   if (isLoading) {
     return (
@@ -50,12 +82,66 @@ const KalinaAgents = () => {
                       </div>
                       <div>
                         <CardTitle className="text-foreground">{agent.name}</CardTitle>
-                        <p className="text-sm text-muted-foreground">Activ</p>
+                        <p className="text-sm text-muted-foreground">
+                          {agent.is_active !== false ? 'Activ' : 'Inactiv'}
+                        </p>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" className="glass-button border-border">
-                      <Settings className="w-4 h-4" />
-                    </Button>
+                    <ContextMenu>
+                      <ContextMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="glass-button border-border">
+                          <Settings className="w-4 h-4" />
+                        </Button>
+                      </ContextMenuTrigger>
+                      <ContextMenuContent className="w-56">
+                        <ContextMenuItem 
+                          onClick={() => handleToggleAgentStatus(agent)}
+                          className="cursor-pointer"
+                        >
+                          {agent.is_active !== false ? (
+                            <>
+                              <PowerOff className="w-4 h-4 mr-2" />
+                              Dezactivează
+                            </>
+                          ) : (
+                            <>
+                              <Power className="w-4 h-4 mr-2" />
+                              Activează
+                            </>
+                          )}
+                        </ContextMenuItem>
+                        <ContextMenuSeparator />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <ContextMenuItem 
+                              className="cursor-pointer text-destructive focus:text-destructive"
+                              onSelect={(e) => e.preventDefault()}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Șterge
+                            </ContextMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Confirmare ștergere</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Ești sigur că vrei să ștergi agentul "{agent.name}"? 
+                                Această acțiune nu poate fi anulată și va șterge agentul și din ElevenLabs.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Anulează</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteAgent(agent)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                {isDeleting ? 'Se șterge...' : 'Șterge'}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </ContextMenuContent>
+                    </ContextMenu>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -76,7 +162,11 @@ const KalinaAgents = () => {
                     </div>
 
                     <div className="flex space-x-2">
-                      <Button size="sm" className="flex-1 glass-button">
+                      <Button 
+                        size="sm" 
+                        className="flex-1 glass-button"
+                        disabled={agent.is_active === false}
+                      >
                         <Phone className="w-4 h-4 mr-2" />
                         Test Apel
                       </Button>
