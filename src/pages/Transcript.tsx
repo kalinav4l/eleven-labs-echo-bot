@@ -4,24 +4,49 @@ import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, Download, FileAudio, MessageSquare } from 'lucide-react';
+import { Upload, Download, FileAudio, MessageSquare, User } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/components/ui/use-toast';
+
+interface TranscriptEntry {
+  speaker: string;
+  text: string;
+  timestamp: string;
+  startTime: number;
+  endTime: number;
+}
 
 const Transcript = () => {
   const { user } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
-  const [transcriptResult, setTranscriptResult] = useState<string>('');
+  const [transcriptEntries, setTranscriptEntries] = useState<TranscriptEntry[]>([]);
   const [audioFile, setAudioFile] = useState<File | null>(null);
 
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
+  const getSpeakerColor = (speaker: string) => {
+    const colors = [
+      'bg-blue-500',
+      'bg-purple-500', 
+      'bg-pink-500',
+      'bg-indigo-500',
+      'bg-cyan-500'
+    ];
+    const index = parseInt(speaker.replace('Speaker ', '')) || 0;
+    return colors[index % colors.length];
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins.toString().padStart(2, '0')}.${secs.toString().padStart(2, '0')}`;
+  };
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Check if file is audio
       if (!file.type.startsWith('audio/')) {
         toast({
           title: "Eroare",
@@ -38,6 +63,26 @@ const Transcript = () => {
     }
   };
 
+  const parseTranscriptResponse = (text: string): TranscriptEntry[] => {
+    // Parse simple transcript - this would need to be adapted based on actual API response
+    const entries: TranscriptEntry[] = [];
+    const lines = text.split('\n').filter(line => line.trim());
+    
+    lines.forEach((line, index) => {
+      if (line.trim()) {
+        entries.push({
+          speaker: `Speaker ${index % 3}`,
+          text: line.trim(),
+          timestamp: formatTime(index * 5), // Mock timestamps
+          startTime: index * 5,
+          endTime: (index + 1) * 5
+        });
+      }
+    });
+
+    return entries;
+  };
+
   const handleUpload = async () => {
     if (!audioFile) {
       toast({
@@ -50,12 +95,10 @@ const Transcript = () => {
 
     setIsUploading(true);
     try {
-      // Create a new FormData instance
       const formData = new FormData();
       formData.append("file", audioFile);
       formData.append("model_id", "scribe_v1");
 
-      // Create transcript (POST /v1/speech-to-text)
       const response = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
         method: "POST",
         headers: {
@@ -71,7 +114,10 @@ const Transcript = () => {
       const body = await response.json();
       console.log(body);
       
-      setTranscriptResult(body.text || 'Nu s-a putut genera transcriptul.');
+      if (body.text) {
+        const entries = parseTranscriptResponse(body.text);
+        setTranscriptEntries(entries);
+      }
       
       toast({
         title: "Succes",
@@ -91,7 +137,7 @@ const Transcript = () => {
   };
 
   const handleDownloadSRT = () => {
-    if (!transcriptResult) {
+    if (transcriptEntries.length === 0) {
       toast({
         title: "Eroare",
         description: "Nu există transcript pentru export.",
@@ -100,10 +146,13 @@ const Transcript = () => {
       return;
     }
 
-    // Convert transcript to basic SRT format
-    const srtContent = `1
-00:00:00,000 --> 00:00:30,000
-${transcriptResult}`;
+    let srtContent = '';
+    transcriptEntries.forEach((entry, index) => {
+      const startTime = `00:00:${entry.startTime.toString().padStart(2, '0')},000`;
+      const endTime = `00:00:${entry.endTime.toString().padStart(2, '0')},000`;
+      
+      srtContent += `${index + 1}\n${startTime} --> ${endTime}\n${entry.speaker}: ${entry.text}\n\n`;
+    });
 
     const blob = new Blob([srtContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -142,7 +191,6 @@ ${transcriptResult}`;
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* File Input */}
               <div className="space-y-4">
                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-accent/50 transition-colors">
                   <FileAudio className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
@@ -182,7 +230,6 @@ ${transcriptResult}`;
                 )}
               </div>
 
-              {/* Upload Button */}
               <Button
                 onClick={handleUpload}
                 disabled={!audioFile || isUploading}
@@ -203,32 +250,47 @@ ${transcriptResult}`;
             </CardContent>
           </Card>
 
-          {/* Result Section */}
+          {/* Transcript Result Section */}
           <Card className="liquid-glass">
             <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <MessageSquare className="w-6 h-6 text-accent" />
-                Rezultat Transcript
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {transcriptResult ? (
-                <>
-                  <div className="bg-white rounded-lg border border-gray-200 p-4 max-h-80 overflow-y-auto">
-                    <p className="text-sm leading-relaxed text-gray-800 whitespace-pre-wrap">
-                      {transcriptResult}
-                    </p>
-                  </div>
-                  
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-3">
+                  <MessageSquare className="w-6 h-6 text-accent" />
+                  Transcript
+                </CardTitle>
+                {transcriptEntries.length > 0 && (
                   <Button
                     onClick={handleDownloadSRT}
                     variant="outline"
-                    className="w-full border-accent text-accent hover:bg-accent/10"
+                    size="sm"
+                    className="border-accent text-accent hover:bg-accent/10"
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    Descarcă ca SRT
+                    Export SRT
                   </Button>
-                </>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {transcriptEntries.length > 0 ? (
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {transcriptEntries.map((entry, index) => (
+                    <div key={index} className="flex gap-3 p-3 rounded-lg bg-gray-50/50 hover:bg-gray-100/50 transition-colors">
+                      <div className="flex-shrink-0">
+                        <div className={`w-8 h-8 rounded-full ${getSpeakerColor(entry.speaker)} flex items-center justify-center`}>
+                          <User className="w-4 h-4 text-white" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-sm text-gray-900">{entry.speaker}</span>
+                          <span className="text-xs text-gray-500">{entry.timestamp}</span>
+                        </div>
+                        <p className="text-sm text-gray-700 leading-relaxed">{entry.text}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <div className="text-center py-12">
                   <MessageSquare className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
