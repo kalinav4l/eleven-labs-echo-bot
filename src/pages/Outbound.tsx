@@ -10,6 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/components/ui/use-toast';
 import { useCallInitiation } from '@/hooks/useCallInitiation';
+import { useLanguage } from '@/contexts/LanguageContext';
+
 interface Contact {
   id: string;
   name: string;
@@ -27,10 +29,11 @@ interface CallHistory {
   date: string;
   cost: number;
 }
+
 const Outbound = () => {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
+  const { t } = useLanguage();
+  
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [isUploadingCsv, setIsUploadingCsv] = useState(false);
@@ -47,9 +50,11 @@ const Outbound = () => {
     createdAgentId: '',
     phoneNumber: ''
   });
+  
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
+  
   const handleCsvSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -68,6 +73,7 @@ const Outbound = () => {
       });
     }
   };
+  
   const parseCsvData = (csvText: string): Contact[] => {
     const lines = csvText.split('\n').filter(line => line.trim());
     const contacts: Contact[] = [];
@@ -90,6 +96,7 @@ const Outbound = () => {
     }
     return contacts;
   };
+  
   const handleUploadCsv = async () => {
     if (!csvFile) {
       toast({
@@ -122,6 +129,7 @@ const Outbound = () => {
       setIsUploadingCsv(false);
     }
   };
+  
   const handleContactSelect = (contactId: string) => {
     const newSelected = new Set(selectedContactIds);
     if (newSelected.has(contactId)) {
@@ -131,6 +139,7 @@ const Outbound = () => {
     }
     setSelectedContactIds(newSelected);
   };
+  
   const handleSelectAll = () => {
     if (selectedContactIds.size === contacts.length) {
       setSelectedContactIds(new Set());
@@ -138,6 +147,7 @@ const Outbound = () => {
       setSelectedContactIds(new Set(contacts.map(c => c.id)));
     }
   };
+  
   const handleInitiateCall = async (contact: Contact) => {
     if (!customAgentId.trim()) {
       toast({
@@ -162,6 +172,7 @@ const Outbound = () => {
     };
     setCallHistory(prev => [newCallRecord, ...prev]);
   };
+  
   const handleInitiateAllCalls = async () => {
     if (!customAgentId.trim()) {
       toast({
@@ -210,6 +221,7 @@ const Outbound = () => {
       description: `S-au inițiat apelurile pentru ${selectedContacts.length} contacte.`
     });
   };
+  
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'success':
@@ -224,28 +236,34 @@ const Outbound = () => {
         return <AlertCircle className="w-4 h-4 text-gray-500" />;
     }
   };
+  
   const getStatusText = (status: string) => {
     switch (status) {
       case 'success':
-        return 'Succes';
+        return t('status.success');
       case 'failed':
-        return 'Eșuat';
+        return t('status.failed');
       case 'busy':
-        return 'Ocupat';
+        return t('status.busy');
       case 'no-answer':
-        return 'Nu răspunde';
+        return t('status.noAnswer');
       default:
-        return 'Necunoscut';
+        return t('status.unknown');
     }
   };
-  const filteredCallHistory = callHistory.filter(call => call.phone.includes(searchTerm) || call.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  return <DashboardLayout>
+  
+  const filteredCallHistory = callHistory.filter(call => 
+    call.phone.includes(searchTerm) || call.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  return (
+    <DashboardLayout>
       <div className="p-6 my-[60px]">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Outbound</h1>
-            <p className="text-muted-foreground">Gestionează apelurile outbound și bazele de date de contacte</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">{t('outbound.title')}</h1>
+            <p className="text-muted-foreground">{t('outbound.description')}</p>
           </div>
         </div>
 
@@ -255,7 +273,7 @@ const Outbound = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <Upload className="w-6 h-6 text-accent" />
-                Upload Bază de Date CSV
+                {t('outbound.uploadCSV')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -264,19 +282,30 @@ const Outbound = () => {
                   <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">
-                      Drag & drop sau selectează un fișier CSV
+                      {t('outbound.dragDrop')}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Format: Nume, Telefon, Țara, Locație
+                      {t('outbound.format')}
                     </p>
-                    <input type="file" accept=".csv" onChange={handleCsvSelect} className="hidden" id="csv-upload" />
-                    <Button variant="outline" onClick={() => document.getElementById('csv-upload')?.click()} className="mt-2">
-                      Selectează CSV
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={handleCsvSelect}
+                      className="hidden"
+                      id="csv-upload"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => document.getElementById('csv-upload')?.click()}
+                      className="mt-2"
+                    >
+                      {t('outbound.selectCSV')}
                     </Button>
                   </div>
                 </div>
 
-                {csvFile && <div className="bg-gray-50 rounded-lg p-4">
+                {csvFile && (
+                  <div className="bg-gray-50 rounded-lg p-4">
                     <div className="flex items-center gap-3">
                       <FileText className="w-5 h-5 text-accent" />
                       <div className="flex-1">
@@ -286,17 +315,26 @@ const Outbound = () => {
                         </p>
                       </div>
                     </div>
-                  </div>}
+                  </div>
+                )}
               </div>
 
-              <Button onClick={handleUploadCsv} disabled={!csvFile || isUploadingCsv} className="w-full bg-accent hover:bg-accent/90 text-white">
-                {isUploadingCsv ? <div className="flex items-center gap-2">
+              <Button
+                onClick={handleUploadCsv}
+                disabled={!csvFile || isUploadingCsv}
+                className="w-full bg-accent hover:bg-accent/90 text-white"
+              >
+                {isUploadingCsv ? (
+                  <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Procesează CSV...
-                  </div> : <div className="flex items-center gap-2">
+                    {t('outbound.processCSV')}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
                     <Upload className="w-4 h-4" />
-                    Încarcă Contacte
-                  </div>}
+                    {t('outbound.uploadContacts')}
+                  </div>
+                )}
               </Button>
             </CardContent>
           </Card>
@@ -306,47 +344,66 @@ const Outbound = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <Phone className="w-6 h-6 text-accent" />
-                Configurare Apeluri
+                {t('outbound.callConfiguration')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
                 <Label htmlFor="agent-id" className="text-foreground">
-                  ID Agent pentru Apeluri
+                  {t('outbound.agentId')}
                 </Label>
-                <Input id="agent-id" value={customAgentId} onChange={e => setCustomAgentId(e.target.value)} placeholder="agent_id_pentru_apeluri" className="glass-input" />
+                <Input
+                  id="agent-id"
+                  value={customAgentId}
+                  onChange={(e) => setCustomAgentId(e.target.value)}
+                  placeholder={t('outbound.agentIdPlaceholder')}
+                  className="glass-input"
+                />
               </div>
 
-              {contacts.length > 0 && <div className="space-y-4">
+              {contacts.length > 0 && (
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-muted-foreground">
-                      {contacts.length} contacte încărcate, {selectedContactIds.size} selectate
+                      {t('outbound.contactsLoaded')
+                        .replace('{count}', contacts.length.toString())
+                        .replace('{selected}', selectedContactIds.size.toString())}
                     </p>
                     <Button variant="outline" size="sm" onClick={handleSelectAll}>
-                      {selectedContactIds.size === contacts.length ? 'Deselectează Tot' : 'Selectează Tot'}
+                      {selectedContactIds.size === contacts.length ? t('outbound.deselectAll') : t('outbound.selectAll')}
                     </Button>
                   </div>
 
-                  <Button onClick={handleInitiateAllCalls} disabled={!customAgentId.trim() || selectedContactIds.size === 0 || isCallingAll} className="w-full bg-green-600 hover:bg-green-700 text-white">
-                    {isCallingAll ? <div className="flex items-center gap-2">
+                  <Button
+                    onClick={handleInitiateAllCalls}
+                    disabled={!customAgentId.trim() || selectedContactIds.size === 0 || isCallingAll}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    {isCallingAll ? (
+                      <div className="flex items-center gap-2">
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Inițiază Apeluri...
-                      </div> : <div className="flex items-center gap-2">
+                        {t('outbound.initiating')}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
                         <Play className="w-4 h-4" />
-                        Inițiază Apeluri Selectate ({selectedContactIds.size})
-                      </div>}
+                        {t('outbound.initiateSelected').replace('{count}', selectedContactIds.size.toString())}
+                      </div>
+                    )}
                   </Button>
-                </div>}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
 
         {/* Contacts Table */}
-        {contacts.length > 0 && <Card className="liquid-glass mt-8">
+        {contacts.length > 0 && (
+          <Card className="liquid-glass mt-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <Users className="w-6 h-6 text-accent" />
-                Contacte Încărcate ({contacts.length})
+                {t('outbound.contactsTable').replace('{count}', contacts.length.toString())}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -355,111 +412,141 @@ const Outbound = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">
-                        <input type="checkbox" checked={selectedContactIds.size === contacts.length && contacts.length > 0} onChange={handleSelectAll} className="rounded" />
+                        <input
+                          type="checkbox"
+                          checked={selectedContactIds.size === contacts.length && contacts.length > 0}
+                          onChange={handleSelectAll}
+                          className="rounded"
+                        />
                       </TableHead>
                       <TableHead>
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4" />
-                          Nume
+                          {t('common.name')}
                         </div>
                       </TableHead>
                       <TableHead>
                         <div className="flex items-center gap-2">
                           <Phone className="w-4 h-4" />
-                          Telefon
+                          {t('common.phone')}
                         </div>
                       </TableHead>
                       <TableHead>
                         <div className="flex items-center gap-2">
                           <Globe className="w-4 h-4" />
-                          Țara
+                          {t('common.country')}
                         </div>
                       </TableHead>
                       <TableHead>
                         <div className="flex items-center gap-2">
                           <MapPin className="w-4 h-4" />
-                          Locație
+                          {t('common.location')}
                         </div>
                       </TableHead>
-                      <TableHead>Acțiuni</TableHead>
+                      <TableHead>{t('common.actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {contacts.map(contact => <TableRow key={contact.id}>
+                    {contacts.map((contact) => (
+                      <TableRow key={contact.id}>
                         <TableCell>
-                          <input type="checkbox" checked={selectedContactIds.has(contact.id)} onChange={() => handleContactSelect(contact.id)} className="rounded" />
+                          <input
+                            type="checkbox"
+                            checked={selectedContactIds.has(contact.id)}
+                            onChange={() => handleContactSelect(contact.id)}
+                            className="rounded"
+                          />
                         </TableCell>
                         <TableCell className="font-medium">{contact.name}</TableCell>
                         <TableCell className="font-mono text-sm">{contact.phone}</TableCell>
                         <TableCell>{contact.country}</TableCell>
                         <TableCell>{contact.location}</TableCell>
                         <TableCell>
-                          <Button variant="outline" size="sm" onClick={() => handleInitiateCall(contact)} disabled={!customAgentId.trim() || isInitiating} className="border-accent text-accent hover:bg-accent/10">
-                            {isInitiating ? <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" /> : <Phone className="w-4 h-4" />}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleInitiateCall(contact)}
+                            disabled={!customAgentId.trim() || isInitiating}
+                            className="border-accent text-accent hover:bg-accent/10"
+                          >
+                            {isInitiating ? (
+                              <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <Phone className="w-4 h-4" />
+                            )}
                           </Button>
                         </TableCell>
-                      </TableRow>)}
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </div>
             </CardContent>
-          </Card>}
+          </Card>
+        )}
 
         {/* Call History Section */}
         <Card className="liquid-glass mt-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-3">
               <Clock className="w-6 h-6 text-accent" />
-              Istoric Apeluri ({callHistory.length})
+              {t('outbound.callHistory').replace('{count}', callHistory.length.toString())}
             </CardTitle>
             <div className="flex items-center gap-4 mt-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input placeholder="Caută după numărul de telefon sau nume..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
+                <Input
+                  placeholder={t('outbound.searchPlaceholder')}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            {filteredCallHistory.length > 0 ? <div className="max-h-96 overflow-y-auto">
+            {filteredCallHistory.length > 0 ? (
+              <div className="max-h-96 overflow-y-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Status</TableHead>
+                      <TableHead>{t('common.status')}</TableHead>
                       <TableHead>
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4" />
-                          Number
+                          {t('outbound.number')}
                         </div>
                       </TableHead>
                       <TableHead>
                         <div className="flex items-center gap-2">
                           <Phone className="w-4 h-4" />
-                          Telefon
+                          {t('common.phone')}
                         </div>
                       </TableHead>
                       <TableHead>
                         <div className="flex items-center gap-2">
                           <MessageSquare className="w-4 h-4" />
-                          Concluzie
+                          {t('outbound.conclusion')}
                         </div>
                       </TableHead>
-                      <TableHead>Dialog</TableHead>
+                      <TableHead>{t('outbound.dialog')}</TableHead>
                       <TableHead>
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4" />
-                          Data
+                          {t('common.date')}
                         </div>
                       </TableHead>
                       <TableHead>
                         <div className="flex items-center gap-2">
                           <DollarSign className="w-4 h-4" />
-                          Cost
+                          {t('common.cost')}
                         </div>
                       </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredCallHistory.map(call => <TableRow key={call.id}>
+                    {filteredCallHistory.map((call) => (
+                      <TableRow key={call.id}>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             {getStatusIcon(call.status)}
@@ -474,18 +561,24 @@ const Outbound = () => {
                         </TableCell>
                         <TableCell className="text-sm">{call.date}</TableCell>
                         <TableCell className="text-sm font-mono">${call.cost.toFixed(2)}</TableCell>
-                      </TableRow>)}
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
-              </div> : <div className="text-center py-8">
+              </div>
+            ) : (
+              <div className="text-center py-8">
                 <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">
-                  {searchTerm ? 'Nu s-au găsit apeluri care să se potrivească cu termenul de căutare.' : 'Nu există încă apeluri în istoric.'}
+                  {searchTerm ? t('outbound.noSearchResults') : t('outbound.noHistory')}
                 </p>
-                {searchTerm && <Button variant="outline" onClick={() => setSearchTerm('')} className="mt-2">
-                    Șterge filtrul
-                  </Button>}
-              </div>}
+                {searchTerm && (
+                  <Button variant="outline" onClick={() => setSearchTerm('')} className="mt-2">
+                    {t('outbound.clearFilter')}
+                  </Button>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -494,21 +587,23 @@ const Outbound = () => {
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
               <div>
-                <h3 className="font-semibold text-foreground mb-2">Format CSV</h3>
-                <p className="text-sm text-muted-foreground">Nume, Telefon, Țara, Locație</p>
+                <h3 className="font-semibold text-foreground mb-2">{t('outbound.csvFormat')}</h3>
+                <p className="text-sm text-muted-foreground">{t('outbound.format')}</p>
               </div>
               <div>
-                <h3 className="font-semibold text-foreground mb-2">Mărime Maximă</h3>
-                <p className="text-sm text-muted-foreground">1 MB per fișier</p>
+                <h3 className="font-semibold text-foreground mb-2">{t('outbound.maxSize')}</h3>
+                <p className="text-sm text-muted-foreground">{t('outbound.maxSizeValue')}</p>
               </div>
               <div>
-                <h3 className="font-semibold text-foreground mb-2">Telefonie</h3>
-                <p className="text-sm text-muted-foreground">ElevenLabs Outbound</p>
+                <h3 className="font-semibold text-foreground mb-2">{t('outbound.telephony')}</h3>
+                <p className="text-sm text-muted-foreground">{t('outbound.telephonyValue')}</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>;
+    </DashboardLayout>
+  );
 };
+
 export default Outbound;

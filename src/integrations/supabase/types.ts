@@ -317,6 +317,39 @@ export type Database = {
         }
         Relationships: []
       }
+      Outbound: {
+        Row: {
+          Concluzie: string | null
+          Cost: number | null
+          Data: number | null
+          Dialog: string | null
+          id: number
+          Number: number | null
+          Status: string
+          Telefon: string | null
+        }
+        Insert: {
+          Concluzie?: string | null
+          Cost?: number | null
+          Data?: number | null
+          Dialog?: string | null
+          id?: number
+          Number?: number | null
+          Status: string
+          Telefon?: string | null
+        }
+        Update: {
+          Concluzie?: string | null
+          Cost?: number | null
+          Data?: number | null
+          Dialog?: string | null
+          id?: number
+          Number?: number | null
+          Status?: string
+          Telefon?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: string | null
