@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Edit, Upload, FileText, Trash2 } from 'lucide-react';
+import { Edit, Upload, FileText, Trash2, Save } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { useAgentEditing } from '../hooks/useAgentEditing';
 
 interface Step3Props {
   agentIdForEdit: string;
@@ -26,10 +27,17 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
   setAgentIdForEdit,
   onNextStep,
 }) => {
-  const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
   const [newDocContent, setNewDocContent] = useState('');
   const [newDocName, setNewDocName] = useState('');
   const [isAddingDoc, setIsAddingDoc] = useState(false);
+
+  const {
+    documents,
+    addDocument,
+    removeDocument,
+    saveKnowledgeBase,
+    isUpdating,
+  } = useAgentEditing({ agentIdForEdit });
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -44,7 +52,7 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
         content,
         uploadedAt: new Date(),
       };
-      setDocuments(prev => [...prev, newDoc]);
+      addDocument(newDoc);
       toast({
         title: "Succes!",
         description: `Documentul "${file.name}" a fost încărcat cu succes.`,
@@ -69,7 +77,7 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
       content: newDocContent,
       uploadedAt: new Date(),
     };
-    setDocuments(prev => [...prev, newDoc]);
+    addDocument(newDoc);
     setNewDocName('');
     setNewDocContent('');
     setIsAddingDoc(false);
@@ -80,12 +88,22 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
     });
   };
 
-  const removeDocument = (id: string) => {
-    setDocuments(prev => prev.filter(doc => doc.id !== id));
+  const handleRemoveDocument = (id: string) => {
+    removeDocument(id);
     toast({
       title: "Succes!",
       description: "Documentul a fost șters.",
     });
+  };
+
+  const handleSaveKnowledgeBase = async () => {
+    const success = await saveKnowledgeBase();
+    if (success && documents.length > 0) {
+      toast({
+        title: "Succes!",
+        description: "Knowledge Base-ul a fost actualizat cu succes în Eleven Labs.",
+      });
+    }
   };
 
   const canProceed = agentIdForEdit.trim() !== '';
@@ -203,7 +221,7 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => removeDocument(doc.id)}
+                    onClick={() => handleRemoveDocument(doc.id)}
                     className="text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -212,6 +230,26 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
               ))
             )}
           </div>
+
+          {documents.length > 0 && (
+            <Button
+              onClick={handleSaveKnowledgeBase}
+              disabled={isUpdating || !agentIdForEdit.trim()}
+              className="bg-foreground text-background hover:bg-foreground/90 w-full"
+            >
+              {isUpdating ? (
+                <>
+                  <Save className="w-4 h-4 mr-2 animate-spin" />
+                  Se Actualizează Knowledge Base
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Salvează Knowledge Base în Eleven Labs
+                </>
+              )}
+            </Button>
+          )}
         </div>
 
         {canProceed && (
