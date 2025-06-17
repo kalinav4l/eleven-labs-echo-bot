@@ -9,11 +9,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Upload, Phone, FileText, Play, Users, Globe, MapPin, User, Search, Clock, DollarSign, MessageSquare, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Pause, Trash2, Trash } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useCallHistory } from '@/hooks/useCallHistory';
+
 interface Contact {
   id: string;
   name: string;
@@ -376,6 +378,24 @@ const Outbound = () => {
       });
     }
   };
+
+  const handleDeleteSingleCall = async (callId: string) => {
+    try {
+      await deleteCallHistory.mutateAsync([callId]);
+      toast({
+        title: "Succes",
+        description: "Apelul a fost șters cu succes."
+      });
+    } catch (error) {
+      console.error('Error deleting call:', error);
+      toast({
+        title: "Eroare",
+        description: "Nu s-a putut șterge apelul.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleDeleteAll = async () => {
     if (callHistory.length === 0) {
       toast({
@@ -401,6 +421,7 @@ const Outbound = () => {
       });
     }
   };
+
   const handleInitiateCall = async (contact: Contact) => {
     if (!customAgentId.trim()) {
       toast({
@@ -426,6 +447,7 @@ const Outbound = () => {
       });
     }
   };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'success':
@@ -440,6 +462,7 @@ const Outbound = () => {
         return <AlertCircle className="w-4 h-4 text-gray-500" />;
     }
   };
+
   const getStatusText = (status: string) => {
     switch (status) {
       case 'success':
@@ -454,6 +477,7 @@ const Outbound = () => {
         return 'Necunoscut';
     }
   };
+
   const toggleExpandedDialog = (callId: string) => {
     const newExpanded = new Set(expandedDialog);
     if (newExpanded.has(callId)) {
@@ -463,6 +487,7 @@ const Outbound = () => {
     }
     setExpandedDialog(newExpanded);
   };
+
   const toggleExpandedSummary = (callId: string) => {
     const newExpanded = new Set(expandedSummary);
     if (newExpanded.has(callId)) {
@@ -472,8 +497,14 @@ const Outbound = () => {
     }
     setExpandedSummary(newExpanded);
   };
-  const filteredCallHistory = callHistory.filter(call => call.phone_number.includes(searchTerm) || call.contact_name.toLowerCase().includes(searchTerm.toLowerCase()));
-  return <DashboardLayout>
+
+  const filteredCallHistory = callHistory.filter(call => 
+    call.phone_number.includes(searchTerm) || 
+    call.contact_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <DashboardLayout>
       <div className="p-6 my-[60px]">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
@@ -481,7 +512,6 @@ const Outbound = () => {
             <h1 className="text-3xl font-bold text-foreground mb-2">Outbound</h1>
             <p className="text-muted-foreground">Gestionează apelurile outbound și bazele de date de contacte</p>
           </div>
-          
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -687,31 +717,72 @@ const Outbound = () => {
                 Istoric Apeluri ({callHistory.length})
               </CardTitle>
               <div className="flex items-center gap-2">
-                {selectedCallIds.size > 0 && <Button onClick={handleDeleteSelected} variant="destructive" size="sm" disabled={deleteCallHistory.isPending} className="flex items-center gap-2">
+                {selectedCallIds.size > 0 && (
+                  <Button 
+                    onClick={handleDeleteSelected} 
+                    variant="destructive" 
+                    size="sm" 
+                    disabled={deleteCallHistory.isPending}
+                    className="flex items-center gap-2"
+                  >
                     <Trash2 className="w-4 h-4" />
                     Șterge Selectate ({selectedCallIds.size})
-                  </Button>}
-                {callHistory.length > 0 && <Button onClick={handleDeleteAll} variant="destructive" size="sm" disabled={deleteAllCallHistory.isPending} className="flex items-center gap-2">
-                    <Trash className="w-4 h-4" />
-                    Șterge Tot
-                  </Button>}
-                
+                  </Button>
+                )}
+                {callHistory.length > 0 && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        disabled={deleteAllCallHistory.isPending}
+                        className="flex items-center gap-2"
+                      >
+                        <Trash className="w-4 h-4" />
+                        Șterge Tot
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirmare ștergere</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Ești sigur că vrei să ștergi toate apelurile din istoric? Această acțiune nu poate fi anulată.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Anulează</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteAll} className="bg-red-600 hover:bg-red-700">
+                          Da, șterge tot
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-4 mt-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input placeholder="Caută după numărul de telefon sau nume..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
+                <Input 
+                  placeholder="Caută după numărul de telefon sau nume..." 
+                  value={searchTerm} 
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10" 
+                />
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            {filteredCallHistory.length > 0 ? <div className="max-h-96 overflow-y-auto">
+            {filteredCallHistory.length > 0 ? (
+              <div className="max-h-96 overflow-y-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">
-                        <Checkbox checked={selectedCallIds.size === filteredCallHistory.length && filteredCallHistory.length > 0} onCheckedChange={handleSelectAllCalls} />
+                        <Checkbox 
+                          checked={selectedCallIds.size === filteredCallHistory.length && filteredCallHistory.length > 0}
+                          onCheckedChange={handleSelectAllCalls}
+                        />
                       </TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>
@@ -745,12 +816,17 @@ const Outbound = () => {
                           Cost
                         </div>
                       </TableHead>
+                      <TableHead>Acțiuni</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredCallHistory.map(call => <TableRow key={call.id}>
+                    {filteredCallHistory.map((call) => (
+                      <TableRow key={call.id}>
                         <TableCell>
-                          <Checkbox checked={selectedCallIds.has(call.id)} onCheckedChange={() => handleCallSelect(call.id)} />
+                          <Checkbox 
+                            checked={selectedCallIds.has(call.id)}
+                            onCheckedChange={() => handleCallSelect(call.id)}
+                          />
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
@@ -762,11 +838,18 @@ const Outbound = () => {
                         <TableCell className="font-mono text-sm">{call.phone_number}</TableCell>
                         <TableCell className="text-sm">
                           <Collapsible>
-                            <CollapsibleTrigger className="flex items-center gap-2 hover:text-accent cursor-pointer" onClick={() => toggleExpandedSummary(call.id)}>
+                            <CollapsibleTrigger 
+                              className="flex items-center gap-2 hover:text-accent cursor-pointer"
+                              onClick={() => toggleExpandedSummary(call.id)}
+                            >
                               <span className="truncate max-w-[150px]">
                                 {call.summary || 'Nu există rezumat'}
                               </span>
-                              {expandedSummary.has(call.id) ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                              {expandedSummary.has(call.id) ? (
+                                <ChevronUp className="w-4 h-4" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4" />
+                              )}
                             </CollapsibleTrigger>
                             <CollapsibleContent className="mt-2">
                               <div className="bg-gray-50 p-3 rounded max-w-xs whitespace-pre-wrap text-sm">
@@ -777,9 +860,16 @@ const Outbound = () => {
                         </TableCell>
                         <TableCell className="text-sm">
                           <Collapsible>
-                            <CollapsibleTrigger className="flex items-center gap-2 hover:text-accent cursor-pointer" onClick={() => toggleExpandedDialog(call.id)}>
+                            <CollapsibleTrigger 
+                              className="flex items-center gap-2 hover:text-accent cursor-pointer"
+                              onClick={() => toggleExpandedDialog(call.id)}
+                            >
                               <span className="text-blue-600 underline">Vezi Dialog</span>
-                              {expandedDialog.has(call.id) ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                              {expandedDialog.has(call.id) ? (
+                                <ChevronUp className="w-4 h-4" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4" />
+                              )}
                             </CollapsibleTrigger>
                             <CollapsibleContent className="mt-2">
                               <div className="bg-gray-50 p-3 rounded max-w-sm max-h-64 overflow-auto">
@@ -792,18 +882,50 @@ const Outbound = () => {
                         </TableCell>
                         <TableCell className="text-sm">{call.call_date}</TableCell>
                         <TableCell className="text-sm font-mono">{call.cost_usd}</TableCell>
-                      </TableRow>)}
+                        <TableCell>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive" size="sm" className="p-2">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Confirmare ștergere</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Ești sigur că vrei să ștergi acest apel din istoric? Această acțiune nu poate fi anulată.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Anulează</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => handleDeleteSingleCall(call.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  Da, șterge
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
-              </div> : <div className="text-center py-8">
+              </div>
+            ) : (
+              <div className="text-center py-8">
                 <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">
                   {searchTerm ? 'Nu s-au găsit apeluri care să se potrivească cu termenul de căutare.' : 'Nu există încă apeluri în istoric.'}
                 </p>
-                {searchTerm && <Button variant="outline" onClick={() => setSearchTerm('')} className="mt-2">
+                {searchTerm && (
+                  <Button variant="outline" onClick={() => setSearchTerm('')} className="mt-2">
                     Șterge filtrul
-                  </Button>}
-              </div>}
+                  </Button>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -827,6 +949,8 @@ const Outbound = () => {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>;
+    </DashboardLayout>
+  );
 };
+
 export default Outbound;
