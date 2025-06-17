@@ -3,10 +3,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Mic, MicOff, Send, Save } from 'lucide-react';
-import { useConversation } from '@11labs/react';
+import { Send, Save, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
+import VoiceTestButton from './VoiceTestButton';
 
 interface Message {
   id: string;
@@ -25,34 +25,9 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose 
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
-  const [isListening, setIsListening] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const conversation = useConversation({
-    onConnect: () => {
-      console.log('Connected to agent:', agent?.name);
-    },
-    onDisconnect: () => {
-      console.log('Disconnected from agent');
-      setIsListening(false);
-    },
-    onMessage: (message) => {
-      if (message.message) {
-        const newMessage: Message = {
-          id: Date.now().toString(),
-          text: message.message,
-          isUser: message.source === 'user',
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, newMessage]);
-      }
-    },
-    onError: (error) => {
-      console.error('Conversation error:', error);
-      setIsListening(false);
-    }
-  });
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -61,27 +36,6 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  const handleStartConversation = async () => {
-    if (!agent) return;
-    
-    try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-      await conversation.startSession({ agentId: agent.id });
-      setIsListening(true);
-    } catch (error) {
-      console.error('Error starting conversation:', error);
-    }
-  };
-
-  const handleEndConversation = async () => {
-    try {
-      await conversation.endSession();
-      setIsListening(false);
-    } catch (error) {
-      console.error('Error ending conversation:', error);
-    }
-  };
 
   const handleSendText = async () => {
     if (!inputText.trim()) return;
@@ -138,7 +92,6 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose 
 
       if (!error) {
         console.log('Conversation saved successfully');
-        // Show success message
       }
     } catch (error) {
       console.error('Error saving conversation:', error);
@@ -148,9 +101,6 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose 
   };
 
   const handleClose = () => {
-    if (isListening) {
-      handleEndConversation();
-    }
     setMessages([]);
     onClose();
   };
@@ -159,96 +109,121 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose 
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl h-[600px] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="text-black">Test Agent: {agent.name}</DialogTitle>
+      <DialogContent className="max-w-4xl h-[700px] flex flex-col bg-white">
+        <DialogHeader className="flex flex-row items-center justify-between">
+          <DialogTitle className="text-black text-xl">Test Agent: {agent.name}</DialogTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleClose}
+            className="h-8 w-8 p-0"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </DialogHeader>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto border border-gray-200 rounded p-4 mb-4">
-          {messages.length === 0 ? (
-            <div className="text-center text-gray-600">
-              <p>Începe o conversație cu {agent.name}</p>
-              <p className="text-sm mt-2">Folosește microfonul sau scrie un mesaj</p>
+        <div className="flex flex-1 gap-6">
+          {/* Left side - Voice Interface */}
+          <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 rounded-lg p-8">
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-semibold text-gray-800 mb-2">Conversație Vocală</h3>
+              <p className="text-gray-600">Vorbește direct cu agentul folosind microfonul</p>
             </div>
-          ) : (
-            messages.map((message) => (
-              <div
-                key={message.id}
-                className={`mb-4 ${message.isUser ? 'text-right' : 'text-left'}`}
-              >
-                <div
-                  className={`inline-block max-w-xs p-3 rounded-lg ${
-                    message.isUser
-                      ? 'bg-black text-white'
-                      : 'bg-gray-100 text-black'
-                  }`}
-                >
-                  <p className="text-sm">{message.text}</p>
-                  <p className="text-xs opacity-70 mt-1">
-                    {message.timestamp.toLocaleTimeString('ro-RO', { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
-                  </p>
+            
+            <div className="mb-8">
+              <VoiceTestButton 
+                agentId={agent.agent_id || agent.id}
+                onSpeakingChange={setIsSpeaking}
+              />
+            </div>
+
+            <div className="text-center space-y-2">
+              <p className="text-sm text-gray-500">
+                {isSpeaking ? 'Agentul vorbește...' : 'Apasă butonul pentru a începe'}
+              </p>
+              <p className="text-xs text-gray-400">
+                Agent ID: {agent.agent_id || agent.id}
+              </p>
+            </div>
+          </div>
+
+          {/* Right side - Text Chat */}
+          <div className="flex-1 flex flex-col">
+            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">Chat Text</h3>
+              <p className="text-sm text-gray-600">Alternativă de comunicare prin text</p>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto border border-gray-200 rounded-lg p-4 mb-4 bg-white">
+              {messages.length === 0 ? (
+                <div className="text-center text-gray-500 h-full flex items-center justify-center">
+                  <div>
+                    <p>Începe o conversație text cu {agent.name}</p>
+                    <p className="text-sm mt-2">Sau folosește interfața vocală din stânga</p>
+                  </div>
                 </div>
-              </div>
-            ))
-          )}
-          <div ref={messagesEndRef} />
-        </div>
+              ) : (
+                messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`mb-4 ${message.isUser ? 'text-right' : 'text-left'}`}
+                  >
+                    <div
+                      className={`inline-block max-w-xs p-3 rounded-lg ${
+                        message.isUser
+                          ? 'bg-black text-white'
+                          : 'bg-gray-100 text-black'
+                      }`}
+                    >
+                      <p className="text-sm">{message.text}</p>
+                      <p className="text-xs opacity-70 mt-1">
+                        {message.timestamp.toLocaleTimeString('ro-RO', { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+              <div ref={messagesEndRef} />
+            </div>
 
-        {/* Voice Controls */}
-        <div className="flex items-center justify-center mb-4">
-          {!isListening ? (
-            <Button
-              onClick={handleStartConversation}
-              className="bg-black hover:bg-gray-800 text-white rounded-full w-12 h-12"
-            >
-              <Mic className="w-5 h-5" />
-            </Button>
-          ) : (
-            <Button
-              onClick={handleEndConversation}
-              className="bg-gray-600 hover:bg-gray-700 text-white rounded-full w-12 h-12"
-            >
-              <MicOff className="w-5 h-5" />
-            </Button>
-          )}
-        </div>
+            {/* Text Input */}
+            <div className="flex space-x-2 mb-4">
+              <Input
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                placeholder="Scrie un mesaj..."
+                className="flex-1"
+                onKeyPress={(e) => e.key === 'Enter' && handleSendText()}
+              />
+              <Button
+                onClick={handleSendText}
+                disabled={!inputText.trim()}
+                className="bg-black hover:bg-gray-800 text-white"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
 
-        {/* Text Input */}
-        <div className="flex space-x-2 mb-4">
-          <Input
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            placeholder="Scrie un mesaj..."
-            className="flex-1"
-            onKeyPress={(e) => e.key === 'Enter' && handleSendText()}
-          />
-          <Button
-            onClick={handleSendText}
-            disabled={!inputText.trim()}
-            className="bg-black hover:bg-gray-800 text-white"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
-        </div>
-
-        {/* Actions */}
-        <div className="flex justify-between">
-          <Button
-            onClick={handleSaveConversation}
-            disabled={messages.length === 0 || isSaving}
-            variant="outline"
-            className="border-gray-300 text-gray-700"
-          >
-            <Save className="w-4 h-4 mr-2" />
-            {isSaving ? 'Salvează...' : 'Salvează Conversația'}
-          </Button>
-          <Button onClick={handleClose} variant="outline">
-            Închide
-          </Button>
+            {/* Actions */}
+            <div className="flex justify-between">
+              <Button
+                onClick={handleSaveConversation}
+                disabled={messages.length === 0 || isSaving}
+                variant="outline"
+                className="border-gray-300 text-gray-700"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {isSaving ? 'Salvează...' : 'Salvează Conversația'}
+              </Button>
+              <Button onClick={handleClose} variant="outline">
+                Închide
+              </Button>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

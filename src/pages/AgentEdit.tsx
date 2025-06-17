@@ -275,9 +275,9 @@ const AgentEdit = () => {
           {/* Test Agent Button */}
           <Button
             onClick={() => setIsTestModalOpen(true)}
-            className="bg-green-600 hover:bg-green-700 text-white"
+            className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
           >
-            <TestTube className="w-4 h-4 mr-2" />
+            <TestTube className="w-4 h-4" />
             Testează Agent
           </Button>
         </div>
