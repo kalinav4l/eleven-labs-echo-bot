@@ -109,75 +109,80 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose 
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl h-[700px] flex flex-col bg-white">
-        <DialogHeader className="flex flex-row items-center justify-between">
-          <DialogTitle className="text-black text-xl">Test Agent: {agent.name}</DialogTitle>
+      <DialogContent className="max-w-5xl h-[80vh] flex flex-col bg-white/95 backdrop-blur-xl border-0 shadow-2xl">
+        <DialogHeader className="flex flex-row items-center justify-between border-b border-gray-100 pb-4">
+          <DialogTitle className="text-2xl font-light text-gray-800">
+            Test Agent: <span className="font-medium">{agent.name}</span>
+          </DialogTitle>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleClose}
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
           >
             <X className="h-4 w-4" />
           </Button>
         </DialogHeader>
 
-        <div className="flex flex-1 gap-6">
+        <div className="flex flex-1 gap-8 mt-6">
           {/* Left side - Voice Interface */}
-          <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 rounded-lg p-8">
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-semibold text-gray-800 mb-2">Conversație Vocală</h3>
-              <p className="text-gray-600">Vorbește direct cu agentul folosind microfonul</p>
+          <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-white rounded-2xl p-8 border border-gray-100">
+            <div className="text-center mb-12">
+              <h3 className="text-2xl font-light text-gray-800 mb-3">Conversație Vocală</h3>
+              <p className="text-gray-500 text-sm">Vorbește direct cu agentul</p>
             </div>
             
-            <div className="mb-8">
+            <div className="mb-12">
               <VoiceTestButton 
                 agentId={agent.agent_id || agent.id}
                 onSpeakingChange={setIsSpeaking}
               />
             </div>
 
-            <div className="text-center space-y-2">
-              <p className="text-sm text-gray-500">
-                {isSpeaking ? 'Agentul vorbește...' : 'Apasă butonul pentru a începe'}
+            <div className="text-center space-y-3">
+              <p className="text-sm text-gray-600 font-medium">
+                {isSpeaking ? 'Agentul vorbește...' : 'Apasă pentru a începe'}
               </p>
-              <p className="text-xs text-gray-400">
+              <div className="text-xs text-gray-400 bg-gray-50 px-3 py-2 rounded-lg">
                 Agent ID: {agent.agent_id || agent.id}
-              </p>
+              </div>
             </div>
           </div>
 
           {/* Right side - Text Chat */}
           <div className="flex-1 flex flex-col">
-            <div className="bg-gray-50 rounded-lg p-4 mb-4">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Chat Text</h3>
-              <p className="text-sm text-gray-600">Alternativă de comunicare prin text</p>
+            <div className="bg-gradient-to-r from-gray-50 to-white rounded-xl p-5 mb-6 border border-gray-100">
+              <h3 className="text-xl font-light text-gray-800 mb-2">Chat Text</h3>
+              <p className="text-sm text-gray-500">Alternativă de comunicare prin text</p>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto border border-gray-200 rounded-lg p-4 mb-4 bg-white">
+            <div className="flex-1 overflow-y-auto border border-gray-100 rounded-xl p-5 mb-6 bg-white/50">
               {messages.length === 0 ? (
-                <div className="text-center text-gray-500 h-full flex items-center justify-center">
+                <div className="text-center text-gray-400 h-full flex items-center justify-center">
                   <div>
-                    <p>Începe o conversație text cu {agent.name}</p>
-                    <p className="text-sm mt-2">Sau folosește interfața vocală din stânga</p>
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Send className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <p className="text-lg font-light">Începe o conversație</p>
+                    <p className="text-sm mt-2">Scrie un mesaj sau folosește interfața vocală</p>
                   </div>
                 </div>
               ) : (
                 messages.map((message) => (
                   <div
                     key={message.id}
-                    className={`mb-4 ${message.isUser ? 'text-right' : 'text-left'}`}
+                    className={`mb-6 ${message.isUser ? 'text-right' : 'text-left'}`}
                   >
                     <div
-                      className={`inline-block max-w-xs p-3 rounded-lg ${
+                      className={`inline-block max-w-xs p-4 rounded-2xl ${
                         message.isUser
-                          ? 'bg-black text-white'
-                          : 'bg-gray-100 text-black'
+                          ? 'bg-black text-white shadow-lg'
+                          : 'bg-gray-100 text-gray-800 shadow-sm'
                       }`}
                     >
-                      <p className="text-sm">{message.text}</p>
-                      <p className="text-xs opacity-70 mt-1">
+                      <p className="text-sm leading-relaxed">{message.text}</p>
+                      <p className="text-xs opacity-60 mt-2">
                         {message.timestamp.toLocaleTimeString('ro-RO', { 
                           hour: '2-digit', 
                           minute: '2-digit' 
@@ -191,18 +196,18 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose 
             </div>
 
             {/* Text Input */}
-            <div className="flex space-x-2 mb-4">
+            <div className="flex space-x-3 mb-6">
               <Input
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder="Scrie un mesaj..."
-                className="flex-1"
+                className="flex-1 border-gray-200 rounded-xl bg-white/80 focus:bg-white transition-colors"
                 onKeyPress={(e) => e.key === 'Enter' && handleSendText()}
               />
               <Button
                 onClick={handleSendText}
                 disabled={!inputText.trim()}
-                className="bg-black hover:bg-gray-800 text-white"
+                className="bg-black hover:bg-gray-800 text-white rounded-xl px-6"
               >
                 <Send className="w-4 h-4" />
               </Button>
@@ -214,12 +219,16 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose 
                 onClick={handleSaveConversation}
                 disabled={messages.length === 0 || isSaving}
                 variant="outline"
-                className="border-gray-300 text-gray-700"
+                className="border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl"
               >
                 <Save className="w-4 h-4 mr-2" />
-                {isSaving ? 'Salvează...' : 'Salvează Conversația'}
+                {isSaving ? 'Salvează...' : 'Salvează'}
               </Button>
-              <Button onClick={handleClose} variant="outline">
+              <Button 
+                onClick={handleClose} 
+                variant="outline"
+                className="border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl"
+              >
                 Închide
               </Button>
             </div>

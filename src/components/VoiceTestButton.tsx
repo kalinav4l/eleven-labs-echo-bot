@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Phone } from 'lucide-react';
+import { Mic, MicOff } from 'lucide-react';
 import { useConversation } from '@11labs/react';
 import { toast } from '@/components/ui/use-toast';
 
@@ -95,54 +95,54 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({ agentId, onSpeakingCh
 
   return (
     <div className="relative flex items-center justify-center">
-      {/* Animated background circles */}
+      {/* Animated background circles - more subtle and modern */}
       <div className="absolute inset-0 flex items-center justify-center">
-        {/* Outer circle - animated when speaking */}
+        {/* Outer circle */}
         <div 
-          className={`absolute w-32 h-32 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-teal-400 transition-all duration-300 ${
+          className={`absolute w-40 h-40 rounded-full bg-gradient-to-br from-cyan-400/20 via-blue-500/20 to-teal-400/20 transition-all duration-500 ${
             conversation.isSpeaking 
               ? 'animate-spin opacity-80 scale-110' 
               : isActive 
                 ? 'animate-pulse opacity-60' 
-                : 'opacity-40'
+                : 'opacity-30'
           }`}
         />
         
         {/* Middle circle */}
         <div 
-          className={`absolute w-24 h-24 rounded-full bg-gradient-to-r from-blue-400 via-cyan-500 to-blue-600 transition-all duration-300 ${
+          className={`absolute w-28 h-28 rounded-full bg-gradient-to-br from-blue-400/30 via-cyan-500/30 to-blue-600/30 transition-all duration-400 ${
             conversation.isSpeaking 
               ? 'animate-pulse opacity-70 scale-105' 
               : isActive 
                 ? 'opacity-50' 
-                : 'opacity-30'
+                : 'opacity-25'
           }`}
         />
         
         {/* Inner circle */}
         <div 
-          className={`absolute w-16 h-16 rounded-full bg-gradient-to-r from-teal-400 via-cyan-400 to-blue-500 transition-all duration-300 ${
+          className={`absolute w-20 h-20 rounded-full bg-gradient-to-br from-teal-400/40 via-cyan-400/40 to-blue-500/40 transition-all duration-300 ${
             conversation.isSpeaking 
               ? 'animate-bounce opacity-90' 
               : isActive 
                 ? 'opacity-70' 
-                : 'opacity-50'
+                : 'opacity-40'
           }`}
         />
       </div>
 
-      {/* Main button */}
+      {/* Main button - cleaner design */}
       <Button
         onClick={handleToggleConversation}
         disabled={isConnecting}
-        className={`relative z-10 w-20 h-20 rounded-full transition-all duration-300 ${
+        className={`relative z-10 w-24 h-24 rounded-full transition-all duration-300 border-2 ${
           isActive
-            ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg scale-110'
-            : 'bg-black hover:bg-gray-800 text-white shadow-lg'
+            ? 'bg-red-500 hover:bg-red-600 border-red-400 text-white shadow-xl scale-105'
+            : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700 shadow-lg hover:shadow-xl'
         }`}
       >
         {isConnecting ? (
-          <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
         ) : isActive ? (
           <MicOff className="w-8 h-8" />
         ) : (
@@ -150,10 +150,10 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({ agentId, onSpeakingCh
         )}
       </Button>
 
-      {/* Status indicator */}
+      {/* Status indicator - more subtle */}
       {isActive && (
-        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2">
-          <div className="px-3 py-1 bg-black/80 text-white text-xs rounded-full">
+        <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2">
+          <div className="px-4 py-2 bg-black/90 text-white text-xs rounded-full backdrop-blur-sm">
             {conversation.isSpeaking ? 'Agentul vorbește...' : 'Ascultă...'}
           </div>
         </div>
