@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/utils/utils.ts'
 
 interface WheelPickerProps {
   items: { id: string; name: string }[]

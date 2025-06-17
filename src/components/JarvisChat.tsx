@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { Mic, MicOff, Volume2, VolumeX, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { cn } from '@/lib/utils'
+import { cn } from '@/utils/utils.ts'
 
 interface Message {
   id: string
