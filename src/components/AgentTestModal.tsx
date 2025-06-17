@@ -19,15 +19,9 @@ interface AgentTestModalProps {
   agent: any;
   isOpen: boolean;
   onClose: () => void;
-  onSpeakingChange?: (isSpeaking: boolean) => void;
 }
 
-const AgentTestModal: React.FC<AgentTestModalProps> = ({ 
-  agent, 
-  isOpen, 
-  onClose, 
-  onSpeakingChange 
-}) => {
+const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose }) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
@@ -42,7 +36,6 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({
     onDisconnect: () => {
       console.log('Disconnected from agent');
       setIsListening(false);
-      onSpeakingChange?.(false);
     },
     onMessage: (message) => {
       if (message.message) {
@@ -53,21 +46,11 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({
           timestamp: new Date()
         };
         setMessages(prev => [...prev, newMessage]);
-        
-        // Update speaking state based on message source
-        if (message.source !== 'user') {
-          onSpeakingChange?.(true);
-          // Stop speaking animation after a delay (simulating speech duration)
-          setTimeout(() => {
-            onSpeakingChange?.(false);
-          }, message.message.length * 50); // Rough estimation of speech duration
-        }
       }
     },
     onError: (error) => {
       console.error('Conversation error:', error);
       setIsListening(false);
-      onSpeakingChange?.(false);
     }
   });
 

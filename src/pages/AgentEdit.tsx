@@ -7,12 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Bot, Save, Copy, Upload, FileText, Trash2 } from 'lucide-react';
+import { ArrowLeft, Bot, Save, Copy, Upload, FileText, Trash2, TestTube } from 'lucide-react';
 import { useClipboard } from '@/hooks/useClipboard';
 import { toast } from '@/components/ui/use-toast';
 import { API_CONFIG, VOICES, LANGUAGES } from '@/constants/constants';
 import AgentTestModal from '@/components/AgentTestModal';
-import { AnimatedTestButton } from '@/components/AnimatedTestButton';
 
 interface KnowledgeDocument {
   id: string;
@@ -34,7 +33,6 @@ const AgentEdit = () => {
   const [isAddingDoc, setIsAddingDoc] = useState(false);
   const [isUpdatingKnowledge, setIsUpdatingKnowledge] = useState(false);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
-  const [isAgentSpeaking, setIsAgentSpeaking] = useState(false);
 
   useEffect(() => {
     const fetchAgentData = async () => {
@@ -274,12 +272,14 @@ const AgentEdit = () => {
             </div>
           </div>
           
-          {/* Animated Test Agent Button */}
-          <AnimatedTestButton
+          {/* Test Agent Button */}
+          <Button
             onClick={() => setIsTestModalOpen(true)}
-            isActive={isTestModalOpen}
-            isAnimating={isAgentSpeaking}
-          />
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            <TestTube className="w-4 h-4 mr-2" />
+            Testează Agent
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -572,11 +572,7 @@ const AgentEdit = () => {
         <AgentTestModal
           agent={agentData}
           isOpen={isTestModalOpen}
-          onClose={() => {
-            setIsTestModalOpen(false);
-            setIsAgentSpeaking(false);
-          }}
-          onSpeakingChange={setIsAgentSpeaking}
+          onClose={() => setIsTestModalOpen(false)}
         />
       </div>
     </DashboardLayout>
