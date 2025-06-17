@@ -1,12 +1,12 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, Download, FileAudio, MessageSquare, User } from 'lucide-react';
+import { Upload, Download, FileAudio, MessageSquare, User, Bot, Wand2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TranscriptEntry {
   speaker: string;
@@ -19,14 +19,22 @@ interface TranscriptEntry {
 const Transcript = () => {
   const { user } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
+  const [isProcessingWithAI, setIsProcessingWithAI] = useState(false);
   const [transcriptEntries, setTranscriptEntries] = useState<TranscriptEntry[]>([]);
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [rawTranscript, setRawTranscript] = useState<string>('');
 
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
   const getSpeakerColor = (speaker: string) => {
+    if (speaker.toLowerCase().includes('agent') || speaker.toLowerCase().includes('ai')) {
+      return 'bg-purple-500';
+    } else if (speaker.toLowerCase().includes('user')) {
+      return 'bg-blue-500';
+    }
+    
     const colors = [
       'bg-blue-500',
       'bg-purple-500', 
@@ -34,8 +42,15 @@ const Transcript = () => {
       'bg-indigo-500',
       'bg-cyan-500'
     ];
-    const index = parseInt(speaker.replace('Speaker ', '')) || 0;
+    const index = parseInt(speaker.replace(/\D/g, '')) || 0;
     return colors[index % colors.length];
+  };
+
+  const getSpeakerIcon = (speaker: string) => {
+    if (speaker.toLowerCase().includes('agent') || speaker.toLowerCase().includes('ai')) {
+      return <Bot className="w-4 h-4 text-white" />;
+    }
+    return <User className="w-4 h-4 text-white" />;
   };
 
   const formatTime = (seconds: number) => {
@@ -133,6 +148,55 @@ const Transcript = () => {
       });
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const processWithGPT4o = async () => {
+    if (!rawTranscript) {
+      toast({
+        title: "Eroare",
+        description: "Nu există transcript pentru procesare.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsProcessingWithAI(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('process-transcript', {
+        body: { transcriptText: rawTranscript }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.dialogue && Array.isArray(data.dialogue)) {
+        const processedEntries: TranscriptEntry[] = data.dialogue.map((item: any, index: number) => ({
+          speaker: item.speaker || 'Unknown',
+          text: item.text || '',
+          timestamp: item.timestamp || formatTime(index * 5),
+          startTime: index * 5,
+          endTime: (index + 1) * 5
+        }));
+
+        setTranscriptEntries(processedEntries);
+        
+        toast({
+          title: "Succes",
+          description: "Transcriptul a fost procesat cu GPT-4o!"
+        });
+      }
+
+    } catch (error) {
+      console.error('Error processing with GPT-4o:', error);
+      toast({
+        title: "Eroare",
+        description: "Nu s-a putut procesa transcriptul cu AI.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessingWithAI(false);
     }
   };
 
@@ -247,6 +311,28 @@ const Transcript = () => {
                   </div>
                 )}
               </Button>
+
+              {/* GPT-4o Processing Button */}
+              {rawTranscript && (
+                <Button
+                  onClick={processWithGPT4o}
+                  disabled={isProcessingWithAI}
+                  variant="outline"
+                  className="w-full border-purple-500 text-purple-500 hover:bg-purple-50"
+                >
+                  {isProcessingWithAI ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                      Procesează cu GPT-4o...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Wand2 className="w-4 h-4" />
+                      Procesează cu GPT-4o
+                    </div>
+                  )}
+                </Button>
+              )}
             </CardContent>
           </Card>
 
@@ -278,7 +364,7 @@ const Transcript = () => {
                     <div key={index} className="flex gap-3 p-3 rounded-lg bg-gray-50/50 hover:bg-gray-100/50 transition-colors">
                       <div className="flex-shrink-0">
                         <div className={`w-8 h-8 rounded-full ${getSpeakerColor(entry.speaker)} flex items-center justify-center`}>
-                          <User className="w-4 h-4 text-white" />
+                          {getSpeakerIcon(entry.speaker)}
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
