@@ -5,12 +5,24 @@ import { Mic, MicOff } from 'lucide-react';
 import { useConversation } from '@11labs/react';
 import { toast } from '@/components/ui/use-toast';
 
+interface Message {
+  id: string;
+  text: string;
+  isUser: boolean;
+  timestamp: Date;
+}
+
 interface VoiceTestButtonProps {
   agentId: string;
   onSpeakingChange?: (isSpeaking: boolean) => void;
+  onTranscription?: (message: Message) => void;
 }
 
-const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({ agentId, onSpeakingChange }) => {
+const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({ 
+  agentId, 
+  onSpeakingChange, 
+  onTranscription 
+}) => {
   const [isActive, setIsActive] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
 
@@ -35,6 +47,39 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({ agentId, onSpeakingCh
     },
     onMessage: (message) => {
       console.log('Message received:', message);
+      
+      // Handle different message types
+      if (message.type === 'user_transcript') {
+        // User speaking
+        const userMessage: Message = {
+          id: Date.now().toString() + '_user',
+          text: message.message || message.text || '',
+          isUser: true,
+          timestamp: new Date()
+        };
+        console.log('User transcript:', userMessage);
+        onTranscription?.(userMessage);
+      } else if (message.type === 'agent_response' || message.type === 'agent_transcript') {
+        // Agent speaking
+        const agentMessage: Message = {
+          id: Date.now().toString() + '_agent',
+          text: message.message || message.text || '',
+          isUser: false,
+          timestamp: new Date()
+        };
+        console.log('Agent transcript:', agentMessage);
+        onTranscription?.(agentMessage);
+      } else if (message.message || message.text) {
+        // Fallback for any message with text content
+        const fallbackMessage: Message = {
+          id: Date.now().toString() + '_fallback',
+          text: message.message || message.text,
+          isUser: false, // Default to agent
+          timestamp: new Date()
+        };
+        console.log('Fallback transcript:', fallbackMessage);
+        onTranscription?.(fallbackMessage);
+      }
     },
     onError: (error) => {
       console.error('Conversation error:', error);
@@ -95,7 +140,7 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({ agentId, onSpeakingCh
 
   return (
     <div className="relative flex items-center justify-center">
-      {/* Animated background circles - more subtle and modern */}
+      {/* Animated background circles */}
       <div className="absolute inset-0 flex items-center justify-center">
         {/* Outer circle */}
         <div 
@@ -131,7 +176,7 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({ agentId, onSpeakingCh
         />
       </div>
 
-      {/* Main button - cleaner design */}
+      {/* Main button */}
       <Button
         onClick={handleToggleConversation}
         disabled={isConnecting}
@@ -150,7 +195,7 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({ agentId, onSpeakingCh
         )}
       </Button>
 
-      {/* Status indicator - more subtle */}
+      {/* Status indicator */}
       {isActive && (
         <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2">
           <div className="px-4 py-2 bg-black/90 text-white text-xs rounded-full backdrop-blur-sm">

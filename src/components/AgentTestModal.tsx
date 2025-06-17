@@ -37,6 +37,11 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose 
     scrollToBottom();
   }, [messages]);
 
+  const handleVoiceTranscription = (message: Message) => {
+    console.log('Adding voice transcription:', message);
+    setMessages(prev => [...prev, message]);
+  };
+
   const handleSendText = async () => {
     if (!inputText.trim()) return;
 
@@ -136,6 +141,7 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose 
               <VoiceTestButton 
                 agentId={agent.agent_id || agent.id}
                 onSpeakingChange={setIsSpeaking}
+                onTranscription={handleVoiceTranscription}
               />
             </div>
 
@@ -153,7 +159,7 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose 
           <div className="flex-1 flex flex-col">
             <div className="bg-gradient-to-r from-gray-50 to-white rounded-xl p-5 mb-6 border border-gray-100">
               <h3 className="text-xl font-light text-gray-800 mb-2">Chat Text</h3>
-              <p className="text-sm text-gray-500">Alternativă de comunicare prin text</p>
+              <p className="text-sm text-gray-500">Transcripția conversației vocale și chat text</p>
             </div>
 
             {/* Messages */}
@@ -165,7 +171,7 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose 
                       <Send className="w-6 h-6 text-gray-400" />
                     </div>
                     <p className="text-lg font-light">Începe o conversație</p>
-                    <p className="text-sm mt-2">Scrie un mesaj sau folosește interfața vocală</p>
+                    <p className="text-sm mt-2">Vorbește vocal sau scrie un mesaj</p>
                   </div>
                 </div>
               ) : (
