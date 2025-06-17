@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import type { WebhookCallResult, WebhookResponse } from '@/types/webhook';
 
 interface Contact {
   id: string;
@@ -199,24 +200,32 @@ const Outbound = () => {
     }
   };
 
-  const saveCallResultsToSupabase = async (callResults: any[]) => {
+  const saveCallResultsToSupabase = async (callResults: WebhookCallResult[]) => {
     try {
       const recordsToInsert = callResults.map((result) => {
         const cleanConversations = result.clean_conversations;
-        const phone = cleanConversations.call_info?.phone_numbers?.user || '';
-        const dialogArray = cleanConversations.dialog || [];
-        const dialogText = dialogArray.map((d: any) => `${d.speaker}: ${d.message}`).join('\n');
-        const cost = cleanConversations['']?.cost_info?.total_cost || 0;
-        const timestamp = cleanConversations.timestamps ? cleanConversations.timestamps.split('-')[0] : new Date().toISOString();
+        
+        // Defensive data extraction using optional chaining and nullish coalescing
+        const phone = cleanConversations?.call_info?.phone_numbers?.user ?? '';
+        const dialogArray = cleanConversations?.dialog ?? [];
+        const dialogText = dialogArray
+          .map((d) => `${d.speaker ?? 'Unknown'}: ${d.message ?? ''}`)
+          .join('\n');
+        
+        // Fixed the invalid empty string key - using cost_info directly
+        const cost = cleanConversations?.cost_info?.total_cost ?? 0;
+        const timestamp = cleanConversations?.timestamps 
+          ? cleanConversations.timestamps.split('-')[0] 
+          : new Date().toISOString();
         
         return {
-          Status: cleanConversations.status === 'done' ? 'success' : 'failed',
-          Number: parseFloat(phone.replace(/[^\d]/g, '')) || null,
+          Status: cleanConversations?.status === 'done' ? 'success' : 'failed',
+          Number: phone ? parseFloat(phone.replace(/[^\d]/g, '')) || null : null,
           Telefon: phone,
-          Concluzie: cleanConversations.summary || '',
+          Concluzie: cleanConversations?.summary ?? '',
           Dialog: dialogText,
           Data: new Date(timestamp).getTime(),
-          Cost: cost
+          Cost: cost / 100 // Convert from cents to dollars assuming cost is in cents
         };
       });
 
@@ -245,43 +254,75 @@ const Outbound = () => {
         const response = await fetch(`${WEBHOOK_URL}/results/${batchId}`);
         
         if (response.ok) {
-          const results = await response.json();
+          const responseClone = response.clone();
+          let results: WebhookResponse;
+          
+          try {
+            results = await response.json();
+          } catch (jsonError) {
+            // Improved error diagnostics - log raw response text
+            const rawResponseText = await responseClone.text();
+            console.error('Failed to parse JSON response:', jsonError);
+            console.error('Raw response text:', rawResponseText);
+            
+            toast({
+              title: "Eroare de parsare",
+              description: "Răspunsul de la webhook nu poate fi procesat.",
+              variant: "destructive"
+            });
+            return;
+          }
           
           if (results.completed || Array.isArray(results)) {
-            // Process the results from webhook response
-            const callResults = Array.isArray(results) ? results : results.calls || [];
+            // Process the results from webhook response with defensive handling
+            const callResults = Array.isArray(results) ? results : results.calls ?? [];
             
             console.log('Received call results:', callResults);
             
-            // Save to Supabase
+            // Save to Supabase with improved error handling
             if (callResults.length > 0) {
-              await saveCallResultsToSupabase(callResults);
-              
-              // Refresh call history by fetching from Supabase again
-              const { data } = await supabase
-                .from('Outbound')
-                .select('*')
-                .order('Data', { ascending: false });
+              try {
+                await saveCallResultsToSupabase(callResults);
+                
+                // Refresh call history by fetching from Supabase again
+                const { data } = await supabase
+                  .from('Outbound')
+                  .select('*')
+                  .order('Data', { ascending: false });
 
-              if (data) {
-                const updatedHistory: CallHistory[] = data.map((record: any) => ({
-                  id: record.id ? String(record.id) : Date.now().toString() + Math.random(),
-                  phone: record.Telefon || '',
-                  name: record.Telefon || 'Necunoscut',
-                  status: record.Status === 'success' ? 'success' : 'failed',
-                  conclusion: record.Concluzie || '',
-                  dialog: record.Dialog || '',
-                  date: record.Data ? new Date(record.Data).toLocaleString('ro-RO') : '',
-                  cost: record.Cost ? Number(record.Cost) : 0
-                }));
-                setCallHistory(updatedHistory);
+                if (data) {
+                  const updatedHistory: CallHistory[] = data.map((record: any) => ({
+                    id: record.id ? String(record.id) : Date.now().toString() + Math.random(),
+                    phone: record.Telefon ?? '',
+                    name: record.Telefon ?? 'Necunoscut',
+                    status: record.Status === 'success' ? 'success' : 'failed',
+                    conclusion: record.Concluzie ?? '',
+                    dialog: record.Dialog ?? '',
+                    date: record.Data ? new Date(record.Data).toLocaleString('ro-RO') : '',
+                    cost: record.Cost ? Number(record.Cost) : 0
+                  }));
+                  setCallHistory(updatedHistory);
+                }
+                
+                toast({
+                  title: "Apeluri finalizate",
+                  description: `S-au primit rezultatele pentru ${callResults.length} apeluri.`
+                });
+              } catch (saveError) {
+                console.error('Error saving call results:', saveError);
+                toast({
+                  title: "Eroare la salvare",
+                  description: "Nu s-au putut salva rezultatele apelurilor.",
+                  variant: "destructive"
+                });
               }
+            } else {
+              toast({
+                title: "Apeluri finalizate",
+                description: "Nu s-au găsit rezultate de apeluri.",
+                variant: "destructive"
+              });
             }
-            
-            toast({
-              title: "Apeluri finalizate",
-              description: `S-au primit rezultatele pentru ${callResults.length} apeluri.`
-            });
             
             return;
           }
@@ -302,6 +343,12 @@ const Outbound = () => {
         attempts++;
         if (attempts < maxAttempts) {
           setTimeout(() => poll(), 10000);
+        } else {
+          toast({
+            title: "Eroare de conectare",
+            description: "Nu s-a putut verifica statusul apelurilor.",
+            variant: "destructive"
+          });
         }
       }
     };
