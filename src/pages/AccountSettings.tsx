@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -9,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Settings, User, Volume2, Globe, Shield } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
-
 const AccountSettings = () => {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [settings, setSettings] = useState({
     defaultLanguage: 'ro',
     defaultVoice: 'aria',
@@ -20,14 +20,11 @@ const AccountSettings = () => {
     darkMode: true,
     volume: 80
   });
-
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
-
-  return (
-    <DashboardLayout>
-      <div className="p-6">
+  return <DashboardLayout>
+      <div className="p-6 my-[60px]">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Setări</h1>
           <p className="text-muted-foreground">Configurează preferințele tale pentru agenții AI</p>
@@ -45,7 +42,10 @@ const AccountSettings = () => {
             <CardContent className="space-y-6">
               <div>
                 <label className="block text-muted-foreground text-sm mb-2">Limbă Implicită</label>
-                <Select value={settings.defaultLanguage} onValueChange={(value) => setSettings({...settings, defaultLanguage: value})}>
+                <Select value={settings.defaultLanguage} onValueChange={value => setSettings({
+                ...settings,
+                defaultLanguage: value
+              })}>
                   <SelectTrigger className="liquid-glass border-gray-200/50 text-foreground">
                     <SelectValue />
                   </SelectTrigger>
@@ -60,7 +60,10 @@ const AccountSettings = () => {
 
               <div>
                 <label className="block text-muted-foreground text-sm mb-2">Voce Implicită</label>
-                <Select value={settings.defaultVoice} onValueChange={(value) => setSettings({...settings, defaultVoice: value})}>
+                <Select value={settings.defaultVoice} onValueChange={value => setSettings({
+                ...settings,
+                defaultVoice: value
+              })}>
                   <SelectTrigger className="liquid-glass border-gray-200/50 text-foreground">
                     <SelectValue />
                   </SelectTrigger>
@@ -78,10 +81,10 @@ const AccountSettings = () => {
                   <label className="text-foreground text-sm font-medium">Pornire Automată</label>
                   <p className="text-muted-foreground text-xs">Pornește automat conversația când intri pe site</p>
                 </div>
-                <Switch 
-                  checked={settings.autoStart}
-                  onCheckedChange={(checked) => setSettings({...settings, autoStart: checked})}
-                />
+                <Switch checked={settings.autoStart} onCheckedChange={checked => setSettings({
+                ...settings,
+                autoStart: checked
+              })} />
               </div>
 
               <div className="flex items-center justify-between">
@@ -89,10 +92,10 @@ const AccountSettings = () => {
                   <label className="text-foreground text-sm font-medium">Notificări</label>
                   <p className="text-muted-foreground text-xs">Primește notificări pentru mesaje noi</p>
                 </div>
-                <Switch 
-                  checked={settings.notifications}
-                  onCheckedChange={(checked) => setSettings({...settings, notifications: checked})}
-                />
+                <Switch checked={settings.notifications} onCheckedChange={checked => setSettings({
+                ...settings,
+                notifications: checked
+              })} />
               </div>
             </CardContent>
           </Card>
@@ -108,14 +111,10 @@ const AccountSettings = () => {
             <CardContent className="space-y-6">
               <div>
                 <label className="block text-muted-foreground text-sm mb-2">Volum ({settings.volume}%)</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={settings.volume}
-                  onChange={(e) => setSettings({...settings, volume: parseInt(e.target.value)})}
-                  className="w-full h-2 bg-gray-200/50 rounded-lg appearance-none cursor-pointer accent-accent"
-                />
+                <input type="range" min="0" max="100" value={settings.volume} onChange={e => setSettings({
+                ...settings,
+                volume: parseInt(e.target.value)
+              })} className="w-full h-2 bg-gray-200/50 rounded-lg appearance-none cursor-pointer accent-accent" />
               </div>
 
               <div>
@@ -194,11 +193,7 @@ const AccountSettings = () => {
             <CardContent className="space-y-4">
               <div>
                 <label className="block text-muted-foreground text-sm mb-2">Email</label>
-                <Input
-                  value={user?.email || ''}
-                  disabled
-                  className="liquid-glass border-gray-200/50 text-foreground bg-gray-50/50"
-                />
+                <Input value={user?.email || ''} disabled className="liquid-glass border-gray-200/50 text-foreground bg-gray-50/50" />
               </div>
 
               <div>
@@ -221,8 +216,6 @@ const AccountSettings = () => {
           </Button>
         </div>
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
-
 export default AccountSettings;
