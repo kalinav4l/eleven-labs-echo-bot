@@ -3,8 +3,7 @@ import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Upload, Download, FileAudio, MessageSquare, User, Bot, Wand2, Search } from 'lucide-react';
+import { Upload, Download, FileAudio, MessageSquare, User, Bot, Wand2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,11 +20,9 @@ const Transcript = () => {
   const { user } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessingWithAI, setIsProcessingWithAI] = useState(false);
-  const [isFetchingDubbed, setIsFetchingDubbed] = useState(false);
   const [transcriptEntries, setTranscriptEntries] = useState<TranscriptEntry[]>([]);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [rawTranscript, setRawTranscript] = useState<string>('');
-  const [dubbingId, setDubbingId] = useState<string>('');
 
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -99,54 +96,6 @@ const Transcript = () => {
     });
 
     return entries;
-  };
-
-  const parseWebVTTResponse = (webvttText: string): TranscriptEntry[] => {
-    const entries: TranscriptEntry[] = [];
-    const lines = webvttText.split('\n');
-    
-    let currentEntry: Partial<TranscriptEntry> = {};
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      
-      // Skip WEBVTT header and empty lines
-      if (line === 'WEBVTT' || line === '' || line.startsWith('NOTE')) {
-        continue;
-      }
-      
-      // Check if line contains timestamp (format: 00:00:00.000 --> 00:00:00.000)
-      if (line.includes(' --> ')) {
-        const [startTime, endTime] = line.split(' --> ');
-        currentEntry.timestamp = startTime;
-        currentEntry.startTime = parseTimeToSeconds(startTime);
-        currentEntry.endTime = parseTimeToSeconds(endTime);
-      } else if (line && currentEntry.timestamp) {
-        // This is the text content
-        // Try to identify speaker from the text
-        const speakerMatch = line.match(/^(.*?):\s*(.*)$/);
-        if (speakerMatch) {
-          currentEntry.speaker = speakerMatch[1];
-          currentEntry.text = speakerMatch[2];
-        } else {
-          currentEntry.speaker = 'Speaker';
-          currentEntry.text = line;
-        }
-        
-        entries.push(currentEntry as TranscriptEntry);
-        currentEntry = {};
-      }
-    }
-    
-    return entries;
-  };
-
-  const parseTimeToSeconds = (timeString: string): number => {
-    const parts = timeString.split(':');
-    const hours = parseInt(parts[0]);
-    const minutes = parseInt(parts[1]);
-    const seconds = parseFloat(parts[2]);
-    return hours * 3600 + minutes * 60 + seconds;
   };
 
   const handleUpload = async () => {
@@ -248,52 +197,6 @@ const Transcript = () => {
       });
     } finally {
       setIsProcessingWithAI(false);
-    }
-  };
-
-  const handleFetchDubbedTranscript = async () => {
-    if (!dubbingId.trim()) {
-      toast({
-        title: "Eroare",
-        description: "Te rog introdu un dubbing ID valid.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsFetchingDubbed(true);
-    try {
-      const response = await fetch(`https://api.elevenlabs.io/v1/dubbing/${dubbingId}/transcript/en?format_type=webvtt`, {
-        method: "GET",
-        headers: {
-          "Xi-Api-Key": "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873"
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const webvttText = await response.text();
-      console.log('Dubbed transcript:', webvttText);
-      
-      const entries = parseWebVTTResponse(webvttText);
-      setTranscriptEntries(entries);
-      
-      toast({
-        title: "Succes",
-        description: "Transcriptul dubat a fost încărcat cu succes!"
-      });
-
-    } catch (error) {
-      console.error('Error fetching dubbed transcript:', error);
-      toast({
-        title: "Eroare",
-        description: "Nu s-a putut obține transcriptul dubat.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsFetchingDubbed(false);
     }
   };
 
@@ -430,41 +333,6 @@ const Transcript = () => {
                   )}
                 </Button>
               )}
-
-              {/* Dubbed Transcript Section */}
-              <div className="border-t pt-6">
-                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Search className="w-5 h-5 text-accent" />
-                  Transcript Dubat
-                </h3>
-                <div className="space-y-4">
-                  <Input
-                    type="text"
-                    placeholder="Introdu dubbing ID"
-                    value={dubbingId}
-                    onChange={(e) => setDubbingId(e.target.value)}
-                    className="w-full"
-                  />
-                  <Button
-                    onClick={handleFetchDubbedTranscript}
-                    disabled={!dubbingId.trim() || isFetchingDubbed}
-                    variant="outline"
-                    className="w-full border-accent text-accent hover:bg-accent/10"
-                  >
-                    {isFetchingDubbed ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                        Obține Transcript...
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Search className="w-4 h-4" />
-                        Obține Transcript Dubat
-                      </div>
-                    )}
-                  </Button>
-                </div>
-              </div>
             </CardContent>
           </Card>
 
