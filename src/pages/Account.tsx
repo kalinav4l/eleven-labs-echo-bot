@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
@@ -9,22 +8,26 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useUserAgents } from '@/hooks/useUserAgents';
 import { useUserConversations } from '@/hooks/useUserConversations';
-
 const Account = () => {
-  const { user } = useAuth();
-  const { data: stats } = useUserStats();
-  const { data: userAgents } = useUserAgents();
-  const { data: conversations } = useUserConversations();
-
+  const {
+    user
+  } = useAuth();
+  const {
+    data: stats
+  } = useUserStats();
+  const {
+    data: userAgents
+  } = useUserAgents();
+  const {
+    data: conversations
+  } = useUserConversations();
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
-
   const formatTimeAgo = (date: string) => {
     const now = new Date();
     const conversationDate = new Date(date);
     const diffInMinutes = Math.floor((now.getTime() - conversationDate.getTime()) / (1000 * 60));
-    
     if (diffInMinutes < 60) {
       return `Acum ${diffInMinutes} ${diffInMinutes === 1 ? 'minut' : 'minute'}`;
     } else if (diffInMinutes < 1440) {
@@ -35,10 +38,8 @@ const Account = () => {
       return `Acum ${days} ${days === 1 ? 'zi' : 'zile'}`;
     }
   };
-
-  return (
-    <DashboardLayout>
-      <div className="p-6">
+  return <DashboardLayout>
+      <div className="p-6 mx-0 my-[60px]">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-black mb-2">
             Bun venit, {user.email?.split('@')[0]}!
@@ -123,9 +124,7 @@ const Account = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {conversations && conversations.length > 0 ? (
-                  conversations.map((conversation, index) => (
-                    <div key={conversation.id} className="flex items-center space-x-4">
+                {conversations && conversations.length > 0 ? conversations.map((conversation, index) => <div key={conversation.id} className="flex items-center space-x-4">
                       <div className="w-2 h-2 bg-black rounded-full"></div>
                       <div className="flex-1">
                         <p className="text-sm font-medium text-black">
@@ -138,14 +137,10 @@ const Account = () => {
                       <div className="text-xs text-gray-600">
                         {conversation.message_count} mesaje
                       </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8">
+                    </div>) : <div className="text-center py-8">
                     <p className="text-gray-600 text-sm">Nu ai conversații încă</p>
                     <p className="text-gray-500 text-xs mt-1">Creează un agent pentru a începe</p>
-                  </div>
-                )}
+                  </div>}
               </div>
             </CardContent>
           </Card>
@@ -163,9 +158,7 @@ const Account = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {userAgents && userAgents.length > 0 ? (
-                  userAgents.slice(0, 3).map((agent) => (
-                    <div key={agent.id} className="flex items-center space-x-4">
+                {userAgents && userAgents.length > 0 ? userAgents.slice(0, 3).map(agent => <div key={agent.id} className="flex items-center space-x-4">
                       <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
                         <Bot className="w-4 h-4 text-gray-600" />
                       </div>
@@ -176,10 +169,7 @@ const Account = () => {
                         </p>
                       </div>
                       <div className="w-2 h-2 bg-black rounded-full"></div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8">
+                    </div>) : <div className="text-center py-8">
                     <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3">
                       <Bot className="w-6 h-6 text-gray-400" />
                     </div>
@@ -189,15 +179,12 @@ const Account = () => {
                         Creează primul agent
                       </Button>
                     </Link>
-                  </div>
-                )}
+                  </div>}
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
-
 export default Account;
