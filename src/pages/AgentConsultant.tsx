@@ -180,6 +180,7 @@ const AgentConsultant: React.FC = () => {
             currentStep={currentStep}
             totalSteps={4}
             stepTitles={stepTitles}
+            onStepClick={setCurrentStep}
           />
 
           {/* Current Step */}

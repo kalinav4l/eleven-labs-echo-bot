@@ -7,10 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Bot, Save, Copy, Upload, FileText, Trash2 } from 'lucide-react';
+import { ArrowLeft, Bot, Save, Copy, Upload, FileText, Trash2, TestTube } from 'lucide-react';
 import { useClipboard } from '@/hooks/useClipboard';
 import { toast } from '@/components/ui/use-toast';
 import { API_CONFIG, VOICES, LANGUAGES } from '@/constants/constants';
+import AgentTestModal from '@/components/AgentTestModal';
 
 interface KnowledgeDocument {
   id: string;
@@ -31,6 +32,7 @@ const AgentEdit = () => {
   const [newDocName, setNewDocName] = useState('');
   const [isAddingDoc, setIsAddingDoc] = useState(false);
   const [isUpdatingKnowledge, setIsUpdatingKnowledge] = useState(false);
+  const [isTestModalOpen, setIsTestModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchAgentData = async () => {
@@ -249,24 +251,35 @@ const AgentEdit = () => {
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            onClick={() => navigate('/account/kalina-agents')}
-            className="glass-button border-border"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Înapoi
-          </Button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
-              <Bot className="w-5 h-5 text-accent" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Editare Agent</h1>
-              <p className="text-muted-foreground">Modifică setările agentului tău AI</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/account/kalina-agents')}
+              className="glass-button border-border"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Înapoi
+            </Button>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
+                <Bot className="w-5 h-5 text-accent" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">Editare Agent</h1>
+                <p className="text-muted-foreground">Modifică setările agentului tău AI</p>
+              </div>
             </div>
           </div>
+          
+          {/* Test Agent Button */}
+          <Button
+            onClick={() => setIsTestModalOpen(true)}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            <TestTube className="w-4 h-4 mr-2" />
+            Testează Agent
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -554,6 +567,13 @@ const AgentEdit = () => {
             )}
           </Button>
         </div>
+
+        {/* Test Modal */}
+        <AgentTestModal
+          agent={agentData}
+          isOpen={isTestModalOpen}
+          onClose={() => setIsTestModalOpen(false)}
+        />
       </div>
     </DashboardLayout>
   );

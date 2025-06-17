@@ -1,14 +1,13 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Globe, Edit } from 'lucide-react';
+import { Loader2, Globe, ArrowRight } from 'lucide-react';
 
-interface Step1Props {
+interface Step1PromptGenerationProps {
   websiteUrl: string;
   setWebsiteUrl: (url: string) => void;
   agentRole: string;
@@ -22,7 +21,7 @@ interface Step1Props {
   isGenerating: boolean;
 }
 
-export const Step1PromptGeneration: React.FC<Step1Props> = ({
+export const Step1PromptGeneration: React.FC<Step1PromptGenerationProps> = ({
   websiteUrl,
   setWebsiteUrl,
   agentRole,
@@ -35,22 +34,20 @@ export const Step1PromptGeneration: React.FC<Step1Props> = ({
   onNextStep,
   isGenerating,
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
-
-  const canProceed = generatedPrompt.trim() !== '';
+  const canProceed = websiteUrl.trim() !== '';
 
   return (
     <Card className="liquid-glass">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-foreground">
           <Globe className="w-5 h-5 text-accent" />
-          Pas 1: Generare Prompt
+          Pas 1: Configurare Prompt
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
           <Label htmlFor="website-url" className="text-foreground">
-            URL Site Web
+            URL Site Web *
           </Label>
           <Input
             id="website-url"
@@ -65,85 +62,73 @@ export const Step1PromptGeneration: React.FC<Step1Props> = ({
           <Label htmlFor="agent-role" className="text-foreground">
             Rolul Agentului
           </Label>
-          <Select value={agentRole} onValueChange={setAgentRole}>
-            <SelectTrigger className="glass-input">
-              <SelectValue placeholder="Alege rolul agentului" />
-            </SelectTrigger>
-            <SelectContent className="bg-white border border-gray-200">
-              <SelectItem value="consultant">Consultant</SelectItem>
-              <SelectItem value="vinzator">Vânzător</SelectItem>
-            </SelectContent>
-          </Select>
+          <Input
+            id="agent-role"
+            value={agentRole}
+            onChange={(e) => setAgentRole(e.target.value)}
+            placeholder="De ex: consultant vânzări, suport tehnic, etc."
+            className="glass-input"
+          />
         </div>
 
         <div>
           <Label htmlFor="additional-prompt" className="text-foreground">
-            Instrucțiuni Adiționale (opțional)
+            Prompt Aditional
           </Label>
-          <Input
+          <Textarea
             id="additional-prompt"
             value={additionalPrompt}
             onChange={(e) => setAdditionalPrompt(e.target.value)}
             placeholder="De exemplu: Atrage atenția că în următoarele 3 luni avem reducere 30%"
             className="glass-input"
+            rows={3}
           />
         </div>
 
-        <Button
-          onClick={onGeneratePrompt}
-          disabled={!websiteUrl || !agentRole || isGenerating}
-          className="bg-foreground text-background hover:bg-foreground/90 w-full"
-        >
-          {isGenerating ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Se Generează Prompt
-            </>
-          ) : (
-            'Generează Prompt'
-          )}
-        </Button>
+        <div>
+          <Label htmlFor="generated-prompt" className="text-foreground">
+            Prompt Generat (Opțional)
+          </Label>
+          <Textarea
+            id="generated-prompt"
+            value={generatedPrompt}
+            onChange={(e) => setGeneratedPrompt(e.target.value)}
+            placeholder="Prompt-ul generat va apărea aici sau poți scrie unul manual..."
+            className="glass-input"
+            rows={4}
+          />
+        </div>
 
-        {generatedPrompt && (
-          <div className="mt-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <Label className="text-foreground font-medium">Prompt Generat</Label>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsEditing(!isEditing)}
-                className="flex items-center gap-2"
-              >
-                <Edit className="w-4 h-4" />
-                {isEditing ? 'Previzualizare' : 'Editează'}
-              </Button>
-            </div>
-            
-            {isEditing ? (
-              <Textarea
-                value={generatedPrompt}
-                onChange={(e) => setGeneratedPrompt(e.target.value)}
-                className="glass-input min-h-[200px]"
-                placeholder="Editează promptul aici..."
-              />
+        <div className="flex gap-2">
+          <Button
+            onClick={onGeneratePrompt}
+            disabled={isGenerating || !websiteUrl.trim()}
+            variant="outline"
+            className="glass-button border-border"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Se Generează...
+              </>
             ) : (
-              <div className="p-4 bg-muted/50 rounded-lg border">
-                <pre className="whitespace-pre-wrap text-sm text-foreground">
-                  {generatedPrompt}
-                </pre>
-              </div>
+              'Generează Prompt'
             )}
-          </div>
-        )}
+          </Button>
 
-        {canProceed && (
           <Button
             onClick={onNextStep}
-            className="bg-accent text-white hover:bg-accent/90 w-full mt-4"
+            disabled={!canProceed}
+            className="bg-accent text-white hover:bg-accent/90"
           >
-            Continuă la Pasul 2
+            Următorul Pas
+            <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
-        )}
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          * Câmpurile marcate sunt obligatorii pentru a continua
+        </p>
       </CardContent>
     </Card>
   );
