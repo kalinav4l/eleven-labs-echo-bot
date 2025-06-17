@@ -9,6 +9,60 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      call_history: {
+        Row: {
+          agent_id: string | null
+          call_date: string
+          call_status: string
+          contact_name: string | null
+          cost_usd: number | null
+          created_at: string
+          dialog_json: string | null
+          duration_seconds: number | null
+          id: string
+          language: string | null
+          phone_number: string
+          summary: string | null
+          timestamps: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_id?: string | null
+          call_date?: string
+          call_status?: string
+          contact_name?: string | null
+          cost_usd?: number | null
+          created_at?: string
+          dialog_json?: string | null
+          duration_seconds?: number | null
+          id?: string
+          language?: string | null
+          phone_number: string
+          summary?: string | null
+          timestamps?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string | null
+          call_date?: string
+          call_status?: string
+          contact_name?: string | null
+          cost_usd?: number | null
+          created_at?: string
+          dialog_json?: string | null
+          duration_seconds?: number | null
+          id?: string
+          language?: string | null
+          phone_number?: string
+          summary?: string | null
+          timestamps?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           agent_id: string

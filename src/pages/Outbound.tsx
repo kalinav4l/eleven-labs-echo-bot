@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import type { WebhookCallResult, WebhookResponse } from '@/types/webhook';
+import type { WebhookCallResponse } from '@/types/webhook';
 
 interface Contact {
   id: string;
@@ -22,13 +22,15 @@ interface Contact {
 
 interface CallHistory {
   id: string;
-  phone: string;
-  name: string;
-  status: 'success' | 'failed' | 'busy' | 'no-answer';
-  conclusion: string;
-  dialog: string;
-  date: string;
-  cost: number;
+  phone_number: string;
+  contact_name: string;
+  call_status: 'success' | 'failed' | 'busy' | 'no-answer' | 'unknown';
+  summary: string;
+  dialog_json: string;
+  call_date: string;
+  cost_usd: number;
+  agent_id?: string;
+  language?: string;
 }
 
 const Outbound = () => {
@@ -48,18 +50,18 @@ const Outbound = () => {
     return <Navigate to="/auth" replace />;
   }
 
-  // Load call history from Supabase on component mount
+  // Load call history from new call_history table
   useEffect(() => {
     const fetchCallHistory = async () => {
       try {
-        console.log('Fetching call history from Supabase...');
+        console.log('Fetching call history from call_history table...');
         const { data, error } = await supabase
-          .from('Outbound')
+          .from('call_history')
           .select('*')
-          .order('Data', { ascending: false });
+          .order('call_date', { ascending: false });
 
         if (error) {
-          console.error('Error fetching call history from Supabase:', error);
+          console.error('Error fetching call history:', error);
           toast({
             title: "Eroare la încărcare",
             description: "Nu s-a putut încărca istoricul apelurilor.",
@@ -68,23 +70,25 @@ const Outbound = () => {
           return;
         }
 
-        console.log('Raw data from Supabase:', data);
+        console.log('Raw call history data:', data);
 
         if (data && data.length > 0) {
           const loadedHistory: CallHistory[] = data.map((record: any) => ({
-            id: record.id ? String(record.id) : Date.now().toString() + Math.random(),
-            phone: record.Telefon || '',
-            name: record.Telefon || 'Necunoscut',
-            status: record.Status === 'success' ? 'success' : 'failed',
-            conclusion: record.Concluzie || '',
-            dialog: record.Dialog || '',
-            date: record.Data ? new Date(record.Data).toLocaleString('ro-RO') : '',
-            cost: record.Cost ? Number(record.Cost) : 0
+            id: record.id,
+            phone_number: record.phone_number || '',
+            contact_name: record.contact_name || 'Necunoscut',
+            call_status: record.call_status || 'unknown',
+            summary: record.summary || '',
+            dialog_json: record.dialog_json || '',
+            call_date: record.call_date ? new Date(record.call_date).toLocaleString('ro-RO') : '',
+            cost_usd: record.cost_usd ? Number(record.cost_usd) : 0,
+            agent_id: record.agent_id,
+            language: record.language
           }));
           console.log('Processed call history:', loadedHistory);
           setCallHistory(loadedHistory);
         } else {
-          console.log('No call history data found in Supabase');
+          console.log('No call history data found');
           setCallHistory([]);
         }
       } catch (error) {
@@ -97,8 +101,10 @@ const Outbound = () => {
       }
     };
 
-    fetchCallHistory();
-  }, []);
+    if (user) {
+      fetchCallHistory();
+    }
+  }, [user]);
 
   const formatObjectAsJson = (obj: any): string => {
     try {
@@ -216,7 +222,6 @@ const Outbound = () => {
         const result = JSON.parse(responseText);
         console.log('Processing JSON response:', result);
         
-        // Process the JSON response directly
         await processWebhookResponse(result);
         return result;
       } catch (jsonError) {
@@ -234,9 +239,9 @@ const Outbound = () => {
     try {
       console.log('Processing webhook response:', result);
       
-      let callResults: WebhookCallResult[] = [];
+      let callResults: any[] = [];
       
-      // Handle the array structure from the webhook
+      // Handle different response structures
       if (Array.isArray(result)) {
         callResults = result;
         console.log('Result is array, using directly');
@@ -285,66 +290,55 @@ const Outbound = () => {
     }
   };
 
-  const saveCallResultsToSupabase = async (callResults: WebhookCallResult[]) => {
+  const saveCallResultsToSupabase = async (callResults: any[]) => {
     try {
-      console.log('Saving call results to Supabase:', callResults);
+      console.log('Saving call results to new call_history table:', callResults);
       
       const recordsToInsert = callResults.map((result, index) => {
         console.log(`Processing call result ${index}:`, result);
         
-        // Defensive access to nested properties using optional chaining and nullish coalescing
+        // Defensive access using optional chaining and nullish coalescing
         const cleanConversations = result?.clean_conversations ?? {};
         const callInfo = cleanConversations?.call_info ?? {};
         const phoneNumbers = callInfo?.phone_numbers ?? {};
         const dialog = cleanConversations?.dialog ?? [];
-        const costInfo = cleanConversations?.['']?.cost_info ?? {}; // Handle the empty key correctly
+        const costInfo = cleanConversations?.['']?.cost_info ?? {};
         
-        // Safely extract phone number
-        const phone = phoneNumbers?.user ?? '';
-        
-        // Safely extract cost and convert from cents to dollars
-        const cost = (costInfo?.total_cost ?? 0) / 100;
-        
-        // Safely extract status
+        // Extract data safely
+        const phoneNumber = phoneNumbers?.user ?? '';
+        const costCents = costInfo?.total_cost ?? 0;
+        const costUsd = costCents / 100; // Convert cents to dollars
         const status = cleanConversations?.status ?? 'unknown';
-        
-        // Safely extract summary
         const summary = cleanConversations?.summary ?? '';
-        
-        // Safely extract timestamps
         const timestamps = cleanConversations?.timestamps ?? '';
-        
-        // Safely construct dialog text
-        let dialogText = '';
-        if (Array.isArray(dialog) && dialog.length > 0) {
-          dialogText = dialog
-            .filter(d => d && (d.speaker || d.message))
-            .map(d => `${d.speaker ?? 'Unknown'}: ${d.message ?? ''}`)
-            .join('\n');
-        }
+        const language = callInfo?.language ?? 'ro';
         
         // Format the entire result as JSON string for storage
-        const formattedJson = formatObjectAsJson(result);
+        const dialogJson = formatObjectAsJson(result);
         
         // Parse timestamp safely
-        let timestamp = new Date().toISOString();
+        let callDate = new Date().toISOString();
         if (timestamps) {
           try {
             const timestampPart = timestamps.split('-')[0];
-            timestamp = new Date(timestampPart).toISOString();
+            callDate = new Date(timestampPart).toISOString();
           } catch (timestampError) {
             console.warn('Error parsing timestamp:', timestampError);
           }
         }
         
         const record = {
-          Status: status === 'done' ? 'success' : 'failed',
-          Number: phone ? parseFloat(phone.replace(/[^\d]/g, '')) || null : null,
-          Telefon: phone,
-          Concluzie: summary,
-          Dialog: formattedJson, // Store the full JSON result in Dialog field
-          Data: new Date(timestamp).getTime(),
-          Cost: cost
+          user_id: user?.id,
+          phone_number: phoneNumber,
+          contact_name: phoneNumber || 'Necunoscut',
+          call_status: status === 'done' ? 'success' : 'failed',
+          summary: summary,
+          dialog_json: dialogJson,
+          call_date: callDate,
+          cost_usd: costUsd,
+          agent_id: customAgentId,
+          language: language,
+          timestamps: timestamps
         };
         
         console.log(`Record ${index} to insert:`, record);
@@ -354,16 +348,16 @@ const Outbound = () => {
       console.log('All records to insert:', recordsToInsert);
 
       const { data, error } = await supabase
-        .from('Outbound')
+        .from('call_history')
         .insert(recordsToInsert)
         .select();
 
       if (error) {
-        console.error('Error saving to Supabase:', error);
+        console.error('Error saving to call_history table:', error);
         throw error;
       }
 
-      console.log('Successfully saved to Supabase:', data);
+      console.log('Successfully saved to call_history table:', data);
       return data;
     } catch (error) {
       console.error('Error in saveCallResultsToSupabase:', error);
@@ -375,20 +369,22 @@ const Outbound = () => {
     try {
       console.log('Refreshing call history...');
       const { data } = await supabase
-        .from('Outbound')
+        .from('call_history')
         .select('*')
-        .order('Data', { ascending: false });
+        .order('call_date', { ascending: false });
 
       if (data) {
         const updatedHistory: CallHistory[] = data.map((record: any) => ({
-          id: record.id ? String(record.id) : Date.now().toString() + Math.random(),
-          phone: record.Telefon ?? '',
-          name: record.Telefon ?? 'Necunoscut',
-          status: record.Status === 'success' ? 'success' : 'failed',
-          conclusion: record.Concluzie ?? '',
-          dialog: record.Dialog ?? '',
-          date: record.Data ? new Date(record.Data).toLocaleString('ro-RO') : '',
-          cost: record.Cost ? Number(record.Cost) : 0
+          id: record.id,
+          phone_number: record.phone_number || '',
+          contact_name: record.contact_name || 'Necunoscut',
+          call_status: record.call_status || 'unknown',
+          summary: record.summary || '',
+          dialog_json: record.dialog_json || '',
+          call_date: record.call_date ? new Date(record.call_date).toLocaleString('ro-RO') : '',
+          cost_usd: record.cost_usd ? Number(record.cost_usd) : 0,
+          agent_id: record.agent_id,
+          language: record.language
         }));
         console.log('Refreshed call history:', updatedHistory);
         setCallHistory(updatedHistory);
@@ -400,7 +396,7 @@ const Outbound = () => {
 
   const pollForResults = async (batchId: string) => {
     console.log('Starting polling for batch:', batchId);
-    const maxAttempts = 30; // 5 minute timeout (10 seconds * 30)
+    const maxAttempts = 30;
     let attempts = 0;
 
     const poll = async (): Promise<void> => {
@@ -416,7 +412,6 @@ const Outbound = () => {
             results = await response.json();
             console.log('Polling response received:', results);
           } catch (jsonError) {
-            // Enhanced error diagnostics - log raw response text
             const rawResponseText = await responseClone.text();
             console.error('Failed to parse JSON response:', jsonError);
             console.error('Raw response text:', rawResponseText);
@@ -429,7 +424,6 @@ const Outbound = () => {
             return;
           }
           
-          // Process the results regardless of completion status
           await processWebhookResponse(results);
           return;
         }
@@ -437,7 +431,7 @@ const Outbound = () => {
         attempts++;
         if (attempts < maxAttempts) {
           console.log(`Polling attempt ${attempts} failed, retrying in 10 seconds...`);
-          setTimeout(() => poll(), 10000); // Poll every 10 seconds
+          setTimeout(() => poll(), 10000);
         } else {
           console.log('Polling timeout reached');
           toast({
@@ -585,8 +579,8 @@ const Outbound = () => {
   };
 
   const filteredCallHistory = callHistory.filter(call => 
-    call.phone.includes(searchTerm) || 
-    call.name.toLowerCase().includes(searchTerm.toLowerCase())
+    call.phone_number.includes(searchTerm) || 
+    call.contact_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -849,7 +843,7 @@ const Outbound = () => {
                       <TableHead>
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4" />
-                          Number
+                          Contact
                         </div>
                       </TableHead>
                       <TableHead>
@@ -861,7 +855,7 @@ const Outbound = () => {
                       <TableHead>
                         <div className="flex items-center gap-2">
                           <MessageSquare className="w-4 h-4" />
-                          Concluzie
+                          Rezumat
                         </div>
                       </TableHead>
                       <TableHead>Dialog JSON</TableHead>
@@ -884,20 +878,20 @@ const Outbound = () => {
                       <TableRow key={call.id}>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            {getStatusIcon(call.status)}
-                            <span className="text-sm">{getStatusText(call.status)}</span>
+                            {getStatusIcon(call.call_status)}
+                            <span className="text-sm">{getStatusText(call.call_status)}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="font-medium">{call.name}</TableCell>
-                        <TableCell className="font-mono text-sm">{call.phone}</TableCell>
-                        <TableCell className="text-sm">{call.conclusion}</TableCell>
+                        <TableCell className="font-medium">{call.contact_name}</TableCell>
+                        <TableCell className="font-mono text-sm">{call.phone_number}</TableCell>
+                        <TableCell className="text-sm">{call.summary}</TableCell>
                         <TableCell className="text-sm max-w-xs">
                           <pre className="whitespace-pre-wrap text-xs bg-gray-50 p-2 rounded overflow-auto max-h-32">
-                            {call.dialog}
+                            {call.dialog_json}
                           </pre>
                         </TableCell>
-                        <TableCell className="text-sm">{call.date}</TableCell>
-                        <TableCell className="text-sm font-mono">${call.cost.toFixed(2)}</TableCell>
+                        <TableCell className="text-sm">{call.call_date}</TableCell>
+                        <TableCell className="text-sm font-mono">${call.cost_usd.toFixed(4)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
