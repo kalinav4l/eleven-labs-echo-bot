@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { User, Settings, Volume2, Bot, MessageSquare, FileText } from 'lucide-react';
+import { User, Settings, Volume2, Bot, MessageSquare, FileText, PhoneCall } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface SidebarProps {
@@ -57,6 +57,11 @@ const Sidebar = ({
           <Link to="/account/transcript" className={`${location.pathname === '/account/transcript' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors`}>
             <FileText className="mr-3 h-6 w-6" />
             Transcript
+          </Link>
+
+          <Link to="/account/outbound" className={`${location.pathname === '/account/outbound' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors`}>
+            <PhoneCall className="mr-3 h-6 w-6" />
+            Outbound
           </Link>
 
           <Link to="/account/settings" className={`${location.pathname === '/account/settings' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors`}>
