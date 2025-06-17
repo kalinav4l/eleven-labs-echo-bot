@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -9,7 +10,7 @@ import { Upload, Phone, FileText, Play, Users, Globe, MapPin, User, Search, Cloc
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/components/ui/use-toast';
-import { useCallInitiation } from '@/hooks/useCallInitiation';
+
 interface Contact {
   id: string;
   name: string;
@@ -17,6 +18,7 @@ interface Contact {
   country: string;
   location: string;
 }
+
 interface CallHistory {
   id: string;
   phone: string;
@@ -27,10 +29,9 @@ interface CallHistory {
   date: string;
   cost: number;
 }
+
 const Outbound = () => {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [isUploadingCsv, setIsUploadingCsv] = useState(false);
@@ -39,17 +40,13 @@ const Outbound = () => {
   const [isCallingAll, setIsCallingAll] = useState(false);
   const [callHistory, setCallHistory] = useState<CallHistory[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const {
-    initiateCall,
-    isInitiating
-  } = useCallInitiation({
-    customAgentId,
-    createdAgentId: '',
-    phoneNumber: ''
-  });
+
+  const WEBHOOK_URL = 'https://zuckerberg.aichat.md/webhook/telefonie-sunat';
+
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
+
   const handleCsvSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -68,6 +65,7 @@ const Outbound = () => {
       });
     }
   };
+
   const parseCsvData = (csvText: string): Contact[] => {
     const lines = csvText.split('\n').filter(line => line.trim());
     const contacts: Contact[] = [];
@@ -90,6 +88,7 @@ const Outbound = () => {
     }
     return contacts;
   };
+
   const handleUploadCsv = async () => {
     if (!csvFile) {
       toast({
@@ -99,13 +98,16 @@ const Outbound = () => {
       });
       return;
     }
+
     setIsUploadingCsv(true);
     try {
       const csvText = await csvFile.text();
       const parsedContacts = parseCsvData(csvText);
+      
       if (parsedContacts.length === 0) {
         throw new Error('Nu s-au găsit contacte valide în fișierul CSV');
       }
+
       setContacts(parsedContacts);
       toast({
         title: "Succes",
@@ -122,6 +124,93 @@ const Outbound = () => {
       setIsUploadingCsv(false);
     }
   };
+
+  const sendContactsToWebhook = async (contactsToSend: Contact[]) => {
+    try {
+      const response = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          agent_id: customAgentId,
+          contacts: contactsToSend,
+          timestamp: new Date().toISOString(),
+          user_id: user?.id
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Webhook response:', result);
+      
+      return result;
+    } catch (error) {
+      console.error('Error sending to webhook:', error);
+      throw error;
+    }
+  };
+
+  const pollForResults = async (batchId: string) => {
+    const maxAttempts = 30; // 5 minute timeout (10 seconds * 30)
+    let attempts = 0;
+
+    const poll = async (): Promise<void> => {
+      try {
+        const response = await fetch(`${WEBHOOK_URL}/results/${batchId}`);
+        
+        if (response.ok) {
+          const results = await response.json();
+          
+          if (results.completed) {
+            // Process the results and add to call history
+            const newCallHistory: CallHistory[] = results.calls.map((call: any) => ({
+              id: Date.now().toString() + Math.random(),
+              phone: call.phone,
+              name: call.name,
+              status: call.status,
+              conclusion: call.conclusion,
+              dialog: call.dialog,
+              date: new Date(call.date).toLocaleString('ro-RO'),
+              cost: call.cost
+            }));
+
+            setCallHistory(prev => [...newCallHistory, ...prev]);
+            
+            toast({
+              title: "Apeluri finalizate",
+              description: `S-au primit rezultatele pentru ${newCallHistory.length} apeluri.`
+            });
+            
+            return;
+          }
+        }
+
+        attempts++;
+        if (attempts < maxAttempts) {
+          setTimeout(() => poll(), 10000); // Poll every 10 seconds
+        } else {
+          toast({
+            title: "Timeout",
+            description: "Rezultatele apelurilor nu au fost primite în timp util.",
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        console.error('Error polling for results:', error);
+        attempts++;
+        if (attempts < maxAttempts) {
+          setTimeout(() => poll(), 10000);
+        }
+      }
+    };
+
+    poll();
+  };
+
   const handleContactSelect = (contactId: string) => {
     const newSelected = new Set(selectedContactIds);
     if (newSelected.has(contactId)) {
@@ -131,6 +220,7 @@ const Outbound = () => {
     }
     setSelectedContactIds(newSelected);
   };
+
   const handleSelectAll = () => {
     if (selectedContactIds.size === contacts.length) {
       setSelectedContactIds(new Set());
@@ -138,6 +228,7 @@ const Outbound = () => {
       setSelectedContactIds(new Set(contacts.map(c => c.id)));
     }
   };
+
   const handleInitiateCall = async (contact: Contact) => {
     if (!customAgentId.trim()) {
       toast({
@@ -147,21 +238,27 @@ const Outbound = () => {
       });
       return;
     }
-    await initiateCall(customAgentId, contact.phone);
 
-    // Simulate adding to call history (in real implementation, this would come from the API response)
-    const newCallRecord: CallHistory = {
-      id: Date.now().toString(),
-      phone: contact.phone,
-      name: contact.name,
-      status: Math.random() > 0.3 ? 'success' : 'failed',
-      conclusion: 'Apel finalizat cu succes',
-      dialog: 'Agent: Bună ziua! / User: Bună ziua, cu ce vă pot ajuta?',
-      date: new Date().toLocaleString('ro-RO'),
-      cost: Math.round((Math.random() * 0.5 + 0.1) * 100) / 100
-    };
-    setCallHistory(prev => [newCallRecord, ...prev]);
+    try {
+      const result = await sendContactsToWebhook([contact]);
+      
+      toast({
+        title: "Apel inițiat",
+        description: `Apelul către ${contact.name} a fost trimis pentru procesare.`
+      });
+
+      if (result.batch_id) {
+        pollForResults(result.batch_id);
+      }
+    } catch (error) {
+      toast({
+        title: "Eroare",
+        description: "Nu s-a putut iniția apelul.",
+        variant: "destructive"
+      });
+    }
   };
+
   const handleInitiateAllCalls = async () => {
     if (!customAgentId.trim()) {
       toast({
@@ -171,6 +268,7 @@ const Outbound = () => {
       });
       return;
     }
+
     if (selectedContactIds.size === 0) {
       toast({
         title: "Eroare",
@@ -179,37 +277,32 @@ const Outbound = () => {
       });
       return;
     }
+
     setIsCallingAll(true);
     const selectedContacts = contacts.filter(c => selectedContactIds.has(c.id));
-    for (const contact of selectedContacts) {
-      try {
-        await initiateCall(customAgentId, contact.phone);
 
-        // Simulate adding to call history
-        const newCallRecord: CallHistory = {
-          id: Date.now().toString() + Math.random(),
-          phone: contact.phone,
-          name: contact.name,
-          status: Math.random() > 0.3 ? 'success' : Math.random() > 0.5 ? 'busy' : 'no-answer',
-          conclusion: 'Apel finalizat',
-          dialog: 'Agent: Bună ziua! / User: Bună ziua, cu ce vă pot ajuta?',
-          date: new Date().toLocaleString('ro-RO'),
-          cost: Math.round((Math.random() * 0.5 + 0.1) * 100) / 100
-        };
-        setCallHistory(prev => [newCallRecord, ...prev]);
+    try {
+      const result = await sendContactsToWebhook(selectedContacts);
+      
+      toast({
+        title: "Apeluri inițiate",
+        description: `${selectedContacts.length} apeluri au fost trimise pentru procesare.`
+      });
 
-        // Add delay between calls
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      } catch (error) {
-        console.error(`Failed to call ${contact.name}:`, error);
+      if (result.batch_id) {
+        pollForResults(result.batch_id);
       }
+    } catch (error) {
+      toast({
+        title: "Eroare",
+        description: "Nu s-au putut iniția apelurile.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCallingAll(false);
     }
-    setIsCallingAll(false);
-    toast({
-      title: "Apeluri finalizate",
-      description: `S-au inițiat apelurile pentru ${selectedContacts.length} contacte.`
-    });
   };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'success':
@@ -224,6 +317,7 @@ const Outbound = () => {
         return <AlertCircle className="w-4 h-4 text-gray-500" />;
     }
   };
+
   const getStatusText = (status: string) => {
     switch (status) {
       case 'success':
@@ -238,8 +332,14 @@ const Outbound = () => {
         return 'Necunoscut';
     }
   };
-  const filteredCallHistory = callHistory.filter(call => call.phone.includes(searchTerm) || call.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  return <DashboardLayout>
+
+  const filteredCallHistory = callHistory.filter(call => 
+    call.phone.includes(searchTerm) || 
+    call.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <DashboardLayout>
       <div className="p-6 my-[60px]">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
@@ -269,14 +369,25 @@ const Outbound = () => {
                     <p className="text-xs text-muted-foreground">
                       Format: Nume, Telefon, Țara, Locație
                     </p>
-                    <input type="file" accept=".csv" onChange={handleCsvSelect} className="hidden" id="csv-upload" />
-                    <Button variant="outline" onClick={() => document.getElementById('csv-upload')?.click()} className="mt-2">
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={handleCsvSelect}
+                      className="hidden"
+                      id="csv-upload"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => document.getElementById('csv-upload')?.click()}
+                      className="mt-2"
+                    >
                       Selectează CSV
                     </Button>
                   </div>
                 </div>
 
-                {csvFile && <div className="bg-gray-50 rounded-lg p-4">
+                {csvFile && (
+                  <div className="bg-gray-50 rounded-lg p-4">
                     <div className="flex items-center gap-3">
                       <FileText className="w-5 h-5 text-accent" />
                       <div className="flex-1">
@@ -286,17 +397,26 @@ const Outbound = () => {
                         </p>
                       </div>
                     </div>
-                  </div>}
+                  </div>
+                )}
               </div>
 
-              <Button onClick={handleUploadCsv} disabled={!csvFile || isUploadingCsv} className="w-full bg-accent hover:bg-accent/90 text-white">
-                {isUploadingCsv ? <div className="flex items-center gap-2">
+              <Button
+                onClick={handleUploadCsv}
+                disabled={!csvFile || isUploadingCsv}
+                className="w-full bg-accent hover:bg-accent/90 text-white"
+              >
+                {isUploadingCsv ? (
+                  <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Procesează CSV...
-                  </div> : <div className="flex items-center gap-2">
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
                     <Upload className="w-4 h-4" />
                     Încarcă Contacte
-                  </div>}
+                  </div>
+                )}
               </Button>
             </CardContent>
           </Card>
@@ -314,10 +434,17 @@ const Outbound = () => {
                 <Label htmlFor="agent-id" className="text-foreground">
                   ID Agent pentru Apeluri
                 </Label>
-                <Input id="agent-id" value={customAgentId} onChange={e => setCustomAgentId(e.target.value)} placeholder="agent_id_pentru_apeluri" className="glass-input" />
+                <Input
+                  id="agent-id"
+                  value={customAgentId}
+                  onChange={(e) => setCustomAgentId(e.target.value)}
+                  placeholder="agent_id_pentru_apeluri"
+                  className="glass-input"
+                />
               </div>
 
-              {contacts.length > 0 && <div className="space-y-4">
+              {contacts.length > 0 && (
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-muted-foreground">
                       {contacts.length} contacte încărcate, {selectedContactIds.size} selectate
@@ -327,22 +454,32 @@ const Outbound = () => {
                     </Button>
                   </div>
 
-                  <Button onClick={handleInitiateAllCalls} disabled={!customAgentId.trim() || selectedContactIds.size === 0 || isCallingAll} className="w-full bg-green-600 hover:bg-green-700 text-white">
-                    {isCallingAll ? <div className="flex items-center gap-2">
+                  <Button
+                    onClick={handleInitiateAllCalls}
+                    disabled={!customAgentId.trim() || selectedContactIds.size === 0 || isCallingAll}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    {isCallingAll ? (
+                      <div className="flex items-center gap-2">
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         Inițiază Apeluri...
-                      </div> : <div className="flex items-center gap-2">
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
                         <Play className="w-4 h-4" />
                         Inițiază Apeluri Selectate ({selectedContactIds.size})
-                      </div>}
+                      </div>
+                    )}
                   </Button>
-                </div>}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
 
         {/* Contacts Table */}
-        {contacts.length > 0 && <Card className="liquid-glass mt-8">
+        {contacts.length > 0 && (
+          <Card className="liquid-glass mt-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <Users className="w-6 h-6 text-accent" />
@@ -355,7 +492,12 @@ const Outbound = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">
-                        <input type="checkbox" checked={selectedContactIds.size === contacts.length && contacts.length > 0} onChange={handleSelectAll} className="rounded" />
+                        <input
+                          type="checkbox"
+                          checked={selectedContactIds.size === contacts.length && contacts.length > 0}
+                          onChange={handleSelectAll}
+                          className="rounded"
+                        />
                       </TableHead>
                       <TableHead>
                         <div className="flex items-center gap-2">
@@ -385,25 +527,39 @@ const Outbound = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {contacts.map(contact => <TableRow key={contact.id}>
+                    {contacts.map((contact) => (
+                      <TableRow key={contact.id}>
                         <TableCell>
-                          <input type="checkbox" checked={selectedContactIds.has(contact.id)} onChange={() => handleContactSelect(contact.id)} className="rounded" />
+                          <input
+                            type="checkbox"
+                            checked={selectedContactIds.has(contact.id)}
+                            onChange={() => handleContactSelect(contact.id)}
+                            className="rounded"
+                          />
                         </TableCell>
                         <TableCell className="font-medium">{contact.name}</TableCell>
                         <TableCell className="font-mono text-sm">{contact.phone}</TableCell>
                         <TableCell>{contact.country}</TableCell>
                         <TableCell>{contact.location}</TableCell>
                         <TableCell>
-                          <Button variant="outline" size="sm" onClick={() => handleInitiateCall(contact)} disabled={!customAgentId.trim() || isInitiating} className="border-accent text-accent hover:bg-accent/10">
-                            {isInitiating ? <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" /> : <Phone className="w-4 h-4" />}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleInitiateCall(contact)}
+                            disabled={!customAgentId.trim()}
+                            className="border-accent text-accent hover:bg-accent/10"
+                          >
+                            <Phone className="w-4 h-4" />
                           </Button>
                         </TableCell>
-                      </TableRow>)}
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </div>
             </CardContent>
-          </Card>}
+          </Card>
+        )}
 
         {/* Call History Section */}
         <Card className="liquid-glass mt-8">
@@ -415,12 +571,18 @@ const Outbound = () => {
             <div className="flex items-center gap-4 mt-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input placeholder="Caută după numărul de telefon sau nume..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
+                <Input
+                  placeholder="Caută după numărul de telefon sau nume..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            {filteredCallHistory.length > 0 ? <div className="max-h-96 overflow-y-auto">
+            {filteredCallHistory.length > 0 ? (
+              <div className="max-h-96 overflow-y-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -459,7 +621,8 @@ const Outbound = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredCallHistory.map(call => <TableRow key={call.id}>
+                    {filteredCallHistory.map((call) => (
+                      <TableRow key={call.id}>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             {getStatusIcon(call.status)}
@@ -474,18 +637,27 @@ const Outbound = () => {
                         </TableCell>
                         <TableCell className="text-sm">{call.date}</TableCell>
                         <TableCell className="text-sm font-mono">${call.cost.toFixed(2)}</TableCell>
-                      </TableRow>)}
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
-              </div> : <div className="text-center py-8">
+              </div>
+            ) : (
+              <div className="text-center py-8">
                 <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">
-                  {searchTerm ? 'Nu s-au găsit apeluri care să se potrivească cu termenul de căutare.' : 'Nu există încă apeluri în istoric.'}
+                  {searchTerm 
+                    ? 'Nu s-au găsit apeluri care să se potrivească cu termenul de căutare.' 
+                    : 'Nu există încă apeluri în istoric.'
+                  }
                 </p>
-                {searchTerm && <Button variant="outline" onClick={() => setSearchTerm('')} className="mt-2">
+                {searchTerm && (
+                  <Button variant="outline" onClick={() => setSearchTerm('')} className="mt-2">
                     Șterge filtrul
-                  </Button>}
-              </div>}
+                  </Button>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -498,17 +670,19 @@ const Outbound = () => {
                 <p className="text-sm text-muted-foreground">Nume, Telefon, Țara, Locație</p>
               </div>
               <div>
-                <h3 className="font-semibold text-foreground mb-2">Mărime Maximă</h3>
-                <p className="text-sm text-muted-foreground">1 MB per fișier</p>
+                <h3 className="font-semibold text-foreground mb-2">Webhook</h3>
+                <p className="text-sm text-muted-foreground">N8N Integration</p>
               </div>
               <div>
-                <h3 className="font-semibold text-foreground mb-2">Telefonie</h3>
-                <p className="text-sm text-muted-foreground">ElevenLabs Outbound</p>
+                <h3 className="font-semibold text-foreground mb-2">Rezultate</h3>
+                <p className="text-sm text-muted-foreground">Real-time Updates</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>;
+    </DashboardLayout>
+  );
 };
+
 export default Outbound;
