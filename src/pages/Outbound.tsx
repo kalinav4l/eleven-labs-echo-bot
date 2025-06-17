@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Upload, Phone, FileText, Play, Users, Globe, MapPin, User, Search, Clock, DollarSign, MessageSquare, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import DashboardLayout from '@/components/DashboardLayout';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import type { WebhookCallResult, WebhookResponse } from '@/types/webhook';
 
@@ -52,6 +52,7 @@ const Outbound = () => {
   useEffect(() => {
     const fetchCallHistory = async () => {
       try {
+        console.log('Fetching call history from Supabase...');
         const { data, error } = await supabase
           .from('Outbound')
           .select('*')
@@ -67,7 +68,9 @@ const Outbound = () => {
           return;
         }
 
-        if (data) {
+        console.log('Raw data from Supabase:', data);
+
+        if (data && data.length > 0) {
           const loadedHistory: CallHistory[] = data.map((record: any) => ({
             id: record.id ? String(record.id) : Date.now().toString() + Math.random(),
             phone: record.Telefon || '',
@@ -78,7 +81,11 @@ const Outbound = () => {
             date: record.Data ? new Date(record.Data).toLocaleString('ro-RO') : '',
             cost: record.Cost ? Number(record.Cost) : 0
           }));
+          console.log('Processed call history:', loadedHistory);
           setCallHistory(loadedHistory);
+        } else {
+          console.log('No call history data found in Supabase');
+          setCallHistory([]);
         }
       } catch (error) {
         console.error('Error in fetchCallHistory:', error);
@@ -173,6 +180,7 @@ const Outbound = () => {
 
   const sendContactsToWebhook = async (contactsToSend: Contact[]) => {
     try {
+      console.log('Sending contacts to webhook:', contactsToSend);
       const response = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: {
@@ -186,12 +194,14 @@ const Outbound = () => {
         })
       });
 
+      console.log('Webhook response status:', response.status);
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
-      console.log('Webhook response:', result);
+      console.log('Webhook response result:', result);
       
       return result;
     } catch (error) {
@@ -202,7 +212,11 @@ const Outbound = () => {
 
   const saveCallResultsToSupabase = async (callResults: WebhookCallResult[]) => {
     try {
-      const recordsToInsert = callResults.map((result) => {
+      console.log('Processing call results for Supabase:', callResults);
+      
+      const recordsToInsert = callResults.map((result, index) => {
+        console.log(`Processing call result ${index}:`, result);
+        
         const cleanConversations = result.clean_conversations;
         
         // Defensive data extraction using optional chaining and nullish coalescing
@@ -212,13 +226,12 @@ const Outbound = () => {
           .map((d) => `${d.speaker ?? 'Unknown'}: ${d.message ?? ''}`)
           .join('\n');
         
-        // Fixed the invalid empty string key - using cost_info directly
         const cost = cleanConversations?.cost_info?.total_cost ?? 0;
         const timestamp = cleanConversations?.timestamps 
           ? cleanConversations.timestamps.split('-')[0] 
           : new Date().toISOString();
         
-        return {
+        const record = {
           Status: cleanConversations?.status === 'done' ? 'success' : 'failed',
           Number: phone ? parseFloat(phone.replace(/[^\d]/g, '')) || null : null,
           Telefon: phone,
@@ -227,38 +240,139 @@ const Outbound = () => {
           Data: new Date(timestamp).getTime(),
           Cost: cost / 100 // Convert from cents to dollars assuming cost is in cents
         };
+        
+        console.log(`Record ${index} to insert:`, record);
+        return record;
       });
 
-      const { error } = await supabase
+      console.log('All records to insert:', recordsToInsert);
+
+      const { data, error } = await supabase
         .from('Outbound')
-        .insert(recordsToInsert);
+        .insert(recordsToInsert)
+        .select();
 
       if (error) {
         console.error('Error saving to Supabase:', error);
         throw error;
       }
 
-      console.log('Successfully saved call results to Supabase');
+      console.log('Successfully saved to Supabase:', data);
+      return data;
     } catch (error) {
       console.error('Error in saveCallResultsToSupabase:', error);
       throw error;
     }
   };
 
+  const refreshCallHistory = async () => {
+    try {
+      console.log('Refreshing call history...');
+      const { data } = await supabase
+        .from('Outbound')
+        .select('*')
+        .order('Data', { ascending: false });
+
+      if (data) {
+        const updatedHistory: CallHistory[] = data.map((record: any) => ({
+          id: record.id ? String(record.id) : Date.now().toString() + Math.random(),
+          phone: record.Telefon ?? '',
+          name: record.Telefon ?? 'Necunoscut',
+          status: record.Status === 'success' ? 'success' : 'failed',
+          conclusion: record.Concluzie ?? '',
+          dialog: record.Dialog ?? '',
+          date: record.Data ? new Date(record.Data).toLocaleString('ro-RO') : '',
+          cost: record.Cost ? Number(record.Cost) : 0
+        }));
+        console.log('Refreshed call history:', updatedHistory);
+        setCallHistory(updatedHistory);
+      }
+    } catch (error) {
+      console.error('Error refreshing call history:', error);
+    }
+  };
+
+  const processWebhookResponse = async (result: any) => {
+    try {
+      console.log('Processing webhook response:', result);
+      
+      // Check if the result contains call results directly
+      let callResults: WebhookCallResult[] = [];
+      
+      if (Array.isArray(result)) {
+        callResults = result;
+        console.log('Result is array, using directly');
+      } else if (result.calls && Array.isArray(result.calls)) {
+        callResults = result.calls;
+        console.log('Found calls array in result');
+      } else if (result.completed && result.calls) {
+        callResults = result.calls;
+        console.log('Result is completed with calls');
+      } else {
+        // Try to find any array in the result
+        for (const key in result) {
+          if (Array.isArray(result[key])) {
+            callResults = result[key];
+            console.log(`Found array in result.${key}`);
+            break;
+          }
+        }
+      }
+      
+      console.log('Extracted call results:', callResults);
+      
+      if (callResults.length > 0) {
+        try {
+          await saveCallResultsToSupabase(callResults);
+          await refreshCallHistory();
+          
+          toast({
+            title: "Apeluri finalizate",
+            description: `S-au primit și salvat rezultatele pentru ${callResults.length} apeluri.`
+          });
+        } catch (saveError) {
+          console.error('Error saving call results:', saveError);
+          toast({
+            title: "Eroare la salvare",
+            description: "Nu s-au putut salva rezultatele apelurilor.",
+            variant: "destructive"
+          });
+        }
+      } else {
+        console.log('No call results found in response');
+        toast({
+          title: "Rezultate primite",
+          description: "Răspunsul a fost primit dar nu conține rezultate de apeluri.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error processing webhook response:', error);
+      toast({
+        title: "Eroare de procesare",
+        description: "Nu s-a putut procesa răspunsul de la webhook.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const pollForResults = async (batchId: string) => {
+    console.log('Starting polling for batch:', batchId);
     const maxAttempts = 30; // 5 minute timeout (10 seconds * 30)
     let attempts = 0;
 
     const poll = async (): Promise<void> => {
       try {
+        console.log(`Polling attempt ${attempts + 1}/${maxAttempts} for batch ${batchId}`);
         const response = await fetch(`${WEBHOOK_URL}/results/${batchId}`);
         
         if (response.ok) {
           const responseClone = response.clone();
-          let results: WebhookResponse;
+          let results: any;
           
           try {
             results = await response.json();
+            console.log('Polling response received:', results);
           } catch (jsonError) {
             // Improved error diagnostics - log raw response text
             const rawResponseText = await responseClone.text();
@@ -273,65 +387,17 @@ const Outbound = () => {
             return;
           }
           
-          if (results.completed || Array.isArray(results)) {
-            // Process the results from webhook response with defensive handling
-            const callResults = Array.isArray(results) ? results : results.calls ?? [];
-            
-            console.log('Received call results:', callResults);
-            
-            // Save to Supabase with improved error handling
-            if (callResults.length > 0) {
-              try {
-                await saveCallResultsToSupabase(callResults);
-                
-                // Refresh call history by fetching from Supabase again
-                const { data } = await supabase
-                  .from('Outbound')
-                  .select('*')
-                  .order('Data', { ascending: false });
-
-                if (data) {
-                  const updatedHistory: CallHistory[] = data.map((record: any) => ({
-                    id: record.id ? String(record.id) : Date.now().toString() + Math.random(),
-                    phone: record.Telefon ?? '',
-                    name: record.Telefon ?? 'Necunoscut',
-                    status: record.Status === 'success' ? 'success' : 'failed',
-                    conclusion: record.Concluzie ?? '',
-                    dialog: record.Dialog ?? '',
-                    date: record.Data ? new Date(record.Data).toLocaleString('ro-RO') : '',
-                    cost: record.Cost ? Number(record.Cost) : 0
-                  }));
-                  setCallHistory(updatedHistory);
-                }
-                
-                toast({
-                  title: "Apeluri finalizate",
-                  description: `S-au primit rezultatele pentru ${callResults.length} apeluri.`
-                });
-              } catch (saveError) {
-                console.error('Error saving call results:', saveError);
-                toast({
-                  title: "Eroare la salvare",
-                  description: "Nu s-au putut salva rezultatele apelurilor.",
-                  variant: "destructive"
-                });
-              }
-            } else {
-              toast({
-                title: "Apeluri finalizate",
-                description: "Nu s-au găsit rezultate de apeluri.",
-                variant: "destructive"
-              });
-            }
-            
-            return;
-          }
+          // Process the results regardless of completion status
+          await processWebhookResponse(results);
+          return;
         }
 
         attempts++;
         if (attempts < maxAttempts) {
+          console.log(`Polling attempt ${attempts} failed, retrying in 10 seconds...`);
           setTimeout(() => poll(), 10000); // Poll every 10 seconds
         } else {
+          console.log('Polling timeout reached');
           toast({
             title: "Timeout",
             description: "Rezultatele apelurilor nu au fost primite în timp util.",
@@ -392,16 +458,17 @@ const Outbound = () => {
         description: `Apelul către ${contact.name} a fost trimis pentru procesare.`
       });
 
+      // Process the result immediately if it contains data
+      if (result) {
+        await processWebhookResponse(result);
+      }
+
+      // Also try polling if there's a batch_id
       if (result.batch_id) {
         pollForResults(result.batch_id);
-      } else {
-        // If no batch_id, assume immediate results
-        setTimeout(() => {
-          // Simulate polling for this single call
-          pollForResults('single_call_' + Date.now());
-        }, 5000);
       }
     } catch (error) {
+      console.error('Error initiating call:', error);
       toast({
         title: "Eroare",
         description: "Nu s-a putut iniția apelul.",
@@ -440,16 +507,17 @@ const Outbound = () => {
         description: `${selectedContacts.length} apeluri au fost trimise pentru procesare.`
       });
 
+      // Process the result immediately if it contains data
+      if (result) {
+        await processWebhookResponse(result);
+      }
+
+      // Also try polling if there's a batch_id
       if (result.batch_id) {
         pollForResults(result.batch_id);
-      } else {
-        // If no batch_id, assume immediate results
-        setTimeout(() => {
-          // Simulate polling for these calls
-          pollForResults('batch_call_' + Date.now());
-        }, 5000);
       }
     } catch (error) {
+      console.error('Error initiating calls:', error);
       toast({
         title: "Eroare",
         description: "Nu s-au putut iniția apelurile.",
@@ -504,6 +572,14 @@ const Outbound = () => {
             <h1 className="text-3xl font-bold text-foreground mb-2">Outbound</h1>
             <p className="text-muted-foreground">Gestionează apelurile outbound și bazele de date de contacte</p>
           </div>
+          <Button 
+            onClick={refreshCallHistory}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Clock className="w-4 h-4" />
+            Reîmprospătează Istoricul
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
