@@ -7,7 +7,6 @@ import { Upload, Download, FileAudio, MessageSquare, User, Bot, Wand2 } from 'lu
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-
 interface TranscriptEntry {
   speaker: string;
   text: string;
@@ -15,50 +14,39 @@ interface TranscriptEntry {
   startTime: number;
   endTime: number;
 }
-
 const Transcript = () => {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessingWithAI, setIsProcessingWithAI] = useState(false);
   const [transcriptEntries, setTranscriptEntries] = useState<TranscriptEntry[]>([]);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [rawTranscript, setRawTranscript] = useState<string>('');
-
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
-
   const getSpeakerColor = (speaker: string) => {
     if (speaker.toLowerCase().includes('agent') || speaker.toLowerCase().includes('ai')) {
       return 'bg-purple-500';
     } else if (speaker.toLowerCase().includes('user')) {
       return 'bg-blue-500';
     }
-    
-    const colors = [
-      'bg-blue-500',
-      'bg-purple-500', 
-      'bg-pink-500',
-      'bg-indigo-500',
-      'bg-cyan-500'
-    ];
+    const colors = ['bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-cyan-500'];
     const index = parseInt(speaker.replace(/\D/g, '')) || 0;
     return colors[index % colors.length];
   };
-
   const getSpeakerIcon = (speaker: string) => {
     if (speaker.toLowerCase().includes('agent') || speaker.toLowerCase().includes('ai')) {
       return <Bot className="w-4 h-4 text-white" />;
     }
     return <User className="w-4 h-4 text-white" />;
   };
-
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins.toString().padStart(2, '0')}.${secs.toString().padStart(2, '0')}`;
   };
-
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -77,27 +65,24 @@ const Transcript = () => {
       });
     }
   };
-
   const parseTranscriptResponse = (text: string): TranscriptEntry[] => {
     // Parse simple transcript - this would need to be adapted based on actual API response
     const entries: TranscriptEntry[] = [];
     const lines = text.split('\n').filter(line => line.trim());
-    
     lines.forEach((line, index) => {
       if (line.trim()) {
         entries.push({
           speaker: `Speaker ${index % 3}`,
           text: line.trim(),
-          timestamp: formatTime(index * 5), // Mock timestamps
+          timestamp: formatTime(index * 5),
+          // Mock timestamps
           startTime: index * 5,
           endTime: (index + 1) * 5
         });
       }
     });
-
     return entries;
   };
-
   const handleUpload = async () => {
     if (!audioFile) {
       toast({
@@ -107,38 +92,31 @@ const Transcript = () => {
       });
       return;
     }
-
     setIsUploading(true);
     try {
       const formData = new FormData();
       formData.append("file", audioFile);
       formData.append("model_id", "scribe_v1");
-
       const response = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
         method: "POST",
         headers: {
           "Xi-Api-Key": "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873"
         },
-        body: formData,
+        body: formData
       });
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
       const body = await response.json();
       console.log(body);
-      
       if (body.text) {
         const entries = parseTranscriptResponse(body.text);
         setTranscriptEntries(entries);
       }
-      
       toast({
         title: "Succes",
         description: "Transcriptul a fost generat cu succes!"
       });
-
     } catch (error) {
       console.error('Error uploading file:', error);
       toast({
@@ -150,7 +128,6 @@ const Transcript = () => {
       setIsUploading(false);
     }
   };
-
   const processWithGPT4o = async () => {
     if (!rawTranscript) {
       toast({
@@ -160,17 +137,19 @@ const Transcript = () => {
       });
       return;
     }
-
     setIsProcessingWithAI(true);
     try {
-      const { data, error } = await supabase.functions.invoke('process-transcript', {
-        body: { transcriptText: rawTranscript }
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('process-transcript', {
+        body: {
+          transcriptText: rawTranscript
+        }
       });
-
       if (error) {
         throw error;
       }
-
       if (data.dialogue && Array.isArray(data.dialogue)) {
         const processedEntries: TranscriptEntry[] = data.dialogue.map((item: any, index: number) => ({
           speaker: item.speaker || 'Unknown',
@@ -179,15 +158,12 @@ const Transcript = () => {
           startTime: index * 5,
           endTime: (index + 1) * 5
         }));
-
         setTranscriptEntries(processedEntries);
-        
         toast({
           title: "Succes",
           description: "Transcriptul a fost procesat cu GPT-4o!"
         });
       }
-
     } catch (error) {
       console.error('Error processing with GPT-4o:', error);
       toast({
@@ -199,7 +175,6 @@ const Transcript = () => {
       setIsProcessingWithAI(false);
     }
   };
-
   const handleDownloadSRT = () => {
     if (transcriptEntries.length === 0) {
       toast({
@@ -209,16 +184,15 @@ const Transcript = () => {
       });
       return;
     }
-
     let srtContent = '';
     transcriptEntries.forEach((entry, index) => {
       const startTime = `00:00:${entry.startTime.toString().padStart(2, '0')},000`;
       const endTime = `00:00:${entry.endTime.toString().padStart(2, '0')},000`;
-      
       srtContent += `${index + 1}\n${startTime} --> ${endTime}\n${entry.speaker}: ${entry.text}\n\n`;
     });
-
-    const blob = new Blob([srtContent], { type: 'text/plain' });
+    const blob = new Blob([srtContent], {
+      type: 'text/plain'
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -227,16 +201,13 @@ const Transcript = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-
     toast({
       title: "Descărcare",
       description: "Fișierul SRT a fost descărcat."
     });
   };
-
-  return (
-    <DashboardLayout>
-      <div className="p-6">
+  return <DashboardLayout>
+      <div className="p-6 my-[60px]">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -262,25 +233,14 @@ const Transcript = () => {
                     <p className="text-sm text-muted-foreground">
                       Drag & drop sau selectează un fișier audio
                     </p>
-                    <input
-                      type="file"
-                      accept="audio/*"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      id="audio-upload"
-                    />
-                    <Button
-                      variant="outline"
-                      onClick={() => document.getElementById('audio-upload')?.click()}
-                      className="mt-2"
-                    >
+                    <input type="file" accept="audio/*" onChange={handleFileSelect} className="hidden" id="audio-upload" />
+                    <Button variant="outline" onClick={() => document.getElementById('audio-upload')?.click()} className="mt-2">
                       Selectează Fișier
                     </Button>
                   </div>
                 </div>
 
-                {audioFile && (
-                  <div className="bg-gray-50 rounded-lg p-4">
+                {audioFile && <div className="bg-gray-50 rounded-lg p-4">
                     <div className="flex items-center gap-3">
                       <FileAudio className="w-5 h-5 text-accent" />
                       <div className="flex-1">
@@ -290,49 +250,29 @@ const Transcript = () => {
                         </p>
                       </div>
                     </div>
-                  </div>
-                )}
+                  </div>}
               </div>
 
-              <Button
-                onClick={handleUpload}
-                disabled={!audioFile || isUploading}
-                className="w-full bg-accent hover:bg-accent/90 text-white"
-              >
-                {isUploading ? (
-                  <div className="flex items-center gap-2">
+              <Button onClick={handleUpload} disabled={!audioFile || isUploading} className="w-full bg-accent hover:bg-accent/90 text-white">
+                {isUploading ? <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Procesează...
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
+                  </div> : <div className="flex items-center gap-2">
                     <Upload className="w-4 h-4" />
                     Generează Transcript
-                  </div>
-                )}
+                  </div>}
               </Button>
 
               {/* GPT-4o Processing Button */}
-              {rawTranscript && (
-                <Button
-                  onClick={processWithGPT4o}
-                  disabled={isProcessingWithAI}
-                  variant="outline"
-                  className="w-full border-purple-500 text-purple-500 hover:bg-purple-50"
-                >
-                  {isProcessingWithAI ? (
-                    <div className="flex items-center gap-2">
+              {rawTranscript && <Button onClick={processWithGPT4o} disabled={isProcessingWithAI} variant="outline" className="w-full border-purple-500 text-purple-500 hover:bg-purple-50">
+                  {isProcessingWithAI ? <div className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
                       Procesează cu GPT-4o...
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
+                    </div> : <div className="flex items-center gap-2">
                       <Wand2 className="w-4 h-4" />
                       Procesează cu GPT-4o
-                    </div>
-                  )}
-                </Button>
-              )}
+                    </div>}
+                </Button>}
             </CardContent>
           </Card>
 
@@ -344,24 +284,15 @@ const Transcript = () => {
                   <MessageSquare className="w-6 h-6 text-accent" />
                   Transcript
                 </CardTitle>
-                {transcriptEntries.length > 0 && (
-                  <Button
-                    onClick={handleDownloadSRT}
-                    variant="outline"
-                    size="sm"
-                    className="border-accent text-accent hover:bg-accent/10"
-                  >
+                {transcriptEntries.length > 0 && <Button onClick={handleDownloadSRT} variant="outline" size="sm" className="border-accent text-accent hover:bg-accent/10">
                     <Download className="w-4 h-4 mr-2" />
                     Export SRT
-                  </Button>
-                )}
+                  </Button>}
               </div>
             </CardHeader>
             <CardContent>
-              {transcriptEntries.length > 0 ? (
-                <div className="space-y-4 max-h-96 overflow-y-auto">
-                  {transcriptEntries.map((entry, index) => (
-                    <div key={index} className="flex gap-3 p-3 rounded-lg bg-gray-50/50 hover:bg-gray-100/50 transition-colors">
+              {transcriptEntries.length > 0 ? <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {transcriptEntries.map((entry, index) => <div key={index} className="flex gap-3 p-3 rounded-lg bg-gray-50/50 hover:bg-gray-100/50 transition-colors">
                       <div className="flex-shrink-0">
                         <div className={`w-8 h-8 rounded-full ${getSpeakerColor(entry.speaker)} flex items-center justify-center`}>
                           {getSpeakerIcon(entry.speaker)}
@@ -374,17 +305,13 @@ const Transcript = () => {
                         </div>
                         <p className="text-sm text-gray-700 leading-relaxed">{entry.text}</p>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
+                    </div>)}
+                </div> : <div className="text-center py-12">
                   <MessageSquare className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
                   <p className="text-muted-foreground">
                     Transcriptul va apărea aici după procesare
                   </p>
-                </div>
-              )}
+                </div>}
             </CardContent>
           </Card>
         </div>
@@ -409,8 +336,6 @@ const Transcript = () => {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
-
 export default Transcript;
