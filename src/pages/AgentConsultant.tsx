@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -12,9 +11,10 @@ import { Step1PromptGeneration } from '../components/Step1PromptGeneration';
 import { Step2AgentCreation } from '../components/Step2AgentCreation';
 import { Step3AgentEditing } from '../components/Step3AgentEditing';
 import { Step4CallInitiation } from '../components/Step4CallInitiation';
-
 const AgentConsultant: React.FC = () => {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
 
   // Step management
   const [currentStep, setCurrentStep] = useState(1);
@@ -40,26 +40,30 @@ const AgentConsultant: React.FC = () => {
   const [isOnlineCallActive, setIsOnlineCallActive] = useState(false);
 
   // Custom hooks
-  const { generatePrompt, isGenerating: isGeneratingPrompt } = usePromptGeneration();
-
+  const {
+    generatePrompt,
+    isGenerating: isGeneratingPrompt
+  } = usePromptGeneration();
   const {
     isCreating: isCreatingAgent,
     createdAgentId,
     handleCreateAgent,
-    handleCopyAgentId,
+    handleCopyAgentId
   } = useAgentCreation({
     websiteUrl,
     additionalPrompt,
     agentName,
     agentLanguage,
     selectedVoice,
-    generatePrompt: () => Promise.resolve(generatedPrompt),
+    generatePrompt: () => Promise.resolve(generatedPrompt)
   });
-
-  const { isInitiating: isInitiatingCall, handleInitiateCall } = useCallInitiation({
+  const {
+    isInitiating: isInitiatingCall,
+    handleInitiateCall
+  } = useCallInitiation({
     customAgentId: finalAgentId,
     createdAgentId: '',
-    phoneNumber,
+    phoneNumber
   });
 
   // Authentication guard
@@ -69,101 +73,48 @@ const AgentConsultant: React.FC = () => {
 
   // Step handlers
   const handleGeneratePrompt = async () => {
-    const prompt = await generatePrompt({ 
-      websiteUrl, 
-      additionalPrompt: `${additionalPrompt} Rolul agentului: ${agentRole}` 
+    const prompt = await generatePrompt({
+      websiteUrl,
+      additionalPrompt: `${additionalPrompt} Rolul agentului: ${agentRole}`
     });
     if (prompt) {
       setGeneratedPrompt(prompt);
     }
   };
-
   const handleCreateAgentWithPrompt = async () => {
     await handleCreateAgent();
   };
-
   const handleStep1Next = () => {
     setCurrentStep(2);
   };
-
   const handleStep2Next = () => {
     setAgentIdForEdit(createdAgentId);
     setFinalAgentId(createdAgentId);
     setCurrentStep(3);
   };
-
   const handleStep3Next = () => {
     setCurrentStep(4);
   };
-
   const handleInitiateOnlineCall = () => {
     setIsOnlineCallActive(!isOnlineCallActive);
     // Here you would implement the actual online call functionality
   };
-
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return (
-          <Step1PromptGeneration
-            websiteUrl={websiteUrl}
-            setWebsiteUrl={setWebsiteUrl}
-            agentRole={agentRole}
-            setAgentRole={setAgentRole}
-            additionalPrompt={additionalPrompt}
-            setAdditionalPrompt={setAdditionalPrompt}
-            generatedPrompt={generatedPrompt}
-            setGeneratedPrompt={setGeneratedPrompt}
-            onGeneratePrompt={handleGeneratePrompt}
-            onNextStep={handleStep1Next}
-            isGenerating={isGeneratingPrompt}
-          />
-        );
+        return <Step1PromptGeneration websiteUrl={websiteUrl} setWebsiteUrl={setWebsiteUrl} agentRole={agentRole} setAgentRole={setAgentRole} additionalPrompt={additionalPrompt} setAdditionalPrompt={setAdditionalPrompt} generatedPrompt={generatedPrompt} setGeneratedPrompt={setGeneratedPrompt} onGeneratePrompt={handleGeneratePrompt} onNextStep={handleStep1Next} isGenerating={isGeneratingPrompt} />;
       case 2:
-        return (
-          <Step2AgentCreation
-            agentName={agentName}
-            setAgentName={setAgentName}
-            agentLanguage={agentLanguage}
-            setAgentLanguage={setAgentLanguage}
-            selectedVoice={selectedVoice}
-            setSelectedVoice={setSelectedVoice}
-            createdAgentId={createdAgentId}
-            onCreateAgent={handleCreateAgentWithPrompt}
-            onCopyAgentId={handleCopyAgentId}
-            onNextStep={handleStep2Next}
-            isCreating={isCreatingAgent}
-          />
-        );
+        return <Step2AgentCreation agentName={agentName} setAgentName={setAgentName} agentLanguage={agentLanguage} setAgentLanguage={setAgentLanguage} selectedVoice={selectedVoice} setSelectedVoice={setSelectedVoice} createdAgentId={createdAgentId} onCreateAgent={handleCreateAgentWithPrompt} onCopyAgentId={handleCopyAgentId} onNextStep={handleStep2Next} isCreating={isCreatingAgent} />;
       case 3:
-        return (
-          <Step3AgentEditing
-            agentIdForEdit={agentIdForEdit}
-            setAgentIdForEdit={setAgentIdForEdit}
-            onNextStep={handleStep3Next}
-          />
-        );
+        return <Step3AgentEditing agentIdForEdit={agentIdForEdit} setAgentIdForEdit={setAgentIdForEdit} onNextStep={handleStep3Next} />;
       case 4:
-        return (
-          <Step4CallInitiation
-            phoneNumber={phoneNumber}
-            setPhoneNumber={setPhoneNumber}
-            finalAgentId={finalAgentId}
-            setFinalAgentId={setFinalAgentId}
-            onInitiateCall={handleInitiateCall}
-            onInitiateOnlineCall={handleInitiateOnlineCall}
-            isInitiatingCall={isInitiatingCall}
-            isOnlineCallActive={isOnlineCallActive}
-          />
-        );
+        return <Step4CallInitiation phoneNumber={phoneNumber} setPhoneNumber={setPhoneNumber} finalAgentId={finalAgentId} setFinalAgentId={setFinalAgentId} onInitiateCall={handleInitiateCall} onInitiateOnlineCall={handleInitiateOnlineCall} isInitiatingCall={isInitiatingCall} isOnlineCallActive={isOnlineCallActive} />;
       default:
         return null;
     }
   };
-
-  return (
-    <DashboardLayout>
-      <div className="p-6">
+  return <DashboardLayout>
+      <div className="p-6 my-[60px]">
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Header */}
           <div>
@@ -176,31 +127,19 @@ const AgentConsultant: React.FC = () => {
           </div>
 
           {/* Step Indicator */}
-          <StepIndicator
-            currentStep={currentStep}
-            totalSteps={4}
-            stepTitles={stepTitles}
-            onStepClick={setCurrentStep}
-          />
+          <StepIndicator currentStep={currentStep} totalSteps={4} stepTitles={stepTitles} onStepClick={setCurrentStep} />
 
           {/* Current Step */}
           {renderCurrentStep()}
 
           {/* Navigation */}
-          {currentStep > 1 && (
-            <div className="flex justify-center">
-              <button
-                onClick={() => setCurrentStep(currentStep - 1)}
-                className="text-accent hover:text-accent/80 font-medium"
-              >
+          {currentStep > 1 && <div className="flex justify-center">
+              <button onClick={() => setCurrentStep(currentStep - 1)} className="text-accent hover:text-accent/80 font-medium">
                 ← Înapoi la pasul anterior
               </button>
-            </div>
-          )}
+            </div>}
         </div>
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
-
 export default AgentConsultant;
