@@ -2,7 +2,6 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./components/AuthContext";
-import { LanguageProvider } from "./contexts/LanguageContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Account from "./pages/Account";
@@ -24,28 +23,26 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <BrowserRouter>
-      <LanguageProvider>
-        <AuthProvider>
-          <QueryClientProvider client={queryClient}>
-            <Toaster />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/info" element={<Info />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/account" element={<Account />} />
-              <Route path="/account/kalina-agents" element={<KalinaAgents />} />
-              <Route path="/account/agent-edit/:agentId" element={<AgentEdit />} />
-              <Route path="/account/agent-consultant" element={<AgentConsultant />} />
-              <Route path="/account/voices" element={<Voices />} />
-              <Route path="/account/transcript" element={<Transcript />} />
-              <Route path="/account/outbound" element={<Outbound />} />
-              <Route path="/account/settings" element={<AccountSettings />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </QueryClientProvider>
-        </AuthProvider>
-      </LanguageProvider>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <Toaster />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/info" element={<Info />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/account" element={<Account />} />
+            <Route path="/account/kalina-agents" element={<KalinaAgents />} />
+            <Route path="/account/agent-edit/:agentId" element={<AgentEdit />} />
+            <Route path="/account/agent-consultant" element={<AgentConsultant />} />
+            <Route path="/account/voices" element={<Voices />} />
+            <Route path="/account/transcript" element={<Transcript />} />
+            <Route path="/account/outbound" element={<Outbound />} />
+            <Route path="/account/settings" element={<AccountSettings />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </QueryClientProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
