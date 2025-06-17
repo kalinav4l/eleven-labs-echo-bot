@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -6,20 +7,37 @@ import { DEFAULT_VALUES } from '../constants/constants';
 import { usePromptGeneration } from '../hooks/usePromptGeneration';
 import { useAgentCreation } from '../hooks/useAgentCreation';
 import { useCallInitiation } from '../hooks/useCallInitiation';
-import { PromptGenerationSection } from '../components/PromptGenerationSection';
-import { CallInitiationSection } from '../components/CallInitiationSection';
+import { StepIndicator } from '../components/StepIndicator';
+import { Step1PromptGeneration } from '../components/Step1PromptGeneration';
+import { Step2AgentCreation } from '../components/Step2AgentCreation';
+import { Step3AgentEditing } from '../components/Step3AgentEditing';
+import { Step4CallInitiation } from '../components/Step4CallInitiation';
 
 const AgentConsultant: React.FC = () => {
   const { user } = useAuth();
 
-  // Form state
+  // Step management
+  const [currentStep, setCurrentStep] = useState(1);
+  const stepTitles = ['Prompt', 'Agent', 'Editare', 'Apeluri'];
+
+  // Step 1 - Prompt Generation
   const [websiteUrl, setWebsiteUrl] = useState('');
+  const [agentRole, setAgentRole] = useState('');
   const [additionalPrompt, setAdditionalPrompt] = useState('');
+  const [generatedPrompt, setGeneratedPrompt] = useState('');
+
+  // Step 2 - Agent Creation
   const [agentName, setAgentName] = useState('');
   const [agentLanguage, setAgentLanguage] = useState(DEFAULT_VALUES.LANGUAGE);
   const [selectedVoice, setSelectedVoice] = useState(DEFAULT_VALUES.VOICE_ID);
+
+  // Step 3 - Agent Editing
+  const [agentIdForEdit, setAgentIdForEdit] = useState('');
+
+  // Step 4 - Call Initiation
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [customAgentId, setCustomAgentId] = useState('');
+  const [finalAgentId, setFinalAgentId] = useState('');
+  const [isOnlineCallActive, setIsOnlineCallActive] = useState(false);
 
   // Custom hooks
   const { generatePrompt, isGenerating: isGeneratingPrompt } = usePromptGeneration();
@@ -35,66 +53,152 @@ const AgentConsultant: React.FC = () => {
     agentName,
     agentLanguage,
     selectedVoice,
-    generatePrompt,
+    generatePrompt: () => Promise.resolve(generatedPrompt),
   });
 
   const { isInitiating: isInitiatingCall, handleInitiateCall } = useCallInitiation({
-    customAgentId,
-    createdAgentId,
+    customAgentId: finalAgentId,
+    createdAgentId: '',
     phoneNumber,
   });
 
-  // Authentication guard - moved after hooks to comply with rules of hooks
+  // Authentication guard
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
+  // Step handlers
+  const handleGeneratePrompt = async () => {
+    const prompt = await generatePrompt({ 
+      websiteUrl, 
+      additionalPrompt: `${additionalPrompt} Rolul agentului: ${agentRole}` 
+    });
+    if (prompt) {
+      setGeneratedPrompt(prompt);
+    }
+  };
+
+  const handleCreateAgentWithPrompt = async () => {
+    await handleCreateAgent();
+  };
+
+  const handleStep1Next = () => {
+    setCurrentStep(2);
+  };
+
+  const handleStep2Next = () => {
+    setAgentIdForEdit(createdAgentId);
+    setFinalAgentId(createdAgentId);
+    setCurrentStep(3);
+  };
+
+  const handleStep3Next = () => {
+    setCurrentStep(4);
+  };
+
+  const handleInitiateOnlineCall = () => {
+    setIsOnlineCallActive(!isOnlineCallActive);
+    // Here you would implement the actual online call functionality
+  };
+
+  const renderCurrentStep = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <Step1PromptGeneration
+            websiteUrl={websiteUrl}
+            setWebsiteUrl={setWebsiteUrl}
+            agentRole={agentRole}
+            setAgentRole={setAgentRole}
+            additionalPrompt={additionalPrompt}
+            setAdditionalPrompt={setAdditionalPrompt}
+            generatedPrompt={generatedPrompt}
+            setGeneratedPrompt={setGeneratedPrompt}
+            onGeneratePrompt={handleGeneratePrompt}
+            onNextStep={handleStep1Next}
+            isGenerating={isGeneratingPrompt}
+          />
+        );
+      case 2:
+        return (
+          <Step2AgentCreation
+            agentName={agentName}
+            setAgentName={setAgentName}
+            agentLanguage={agentLanguage}
+            setAgentLanguage={setAgentLanguage}
+            selectedVoice={selectedVoice}
+            setSelectedVoice={setSelectedVoice}
+            createdAgentId={createdAgentId}
+            onCreateAgent={handleCreateAgentWithPrompt}
+            onCopyAgentId={handleCopyAgentId}
+            onNextStep={handleStep2Next}
+            isCreating={isCreatingAgent}
+          />
+        );
+      case 3:
+        return (
+          <Step3AgentEditing
+            agentIdForEdit={agentIdForEdit}
+            setAgentIdForEdit={setAgentIdForEdit}
+            onNextStep={handleStep3Next}
+          />
+        );
+      case 4:
+        return (
+          <Step4CallInitiation
+            phoneNumber={phoneNumber}
+            setPhoneNumber={setPhoneNumber}
+            finalAgentId={finalAgentId}
+            setFinalAgentId={setFinalAgentId}
+            onInitiateCall={handleInitiateCall}
+            onInitiateOnlineCall={handleInitiateOnlineCall}
+            isInitiatingCall={isInitiatingCall}
+            isOnlineCallActive={isOnlineCallActive}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-      <DashboardLayout>
-        <div className="p-6">
-          <div className="max-w-4xl mx-auto space-y-8">
-            {/* Header */}
-            <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">
-                Agent Consultant AI
-              </h1>
-              <p className="text-muted-foreground">
-                Creează automat un agent consultant pentru orice site web
-              </p>
-            </div>
-
-            {/* Section 1: Generate Agent */}
-            <PromptGenerationSection
-                websiteUrl={websiteUrl}
-                setWebsiteUrl={setWebsiteUrl}
-                additionalPrompt={additionalPrompt}
-                setAdditionalPrompt={setAdditionalPrompt}
-                agentName={agentName}
-                setAgentName={setAgentName}
-                agentLanguage={agentLanguage}
-                setAgentLanguage={setAgentLanguage}
-                selectedVoice={selectedVoice}
-                setSelectedVoice={setSelectedVoice}
-                onCreateAgent={handleCreateAgent}
-                onCopyAgentId={handleCopyAgentId}
-                isCreatingAgent={isCreatingAgent}
-                isGeneratingPrompt={isGeneratingPrompt}
-                createdAgentId={createdAgentId}
-            />
-
-            {/* Section 2: Initiate Call */}
-            <CallInitiationSection
-                phoneNumber={phoneNumber}
-                setPhoneNumber={setPhoneNumber}
-                customAgentId={customAgentId}
-                setCustomAgentId={setCustomAgentId}
-                createdAgentId={createdAgentId}
-                onInitiateCall={handleInitiateCall}
-                isInitiatingCall={isInitiatingCall}
-            />
+    <DashboardLayout>
+      <div className="p-6">
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Header */}
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Agent Consultant AI
+            </h1>
+            <p className="text-muted-foreground">
+              Creează automat un agent consultant pentru orice site web în 4 pași simpli
+            </p>
           </div>
+
+          {/* Step Indicator */}
+          <StepIndicator
+            currentStep={currentStep}
+            totalSteps={4}
+            stepTitles={stepTitles}
+          />
+
+          {/* Current Step */}
+          {renderCurrentStep()}
+
+          {/* Navigation */}
+          {currentStep > 1 && (
+            <div className="flex justify-center">
+              <button
+                onClick={() => setCurrentStep(currentStep - 1)}
+                className="text-accent hover:text-accent/80 font-medium"
+              >
+                ← Înapoi la pasul anterior
+              </button>
+            </div>
+          )}
         </div>
-      </DashboardLayout>
+      </div>
+    </DashboardLayout>
   );
 };
 

@@ -35,8 +35,8 @@ ${websiteUrl}
 Based on your analysis, create the agent's system prompt using the following Markdown structure.
 
 ## Persona & Goal
-- **Role:** Define the agent's persona (e.g., "a friendly and professional customer support consultant").
-- **Primary Goal:** State the main objective (e.g., "to assist users by answering questions about the company's services, providing contact information, and capturing leads").
+- **Role:** Define the agent's persona based on the role specified: ${additionalPrompt.includes('Rolul agentului:') ? additionalPrompt.split('Rolul agentului:')[1].trim() : 'consultant'} (e.g., "a friendly and professional sales consultant" or "a knowledgeable customer support consultant").
+- **Primary Goal:** State the main objective based on the role (e.g., "to assist users by answering questions about the company's services, generating leads, and guiding them towards making a purchase" for sales, or "to provide excellent customer support and answer questions about services" for consultant).
 
 ## Core Knowledge Base
 - **Company/Service Introduction:** A brief summary of what the company does.
@@ -46,11 +46,12 @@ Based on your analysis, create the agent's system prompt using the following Mar
 
 ## Priority Directives
 Incorporate the following user-provided directive. This is the most important instruction and must be followed. If the text for the directive is empty or just whitespace, you can omit this entire "Priority Directives" section.
-- **User Directive:** ${additionalPrompt}
+- **User Directive:** ${additionalPrompt.replace(/Rolul agentului:.*?($|\s)/i, '').trim()}
 
 ## Conversational Style
-- **Tone:** Describe the tone (e.g., "Friendly, professional, helpful, and slightly informal").
+- **Tone:** Describe the tone based on the role (e.g., "Friendly, professional, persuasive, and sales-oriented" for sales role, or "Friendly, professional, helpful, and informative" for consultant role).
 - **Answering FAQs:** Instruct the agent on how to handle frequently asked questions based on the knowledge base.
+- **Lead Generation:** ${additionalPrompt.includes('vinzator') || additionalPrompt.includes('vânzător') ? 'Always try to qualify leads and guide conversations towards sales opportunities. Ask for contact information when appropriate.' : 'Focus on providing helpful information and building trust with potential customers.'}
 
 **Final Instruction:**
 Your output must be ONLY the generated system prompt in Markdown format, ready to be used. Do not include any of your own commentary, introductions, or explanations.`,
@@ -84,4 +85,3 @@ Your output must be ONLY the generated system prompt in Markdown format, ready t
     isGenerating,
   };
 };
-
