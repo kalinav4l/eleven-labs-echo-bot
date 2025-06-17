@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -101,6 +100,15 @@ const Outbound = () => {
     fetchCallHistory();
   }, []);
 
+  const formatObjectAsJson = (obj: any): string => {
+    try {
+      return JSON.stringify(obj, null, 2);
+    } catch (error) {
+      console.error('Error formatting object as JSON:', error);
+      return String(obj);
+    }
+  };
+
   const handleCsvSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -201,29 +209,20 @@ const Outbound = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      // Verifică dacă răspunsul este CSV sau JSON
-      const contentType = response.headers.get('content-type');
-      console.log('Response content type:', contentType);
-      
       const responseText = await response.text();
       console.log('Response body (raw):', responseText);
 
-      // Dacă răspunsul începe cu header-ul CSV
-      if (responseText.includes('clean_conversations.status,')) {
-        console.log('Processing CSV response');
-        await processCsvResponse(responseText);
-        return { processed: true, type: 'csv' };
-      } else {
-        // Încearcă să parsezi ca JSON
-        try {
-          const result = JSON.parse(responseText);
-          console.log('Processing JSON response:', result);
-          return result;
-        } catch (jsonError) {
-          console.error('Error parsing JSON:', jsonError);
-          console.log('Raw response that failed JSON parsing:', responseText);
-          throw new Error('Răspunsul nu este nici CSV nici JSON valid');
-        }
+      try {
+        const result = JSON.parse(responseText);
+        console.log('Processing JSON response:', result);
+        
+        // Process the JSON response directly
+        await processWebhookResponse(result);
+        return result;
+      } catch (jsonError) {
+        console.error('Error parsing JSON:', jsonError);
+        console.log('Raw response that failed JSON parsing:', responseText);
+        throw new Error('Răspunsul nu este JSON valid');
       }
     } catch (error) {
       console.error('Error sending to webhook:', error);
@@ -231,89 +230,62 @@ const Outbound = () => {
     }
   };
 
-  const processCsvResponse = async (csvText: string) => {
+  const processWebhookResponse = async (result: any) => {
     try {
-      console.log('Processing CSV response:', csvText);
+      console.log('Processing webhook response:', result);
       
-      const lines = csvText.split('\n').filter(line => line.trim());
-      if (lines.length < 2) {
-        console.log('CSV has no data rows');
-        return;
+      let callResults: WebhookCallResult[] = [];
+      
+      // Handle the array structure from the webhook
+      if (Array.isArray(result)) {
+        callResults = result;
+        console.log('Result is array, using directly');
+      } else if (result?.response?.body && Array.isArray(result.response.body)) {
+        callResults = result.response.body;
+        console.log('Found call results in response.body');
+      } else if (result?.calls && Array.isArray(result.calls)) {
+        callResults = result.calls;
+        console.log('Found calls array in result');
       }
-
-      const headers = lines[0].split(',');
-      console.log('CSV Headers:', headers);
-
-      const callResults: any[] = [];
-
-      // Procesează fiecare linie de date (skip header)
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',');
-        console.log(`Processing CSV row ${i}:`, values);
-
-        if (values.length >= headers.length) {
-          const callResult: any = {};
-          
-          // Mapează valorile la header-uri
-          headers.forEach((header, index) => {
-            const cleanHeader = header.trim().replace(/"/g, '');
-            const value = values[index] ? values[index].trim().replace(/"/g, '') : '';
-            
-            // Creează structura nested pentru datele de apel
-            if (cleanHeader === 'clean_conversations.status') {
-              callResult.status = value;
-            } else if (cleanHeader === 'clean_conversations.call_info.language') {
-              callResult.language = value;
-            } else if (cleanHeader === 'clean_conversations.call_info.phone_numbers.user') {
-              callResult.phone = value;
-            } else if (cleanHeader === 'clean_conversations.summary') {
-              callResult.summary = value;
-            } else if (cleanHeader === 'clean_conversations..cost_info.total_cost') {
-              callResult.cost = parseFloat(value) || 0;
-            } else if (cleanHeader === 'clean_conversations.timestamps') {
-              callResult.timestamps = value;
-            } else if (cleanHeader.includes('dialog')) {
-              // Construiește dialogul
-              if (!callResult.dialog) callResult.dialog = [];
-              
-              if (cleanHeader.includes('speaker')) {
-                const dialogIndex = parseInt(cleanHeader.split('.')[3]) || 0;
-                if (!callResult.dialog[dialogIndex]) callResult.dialog[dialogIndex] = {};
-                callResult.dialog[dialogIndex].speaker = value;
-              } else if (cleanHeader.includes('message')) {
-                const dialogIndex = parseInt(cleanHeader.split('.')[3]) || 0;
-                if (!callResult.dialog[dialogIndex]) callResult.dialog[dialogIndex] = {};
-                callResult.dialog[dialogIndex].message = value;
-              }
-            }
-          });
-
-          callResults.push(callResult);
-        }
-      }
-
-      console.log('Parsed call results from CSV:', callResults);
-
+      
+      console.log('Extracted call results:', callResults);
+      
       if (callResults.length > 0) {
-        await saveCallResultsToSupabase(callResults);
-        await refreshCallHistory();
-        
+        try {
+          await saveCallResultsToSupabase(callResults);
+          await refreshCallHistory();
+          
+          toast({
+            title: "Apeluri finalizate",
+            description: `S-au primit și salvat rezultatele pentru ${callResults.length} apeluri.`
+          });
+        } catch (saveError) {
+          console.error('Error saving call results:', saveError);
+          toast({
+            title: "Eroare la salvare",
+            description: "Nu s-au putut salva rezultatele apelurilor.",
+            variant: "destructive"
+          });
+        }
+      } else {
+        console.log('No call results found in response');
         toast({
-          title: "Apeluri finalizate",
-          description: `S-au primit și salvat rezultatele pentru ${callResults.length} apeluri din CSV.`
+          title: "Rezultate primite",
+          description: "Răspunsul a fost primit dar nu conține rezultate de apeluri.",
+          variant: "destructive"
         });
       }
     } catch (error) {
-      console.error('Error processing CSV response:', error);
+      console.error('Error processing webhook response:', error);
       toast({
-        title: "Eroare la procesarea CSV",
-        description: "Nu s-au putut procesa datele CSV primite.",
+        title: "Eroare de procesare",
+        description: "Nu s-a putut procesa răspunsul de la webhook.",
         variant: "destructive"
       });
     }
   };
 
-  const saveCallResultsToSupabase = async (callResults: any[]) => {
+  const saveCallResultsToSupabase = async (callResults: WebhookCallResult[]) => {
     try {
       console.log('Saving call results to Supabase:', callResults);
       
@@ -321,11 +293,11 @@ const Outbound = () => {
         console.log(`Processing call result ${index}:`, result);
         
         // Defensive access to nested properties using optional chaining and nullish coalescing
-        const cleanConversations = result?.clean_conversations || {};
-        const callInfo = cleanConversations?.call_info || {};
-        const phoneNumbers = callInfo?.phone_numbers || {};
-        const dialog = cleanConversations?.dialog || [];
-        const costInfo = cleanConversations?.['']?.cost_info || {}; // Fixed the empty key access
+        const cleanConversations = result?.clean_conversations ?? {};
+        const callInfo = cleanConversations?.call_info ?? {};
+        const phoneNumbers = callInfo?.phone_numbers ?? {};
+        const dialog = cleanConversations?.dialog ?? [];
+        const costInfo = cleanConversations?.['']?.cost_info ?? {}; // Handle the empty key correctly
         
         // Safely extract phone number
         const phone = phoneNumbers?.user ?? '';
@@ -351,6 +323,9 @@ const Outbound = () => {
             .join('\n');
         }
         
+        // Format the entire result as JSON string for storage
+        const formattedJson = formatObjectAsJson(result);
+        
         // Parse timestamp safely
         let timestamp = new Date().toISOString();
         if (timestamps) {
@@ -367,7 +342,7 @@ const Outbound = () => {
           Number: phone ? parseFloat(phone.replace(/[^\d]/g, '')) || null : null,
           Telefon: phone,
           Concluzie: summary,
-          Dialog: dialogText,
+          Dialog: formattedJson, // Store the full JSON result in Dialog field
           Data: new Date(timestamp).getTime(),
           Cost: cost
         };
@@ -420,74 +395,6 @@ const Outbound = () => {
       }
     } catch (error) {
       console.error('Error refreshing call history:', error);
-    }
-  };
-
-  const processWebhookResponse = async (result: any) => {
-    try {
-      console.log('Processing webhook response:', result);
-      
-      // Check if the result contains call results directly
-      let callResults: WebhookCallResult[] = [];
-      
-      // Handle nested response structure with defensive access
-      if (result?.response?.body && Array.isArray(result.response.body)) {
-        callResults = result.response.body;
-        console.log('Found call results in response.body');
-      } else if (Array.isArray(result)) {
-        callResults = result;
-        console.log('Result is array, using directly');
-      } else if (result?.calls && Array.isArray(result.calls)) {
-        callResults = result.calls;
-        console.log('Found calls array in result');
-      } else if (result?.completed && result?.calls) {
-        callResults = result.calls;
-        console.log('Result is completed with calls');
-      } else {
-        // Try to find any array in the result
-        for (const key in result) {
-          if (Array.isArray(result[key])) {
-            callResults = result[key];
-            console.log(`Found array in result.${key}`);
-            break;
-          }
-        }
-      }
-      
-      console.log('Extracted call results:', callResults);
-      
-      if (callResults.length > 0) {
-        try {
-          await saveCallResultsToSupabase(callResults);
-          await refreshCallHistory();
-          
-          toast({
-            title: "Apeluri finalizate",
-            description: `S-au primit și salvat rezultatele pentru ${callResults.length} apeluri.`
-          });
-        } catch (saveError) {
-          console.error('Error saving call results:', saveError);
-          toast({
-            title: "Eroare la salvare",
-            description: "Nu s-au putut salva rezultatele apelurilor.",
-            variant: "destructive"
-          });
-        }
-      } else {
-        console.log('No call results found in response');
-        toast({
-          title: "Rezultate primite",
-          description: "Răspunsul a fost primit dar nu conține rezultate de apeluri.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Error processing webhook response:', error);
-      toast({
-        title: "Eroare de procesare",
-        description: "Nu s-a putut procesa răspunsul de la webhook.",
-        variant: "destructive"
-      });
     }
   };
 
@@ -957,7 +864,7 @@ const Outbound = () => {
                           Concluzie
                         </div>
                       </TableHead>
-                      <TableHead>Dialog</TableHead>
+                      <TableHead>Dialog JSON</TableHead>
                       <TableHead>
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4" />
@@ -984,8 +891,10 @@ const Outbound = () => {
                         <TableCell className="font-medium">{call.name}</TableCell>
                         <TableCell className="font-mono text-sm">{call.phone}</TableCell>
                         <TableCell className="text-sm">{call.conclusion}</TableCell>
-                        <TableCell className="text-sm max-w-xs truncate" title={call.dialog}>
-                          {call.dialog}
+                        <TableCell className="text-sm max-w-xs">
+                          <pre className="whitespace-pre-wrap text-xs bg-gray-50 p-2 rounded overflow-auto max-h-32">
+                            {call.dialog}
+                          </pre>
                         </TableCell>
                         <TableCell className="text-sm">{call.date}</TableCell>
                         <TableCell className="text-sm font-mono">${call.cost.toFixed(2)}</TableCell>
