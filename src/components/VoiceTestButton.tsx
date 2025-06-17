@@ -48,37 +48,17 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
     onMessage: (message) => {
       console.log('Message received:', message);
       
-      // Handle different message types
-      if (message.type === 'user_transcript') {
-        // User speaking
-        const userMessage: Message = {
-          id: Date.now().toString() + '_user',
-          text: message.message || message.text || '',
-          isUser: true,
+      // Handle the actual ElevenLabs message structure: { message: string; source: Role; }
+      if (message.message && typeof message.message === 'string') {
+        const transcriptionMessage: Message = {
+          id: Date.now().toString() + '_' + message.source,
+          text: message.message,
+          isUser: message.source === 'user',
           timestamp: new Date()
         };
-        console.log('User transcript:', userMessage);
-        onTranscription?.(userMessage);
-      } else if (message.type === 'agent_response' || message.type === 'agent_transcript') {
-        // Agent speaking
-        const agentMessage: Message = {
-          id: Date.now().toString() + '_agent',
-          text: message.message || message.text || '',
-          isUser: false,
-          timestamp: new Date()
-        };
-        console.log('Agent transcript:', agentMessage);
-        onTranscription?.(agentMessage);
-      } else if (message.message || message.text) {
-        // Fallback for any message with text content
-        const fallbackMessage: Message = {
-          id: Date.now().toString() + '_fallback',
-          text: message.message || message.text,
-          isUser: false, // Default to agent
-          timestamp: new Date()
-        };
-        console.log('Fallback transcript:', fallbackMessage);
-        onTranscription?.(fallbackMessage);
+        
+        console.log('Adding transcription:', transcriptionMessage);
+        onTranscription?.(transcriptionMessage);
       }
     },
     onError: (error) => {
