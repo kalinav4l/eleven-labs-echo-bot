@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,6 +46,51 @@ const Outbound = () => {
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
+
+  // Load call history from Supabase on component mount
+  useEffect(() => {
+    const fetchCallHistory = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('Outbound')
+          .select('*')
+          .order('Data', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching call history from Supabase:', error);
+          toast({
+            title: "Eroare la încărcare",
+            description: "Nu s-a putut încărca istoricul apelurilor.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        if (data) {
+          const loadedHistory: CallHistory[] = data.map((record: any) => ({
+            id: record.id ? String(record.id) : Date.now().toString() + Math.random(),
+            phone: record.Telefon || '',
+            name: record.Telefon || 'Necunoscut',
+            status: record.Status === 'success' ? 'success' : 'failed',
+            conclusion: record.Concluzie || '',
+            dialog: record.Dialog || '',
+            date: record.Data ? new Date(record.Data).toLocaleString('ro-RO') : '',
+            cost: record.Cost ? Number(record.Cost) : 0
+          }));
+          setCallHistory(loadedHistory);
+        }
+      } catch (error) {
+        console.error('Error in fetchCallHistory:', error);
+        toast({
+          title: "Eroare",
+          description: "A apărut o eroare la încărcarea istoricului apelurilor.",
+          variant: "destructive"
+        });
+      }
+    };
+
+    fetchCallHistory();
+  }, []);
 
   const handleCsvSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -211,34 +256,31 @@ const Outbound = () => {
             // Save to Supabase
             if (callResults.length > 0) {
               await saveCallResultsToSupabase(callResults);
-            }
-
-            // Process the results and add to call history for display
-            const newCallHistory: CallHistory[] = callResults.map((result: any) => {
-              const cleanConversations = result.clean_conversations;
-              const phone = cleanConversations.call_info?.phone_numbers?.user || '';
-              const dialogArray = cleanConversations.dialog || [];
-              const dialogText = dialogArray.map((d: any) => `${d.speaker}: ${d.message}`).join(' | ');
-              const cost = cleanConversations['']?.cost_info?.total_cost || 0;
-              const timestamp = cleanConversations.timestamps ? cleanConversations.timestamps.split('-')[0] : new Date().toISOString();
               
-              return {
-                id: Date.now().toString() + Math.random(),
-                phone: phone,
-                name: phone, // Using phone as name since we don't have name in response
-                status: cleanConversations.status === 'done' ? 'success' : 'failed',
-                conclusion: cleanConversations.summary || '',
-                dialog: dialogText,
-                date: new Date(timestamp).toLocaleString('ro-RO'),
-                cost: cost / 100 // Convert from cents to dollars
-              };
-            });
+              // Refresh call history by fetching from Supabase again
+              const { data } = await supabase
+                .from('Outbound')
+                .select('*')
+                .order('Data', { ascending: false });
 
-            setCallHistory(prev => [...newCallHistory, ...prev]);
+              if (data) {
+                const updatedHistory: CallHistory[] = data.map((record: any) => ({
+                  id: record.id ? String(record.id) : Date.now().toString() + Math.random(),
+                  phone: record.Telefon || '',
+                  name: record.Telefon || 'Necunoscut',
+                  status: record.Status === 'success' ? 'success' : 'failed',
+                  conclusion: record.Concluzie || '',
+                  dialog: record.Dialog || '',
+                  date: record.Data ? new Date(record.Data).toLocaleString('ro-RO') : '',
+                  cost: record.Cost ? Number(record.Cost) : 0
+                }));
+                setCallHistory(updatedHistory);
+              }
+            }
             
             toast({
               title: "Apeluri finalizate",
-              description: `S-au primit rezultatele pentru ${newCallHistory.length} apeluri.`
+              description: `S-au primit rezultatele pentru ${callResults.length} apeluri.`
             });
             
             return;
