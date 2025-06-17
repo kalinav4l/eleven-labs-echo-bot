@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Upload, Phone, FileText, Play, Users, Globe, MapPin, User, Search, Clock, DollarSign, MessageSquare, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Upload, Phone, FileText, Play, Users, Globe, MapPin, User, Search, Clock, DollarSign, MessageSquare, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Pause } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -46,6 +46,9 @@ const Outbound = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedDialog, setExpandedDialog] = useState<Set<string>>(new Set());
   const [expandedSummary, setExpandedSummary] = useState<Set<string>>(new Set());
+  const [currentCallIndex, setCurrentCallIndex] = useState(0);
+  const [processedContacts, setProcessedContacts] = useState<Set<string>>(new Set());
+  const [isPaused, setIsPaused] = useState(false);
 
   const { callHistory, isLoading, saveCallResults, refetch } = useCallHistory();
 
@@ -126,6 +129,11 @@ const Outbound = () => {
       }
 
       setContacts(parsedContacts);
+      // Reset progress when new contacts are loaded
+      setCurrentCallIndex(0);
+      setProcessedContacts(new Set());
+      setIsPaused(false);
+      
       toast({
         title: "Succes",
         description: `${parsedContacts.length} contacte au fost încărcate cu succes!`
@@ -161,9 +169,9 @@ const Outbound = () => {
     }
   };
 
-  const sendContactsToWebhook = async (contactsToSend: Contact[]) => {
+  const sendSingleContactToWebhook = async (contact: Contact) => {
     try {
-      console.log('Sending contacts to webhook:', contactsToSend);
+      console.log('Sending single contact to webhook:', contact);
       const response = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: {
@@ -171,7 +179,7 @@ const Outbound = () => {
         },
         body: JSON.stringify({
           agent_id: customAgentId,
-          contacts: contactsToSend,
+          contacts: [contact],
           timestamp: new Date().toISOString(),
           user_id: user?.id
         })
@@ -227,22 +235,22 @@ const Outbound = () => {
           await saveCallResults.mutateAsync(callResults);
           
           toast({
-            title: "Apeluri finalizate",
-            description: `S-au primit și salvat rezultatele pentru ${callResults.length} apeluri.`
+            title: "Apel finalizat",
+            description: `Rezultatul pentru apelul curent a fost salvat.`
           });
         } catch (saveError) {
           console.error('Error saving call results:', saveError);
           toast({
             title: "Eroare la salvare",
-            description: "Nu s-au putut salva rezultatele apelurilor.",
+            description: "Nu s-au putut salva rezultatele apelului.",
             variant: "destructive"
           });
         }
       } else {
         console.log('No call results found in response');
         toast({
-          title: "Rezultate primite",
-          description: "Răspunsul a fost primit dar nu conține rezultate de apeluri.",
+          title: "Rezultat primit",
+          description: "Răspunsul a fost primit dar nu conține rezultate de apel.",
           variant: "destructive"
         });
       }
@@ -256,68 +264,103 @@ const Outbound = () => {
     }
   };
 
-  const pollForResults = async (batchId: string) => {
-    console.log('Starting polling for batch:', batchId);
-    const maxAttempts = 30;
-    let attempts = 0;
+  const processContactsSequentially = async () => {
+    if (!customAgentId.trim()) {
+      toast({
+        title: "Eroare",
+        description: "Te rog introdu ID-ul agentului.",
+        variant: "destructive"
+      });
+      return;
+    }
 
-    const poll = async (): Promise<void> => {
-      try {
-        console.log(`Polling attempt ${attempts + 1}/${maxAttempts} for batch ${batchId}`);
-        const response = await fetch(`${WEBHOOK_URL}/results/${batchId}`);
-        
-        if (response.ok) {
-          const responseClone = response.clone();
-          let results: any;
-          
-          try {
-            results = await response.json();
-            console.log('Polling response received:', results);
-          } catch (jsonError) {
-            const rawResponseText = await responseClone.text();
-            console.error('Failed to parse JSON response:', jsonError);
-            console.error('Raw response text:', rawResponseText);
-            
-            toast({
-              title: "Eroare de parsare",
-              description: "Răspunsul de la webhook nu poate fi procesat ca JSON.",
-              variant: "destructive"
-            });
-            return;
-          }
-          
-          await processWebhookResponse(results);
-          return;
-        }
+    if (selectedContactIds.size === 0) {
+      toast({
+        title: "Eroare",
+        description: "Te rog selectează cel puțin un contact.",
+        variant: "destructive"
+      });
+      return;
+    }
 
-        attempts++;
-        if (attempts < maxAttempts) {
-          console.log(`Polling attempt ${attempts} failed, retrying in 10 seconds...`);
-          setTimeout(() => poll(), 10000);
-        } else {
-          console.log('Polling timeout reached');
-          toast({
-            title: "Timeout",
-            description: "Rezultatele apelurilor nu au fost primite în timp util.",
-            variant: "destructive"
-          });
-        }
-      } catch (error) {
-        console.error('Error polling for results:', error);
-        attempts++;
-        if (attempts < maxAttempts) {
-          setTimeout(() => poll(), 10000);
-        } else {
-          toast({
-            title: "Eroare de conectare",
-            description: "Nu s-a putut verifica statusul apelurilor.",
-            variant: "destructive"
-          });
-        }
+    setIsCallingAll(true);
+    setIsPaused(false);
+    
+    const selectedContacts = contacts.filter(c => selectedContactIds.has(c.id));
+    const startIndex = currentCallIndex;
+
+    toast({
+      title: "Procesare secvențială inițiată",
+      description: `Se vor procesa ${selectedContacts.length - startIndex} contacte unul câte unul.`
+    });
+
+    for (let i = startIndex; i < selectedContacts.length; i++) {
+      // Check if paused
+      if (isPaused) {
+        console.log('Processing paused by user');
+        break;
       }
-    };
 
-    poll();
+      const contact = selectedContacts[i];
+      setCurrentCallIndex(i);
+      
+      toast({
+        title: "Procesez contact",
+        description: `Apelând ${contact.name} (${i + 1}/${selectedContacts.length})`
+      });
+
+      try {
+        await sendSingleContactToWebhook(contact);
+        
+        // Mark contact as processed
+        setProcessedContacts(prev => new Set([...prev, contact.id]));
+        
+        // Wait 2 seconds before next call (to prevent overwhelming the webhook)
+        if (i < selectedContacts.length - 1 && !isPaused) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+        
+      } catch (error) {
+        console.error(`Error processing contact ${contact.name}:`, error);
+        toast({
+          title: "Eroare la contact",
+          description: `Nu s-a putut procesa ${contact.name}. Se continuă cu următorul.`,
+          variant: "destructive"
+        });
+      }
+    }
+
+    if (!isPaused) {
+      setCurrentCallIndex(0);
+      setProcessedContacts(new Set());
+      toast({
+        title: "Procesare completă",
+        description: "Toate contactele selectate au fost procesate."
+      });
+    }
+    
+    setIsCallingAll(false);
+  };
+
+  const handlePauseResume = () => {
+    if (isCallingAll) {
+      setIsPaused(!isPaused);
+      toast({
+        title: isPaused ? "Procesare reluată" : "Procesare întreruptă",
+        description: isPaused ? "Continuă cu următorul contact." : "Procesarea a fost întreruptă."
+      });
+    }
+  };
+
+  const handleStopProcessing = () => {
+    setIsCallingAll(false);
+    setIsPaused(false);
+    setCurrentCallIndex(0);
+    setProcessedContacts(new Set());
+    toast({
+      title: "Procesare oprită",
+      description: "Procesarea contactelor a fost oprită."
+    });
   };
 
   const handleContactSelect = (contactId: string) => {
@@ -349,7 +392,7 @@ const Outbound = () => {
     }
 
     try {
-      const result = await sendContactsToWebhook([contact]);
+      const result = await sendSingleContactToWebhook(contact);
       
       toast({
         title: "Apel inițiat",
@@ -364,49 +407,6 @@ const Outbound = () => {
         description: "Nu s-a putut iniția apelul.",
         variant: "destructive"
       });
-    }
-  };
-
-  const handleInitiateAllCalls = async () => {
-    if (!customAgentId.trim()) {
-      toast({
-        title: "Eroare",
-        description: "Te rog introdu ID-ul agentului.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (selectedContactIds.size === 0) {
-      toast({
-        title: "Eroare",
-        description: "Te rog selectează cel puțin un contact.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsCallingAll(true);
-    const selectedContacts = contacts.filter(c => selectedContactIds.has(c.id));
-
-    try {
-      const result = await sendContactsToWebhook(selectedContacts);
-      
-      toast({
-        title: "Apeluri inițiate",
-        description: `${selectedContacts.length} apeluri au fost trimise pentru procesare.`
-      });
-
-      console.log('Bulk call result:', result);
-    } catch (error) {
-      console.error('Error initiating calls:', error);
-      toast({
-        title: "Eroare",
-        description: "Nu s-au putut iniția apelurile.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsCallingAll(false);
     }
   };
 
@@ -589,23 +589,66 @@ const Outbound = () => {
                     </Button>
                   </div>
 
-                  <Button
-                    onClick={handleInitiateAllCalls}
-                    disabled={!customAgentId.trim() || selectedContactIds.size === 0 || isCallingAll}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    {isCallingAll ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Inițiază Apeluri...
+                  {/* Progress indicator */}
+                  {isCallingAll && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-blue-900">
+                          Progres: {currentCallIndex + 1} / {contacts.filter(c => selectedContactIds.has(c.id)).length}
+                        </span>
+                        <span className="text-sm text-blue-700">
+                          {isPaused ? 'Întrerupt' : 'În procesare...'}
+                        </span>
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Play className="w-4 h-4" />
-                        Inițiază Apeluri Selectate ({selectedContactIds.size})
+                      <div className="w-full bg-blue-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                          style={{ 
+                            width: `${((currentCallIndex + 1) / contacts.filter(c => selectedContactIds.has(c.id)).length) * 100}%` 
+                          }}
+                        />
                       </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={processContactsSequentially}
+                      disabled={!customAgentId.trim() || selectedContactIds.size === 0 || isCallingAll}
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      {isCallingAll ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Procesează Secvențial...
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Play className="w-4 h-4" />
+                          Procesează Secvențial ({selectedContactIds.size})
+                        </div>
+                      )}
+                    </Button>
+
+                    {isCallingAll && (
+                      <>
+                        <Button
+                          onClick={handlePauseResume}
+                          variant="outline"
+                          className="px-3"
+                        >
+                          {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+                        </Button>
+                        <Button
+                          onClick={handleStopProcessing}
+                          variant="destructive"
+                          className="px-3"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </Button>
+                      </>
                     )}
-                  </Button>
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -658,6 +701,7 @@ const Outbound = () => {
                           Locație
                         </div>
                       </TableHead>
+                      <TableHead>Status</TableHead>
                       <TableHead>Acțiuni</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -677,11 +721,26 @@ const Outbound = () => {
                         <TableCell>{contact.country}</TableCell>
                         <TableCell>{contact.location}</TableCell>
                         <TableCell>
+                          {processedContacts.has(contact.id) ? (
+                            <span className="flex items-center gap-1 text-green-600 text-sm">
+                              <CheckCircle className="w-4 h-4" />
+                              Procesat
+                            </span>
+                          ) : selectedContactIds.has(contact.id) && isCallingAll && contacts.indexOf(contact) === currentCallIndex ? (
+                            <span className="flex items-center gap-1 text-blue-600 text-sm">
+                              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                              În procesare
+                            </span>
+                          ) : (
+                            <span className="text-gray-500 text-sm">În așteptare</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleInitiateCall(contact)}
-                            disabled={!customAgentId.trim()}
+                            disabled={!customAgentId.trim() || isCallingAll}
                             className="border-accent text-accent hover:bg-accent/10"
                           >
                             <Phone className="w-4 h-4" />
@@ -845,8 +904,8 @@ const Outbound = () => {
                 <p className="text-sm text-muted-foreground">Nume, Telefon, Țara, Locație</p>
               </div>
               <div>
-                <h3 className="font-semibold text-foreground mb-2">Webhook</h3>
-                <p className="text-sm text-muted-foreground">N8N Integration</p>
+                <h3 className="font-semibold text-foreground mb-2">Procesare Secvențială</h3>
+                <p className="text-sm text-muted-foreground">Un contact la un timp</p>
               </div>
               <div>
                 <h3 className="font-semibold text-foreground mb-2">Rezultate</h3>
