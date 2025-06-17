@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -5,14 +6,6 @@ import { useAuth } from '@/components/AuthContext';
 import { elevenLabsApi, CreateAgentRequest, TTSConfig } from '../utils/apiService';
 import { API_CONFIG, MESSAGES } from '../constants/constants';
 import { useClipboard } from './useClipboard.ts';
-
-interface CreateAgentParams {
-  agentName: string;
-  agentLanguage: string;
-  selectedVoice: string;
-  websiteUrl: string;
-  prompt: string;
-}
 
 interface CreateAgentParams {
   agentName: string;
@@ -92,22 +85,29 @@ export const useAgentCreation = ({
       const agentData = await elevenLabsApi.createAgent(requestBody);
       console.log('Agent created:', agentData);
 
-      // Save to Supabase
+      // Save to Supabase with the correct ElevenLabs agent ID
       if (user) {
         const { error: supabaseError } = await supabase
             .from('kalina_agents')
             .insert({
-              agent_id: `agent_${Date.now()}`,
+              agent_id: agentData.agent_id, // Use the actual ElevenLabs agent ID
               elevenlabs_agent_id: agentData.agent_id,
               name: agentName,
               description: `Agent consultant generat automat pentru ${websiteUrl}`,
               system_prompt: prompt,
               voice_id: selectedVoice,
               user_id: user.id,
+              provider: 'elevenlabs',
+              is_active: true,
             });
 
         if (supabaseError) {
           console.error('Error saving to Supabase:', supabaseError);
+          toast({
+            title: "Avertisment",
+            description: "Agentul a fost creat în ElevenLabs dar nu a putut fi salvat în baza de date.",
+            variant: "destructive",
+          });
         }
       }
 
@@ -178,4 +178,3 @@ export const useAgentCreation = ({
     handleCopyAgentId,
   };
 };
-

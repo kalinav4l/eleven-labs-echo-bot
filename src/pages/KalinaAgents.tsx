@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bot, Plus, Settings, Phone, Trash2, Power, PowerOff } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Bot, Plus, Settings, Phone, Trash2, Power, PowerOff, Search } from 'lucide-react';
 import { useUserAgents } from '@/hooks/useUserAgents';
 import { useAgentOperations } from '@/hooks/useAgentOperations';
 import {
@@ -29,6 +30,19 @@ import {
 const KalinaAgents = () => {
   const { data: userAgents, isLoading } = useUserAgents();
   const { deactivateAgent, activateAgent, deleteAgent, isDeleting } = useAgentOperations();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter agents based on search query
+  const filteredAgents = useMemo(() => {
+    if (!userAgents) return [];
+    if (!searchQuery.trim()) return userAgents;
+    
+    return userAgents.filter(agent => 
+      agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      agent.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      agent.agent_id.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [userAgents, searchQuery]);
 
   const handleToggleAgentStatus = (agent: any) => {
     if (agent.is_active) {
@@ -70,9 +84,20 @@ const KalinaAgents = () => {
           </Link>
         </div>
 
+        {/* Search Input */}
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Caută agenți..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 glass-input"
+          />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {userAgents && userAgents.length > 0 ? (
-            userAgents.map((agent) => (
+          {filteredAgents && filteredAgents.length > 0 ? (
+            filteredAgents.map((agent) => (
               <Card key={agent.id} className="liquid-glass animate-fade-in hover:shadow-lg transition-all">
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -178,6 +203,27 @@ const KalinaAgents = () => {
                 </CardContent>
               </Card>
             ))
+          ) : searchQuery.trim() ? (
+            <Card className="liquid-glass animate-fade-in hover:shadow-lg transition-all border-dashed border-2 border-border col-span-full">
+              <CardContent className="flex flex-col items-center justify-center h-full py-12 text-center space-y-4">
+                <div className="w-12 h-12 bg-muted/50 rounded-lg flex items-center justify-center">
+                  <Search className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Nu s-au găsit agenți</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Nu există agenți care să corespundă căutării "{searchQuery}"
+                  </p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setSearchQuery('')}
+                  className="glass-button border-border"
+                >
+                  Șterge căutarea
+                </Button>
+              </CardContent>
+            </Card>
           ) : (
             <Card className="liquid-glass animate-fade-in hover:shadow-lg transition-all border-dashed border-2 border-border col-span-full">
               <CardContent className="flex flex-col items-center justify-center h-full py-12 text-center space-y-4">
