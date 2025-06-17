@@ -17,13 +17,11 @@ const AgentConsultant = () => {
   const defaultModelId = "eleven_flash_v2_5";
   const { user } = useAuth();
   const [websiteUrl, setWebsiteUrl] = useState('');
-  const [generatedPrompt, setGeneratedPrompt] = useState('');
   const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
   const [additionalPrompt, setAdditionalPrompt] = useState('');
   
   // Agent creation form
   const [agentName, setAgentName] = useState('');
-  const [agentPrompt, setAgentPrompt] = useState('');
   const [agentLanguage, setAgentLanguage] = useState('ro');
   const [selectedVoice, setSelectedVoice] = useState('cjVigY5qzO86Huf0OWal');
   const [isCreatingAgent, setIsCreatingAgent] = useState(false);
@@ -96,8 +94,6 @@ const AgentConsultant = () => {
       if (error) throw error;
 
       const newPrompt = data.response;
-      setGeneratedPrompt(newPrompt);
-      setAgentPrompt(newPrompt);
       toast({
         title: "Succes!",
         description: "Promptul a fost generat cu succes"
@@ -209,7 +205,7 @@ const AgentConsultant = () => {
           agent: {
             language: agentLanguage,
             prompt: {
-              prompt: agentPrompt
+              prompt: newlyGeneratedPrompt
             }
           },
           tts: ttsConfig
@@ -242,7 +238,7 @@ const AgentConsultant = () => {
             elevenlabs_agent_id: agentData.agent_id,
             name: agentName,
             description: `Agent consultant generat automat pentru ${websiteUrl}`,
-            system_prompt: agentPrompt,
+            system_prompt: newlyGeneratedPrompt,
             voice_id: selectedVoice,
             user_id: user.id
           });
