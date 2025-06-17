@@ -1,13 +1,13 @@
-
 import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Bot, Plus, Settings, Phone, Trash2, Power, PowerOff, Search } from 'lucide-react';
+import { Bot, Plus, Settings, Phone, Trash2, Power, PowerOff, Search, Copy } from 'lucide-react';
 import { useUserAgents } from '@/hooks/useUserAgents';
 import { useAgentOperations } from '@/hooks/useAgentOperations';
+import { useClipboard } from '@/hooks/useClipboard';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -30,7 +30,9 @@ import {
 const KalinaAgents = () => {
   const { data: userAgents, isLoading } = useUserAgents();
   const { deactivateAgent, activateAgent, deleteAgent, isDeleting } = useAgentOperations();
+  const { copyToClipboard } = useClipboard();
   const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
 
   // Filter agents based on search query
   const filteredAgents = useMemo(() => {
@@ -54,6 +56,14 @@ const KalinaAgents = () => {
 
   const handleDeleteAgent = (agent: any) => {
     deleteAgent({ id: agent.id, agent_id: agent.agent_id });
+  };
+
+  const handleEditAgent = (agentId: string) => {
+    navigate(`/account/agent-edit/${agentId}`);
+  };
+
+  const handleCopyAgentId = async (agentId: string) => {
+    await copyToClipboard(agentId);
   };
 
   if (isLoading) {
@@ -182,7 +192,19 @@ const KalinaAgents = () => {
                       </div>
                       <div>
                         <span className="text-muted-foreground">Agent ID:</span>
-                        <p className="font-semibold text-accent text-xs">{agent.agent_id}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-accent text-xs truncate max-w-[120px]" title={agent.agent_id}>
+                            {agent.agent_id}
+                          </p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleCopyAgentId(agent.agent_id)}
+                            className="h-6 w-6 p-0 hover:bg-accent/20"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
 
@@ -195,7 +217,12 @@ const KalinaAgents = () => {
                         <Phone className="w-4 h-4 mr-2" />
                         Test Apel
                       </Button>
-                      <Button variant="outline" size="sm" className="glass-button border-border">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="glass-button border-border"
+                        onClick={() => handleEditAgent(agent.agent_id)}
+                      >
                         Editează
                       </Button>
                     </div>
