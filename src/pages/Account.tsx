@@ -1,157 +1,196 @@
 
 import React from 'react';
 import { useAuth } from '@/components/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity, Bot, MessageSquare, Phone, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { MessageSquare, Bot, Users, TrendingUp, Plus, Phone } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useUserStats } from '@/hooks/useUserStats';
+import { useUserAgents } from '@/hooks/useUserAgents';
+import { useUserConversations } from '@/hooks/useUserConversations';
 
 const Account = () => {
   const { user } = useAuth();
-  const { data: stats, isLoading } = useUserStats();
+  const { data: stats } = useUserStats();
+  const { data: userAgents } = useUserAgents();
+  const { data: conversations } = useUserConversations();
 
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="p-6">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200/50 rounded w-1/4 mb-2"></div>
-            <div className="h-4 bg-gray-200/50 rounded w-1/2 mb-8"></div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-32 bg-gray-200/50 rounded-xl"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  const formatTimeAgo = (date: string) => {
+    const now = new Date();
+    const conversationDate = new Date(date);
+    const diffInMinutes = Math.floor((now.getTime() - conversationDate.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 60) {
+      return `Acum ${diffInMinutes} ${diffInMinutes === 1 ? 'minut' : 'minute'}`;
+    } else if (diffInMinutes < 1440) {
+      const hours = Math.floor(diffInMinutes / 60);
+      return `Acum ${hours} ${hours === 1 ? 'oră' : 'ore'}`;
+    } else {
+      const days = Math.floor(diffInMinutes / 1440);
+      return `Acum ${days} ${days === 1 ? 'zi' : 'zile'}`;
+    }
+  };
 
   return (
     <DashboardLayout>
       <div className="p-6">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard</h1>
-          <p className="text-muted-foreground">Privire de ansamblu asupra activității tale</p>
+          <h1 className="text-3xl font-bold text-black mb-2">
+            Bun venit, {user.email?.split('@')[0]}!
+          </h1>
+          <p className="text-gray-600">Iată o privire de ansamblu asupra activității tale</p>
         </div>
 
-        {/* Statistics Cards */}
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="liquid-glass hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <MessageSquare className="h-8 w-8 text-accent" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Conversații Totale</p>
-                  <p className="text-2xl font-bold text-foreground">{stats?.total_conversations || 0}</p>
-                </div>
+          <Card className="bg-white border-gray-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">
+                Conversații Totale
+              </CardTitle>
+              <MessageSquare className="h-4 w-4 text-gray-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-black">
+                {stats?.total_conversations || 0}
               </div>
+              <p className="text-xs text-gray-600">
+                +{Math.floor((stats?.total_conversations || 0) * 0.1)} din luna trecută
+              </p>
             </CardContent>
           </Card>
 
-          <Card className="liquid-glass hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Activity className="h-8 w-8 text-accent" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Mesaje Totale</p>
-                  <p className="text-2xl font-bold text-foreground">{stats?.total_messages || 0}</p>
-                </div>
+          <Card className="bg-white border-gray-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">
+                Agenți Activi
+              </CardTitle>
+              <Bot className="h-4 w-4 text-gray-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-black">
+                {userAgents?.length || 0}
               </div>
+              <p className="text-xs text-gray-600">
+                +{userAgents?.length || 0} agenți configurați
+              </p>
             </CardContent>
           </Card>
 
-          <Card className="liquid-glass hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Phone className="h-8 w-8 text-accent" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Apeluri Vocale</p>
-                  <p className="text-2xl font-bold text-foreground">{stats?.total_voice_calls || 0}</p>
-                </div>
+          <Card className="bg-white border-gray-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">
+                Minute Vorbite
+              </CardTitle>
+              <Phone className="h-4 w-4 text-gray-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-black">
+                {Math.floor(stats?.total_minutes_talked || 0)}
               </div>
+              <p className="text-xs text-gray-600">
+                Total minute de conversație
+              </p>
             </CardContent>
           </Card>
 
-          <Card className="liquid-glass hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Clock className="h-8 w-8 text-accent" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Minute Vorbite</p>
-                  <p className="text-2xl font-bold text-foreground">{Math.round(stats?.total_minutes_talked || 0)}</p>
-                </div>
-              </div>
+          <Card className="bg-white border-gray-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">
+                Rata de Succes
+              </CardTitle>
+              <TrendingUp className="h-4 w-4 text-gray-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-black">94%</div>
+              <p className="text-xs text-gray-600">
+                Satisfacția clienților
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Recent Activity and Agents */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="liquid-glass hover:shadow-lg transition-shadow">
+          {/* Recent Conversations */}
+          <Card className="bg-white border-gray-200">
             <CardHeader>
-              <CardTitle className="text-foreground">Activitate Recentă</CardTitle>
+              <CardTitle className="text-black">Conversații Recente</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center space-x-4">
-                  <div className="w-2 h-2 bg-accent rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="text-foreground text-sm">Conversație nouă cu clientul</p>
-                    <p className="text-muted-foreground text-xs">Acum 5 minute</p>
+                {conversations && conversations.length > 0 ? (
+                  conversations.map((conversation, index) => (
+                    <div key={conversation.id} className="flex items-center space-x-4">
+                      <div className="w-2 h-2 bg-black rounded-full"></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-black">
+                          {conversation.title || `Conversație cu ${conversation.agent_name}`}
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          {formatTimeAgo(conversation.created_at)}
+                        </p>
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        {conversation.message_count} mesaje
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600 text-sm">Nu ai conversații încă</p>
+                    <p className="text-gray-500 text-xs mt-1">Creează un agent pentru a începe</p>
                   </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <div className="w-2 h-2 bg-muted-foreground rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="text-foreground text-sm">Agent actualizat cu succes</p>
-                    <p className="text-muted-foreground text-xs">Acum 1 oră</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <div className="w-2 h-2 bg-secondary-foreground rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="text-foreground text-sm">Test agent finalizat</p>
-                    <p className="text-muted-foreground text-xs">Acum 2 ore</p>
-                  </div>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="liquid-glass hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="text-foreground">Agenți Configurați</CardTitle>
+          {/* Configured Agents */}
+          <Card className="bg-white border-gray-200">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-black">Agenți Configurați</CardTitle>
+              <Link to="/account/agent-consultant">
+                <Button variant="outline" size="sm" className="border-gray-300 text-gray-700 hover:bg-gray-100">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Adaugă Agent
+                </Button>
+              </Link>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-gray-50/50 rounded-lg">
-                  <div>
-                    <p className="text-foreground font-medium">Borea</p>
-                    <p className="text-muted-foreground text-sm">Activ • Agent Conversational</p>
+                {userAgents && userAgents.length > 0 ? (
+                  userAgents.slice(0, 3).map((agent) => (
+                    <div key={agent.id} className="flex items-center space-x-4">
+                      <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <Bot className="w-4 h-4 text-gray-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-black">{agent.name}</p>
+                        <p className="text-xs text-gray-600">
+                          {agent.provider} • Creat {formatTimeAgo(agent.created_at)}
+                        </p>
+                      </div>
+                      <div className="w-2 h-2 bg-black rounded-full"></div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                      <Bot className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <p className="text-gray-600 text-sm">Nu ai agenți configurați</p>
+                    <Link to="/account/agent-consultant">
+                      <Button size="sm" className="mt-3 bg-black hover:bg-gray-800 text-white">
+                        Creează primul agent
+                      </Button>
+                    </Link>
                   </div>
-                  <div className="w-3 h-3 bg-accent rounded-full"></div>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50/50 rounded-lg">
-                  <div>
-                    <p className="text-foreground font-medium">Jesica</p>
-                    <p className="text-muted-foreground text-sm">Activ • Assistant Personal</p>
-                  </div>
-                  <div className="w-3 h-3 bg-accent rounded-full"></div>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50/50 rounded-lg">
-                  <div>
-                    <p className="text-foreground font-medium">Ana</p>
-                    <p className="text-muted-foreground text-sm">Activ • Support Client</p>
-                  </div>
-                  <div className="w-3 h-3 bg-accent rounded-full"></div>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>
