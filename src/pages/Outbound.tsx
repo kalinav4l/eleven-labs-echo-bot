@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import type { WebhookCallResponse } from '@/types/webhook';
+import { useCallHistory } from '@/hooks/useCallHistory';
 
 interface Contact {
   id: string;
