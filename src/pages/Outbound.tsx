@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -6,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Upload, Phone, FileText, Play, Users, Globe, MapPin, User } from 'lucide-react';
+import { Upload, Phone, FileText, Play, Users, Globe, MapPin, User, Search, Clock, DollarSign, MessageSquare, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/components/ui/use-toast';
@@ -20,6 +19,17 @@ interface Contact {
   location: string;
 }
 
+interface CallHistory {
+  id: string;
+  phone: string;
+  name: string;
+  status: 'success' | 'failed' | 'busy' | 'no-answer';
+  conclusion: string;
+  dialog: string;
+  date: string;
+  cost: number;
+}
+
 const Outbound = () => {
   const { user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -28,6 +38,8 @@ const Outbound = () => {
   const [customAgentId, setCustomAgentId] = useState('');
   const [selectedContactIds, setSelectedContactIds] = useState<Set<string>>(new Set());
   const [isCallingAll, setIsCallingAll] = useState(false);
+  const [callHistory, setCallHistory] = useState<CallHistory[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const { initiateCall, isInitiating } = useCallInitiation({
     customAgentId,
@@ -148,6 +160,20 @@ const Outbound = () => {
     }
 
     await initiateCall(customAgentId, contact.phone);
+    
+    // Simulate adding to call history (in real implementation, this would come from the API response)
+    const newCallRecord: CallHistory = {
+      id: Date.now().toString(),
+      phone: contact.phone,
+      name: contact.name,
+      status: Math.random() > 0.3 ? 'success' : 'failed',
+      conclusion: 'Apel finalizat cu succes',
+      dialog: 'Agent: Bună ziua! / User: Bună ziua, cu ce vă pot ajuta?',
+      date: new Date().toLocaleString('ro-RO'),
+      cost: Math.round((Math.random() * 0.5 + 0.1) * 100) / 100
+    };
+    
+    setCallHistory(prev => [newCallRecord, ...prev]);
   };
 
   const handleInitiateAllCalls = async () => {
@@ -175,6 +201,21 @@ const Outbound = () => {
     for (const contact of selectedContacts) {
       try {
         await initiateCall(customAgentId, contact.phone);
+        
+        // Simulate adding to call history
+        const newCallRecord: CallHistory = {
+          id: Date.now().toString() + Math.random(),
+          phone: contact.phone,
+          name: contact.name,
+          status: Math.random() > 0.3 ? 'success' : Math.random() > 0.5 ? 'busy' : 'no-answer',
+          conclusion: 'Apel finalizat',
+          dialog: 'Agent: Bună ziua! / User: Bună ziua, cu ce vă pot ajuta?',
+          date: new Date().toLocaleString('ro-RO'),
+          cost: Math.round((Math.random() * 0.5 + 0.1) * 100) / 100
+        };
+        
+        setCallHistory(prev => [newCallRecord, ...prev]);
+        
         // Add delay between calls
         await new Promise(resolve => setTimeout(resolve, 2000));
       } catch (error) {
@@ -188,6 +229,41 @@ const Outbound = () => {
       description: `S-au inițiat apelurile pentru ${selectedContacts.length} contacte.`
     });
   };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'success':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'failed':
+        return <XCircle className="w-4 h-4 text-red-500" />;
+      case 'busy':
+        return <AlertCircle className="w-4 h-4 text-yellow-500" />;
+      case 'no-answer':
+        return <AlertCircle className="w-4 h-4 text-gray-500" />;
+      default:
+        return <AlertCircle className="w-4 h-4 text-gray-500" />;
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'success':
+        return 'Succes';
+      case 'failed':
+        return 'Eșuat';
+      case 'busy':
+        return 'Ocupat';
+      case 'no-answer':
+        return 'Nu răspunde';
+      default:
+        return 'Necunoscut';
+    }
+  };
+
+  const filteredCallHistory = callHistory.filter(call => 
+    call.phone.includes(searchTerm) || 
+    call.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <DashboardLayout>
@@ -419,6 +495,107 @@ const Outbound = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Call History Section */}
+        <Card className="liquid-glass mt-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3">
+              <Clock className="w-6 h-6 text-accent" />
+              Istoric Apeluri ({callHistory.length})
+            </CardTitle>
+            <div className="flex items-center gap-4 mt-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  placeholder="Caută după numărul de telefon sau nume..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {filteredCallHistory.length > 0 ? (
+              <div className="max-h-96 overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Status</TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4" />
+                          Nume
+                        </div>
+                      </TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-2">
+                          <Phone className="w-4 h-4" />
+                          Telefon
+                        </div>
+                      </TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="w-4 h-4" />
+                          Concluzie
+                        </div>
+                      </TableHead>
+                      <TableHead>Dialog</TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          Data
+                        </div>
+                      </TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="w-4 h-4" />
+                          Cost
+                        </div>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredCallHistory.map((call) => (
+                      <TableRow key={call.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {getStatusIcon(call.status)}
+                            <span className="text-sm">{getStatusText(call.status)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium">{call.name}</TableCell>
+                        <TableCell className="font-mono text-sm">{call.phone}</TableCell>
+                        <TableCell className="text-sm">{call.conclusion}</TableCell>
+                        <TableCell className="text-sm max-w-xs truncate" title={call.dialog}>
+                          {call.dialog}
+                        </TableCell>
+                        <TableCell className="text-sm">{call.date}</TableCell>
+                        <TableCell className="text-sm font-mono">${call.cost.toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  {searchTerm ? 'Nu s-au găsit apeluri care să se potrivească cu termenul de căutare.' : 'Nu există încă apeluri în istoric.'}
+                </p>
+                {searchTerm && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setSearchTerm('')}
+                    className="mt-2"
+                  >
+                    Șterge filtrul
+                  </Button>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Info Section */}
         <Card className="liquid-glass mt-8">
