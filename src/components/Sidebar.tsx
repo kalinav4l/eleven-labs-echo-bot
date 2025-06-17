@@ -56,17 +56,17 @@ const Sidebar = ({
 
           <Link to="/account/transcript" className={`${location.pathname === '/account/transcript' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors`}>
             <FileText className="mr-3 h-6 w-6" />
-            Transcript
+            transcript
           </Link>
 
           <Link to="/account/outbound" className={`${location.pathname === '/account/outbound' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors`}>
             <PhoneCall className="mr-3 h-6 w-6" />
-            Outbound
+            outbound
           </Link>
 
           <Link to="/account/settings" className={`${location.pathname === '/account/settings' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors`}>
             <Settings className="mr-3 h-6 w-6" />
-            Setări
+            seting
           </Link>
         </div>
       </div>
