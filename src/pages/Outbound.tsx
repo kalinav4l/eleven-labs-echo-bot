@@ -346,6 +346,7 @@ const Outbound = () => {
       setSelectedContactIds(new Set(contacts.map(c => c.id)));
     }
   };
+
   const handleSelectAllCalls = () => {
     if (selectedCallIds.size === filteredCallHistory.length) {
       setSelectedCallIds(new Set());
@@ -353,6 +354,7 @@ const Outbound = () => {
       setSelectedCallIds(new Set(filteredCallHistory.map(call => call.id)));
     }
   };
+
   const handleDeleteSelected = async () => {
     if (selectedCallIds.size === 0) {
       toast({
@@ -502,6 +504,16 @@ const Outbound = () => {
     call.phone_number.includes(searchTerm) || 
     call.contact_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleCallSelect = (callId: string) => {
+    const newSelected = new Set(selectedCallIds);
+    if (newSelected.has(callId)) {
+      newSelected.delete(callId);
+    } else {
+      newSelected.add(callId);
+    }
+    setSelectedCallIds(newSelected);
+  };
 
   return (
     <DashboardLayout>
