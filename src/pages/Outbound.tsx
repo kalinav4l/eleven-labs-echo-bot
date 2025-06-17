@@ -500,30 +500,6 @@ const Outbound = () => {
     setExpandedSummary(newExpanded);
   };
 
-  const extractFirstThreeWordsFromDialog = (dialogJson: string): string => {
-    try {
-      const parsed = JSON.parse(dialogJson);
-      const cleanConversations = parsed?.clean_conversations;
-      const dialog = cleanConversations?.dialog || [];
-      
-      if (Array.isArray(dialog) && dialog.length > 0) {
-        const firstMessage = dialog[0]?.message || '';
-        const words = firstMessage.split(' ').slice(0, 3);
-        return words.length > 0 ? words.join(' ') + '...' : 'Nu există dialog';
-      }
-      return 'Nu există dialog';
-    } catch (error) {
-      console.error('Error parsing dialog JSON:', error);
-      return 'Eroare dialog';
-    }
-  };
-
-  const handleRowDoubleClick = (call: CallHistory) => {
-    // Open detailed view in new window/tab
-    const detailUrl = `/call-details/${call.id}`;
-    window.open(detailUrl, '_blank');
-  };
-
   const filteredCallHistory = callHistory.filter(call => 
     call.phone_number.includes(searchTerm) || 
     call.contact_name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -857,11 +833,7 @@ const Outbound = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredCallHistory.map((call) => (
-                      <TableRow 
-                        key={call.id}
-                        onDoubleClick={() => handleRowDoubleClick(call)}
-                        className="cursor-pointer hover:bg-muted/50"
-                      >
+                      <TableRow key={call.id}>
                         <TableCell>
                           <Checkbox 
                             checked={selectedCallIds.has(call.id)}
@@ -899,9 +871,26 @@ const Outbound = () => {
                           </Collapsible>
                         </TableCell>
                         <TableCell className="text-sm">
-                          <span className="text-blue-600 underline cursor-pointer text-xs">
-                            {extractFirstThreeWordsFromDialog(call.dialog_json)}
-                          </span>
+                          <Collapsible>
+                            <CollapsibleTrigger 
+                              className="flex items-center gap-2 hover:text-accent cursor-pointer"
+                              onClick={() => toggleExpandedDialog(call.id)}
+                            >
+                              <span className="text-blue-600 underline">Vezi Dialog</span>
+                              {expandedDialog.has(call.id) ? (
+                                <ChevronUp className="w-4 h-4" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4" />
+                              )}
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="mt-2">
+                              <div className="bg-gray-50 p-3 rounded max-w-sm max-h-64 overflow-auto">
+                                <pre className="whitespace-pre-wrap text-xs">
+                                  {extractDialogFromJson(call.dialog_json)}
+                                </pre>
+                              </div>
+                            </CollapsibleContent>
+                          </Collapsible>
                         </TableCell>
                         <TableCell className="text-sm">{call.call_date}</TableCell>
                         <TableCell className="text-sm font-mono">{call.cost_usd}</TableCell>
