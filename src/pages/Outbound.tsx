@@ -14,7 +14,6 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useCallHistory } from '@/hooks/useCallHistory';
-
 interface Contact {
   id: string;
   name: string;
@@ -22,7 +21,6 @@ interface Contact {
   country: string;
   location: string;
 }
-
 interface CallHistory {
   id: string;
   phone_number: string;
@@ -35,9 +33,10 @@ interface CallHistory {
   agent_id?: string;
   language?: string;
 }
-
 const Outbound = () => {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [isUploadingCsv, setIsUploadingCsv] = useState(false);
@@ -51,15 +50,18 @@ const Outbound = () => {
   const [currentCallIndex, setCurrentCallIndex] = useState(0);
   const [processedContacts, setProcessedContacts] = useState<Set<string>>(new Set());
   const [isPaused, setIsPaused] = useState(false);
-
-  const { callHistory, isLoading, saveCallResults, deleteCallHistory, deleteAllCallHistory, refetch } = useCallHistory();
-
+  const {
+    callHistory,
+    isLoading,
+    saveCallResults,
+    deleteCallHistory,
+    deleteAllCallHistory,
+    refetch
+  } = useCallHistory();
   const WEBHOOK_URL = 'https://zuckerberg.aichat.md/webhook/telefonie-sunat';
-
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
-
   const formatObjectAsJson = (obj: any): string => {
     try {
       return JSON.stringify(obj, null, 2);
@@ -68,7 +70,6 @@ const Outbound = () => {
       return String(obj);
     }
   };
-
   const handleCsvSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -87,7 +88,6 @@ const Outbound = () => {
       });
     }
   };
-
   const parseCsvData = (csvText: string): Contact[] => {
     const lines = csvText.split('\n').filter(line => line.trim());
     const contacts: Contact[] = [];
@@ -110,7 +110,6 @@ const Outbound = () => {
     }
     return contacts;
   };
-
   const handleUploadCsv = async () => {
     if (!csvFile) {
       toast({
@@ -120,22 +119,18 @@ const Outbound = () => {
       });
       return;
     }
-
     setIsUploadingCsv(true);
     try {
       const csvText = await csvFile.text();
       const parsedContacts = parseCsvData(csvText);
-      
       if (parsedContacts.length === 0) {
         throw new Error('Nu s-au găsit contacte valide în fișierul CSV');
       }
-
       setContacts(parsedContacts);
       // Reset progress when new contacts are loaded
       setCurrentCallIndex(0);
       setProcessedContacts(new Set());
       setIsPaused(false);
-      
       toast({
         title: "Succes",
         description: `${parsedContacts.length} contacte au fost încărcate cu succes!`
@@ -151,33 +146,27 @@ const Outbound = () => {
       setIsUploadingCsv(false);
     }
   };
-
   const extractDialogFromJson = (dialogJson: string): string => {
     try {
       const parsed = JSON.parse(dialogJson);
       const cleanConversations = parsed?.clean_conversations;
       const dialog = cleanConversations?.dialog || [];
-      
       if (Array.isArray(dialog) && dialog.length > 0) {
-        return dialog.map((item: any, index: number) => 
-          `${index + 1}. ${item.speaker || 'Unknown'}: ${item.message || 'No message'}`
-        ).join('\n');
+        return dialog.map((item: any, index: number) => `${index + 1}. ${item.speaker || 'Unknown'}: ${item.message || 'No message'}`).join('\n');
       }
-      
       return 'Nu există dialog disponibil';
     } catch (error) {
       console.error('Error parsing dialog JSON:', error);
       return 'Eroare la parsarea dialogului';
     }
   };
-
   const sendSingleContactToWebhook = async (contact: Contact) => {
     try {
       console.log('Sending single contact to webhook:', contact);
       const response = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           agent_id: customAgentId,
@@ -186,20 +175,15 @@ const Outbound = () => {
           user_id: user?.id
         })
       });
-
       console.log('Webhook response status:', response.status);
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
       const responseText = await response.text();
       console.log('Response body (raw):', responseText);
-
       try {
         const result = JSON.parse(responseText);
         console.log('Processing JSON response:', result);
-        
         await processWebhookResponse(result);
         return result;
       } catch (jsonError) {
@@ -212,13 +196,10 @@ const Outbound = () => {
       throw error;
     }
   };
-
   const processWebhookResponse = async (result: any) => {
     try {
       console.log('Processing webhook response:', result);
-      
       let callResults: any[] = [];
-      
       if (Array.isArray(result)) {
         callResults = result;
         console.log('Result is array, using directly');
@@ -229,13 +210,10 @@ const Outbound = () => {
         callResults = result.calls;
         console.log('Found calls array in result');
       }
-      
       console.log('Extracted call results:', callResults);
-      
       if (callResults.length > 0) {
         try {
           await saveCallResults.mutateAsync(callResults);
-          
           toast({
             title: "Apel finalizat",
             description: `Rezultatul pentru apelul curent a fost salvat.`
@@ -265,7 +243,6 @@ const Outbound = () => {
       });
     }
   };
-
   const processContactsSequentially = async () => {
     if (!customAgentId.trim()) {
       toast({
@@ -275,7 +252,6 @@ const Outbound = () => {
       });
       return;
     }
-
     if (selectedContactIds.size === 0) {
       toast({
         title: "Eroare",
@@ -284,44 +260,36 @@ const Outbound = () => {
       });
       return;
     }
-
     setIsCallingAll(true);
     setIsPaused(false);
-    
     const selectedContacts = contacts.filter(c => selectedContactIds.has(c.id));
     const startIndex = currentCallIndex;
-
     toast({
       title: "Procesare secvențială inițiată",
       description: `Se vor procesa ${selectedContacts.length - startIndex} contacte unul câte unul.`
     });
-
     for (let i = startIndex; i < selectedContacts.length; i++) {
       // Check if paused
       if (isPaused) {
         console.log('Processing paused by user');
         break;
       }
-
       const contact = selectedContacts[i];
       setCurrentCallIndex(i);
-      
       toast({
         title: "Procesez contact",
         description: `Apelând ${contact.name} (${i + 1}/${selectedContacts.length})`
       });
-
       try {
         await sendSingleContactToWebhook(contact);
-        
+
         // Mark contact as processed
         setProcessedContacts(prev => new Set([...prev, contact.id]));
-        
+
         // Wait 2 seconds before next call (to prevent overwhelming the webhook)
         if (i < selectedContacts.length - 1 && !isPaused) {
           await new Promise(resolve => setTimeout(resolve, 2000));
         }
-        
       } catch (error) {
         console.error(`Error processing contact ${contact.name}:`, error);
         toast({
@@ -331,7 +299,6 @@ const Outbound = () => {
         });
       }
     }
-
     if (!isPaused) {
       setCurrentCallIndex(0);
       setProcessedContacts(new Set());
@@ -340,10 +307,8 @@ const Outbound = () => {
         description: "Toate contactele selectate au fost procesate."
       });
     }
-    
     setIsCallingAll(false);
   };
-
   const handlePauseResume = () => {
     if (isCallingAll) {
       setIsPaused(!isPaused);
@@ -353,7 +318,6 @@ const Outbound = () => {
       });
     }
   };
-
   const handleStopProcessing = () => {
     setIsCallingAll(false);
     setIsPaused(false);
@@ -364,7 +328,6 @@ const Outbound = () => {
       description: "Procesarea contactelor a fost oprită."
     });
   };
-
   const handleContactSelect = (contactId: string) => {
     const newSelected = new Set(selectedContactIds);
     if (newSelected.has(contactId)) {
@@ -374,7 +337,6 @@ const Outbound = () => {
     }
     setSelectedContactIds(newSelected);
   };
-
   const handleSelectAll = () => {
     if (selectedContactIds.size === contacts.length) {
       setSelectedContactIds(new Set());
@@ -382,7 +344,6 @@ const Outbound = () => {
       setSelectedContactIds(new Set(contacts.map(c => c.id)));
     }
   };
-
   const handleSelectAllCalls = () => {
     if (selectedCallIds.size === filteredCallHistory.length) {
       setSelectedCallIds(new Set());
@@ -390,7 +351,6 @@ const Outbound = () => {
       setSelectedCallIds(new Set(filteredCallHistory.map(call => call.id)));
     }
   };
-
   const handleDeleteSelected = async () => {
     if (selectedCallIds.size === 0) {
       toast({
@@ -400,7 +360,6 @@ const Outbound = () => {
       });
       return;
     }
-
     try {
       await deleteCallHistory.mutateAsync(Array.from(selectedCallIds));
       setSelectedCallIds(new Set());
@@ -417,7 +376,6 @@ const Outbound = () => {
       });
     }
   };
-
   const handleDeleteAll = async () => {
     if (callHistory.length === 0) {
       toast({
@@ -427,7 +385,6 @@ const Outbound = () => {
       });
       return;
     }
-
     try {
       await deleteAllCallHistory.mutateAsync();
       setSelectedCallIds(new Set());
@@ -444,7 +401,6 @@ const Outbound = () => {
       });
     }
   };
-
   const handleInitiateCall = async (contact: Contact) => {
     if (!customAgentId.trim()) {
       toast({
@@ -454,15 +410,12 @@ const Outbound = () => {
       });
       return;
     }
-
     try {
       const result = await sendSingleContactToWebhook(contact);
-      
       toast({
         title: "Apel inițiat",
         description: `Apelul către ${contact.name} a fost trimis pentru procesare.`
       });
-
       console.log('Single call result:', result);
     } catch (error) {
       console.error('Error initiating call:', error);
@@ -473,7 +426,6 @@ const Outbound = () => {
       });
     }
   };
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'success':
@@ -488,7 +440,6 @@ const Outbound = () => {
         return <AlertCircle className="w-4 h-4 text-gray-500" />;
     }
   };
-
   const getStatusText = (status: string) => {
     switch (status) {
       case 'success':
@@ -503,7 +454,6 @@ const Outbound = () => {
         return 'Necunoscut';
     }
   };
-
   const toggleExpandedDialog = (callId: string) => {
     const newExpanded = new Set(expandedDialog);
     if (newExpanded.has(callId)) {
@@ -513,7 +463,6 @@ const Outbound = () => {
     }
     setExpandedDialog(newExpanded);
   };
-
   const toggleExpandedSummary = (callId: string) => {
     const newExpanded = new Set(expandedSummary);
     if (newExpanded.has(callId)) {
@@ -523,14 +472,8 @@ const Outbound = () => {
     }
     setExpandedSummary(newExpanded);
   };
-
-  const filteredCallHistory = callHistory.filter(call => 
-    call.phone_number.includes(searchTerm) || 
-    call.contact_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  return (
-    <DashboardLayout>
+  const filteredCallHistory = callHistory.filter(call => call.phone_number.includes(searchTerm) || call.contact_name.toLowerCase().includes(searchTerm.toLowerCase()));
+  return <DashboardLayout>
       <div className="p-6 my-[60px]">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
@@ -538,14 +481,7 @@ const Outbound = () => {
             <h1 className="text-3xl font-bold text-foreground mb-2">Outbound</h1>
             <p className="text-muted-foreground">Gestionează apelurile outbound și bazele de date de contacte</p>
           </div>
-          <Button 
-            onClick={() => refetch()}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Clock className="w-4 h-4" />
-            Reîmprospătează Istoricul
-          </Button>
+          
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -568,25 +504,14 @@ const Outbound = () => {
                     <p className="text-xs text-muted-foreground">
                       Format: Nume, Telefon, Țara, Locație
                     </p>
-                    <input
-                      type="file"
-                      accept=".csv"
-                      onChange={handleCsvSelect}
-                      className="hidden"
-                      id="csv-upload"
-                    />
-                    <Button
-                      variant="outline"
-                      onClick={() => document.getElementById('csv-upload')?.click()}
-                      className="mt-2"
-                    >
+                    <input type="file" accept=".csv" onChange={handleCsvSelect} className="hidden" id="csv-upload" />
+                    <Button variant="outline" onClick={() => document.getElementById('csv-upload')?.click()} className="mt-2">
                       Selectează CSV
                     </Button>
                   </div>
                 </div>
 
-                {csvFile && (
-                  <div className="bg-gray-50 rounded-lg p-4">
+                {csvFile && <div className="bg-gray-50 rounded-lg p-4">
                     <div className="flex items-center gap-3">
                       <FileText className="w-5 h-5 text-accent" />
                       <div className="flex-1">
@@ -596,26 +521,17 @@ const Outbound = () => {
                         </p>
                       </div>
                     </div>
-                  </div>
-                )}
+                  </div>}
               </div>
 
-              <Button
-                onClick={handleUploadCsv}
-                disabled={!csvFile || isUploadingCsv}
-                className="w-full bg-accent hover:bg-accent/90 text-white"
-              >
-                {isUploadingCsv ? (
-                  <div className="flex items-center gap-2">
+              <Button onClick={handleUploadCsv} disabled={!csvFile || isUploadingCsv} className="w-full bg-accent hover:bg-accent/90 text-white">
+                {isUploadingCsv ? <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Procesează CSV...
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
+                  </div> : <div className="flex items-center gap-2">
                     <Upload className="w-4 h-4" />
                     Încarcă Contacte
-                  </div>
-                )}
+                  </div>}
               </Button>
             </CardContent>
           </Card>
@@ -633,17 +549,10 @@ const Outbound = () => {
                 <Label htmlFor="agent-id" className="text-foreground">
                   ID Agent pentru Apeluri
                 </Label>
-                <Input
-                  id="agent-id"
-                  value={customAgentId}
-                  onChange={(e) => setCustomAgentId(e.target.value)}
-                  placeholder="agent_id_pentru_apeluri"
-                  className="glass-input"
-                />
+                <Input id="agent-id" value={customAgentId} onChange={e => setCustomAgentId(e.target.value)} placeholder="agent_id_pentru_apeluri" className="glass-input" />
               </div>
 
-              {contacts.length > 0 && (
-                <div className="space-y-4">
+              {contacts.length > 0 && <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-muted-foreground">
                       {contacts.length} contacte încărcate, {selectedContactIds.size} selectate
@@ -654,8 +563,7 @@ const Outbound = () => {
                   </div>
 
                   {/* Progress indicator */}
-                  {isCallingAll && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  {isCallingAll && <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-blue-900">
                           Progres: {currentCallIndex + 1} / {contacts.filter(c => selectedContactIds.has(c.id)).length}
@@ -665,63 +573,39 @@ const Outbound = () => {
                         </span>
                       </div>
                       <div className="w-full bg-blue-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
-                          style={{ 
-                            width: `${((currentCallIndex + 1) / contacts.filter(c => selectedContactIds.has(c.id)).length) * 100}%` 
-                          }}
-                        />
+                        <div className="bg-blue-600 h-2 rounded-full transition-all duration-300" style={{
+                    width: `${(currentCallIndex + 1) / contacts.filter(c => selectedContactIds.has(c.id)).length * 100}%`
+                  }} />
                       </div>
-                    </div>
-                  )}
+                    </div>}
 
                   <div className="flex gap-2">
-                    <Button
-                      onClick={processContactsSequentially}
-                      disabled={!customAgentId.trim() || selectedContactIds.size === 0 || isCallingAll}
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      {isCallingAll ? (
-                        <div className="flex items-center gap-2">
+                    <Button onClick={processContactsSequentially} disabled={!customAgentId.trim() || selectedContactIds.size === 0 || isCallingAll} className="flex-1 bg-green-600 hover:bg-green-700 text-white">
+                      {isCallingAll ? <div className="flex items-center gap-2">
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                           Procesează Secvențial...
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
+                        </div> : <div className="flex items-center gap-2">
                           <Play className="w-4 h-4" />
                           Procesează Secvențial ({selectedContactIds.size})
-                        </div>
-                      )}
+                        </div>}
                     </Button>
 
-                    {isCallingAll && (
-                      <>
-                        <Button
-                          onClick={handlePauseResume}
-                          variant="outline"
-                          className="px-3"
-                        >
+                    {isCallingAll && <>
+                        <Button onClick={handlePauseResume} variant="outline" className="px-3">
                           {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
                         </Button>
-                        <Button
-                          onClick={handleStopProcessing}
-                          variant="destructive"
-                          className="px-3"
-                        >
+                        <Button onClick={handleStopProcessing} variant="destructive" className="px-3">
                           <XCircle className="w-4 h-4" />
                         </Button>
-                      </>
-                    )}
+                      </>}
                   </div>
-                </div>
-              )}
+                </div>}
             </CardContent>
           </Card>
         </div>
 
         {/* Contacts Table */}
-        {contacts.length > 0 && (
-          <Card className="liquid-glass mt-8">
+        {contacts.length > 0 && <Card className="liquid-glass mt-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <Users className="w-6 h-6 text-accent" />
@@ -734,12 +618,7 @@ const Outbound = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">
-                        <input
-                          type="checkbox"
-                          checked={selectedContactIds.size === contacts.length && contacts.length > 0}
-                          onChange={handleSelectAll}
-                          className="rounded"
-                        />
+                        <input type="checkbox" checked={selectedContactIds.size === contacts.length && contacts.length > 0} onChange={handleSelectAll} className="rounded" />
                       </TableHead>
                       <TableHead>
                         <div className="flex items-center gap-2">
@@ -770,54 +649,34 @@ const Outbound = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {contacts.map((contact) => (
-                      <TableRow key={contact.id}>
+                    {contacts.map(contact => <TableRow key={contact.id}>
                         <TableCell>
-                          <input
-                            type="checkbox"
-                            checked={selectedContactIds.has(contact.id)}
-                            onChange={() => handleContactSelect(contact.id)}
-                            className="rounded"
-                          />
+                          <input type="checkbox" checked={selectedContactIds.has(contact.id)} onChange={() => handleContactSelect(contact.id)} className="rounded" />
                         </TableCell>
                         <TableCell className="font-medium">{contact.name}</TableCell>
                         <TableCell className="font-mono text-sm">{contact.phone}</TableCell>
                         <TableCell>{contact.country}</TableCell>
                         <TableCell>{contact.location}</TableCell>
                         <TableCell>
-                          {processedContacts.has(contact.id) ? (
-                            <span className="flex items-center gap-1 text-green-600 text-sm">
+                          {processedContacts.has(contact.id) ? <span className="flex items-center gap-1 text-green-600 text-sm">
                               <CheckCircle className="w-4 h-4" />
                               Procesat
-                            </span>
-                          ) : selectedContactIds.has(contact.id) && isCallingAll && contacts.indexOf(contact) === currentCallIndex ? (
-                            <span className="flex items-center gap-1 text-blue-600 text-sm">
+                            </span> : selectedContactIds.has(contact.id) && isCallingAll && contacts.indexOf(contact) === currentCallIndex ? <span className="flex items-center gap-1 text-blue-600 text-sm">
                               <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                               În procesare
-                            </span>
-                          ) : (
-                            <span className="text-gray-500 text-sm">În așteptare</span>
-                          )}
+                            </span> : <span className="text-gray-500 text-sm">În așteptare</span>}
                         </TableCell>
                         <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleInitiateCall(contact)}
-                            disabled={!customAgentId.trim() || isCallingAll}
-                            className="border-accent text-accent hover:bg-accent/10"
-                          >
+                          <Button variant="outline" size="sm" onClick={() => handleInitiateCall(contact)} disabled={!customAgentId.trim() || isCallingAll} className="border-accent text-accent hover:bg-accent/10">
                             <Phone className="w-4 h-4" />
                           </Button>
                         </TableCell>
-                      </TableRow>
-                    ))}
+                      </TableRow>)}
                   </TableBody>
                 </Table>
               </div>
             </CardContent>
-          </Card>
-        )}
+          </Card>}
 
         {/* Call History Section */}
         <Card className="liquid-glass mt-8">
@@ -828,64 +687,31 @@ const Outbound = () => {
                 Istoric Apeluri ({callHistory.length})
               </CardTitle>
               <div className="flex items-center gap-2">
-                {selectedCallIds.size > 0 && (
-                  <Button
-                    onClick={handleDeleteSelected}
-                    variant="destructive"
-                    size="sm"
-                    disabled={deleteCallHistory.isPending}
-                    className="flex items-center gap-2"
-                  >
+                {selectedCallIds.size > 0 && <Button onClick={handleDeleteSelected} variant="destructive" size="sm" disabled={deleteCallHistory.isPending} className="flex items-center gap-2">
                     <Trash2 className="w-4 h-4" />
                     Șterge Selectate ({selectedCallIds.size})
-                  </Button>
-                )}
-                {callHistory.length > 0 && (
-                  <Button
-                    onClick={handleDeleteAll}
-                    variant="destructive"
-                    size="sm"
-                    disabled={deleteAllCallHistory.isPending}
-                    className="flex items-center gap-2"
-                  >
+                  </Button>}
+                {callHistory.length > 0 && <Button onClick={handleDeleteAll} variant="destructive" size="sm" disabled={deleteAllCallHistory.isPending} className="flex items-center gap-2">
                     <Trash className="w-4 h-4" />
                     Șterge Tot
-                  </Button>
-                )}
-                <Button 
-                  onClick={() => refetch()}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
-                >
-                  <Clock className="w-4 h-4" />
-                  Reîmprospătează
-                </Button>
+                  </Button>}
+                
               </div>
             </div>
             <div className="flex items-center gap-4 mt-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  placeholder="Caută după numărul de telefon sau nume..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+                <Input placeholder="Caută după numărul de telefon sau nume..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            {filteredCallHistory.length > 0 ? (
-              <div className="max-h-96 overflow-y-auto">
+            {filteredCallHistory.length > 0 ? <div className="max-h-96 overflow-y-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">
-                        <Checkbox
-                          checked={selectedCallIds.size === filteredCallHistory.length && filteredCallHistory.length > 0}
-                          onCheckedChange={handleSelectAllCalls}
-                        />
+                        <Checkbox checked={selectedCallIds.size === filteredCallHistory.length && filteredCallHistory.length > 0} onCheckedChange={handleSelectAllCalls} />
                       </TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>
@@ -922,13 +748,9 @@ const Outbound = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredCallHistory.map((call) => (
-                      <TableRow key={call.id}>
+                    {filteredCallHistory.map(call => <TableRow key={call.id}>
                         <TableCell>
-                          <Checkbox
-                            checked={selectedCallIds.has(call.id)}
-                            onCheckedChange={() => handleCallSelect(call.id)}
-                          />
+                          <Checkbox checked={selectedCallIds.has(call.id)} onCheckedChange={() => handleCallSelect(call.id)} />
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
@@ -940,18 +762,11 @@ const Outbound = () => {
                         <TableCell className="font-mono text-sm">{call.phone_number}</TableCell>
                         <TableCell className="text-sm">
                           <Collapsible>
-                            <CollapsibleTrigger 
-                              className="flex items-center gap-2 hover:text-accent cursor-pointer"
-                              onClick={() => toggleExpandedSummary(call.id)}
-                            >
+                            <CollapsibleTrigger className="flex items-center gap-2 hover:text-accent cursor-pointer" onClick={() => toggleExpandedSummary(call.id)}>
                               <span className="truncate max-w-[150px]">
                                 {call.summary || 'Nu există rezumat'}
                               </span>
-                              {expandedSummary.has(call.id) ? (
-                                <ChevronUp className="w-4 h-4" />
-                              ) : (
-                                <ChevronDown className="w-4 h-4" />
-                              )}
+                              {expandedSummary.has(call.id) ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                             </CollapsibleTrigger>
                             <CollapsibleContent className="mt-2">
                               <div className="bg-gray-50 p-3 rounded max-w-xs whitespace-pre-wrap text-sm">
@@ -962,16 +777,9 @@ const Outbound = () => {
                         </TableCell>
                         <TableCell className="text-sm">
                           <Collapsible>
-                            <CollapsibleTrigger 
-                              className="flex items-center gap-2 hover:text-accent cursor-pointer"
-                              onClick={() => toggleExpandedDialog(call.id)}
-                            >
+                            <CollapsibleTrigger className="flex items-center gap-2 hover:text-accent cursor-pointer" onClick={() => toggleExpandedDialog(call.id)}>
                               <span className="text-blue-600 underline">Vezi Dialog</span>
-                              {expandedDialog.has(call.id) ? (
-                                <ChevronUp className="w-4 h-4" />
-                              ) : (
-                                <ChevronDown className="w-4 h-4" />
-                              )}
+                              {expandedDialog.has(call.id) ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                             </CollapsibleTrigger>
                             <CollapsibleContent className="mt-2">
                               <div className="bg-gray-50 p-3 rounded max-w-sm max-h-64 overflow-auto">
@@ -984,27 +792,18 @@ const Outbound = () => {
                         </TableCell>
                         <TableCell className="text-sm">{call.call_date}</TableCell>
                         <TableCell className="text-sm font-mono">{call.cost_usd}</TableCell>
-                      </TableRow>
-                    ))}
+                      </TableRow>)}
                   </TableBody>
                 </Table>
-              </div>
-            ) : (
-              <div className="text-center py-8">
+              </div> : <div className="text-center py-8">
                 <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">
-                  {searchTerm 
-                    ? 'Nu s-au găsit apeluri care să se potrivească cu termenul de căutare.' 
-                    : 'Nu există încă apeluri în istoric.'
-                  }
+                  {searchTerm ? 'Nu s-au găsit apeluri care să se potrivească cu termenul de căutare.' : 'Nu există încă apeluri în istoric.'}
                 </p>
-                {searchTerm && (
-                  <Button variant="outline" onClick={() => setSearchTerm('')} className="mt-2">
+                {searchTerm && <Button variant="outline" onClick={() => setSearchTerm('')} className="mt-2">
                     Șterge filtrul
-                  </Button>
-                )}
-              </div>
-            )}
+                  </Button>}
+              </div>}
           </CardContent>
         </Card>
 
@@ -1028,8 +827,6 @@ const Outbound = () => {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
-
 export default Outbound;
