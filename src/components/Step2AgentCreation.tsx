@@ -12,9 +12,9 @@ interface Step2Props {
   agentName: string;
   setAgentName: (name: string) => void;
   agentLanguage: string;
-  setAgentLanguage: (language: string) => void;
+  setAgentLanguage: React.Dispatch<React.SetStateAction<string>>;
   selectedVoice: string;
-  setSelectedVoice: (voice: string) => void;
+  setSelectedVoice: React.Dispatch<React.SetStateAction<string>>;
   createdAgentId: string;
   onCreateAgent: () => void;
   onCopyAgentId: () => void;
