@@ -62,8 +62,7 @@ export const useCallHistory = () => {
         const costInfo = cleanConversations?.['']?.cost_info ?? {};
         
         const phoneNumber = phoneNumbers?.user ?? '';
-        const costCents = costInfo?.total_cost ?? 0;
-        const costUsd = costCents / 100;
+        const costValue = costInfo?.total_cost ?? 0; // Keep the original value without division
         const status = cleanConversations?.status ?? 'unknown';
         const summary = cleanConversations?.summary ?? '';
         const timestamps = cleanConversations?.timestamps ?? '';
@@ -89,7 +88,7 @@ export const useCallHistory = () => {
           summary: summary,
           dialog_json: dialogJson,
           call_date: callDate,
-          cost_usd: costUsd,
+          cost_usd: costValue, // Store the raw cost value
           language: language,
           timestamps: timestamps
         };

@@ -5,8 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Upload, Phone, FileText, Play, Users, Globe, MapPin, User, Search, Clock, DollarSign, MessageSquare, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Upload, Phone, FileText, Play, Users, Globe, MapPin, User, Search, Clock, DollarSign, MessageSquare, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,70 +43,17 @@ const Outbound = () => {
   const [customAgentId, setCustomAgentId] = useState('');
   const [selectedContactIds, setSelectedContactIds] = useState<Set<string>>(new Set());
   const [isCallingAll, setIsCallingAll] = useState(false);
-  const [callHistory, setCallHistory] = useState<CallHistory[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [expandedDialog, setExpandedDialog] = useState<Set<string>>(new Set());
+  const [expandedSummary, setExpandedSummary] = useState<Set<string>>(new Set());
+
+  const { callHistory, isLoading, saveCallResults, refetch } = useCallHistory();
 
   const WEBHOOK_URL = 'https://zuckerberg.aichat.md/webhook/telefonie-sunat';
 
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
-
-  // Load call history from new call_history table
-  useEffect(() => {
-    const fetchCallHistory = async () => {
-      try {
-        console.log('Fetching call history from call_history table...');
-        const { data, error } = await supabase
-          .from('call_history')
-          .select('*')
-          .order('call_date', { ascending: false });
-
-        if (error) {
-          console.error('Error fetching call history:', error);
-          toast({
-            title: "Eroare la încărcare",
-            description: "Nu s-a putut încărca istoricul apelurilor.",
-            variant: "destructive"
-          });
-          return;
-        }
-
-        console.log('Raw call history data:', data);
-
-        if (data && data.length > 0) {
-          const loadedHistory: CallHistory[] = data.map((record: any) => ({
-            id: record.id,
-            phone_number: record.phone_number || '',
-            contact_name: record.contact_name || 'Necunoscut',
-            call_status: record.call_status || 'unknown',
-            summary: record.summary || '',
-            dialog_json: record.dialog_json || '',
-            call_date: record.call_date ? new Date(record.call_date).toLocaleString('ro-RO') : '',
-            cost_usd: record.cost_usd ? Number(record.cost_usd) : 0,
-            agent_id: record.agent_id,
-            language: record.language
-          }));
-          console.log('Processed call history:', loadedHistory);
-          setCallHistory(loadedHistory);
-        } else {
-          console.log('No call history data found');
-          setCallHistory([]);
-        }
-      } catch (error) {
-        console.error('Error in fetchCallHistory:', error);
-        toast({
-          title: "Eroare",
-          description: "A apărut o eroare la încărcarea istoricului apelurilor.",
-          variant: "destructive"
-        });
-      }
-    };
-
-    if (user) {
-      fetchCallHistory();
-    }
-  }, [user]);
 
   const formatObjectAsJson = (obj: any): string => {
     try {
@@ -193,6 +142,25 @@ const Outbound = () => {
     }
   };
 
+  const extractDialogFromJson = (dialogJson: string): string => {
+    try {
+      const parsed = JSON.parse(dialogJson);
+      const cleanConversations = parsed?.clean_conversations;
+      const dialog = cleanConversations?.dialog || [];
+      
+      if (Array.isArray(dialog) && dialog.length > 0) {
+        return dialog.map((item: any, index: number) => 
+          `${index + 1}. ${item.speaker || 'Unknown'}: ${item.message || 'No message'}`
+        ).join('\n');
+      }
+      
+      return 'Nu există dialog disponibil';
+    } catch (error) {
+      console.error('Error parsing dialog JSON:', error);
+      return 'Eroare la parsarea dialogului';
+    }
+  };
+
   const sendContactsToWebhook = async (contactsToSend: Contact[]) => {
     try {
       console.log('Sending contacts to webhook:', contactsToSend);
@@ -241,7 +209,6 @@ const Outbound = () => {
       
       let callResults: any[] = [];
       
-      // Handle different response structures
       if (Array.isArray(result)) {
         callResults = result;
         console.log('Result is array, using directly');
@@ -257,8 +224,7 @@ const Outbound = () => {
       
       if (callResults.length > 0) {
         try {
-          await saveCallResultsToSupabase(callResults);
-          await refreshCallHistory();
+          await saveCallResults.mutateAsync(callResults);
           
           toast({
             title: "Apeluri finalizate",
@@ -287,110 +253,6 @@ const Outbound = () => {
         description: "Nu s-a putut procesa răspunsul de la webhook.",
         variant: "destructive"
       });
-    }
-  };
-
-  const saveCallResultsToSupabase = async (callResults: any[]) => {
-    try {
-      console.log('Saving call results to new call_history table:', callResults);
-      
-      const recordsToInsert = callResults.map((result, index) => {
-        console.log(`Processing call result ${index}:`, result);
-        
-        // Defensive access using optional chaining and nullish coalescing
-        const cleanConversations = result?.clean_conversations ?? {};
-        const callInfo = cleanConversations?.call_info ?? {};
-        const phoneNumbers = callInfo?.phone_numbers ?? {};
-        const dialog = cleanConversations?.dialog ?? [];
-        const costInfo = cleanConversations?.['']?.cost_info ?? {};
-        
-        // Extract data safely
-        const phoneNumber = phoneNumbers?.user ?? '';
-        const costCents = costInfo?.total_cost ?? 0;
-        const costUsd = costCents / 100; // Convert cents to dollars
-        const status = cleanConversations?.status ?? 'unknown';
-        const summary = cleanConversations?.summary ?? '';
-        const timestamps = cleanConversations?.timestamps ?? '';
-        const language = callInfo?.language ?? 'ro';
-        
-        // Format the entire result as JSON string for storage
-        const dialogJson = formatObjectAsJson(result);
-        
-        // Parse timestamp safely
-        let callDate = new Date().toISOString();
-        if (timestamps) {
-          try {
-            const timestampPart = timestamps.split('-')[0];
-            callDate = new Date(timestampPart).toISOString();
-          } catch (timestampError) {
-            console.warn('Error parsing timestamp:', timestampError);
-          }
-        }
-        
-        const record = {
-          user_id: user?.id,
-          phone_number: phoneNumber,
-          contact_name: phoneNumber || 'Necunoscut',
-          call_status: status === 'done' ? 'success' : 'failed',
-          summary: summary,
-          dialog_json: dialogJson,
-          call_date: callDate,
-          cost_usd: costUsd,
-          agent_id: customAgentId,
-          language: language,
-          timestamps: timestamps
-        };
-        
-        console.log(`Record ${index} to insert:`, record);
-        return record;
-      });
-
-      console.log('All records to insert:', recordsToInsert);
-
-      const { data, error } = await supabase
-        .from('call_history')
-        .insert(recordsToInsert)
-        .select();
-
-      if (error) {
-        console.error('Error saving to call_history table:', error);
-        throw error;
-      }
-
-      console.log('Successfully saved to call_history table:', data);
-      return data;
-    } catch (error) {
-      console.error('Error in saveCallResultsToSupabase:', error);
-      throw error;
-    }
-  };
-
-  const refreshCallHistory = async () => {
-    try {
-      console.log('Refreshing call history...');
-      const { data } = await supabase
-        .from('call_history')
-        .select('*')
-        .order('call_date', { ascending: false });
-
-      if (data) {
-        const updatedHistory: CallHistory[] = data.map((record: any) => ({
-          id: record.id,
-          phone_number: record.phone_number || '',
-          contact_name: record.contact_name || 'Necunoscut',
-          call_status: record.call_status || 'unknown',
-          summary: record.summary || '',
-          dialog_json: record.dialog_json || '',
-          call_date: record.call_date ? new Date(record.call_date).toLocaleString('ro-RO') : '',
-          cost_usd: record.cost_usd ? Number(record.cost_usd) : 0,
-          agent_id: record.agent_id,
-          language: record.language
-        }));
-        console.log('Refreshed call history:', updatedHistory);
-        setCallHistory(updatedHistory);
-      }
-    } catch (error) {
-      console.error('Error refreshing call history:', error);
     }
   };
 
@@ -578,6 +440,26 @@ const Outbound = () => {
     }
   };
 
+  const toggleExpandedDialog = (callId: string) => {
+    const newExpanded = new Set(expandedDialog);
+    if (newExpanded.has(callId)) {
+      newExpanded.delete(callId);
+    } else {
+      newExpanded.add(callId);
+    }
+    setExpandedDialog(newExpanded);
+  };
+
+  const toggleExpandedSummary = (callId: string) => {
+    const newExpanded = new Set(expandedSummary);
+    if (newExpanded.has(callId)) {
+      newExpanded.delete(callId);
+    } else {
+      newExpanded.add(callId);
+    }
+    setExpandedSummary(newExpanded);
+  };
+
   const filteredCallHistory = callHistory.filter(call => 
     call.phone_number.includes(searchTerm) || 
     call.contact_name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -593,7 +475,7 @@ const Outbound = () => {
             <p className="text-muted-foreground">Gestionează apelurile outbound și bazele de date de contacte</p>
           </div>
           <Button 
-            onClick={refreshCallHistory}
+            onClick={() => refetch()}
             variant="outline"
             className="flex items-center gap-2"
           >
@@ -858,7 +740,7 @@ const Outbound = () => {
                           Rezumat
                         </div>
                       </TableHead>
-                      <TableHead>Dialog JSON</TableHead>
+                      <TableHead>Dialog</TableHead>
                       <TableHead>
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4" />
@@ -884,14 +766,52 @@ const Outbound = () => {
                         </TableCell>
                         <TableCell className="font-medium">{call.contact_name}</TableCell>
                         <TableCell className="font-mono text-sm">{call.phone_number}</TableCell>
-                        <TableCell className="text-sm">{call.summary}</TableCell>
-                        <TableCell className="text-sm max-w-xs">
-                          <pre className="whitespace-pre-wrap text-xs bg-gray-50 p-2 rounded overflow-auto max-h-32">
-                            {call.dialog_json}
-                          </pre>
+                        <TableCell className="text-sm">
+                          <Collapsible>
+                            <CollapsibleTrigger 
+                              className="flex items-center gap-2 hover:text-accent cursor-pointer"
+                              onClick={() => toggleExpandedSummary(call.id)}
+                            >
+                              <span className="truncate max-w-[150px]">
+                                {call.summary || 'Nu există rezumat'}
+                              </span>
+                              {expandedSummary.has(call.id) ? (
+                                <ChevronUp className="w-4 h-4" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4" />
+                              )}
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="mt-2">
+                              <div className="bg-gray-50 p-3 rounded max-w-xs whitespace-pre-wrap text-sm">
+                                {call.summary || 'Nu există rezumat disponibil'}
+                              </div>
+                            </CollapsibleContent>
+                          </Collapsible>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          <Collapsible>
+                            <CollapsibleTrigger 
+                              className="flex items-center gap-2 hover:text-accent cursor-pointer"
+                              onClick={() => toggleExpandedDialog(call.id)}
+                            >
+                              <span className="text-blue-600 underline">Vezi Dialog</span>
+                              {expandedDialog.has(call.id) ? (
+                                <ChevronUp className="w-4 h-4" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4" />
+                              )}
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="mt-2">
+                              <div className="bg-gray-50 p-3 rounded max-w-sm max-h-64 overflow-auto">
+                                <pre className="whitespace-pre-wrap text-xs">
+                                  {extractDialogFromJson(call.dialog_json)}
+                                </pre>
+                              </div>
+                            </CollapsibleContent>
+                          </Collapsible>
                         </TableCell>
                         <TableCell className="text-sm">{call.call_date}</TableCell>
-                        <TableCell className="text-sm font-mono">${call.cost_usd.toFixed(4)}</TableCell>
+                        <TableCell className="text-sm font-mono">{call.cost_usd}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
