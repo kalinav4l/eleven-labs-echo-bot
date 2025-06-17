@@ -525,7 +525,7 @@ const Outbound = () => {
                       <TableHead>
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4" />
-                          Nume
+                          Number
                         </div>
                       </TableHead>
                       <TableHead>
