@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -10,6 +9,7 @@ import { Upload, Phone, FileText, Play, Users, Globe, MapPin, User, Search, Cloc
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Contact {
   id: string;
@@ -154,6 +154,43 @@ const Outbound = () => {
     }
   };
 
+  const saveCallResultsToSupabase = async (callResults: any[]) => {
+    try {
+      const recordsToInsert = callResults.map((result) => {
+        const cleanConversations = result.clean_conversations;
+        const phone = cleanConversations.call_info?.phone_numbers?.user || '';
+        const dialogArray = cleanConversations.dialog || [];
+        const dialogText = dialogArray.map((d: any) => `${d.speaker}: ${d.message}`).join('\n');
+        const cost = cleanConversations['']?.cost_info?.total_cost || 0;
+        const timestamp = cleanConversations.timestamps ? cleanConversations.timestamps.split('-')[0] : new Date().toISOString();
+        
+        return {
+          Status: cleanConversations.status === 'done' ? 'success' : 'failed',
+          Number: parseFloat(phone.replace(/[^\d]/g, '')) || null,
+          Telefon: phone,
+          Concluzie: cleanConversations.summary || '',
+          Dialog: dialogText,
+          Data: new Date(timestamp).getTime(),
+          Cost: cost
+        };
+      });
+
+      const { error } = await supabase
+        .from('Outbound')
+        .insert(recordsToInsert);
+
+      if (error) {
+        console.error('Error saving to Supabase:', error);
+        throw error;
+      }
+
+      console.log('Successfully saved call results to Supabase');
+    } catch (error) {
+      console.error('Error in saveCallResultsToSupabase:', error);
+      throw error;
+    }
+  };
+
   const pollForResults = async (batchId: string) => {
     const maxAttempts = 30; // 5 minute timeout (10 seconds * 30)
     let attempts = 0;
@@ -165,18 +202,37 @@ const Outbound = () => {
         if (response.ok) {
           const results = await response.json();
           
-          if (results.completed) {
-            // Process the results and add to call history
-            const newCallHistory: CallHistory[] = results.calls.map((call: any) => ({
-              id: Date.now().toString() + Math.random(),
-              phone: call.phone,
-              name: call.name,
-              status: call.status,
-              conclusion: call.conclusion,
-              dialog: call.dialog,
-              date: new Date(call.date).toLocaleString('ro-RO'),
-              cost: call.cost
-            }));
+          if (results.completed || Array.isArray(results)) {
+            // Process the results from webhook response
+            const callResults = Array.isArray(results) ? results : results.calls || [];
+            
+            console.log('Received call results:', callResults);
+            
+            // Save to Supabase
+            if (callResults.length > 0) {
+              await saveCallResultsToSupabase(callResults);
+            }
+
+            // Process the results and add to call history for display
+            const newCallHistory: CallHistory[] = callResults.map((result: any) => {
+              const cleanConversations = result.clean_conversations;
+              const phone = cleanConversations.call_info?.phone_numbers?.user || '';
+              const dialogArray = cleanConversations.dialog || [];
+              const dialogText = dialogArray.map((d: any) => `${d.speaker}: ${d.message}`).join(' | ');
+              const cost = cleanConversations['']?.cost_info?.total_cost || 0;
+              const timestamp = cleanConversations.timestamps ? cleanConversations.timestamps.split('-')[0] : new Date().toISOString();
+              
+              return {
+                id: Date.now().toString() + Math.random(),
+                phone: phone,
+                name: phone, // Using phone as name since we don't have name in response
+                status: cleanConversations.status === 'done' ? 'success' : 'failed',
+                conclusion: cleanConversations.summary || '',
+                dialog: dialogText,
+                date: new Date(timestamp).toLocaleString('ro-RO'),
+                cost: cost / 100 // Convert from cents to dollars
+              };
+            });
 
             setCallHistory(prev => [...newCallHistory, ...prev]);
             
@@ -249,6 +305,12 @@ const Outbound = () => {
 
       if (result.batch_id) {
         pollForResults(result.batch_id);
+      } else {
+        // If no batch_id, assume immediate results
+        setTimeout(() => {
+          // Simulate polling for this single call
+          pollForResults('single_call_' + Date.now());
+        }, 5000);
       }
     } catch (error) {
       toast({
@@ -291,6 +353,12 @@ const Outbound = () => {
 
       if (result.batch_id) {
         pollForResults(result.batch_id);
+      } else {
+        // If no batch_id, assume immediate results
+        setTimeout(() => {
+          // Simulate polling for these calls
+          pollForResults('batch_call_' + Date.now());
+        }, 5000);
       }
     } catch (error) {
       toast({
