@@ -14,6 +14,7 @@ import AgentEdit from "./pages/AgentEdit";
 import Voices from "./pages/Voices";
 import Transcript from "./pages/Transcript";
 import Outbound from "./pages/Outbound";
+import ConversationAnalytics from "./pages/ConversationAnalytics";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import AgentConsultant from "./pages/AgentConsultant";
@@ -36,6 +37,7 @@ function App() {
             <Route path="/account/agent-edit/:agentId" element={<AgentEdit />} />
             <Route path="/account/agent-consultant" element={<AgentConsultant />} />
             <Route path="/account/voices" element={<Voices />} />
+            <Route path="/account/conversation-analytics" element={<ConversationAnalytics />} />
             <Route path="/account/transcript" element={<Transcript />} />
             <Route path="/account/outbound" element={<Outbound />} />
             <Route path="/account/settings" element={<AccountSettings />} />
