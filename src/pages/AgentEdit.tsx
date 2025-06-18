@@ -146,6 +146,15 @@ const AgentEdit = () => {
     setMultilingualMessages(updatedMessages);
   };
 
+  // Handle agent data refresh after multilingual modal saves
+  const handleAgentDataRefresh = (refreshedAgentData: AgentResponse) => {
+    setAgentData(refreshedAgentData);
+    
+    // Update additional languages based on refreshed data
+    const parsedAdditionalLanguages = parseAdditionalLanguagesFromResponse(refreshedAgentData);
+    setAdditionalLanguages(parsedAdditionalLanguages);
+  };
+
   const getLanguageLabel = (languageId: string) => {
     return LANGUAGE_MAP[languageId as keyof typeof LANGUAGE_MAP] || languageId;
   };
@@ -661,6 +670,7 @@ const AgentEdit = () => {
           onMessagesUpdate={handleMultilingualMessagesUpdate}
           agentId={agentId}
           agentData={agentData}
+          onAgentDataRefresh={handleAgentDataRefresh}
         />
       </div>
     </DashboardLayout>

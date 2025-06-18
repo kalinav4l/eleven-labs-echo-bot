@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -21,6 +20,7 @@ interface MultilingualFirstMessageModalProps {
   onMessagesUpdate: (messages: Record<string, string>) => void;
   agentId?: string;
   agentData?: AgentResponse;
+  onAgentDataRefresh?: (agentData: AgentResponse) => void;
 }
 
 const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps> = ({
@@ -32,6 +32,7 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
   onMessagesUpdate,
   agentId,
   agentData,
+  onAgentDataRefresh,
 }) => {
   const [selectedLanguage, setSelectedLanguage] = useState(defaultLanguage);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -86,45 +87,43 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
       // Make the API call to update the agent
       await agentService.updateAgent(agentId, updatePayload);
       
-      // Update the parent component with the new messages
-      onMessagesUpdate(localMessages);
-      setHasChanges(false);
-      
       toast({
         title: "Succes!",
         description: "Mesajele multilinguale au fost salvate cu succes.",
       });
 
-      // Refresh the modal by fetching updated agent data
-      if (agentId) {
-        try {
-          const updatedAgentData = await agentService.getAgent(agentId);
-          
-          // Extract the updated multilingual messages
-          const updatedMessages: Record<string, string> = {};
-          
-          // Add default language message
-          if (updatedAgentData.conversation_config?.agent?.first_message) {
-            updatedMessages[defaultLanguage] = updatedAgentData.conversation_config.agent.first_message;
+      // Fetch fresh agent data to get the updated state
+      const refreshedAgentData = await agentService.getAgent(agentId);
+      
+      // Extract the updated multilingual messages
+      const updatedMessages: Record<string, string> = {};
+      
+      // Add default language message
+      if (refreshedAgentData.conversation_config?.agent?.first_message) {
+        updatedMessages[defaultLanguage] = refreshedAgentData.conversation_config.agent.first_message;
+      }
+      
+      // Add messages from language presets
+      if (refreshedAgentData.conversation_config?.language_presets) {
+        Object.entries(refreshedAgentData.conversation_config.language_presets).forEach(([languageId, preset]) => {
+          if (preset.overrides?.agent?.first_message) {
+            updatedMessages[languageId] = preset.overrides.agent.first_message;
+          } else if (preset.first_message_translation?.text) {
+            updatedMessages[languageId] = preset.first_message_translation.text;
           }
-          
-          // Add messages from language presets
-          if (updatedAgentData.conversation_config?.language_presets) {
-            Object.entries(updatedAgentData.conversation_config.language_presets).forEach(([languageId, preset]) => {
-              if (preset.overrides?.agent?.first_message) {
-                updatedMessages[languageId] = preset.overrides.agent.first_message;
-              } else if (preset.first_message_translation?.text) {
-                updatedMessages[languageId] = preset.first_message_translation.text;
-              }
-            });
-          }
-          
-          // Update local state with refreshed data
-          setLocalMessages(updatedMessages);
-        } catch (refreshError) {
-          console.error('Error refreshing agent data:', refreshError);
-          // Continue without refresh if there's an error
-        }
+        });
+      }
+      
+      // Update local state with refreshed data
+      setLocalMessages(updatedMessages);
+      setHasChanges(false);
+      
+      // Update the parent component with the new messages
+      onMessagesUpdate(updatedMessages);
+      
+      // Refresh the agent data on the edit page
+      if (onAgentDataRefresh) {
+        onAgentDataRefresh(refreshedAgentData);
       }
       
     } catch (error) {
