@@ -33,8 +33,6 @@ const AgentEdit = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [agentData, setAgentData] = useState<AgentResponse | null>(null);
-  const [originalAgentData, setOriginalAgentData] = useState<AgentResponse | null>(null);
-  const [hasChanges, setHasChanges] = useState(false);
   const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
   const [newDocContent, setNewDocContent] = useState('');
   const [newDocName, setNewDocName] = useState('');
@@ -55,13 +53,6 @@ const AgentEdit = () => {
     return Object.keys(languagePresets).filter(lang => lang !== currentLanguage);
   };
 
-  // Check if data has changed compared to original
-  const checkForChanges = (currentData: AgentResponse, originalData: AgentResponse) => {
-    const currentStr = JSON.stringify(currentData);
-    const originalStr = JSON.stringify(originalData);
-    setHasChanges(currentStr !== originalStr);
-  };
-
   // Remove current language from additional languages when it changes
   useEffect(() => {
     const currentLanguage = agentData?.conversation_config?.agent?.language;
@@ -70,20 +61,12 @@ const AgentEdit = () => {
     }
   }, [agentData?.conversation_config?.agent?.language]);
 
-  // Check for changes whenever agentData changes
-  useEffect(() => {
-    if (agentData && originalAgentData) {
-      checkForChanges(agentData, originalAgentData);
-    }
-  }, [agentData, originalAgentData]);
-
   useEffect(() => {
     const fetchAgentData = async () => {
       if (!agentId) return;
       try {
         const data = await agentService.getAgent(agentId);
         setAgentData(data);
-        setOriginalAgentData(JSON.parse(JSON.stringify(data))); // Deep copy for comparison
 
         // Parse additional languages from the AgentResponse
         const parsedAdditionalLanguages = parseAdditionalLanguagesFromResponse(data);
@@ -166,8 +149,6 @@ const AgentEdit = () => {
   // Handle agent data refresh after multilingual modal saves
   const handleAgentDataRefresh = (refreshedAgentData: AgentResponse) => {
     setAgentData(refreshedAgentData);
-    setOriginalAgentData(JSON.parse(JSON.stringify(refreshedAgentData))); // Update original data
-    setHasChanges(false); // Reset changes flag
     
     // Update additional languages based on refreshed data
     const parsedAdditionalLanguages = parseAdditionalLanguagesFromResponse(refreshedAgentData);
@@ -184,11 +165,6 @@ const AgentEdit = () => {
     try {
       const updatePayload = agentService.prepareUpdatePayload(agentData, multilingualMessages);
       await agentService.updateAgent(agentId, updatePayload);
-      
-      // Update original data and reset changes flag
-      setOriginalAgentData(JSON.parse(JSON.stringify(agentData)));
-      setHasChanges(false);
-      
       toast({
         title: "Succes!",
         description: "Agentul a fost salvat cu succes"
@@ -660,7 +636,7 @@ const AgentEdit = () => {
 
         <div className="flex justify-end gap-4">
           <Button variant="outline" onClick={() => navigate('/account/kalina-agents')} className="glass-button border-border">
-            {hasChanges ? 'Anulează' : 'Închide'}
+            Anulează
           </Button>
           <Button onClick={handleSave} disabled={isSaving} className="bg-accent text-white hover:bg-accent/90">
             {isSaving ? (
