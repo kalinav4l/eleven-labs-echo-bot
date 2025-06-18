@@ -14,6 +14,7 @@ import { API_CONFIG, VOICES, LANGUAGES } from '@/constants/constants';
 import AgentTestModal from '@/components/AgentTestModal';
 import AdditionalLanguagesSection from '@/components/AdditionalLanguagesSection';
 import MultilingualFirstMessageModal from '@/components/MultilingualFirstMessageModal';
+import CreativitySelector from '@/components/CreativitySelector';
 
 interface KnowledgeDocument {
   id: string;
@@ -102,13 +103,17 @@ const AgentEdit = () => {
 
     setIsSaving(true);
     try {
-      // Prepare the conversation config with multilingual first messages
+      // Prepare the conversation config with multilingual first messages and temperature
       const conversationConfig = {
         ...agentData.conversation_config,
         agent: {
           ...agentData.conversation_config?.agent,
           first_message: agentData.conversation_config?.agent?.first_message,
-          multilingual_first_messages: multilingualMessages
+          multilingual_first_messages: multilingualMessages,
+          // Add temperature if it exists
+          ...(agentData.conversation_config?.agent?.temperature !== undefined && {
+            temperature: agentData.conversation_config.agent.temperature
+          })
         }
       };
 
@@ -293,6 +298,19 @@ const AgentEdit = () => {
     setIsMultilingualModalOpen(true);
   };
 
+  const handleCreativityChange = (temperature: number) => {
+    setAgentData({
+      ...agentData,
+      conversation_config: {
+        ...agentData.conversation_config,
+        agent: {
+          ...agentData.conversation_config?.agent,
+          temperature: temperature
+        }
+      }
+    });
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -441,6 +459,11 @@ const AgentEdit = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              <CreativitySelector
+                value={agentData.conversation_config?.agent?.temperature ?? 0.5}
+                onChange={handleCreativityChange}
+              />
             </CardContent>
           </Card>
 
