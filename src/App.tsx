@@ -12,6 +12,7 @@ import AccountSettings from "./pages/AccountSettings";
 import KalinaAgents from "./pages/KalinaAgents";
 import AgentEdit from "./pages/AgentEdit";
 import Voices from "./pages/Voices";
+import Voice from "./pages/Voice";
 import Transcript from "./pages/Transcript";
 import Outbound from "./pages/Outbound";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -36,6 +37,7 @@ function App() {
             <Route path="/account/agent-edit/:agentId" element={<AgentEdit />} />
             <Route path="/account/agent-consultant" element={<AgentConsultant />} />
             <Route path="/account/voices" element={<Voices />} />
+            <Route path="/account/voice" element={<Voice />} />
             <Route path="/account/transcript" element={<Transcript />} />
             <Route path="/account/outbound" element={<Outbound />} />
             <Route path="/account/settings" element={<AccountSettings />} />
