@@ -36,6 +36,14 @@ const AgentEdit = () => {
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [additionalLanguages, setAdditionalLanguages] = useState<string[]>([]);
 
+  // Remove current language from additional languages when it changes
+  useEffect(() => {
+    const currentLanguage = agentData?.conversation_config?.agent?.language;
+    if (currentLanguage && additionalLanguages.includes(currentLanguage)) {
+      setAdditionalLanguages(prev => prev.filter(lang => lang !== currentLanguage));
+    }
+  }, [agentData?.conversation_config?.agent?.language]);
+
   useEffect(() => {
     const fetchAgentData = async () => {
       if (!agentId) return;
