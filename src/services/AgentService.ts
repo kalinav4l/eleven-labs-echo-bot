@@ -1,6 +1,6 @@
 
 import { API_CONFIG } from '@/constants/constants';
-import { toast } from '@/components/ui/use-toast';
+import {AgentResponse} from "@/components/AgentResponse.ts";
 
 export interface AgentPrompt {
   prompt: string;
@@ -14,7 +14,6 @@ export interface AgentConfig {
   language: string;
   prompt: AgentPrompt;
   multilingual_first_messages?: Record<string, string>;
-  temperature?: number;
 }
 
 export interface TTSConfig {
@@ -82,7 +81,7 @@ export class AgentService {
     }
   }
 
-  async getAgent(agentId: string): Promise<any> {
+  async getAgent(agentId: string): Promise<AgentResponse> {
     try {
       const response = await fetch(`${this.baseUrl}/convai/agents/${agentId}`, {
         method: 'GET',
@@ -93,7 +92,9 @@ export class AgentService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
+      const agentResponse = await response.json() as AgentResponse;
+      console.log(agentResponse);
+      return agentResponse;
     } catch (error) {
       console.error('Error fetching agent:', error);
       throw error;
@@ -134,10 +135,9 @@ export class AgentService {
           prompt: agentData.conversation_config?.agent?.prompt?.prompt || '',
           knowledge_base: agentData.conversation_config?.agent?.prompt?.knowledge_base || [],
           rag: agentData.conversation_config?.agent?.prompt?.rag || {},
-          temperature: agentData.conversation_config?.agent?.temperature ?? 0.5
+          temperature: agentData.conversation_config?.agent?.temperature ?? 0.0
         },
         multilingual_first_messages: multilingualMessages,
-        temperature: agentData.conversation_config?.agent?.temperature ?? 0.5
       },
       tts: {
         voice_id: agentData.conversation_config?.tts?.voice_id || ''
