@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -248,9 +247,38 @@ const Transcript = () => {
 
     let srtContent = '';
     transcriptEntries.forEach((entry, index) => {
-      const startTime = `00:${formatTime(entry.startTime)},000`;
-      const endTime = `00:${formatTime(entry.endTime)},000`;
-      srtContent += `${index + 1}\n${startTime} --> ${endTime}\n${entry.speaker}: ${entry.text}\n\n`;
+      // Convert seconds to SRT timestamp format (HH:MM:SS,mmm)
+      const formatSRTTime = (seconds: number) => {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = Math.floor(seconds % 60);
+        const milliseconds = Math.floor((seconds % 1) * 1000);
+        
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')},${milliseconds.toString().padStart(3, '0')}`;
+      };
+
+      // Determine speaker number based on speaker name
+      const getSpeakerNumber = (speakerName: string) => {
+        if (speakerName.toLowerCase().includes('agent') || speakerName.toLowerCase().includes('ai')) {
+          return '0';
+        } else if (speakerName.toLowerCase().includes('user')) {
+          return '1';
+        } else {
+          // Extract number from speaker name if it exists, otherwise assign based on index
+          const numberMatch = speakerName.match(/\d+/);
+          if (numberMatch) {
+            return numberMatch[0];
+          }
+          // Alternate between speaker 0 and 1 based on index
+          return (index % 2).toString();
+        }
+      };
+
+      const startTime = formatSRTTime(entry.startTime);
+      const endTime = formatSRTTime(entry.endTime);
+      const speakerNumber = getSpeakerNumber(entry.speaker);
+      
+      srtContent += `${startTime} --> ${endTime} [Speaker ${speakerNumber}]\n${entry.text}\n\n`;
     });
 
     const blob = new Blob([srtContent], { type: 'text/plain;charset=utf-8' });
@@ -265,7 +293,7 @@ const Transcript = () => {
 
     toast({
       title: "Descărcare",
-      description: "Fișierul SRT a fost descărcat cu succes."
+      description: "Fișierul SRT a fost descărcat cu succes în formatul cerut."
     });
   };
 
