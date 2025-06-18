@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -12,6 +13,7 @@ import { useClipboard } from '@/hooks/useClipboard';
 import { toast } from '@/components/ui/use-toast';
 import { API_CONFIG, VOICES, LANGUAGES } from '@/constants/constants';
 import { agentService } from '@/services/AgentService';
+import { AgentResponse } from '@/components/AgentResponse';
 import AgentTestModal from '@/components/AgentTestModal';
 import AdditionalLanguagesSection from '@/components/AdditionalLanguagesSection';
 import MultilingualFirstMessageModal from '@/components/MultilingualFirstMessageModal';
@@ -30,7 +32,7 @@ const AgentEdit = () => {
   const { copyToClipboard } = useClipboard();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [agentData, setAgentData] = useState<any>(null);
+  const [agentData, setAgentData] = useState<AgentResponse | null>(null);
   const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
   const [newDocContent, setNewDocContent] = useState('');
   const [newDocName, setNewDocName] = useState('');
@@ -56,6 +58,23 @@ const AgentEdit = () => {
       try {
         const data = await agentService.getAgent(agentId);
         setAgentData(data);
+        
+        // Extract additional languages from language_presets
+        if (data.conversation_config?.language_presets) {
+          const presetLanguages = Object.keys(data.conversation_config.language_presets);
+          setAdditionalLanguages(presetLanguages);
+        }
+        
+        // Load existing knowledge base documents if any
+        if (data.conversation_config?.agent?.prompt?.knowledge_base) {
+          const existingDocs = data.conversation_config.agent.prompt.knowledge_base.map((kb: any, index: number) => ({
+            id: `existing-${index}`,
+            name: kb.name || `Document ${index + 1}`,
+            content: kb.content || '',
+            uploadedAt: new Date()
+          }));
+          setDocuments(existingDocs);
+        }
       } catch (error) {
         console.error('Error fetching agent:', error);
         toast({
@@ -232,11 +251,11 @@ const AgentEdit = () => {
     const defaultLanguage = agentData?.conversation_config?.agent?.language || 'en';
     if (messages[defaultLanguage]) {
       setAgentData({
-        ...agentData,
+        ...agentData!,
         conversation_config: {
-          ...agentData.conversation_config,
+          ...agentData!.conversation_config,
           agent: {
-            ...agentData.conversation_config?.agent,
+            ...agentData!.conversation_config?.agent!,
             first_message: messages[defaultLanguage]
           }
         }
@@ -260,12 +279,15 @@ const AgentEdit = () => {
 
   const handleCreativityChange = (temperature: number) => {
     setAgentData({
-      ...agentData,
+      ...agentData!,
       conversation_config: {
-        ...agentData.conversation_config,
+        ...agentData!.conversation_config,
         agent: {
-          ...agentData.conversation_config?.agent,
-          temperature: temperature
+          ...agentData!.conversation_config?.agent!,
+          prompt: {
+            ...agentData!.conversation_config?.agent?.prompt!,
+            temperature: temperature
+          }
         }
       }
     });
@@ -372,7 +394,7 @@ const AgentEdit = () => {
                     conversation_config: {
                       ...agentData.conversation_config,
                       tts: {
-                        ...agentData.conversation_config?.tts,
+                        ...agentData.conversation_config?.tts!,
                         voice_id: value
                       }
                     }
@@ -400,7 +422,7 @@ const AgentEdit = () => {
                     conversation_config: {
                       ...agentData.conversation_config,
                       agent: {
-                        ...agentData.conversation_config?.agent,
+                        ...agentData.conversation_config?.agent!,
                         language: value
                       }
                     }
@@ -421,7 +443,7 @@ const AgentEdit = () => {
 
               <div className="w-full">
                 <CreativitySelector
-                  value={agentData.conversation_config?.agent?.temperature ?? 0.5}
+                  value={agentData.conversation_config?.agent?.prompt?.temperature ?? 0.5}
                   onChange={handleCreativityChange}
                 />
               </div>
@@ -443,9 +465,9 @@ const AgentEdit = () => {
                     conversation_config: {
                       ...agentData.conversation_config,
                       agent: {
-                        ...agentData.conversation_config?.agent,
+                        ...agentData.conversation_config?.agent!,
                         prompt: {
-                          ...agentData.conversation_config?.agent?.prompt,
+                          ...agentData.conversation_config?.agent?.prompt!,
                           prompt: e.target.value
                         }
                       }
@@ -500,7 +522,7 @@ const AgentEdit = () => {
                   conversation_config: {
                     ...agentData.conversation_config,
                     agent: {
-                      ...agentData.conversation_config?.agent,
+                      ...agentData.conversation_config?.agent!,
                       first_message: e.target.value
                     }
                   }
@@ -524,6 +546,7 @@ const AgentEdit = () => {
           currentLanguage={agentData.conversation_config?.agent?.language}
         />
 
+        {/* Knowledge Base Section */}
         <Card className="liquid-glass">
           <CardHeader>
             <CardTitle className="text-foreground">Knowledge Base</CardTitle>
