@@ -1,4 +1,3 @@
-
 import { API_CONFIG } from '@/constants/constants';
 import { AgentResponse, LanguagePreset } from "@/components/AgentResponse.ts";
 
@@ -116,10 +115,17 @@ export class AgentService {
     // Update or add multilingual messages
     Object.entries(multilingualMessages).forEach(([language, message]) => {
       if (language !== defaultLanguage && message.trim()) {
-        const sourceHash = `"first_message": "${multilingualMessages[defaultLanguage] || ''}","language":"${defaultLanguage}"}`;
+        // Create proper source hash with the correct format
+        const sourceHash = JSON.stringify({
+          firstMessage: multilingualMessages[defaultLanguage] || '',
+          language: defaultLanguage
+        });
         
-        if (languagePresets[language]) {
-          // Update existing preset
+        // Check if this language already exists in language_presets
+        const languageAlreadyExists = languagePresets[language] !== undefined;
+        
+        if (languageAlreadyExists) {
+          // Update existing preset - keep existing agent values if they exist
           languagePresets[language] = {
             ...languagePresets[language],
             overrides: {
@@ -127,6 +133,9 @@ export class AgentService {
               agent: {
                 ...languagePresets[language].overrides.agent,
                 first_message: message,
+                // Keep existing language and prompt values if language already exists
+                language: languagePresets[language].overrides.agent.language,
+                prompt: languagePresets[language].overrides.agent.prompt
               }
             },
             first_message_translation: {
@@ -135,15 +144,15 @@ export class AgentService {
             }
           };
         } else {
-          // Create new preset
+          // Create new preset - set agent.language and agent.prompt to null for new languages
           languagePresets[language] = {
             overrides: {
               tts: null,
               conversation: null,
               agent: {
                 first_message: message,
-                language: null,
-                prompt: null
+                language: null, // Set to null for new languages
+                prompt: null    // Set to null for new languages
               }
             },
             first_message_translation: {
