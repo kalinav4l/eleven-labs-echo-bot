@@ -194,6 +194,8 @@ const Outbound = () => {
     try {
       console.log('Processing webhook response:', result);
       let callResults: any[] = [];
+      
+      // Handle different response structures more robustly
       if (Array.isArray(result)) {
         callResults = result;
         console.log('Result is array, using directly');
@@ -203,20 +205,59 @@ const Outbound = () => {
       } else if (result?.calls && Array.isArray(result.calls)) {
         callResults = result.calls;
         console.log('Found calls array in result');
+      } else if (result?.data && Array.isArray(result.data)) {
+        callResults = result.data;
+        console.log('Found call results in data array');
+      } else if (result && typeof result === 'object') {
+        // If it's a single call result object, wrap it in an array
+        callResults = [result];
+        console.log('Single call result, wrapping in array');
       }
-      console.log('Extracted call results:', callResults);
+      
+      console.log('Extracted call results:', callResults.length, 'items');
+      
       if (callResults.length > 0) {
-        try {
-          await saveCallResults.mutateAsync(callResults);
+        // Filter out any invalid results
+        const validResults = callResults.filter(result => {
+          const hasValidData = result && (
+            result.clean_conversations || 
+            result.phone_number || 
+            result.call_info ||
+            result.status
+          );
+          if (!hasValidData) {
+            console.warn('Filtering out invalid result:', result);
+          }
+          return hasValidData;
+        });
+        
+        console.log('Valid results to save:', validResults.length);
+        
+        if (validResults.length > 0) {
+          try {
+            await saveCallResults.mutateAsync(validResults);
+            toast({
+              title: "Apel finalizat",
+              description: `${validResults.length} rezultat(e) salvat(e) cu succes.`
+            });
+            
+            // Force refresh the call history
+            setTimeout(() => {
+              refetch();
+            }, 1000);
+          } catch (saveError) {
+            console.error('Error saving call results:', saveError);
+            toast({
+              title: "Eroare la salvare",
+              description: "Nu s-au putut salva rezultatele apelului.",
+              variant: "destructive"
+            });
+          }
+        } else {
+          console.log('No valid results found after filtering');
           toast({
-            title: "Apel finalizat",
-            description: `Rezultatul pentru apelul curent a fost salvat.`
-          });
-        } catch (saveError) {
-          console.error('Error saving call results:', saveError);
-          toast({
-            title: "Eroare la salvare",
-            description: "Nu s-au putut salva rezultatele apelului.",
+            title: "Rezultat primit",
+            description: "Răspunsul a fost primit dar nu conține rezultate valide de apel.",
             variant: "destructive"
           });
         }
