@@ -56,7 +56,7 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
 
   const getLanguageDisplayName = (languageId: string) => {
     const languageName = getLanguageLabel(languageId);
-    return `• ${languageId.toUpperCase()} ${languageName}`;
+    return `${languageName}`;
   };
 
   const allLanguages = [defaultLanguage, ...additionalLanguages];
