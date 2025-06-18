@@ -52,9 +52,9 @@ const CreativitySelector: React.FC<CreativitySelectorProps> = ({ value, onChange
         <SelectContent className="bg-background border border-border">
           {creativityOptions.map((option) => (
             <SelectItem key={option.value} value={option.value.toString()}>
-              <div className="flex flex-col">
-                <span>{option.label}</span>
-                <span className="text-xs text-muted-foreground">{option.description}</span>
+              <div className="flex flex-col text-left w-full">
+                <span className="text-left">{option.label}</span>
+                <span className="text-xs text-muted-foreground text-left">{option.description}</span>
               </div>
             </SelectItem>
           ))}
