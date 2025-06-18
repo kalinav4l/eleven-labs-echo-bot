@@ -113,6 +113,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, firstName?: string, lastName?: string) => {
     try {
+      console.log('Starting signup process for:', email);
+      
       // Clean up existing state first
       cleanupAuthState();
 
@@ -124,8 +126,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            first_name: firstName,
-            last_name: lastName,
+            first_name: firstName || '',
+            last_name: lastName || '',
           }
         }
       });
@@ -135,7 +137,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error };
       }
 
-      console.log('Sign up successful:', data);
+      console.log('Sign up response:', data);
+
+      // If user was created successfully but needs email confirmation
+      if (data.user && !data.session) {
+        console.log('User created, email confirmation required');
+        return { error: null };
+      }
+
+      // If user was created and logged in immediately
+      if (data.user && data.session) {
+        console.log('User created and logged in immediately');
+        return { error: null };
+      }
+
       return { error: null };
     } catch (err: any) {
       console.error('Sign up exception:', err);

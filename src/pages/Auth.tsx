@@ -30,9 +30,21 @@ const Auth = () => {
     try {
       let result;
       if (isLogin) {
+        console.log('Attempting login for:', email);
         result = await signIn(email, password);
         if (result.error) {
-          setError(`Eroare la conectare: ${result.error.message}`);
+          console.error('Login error:', result.error);
+          let errorMessage = 'Eroare la conectare';
+          
+          if (result.error.message?.includes('Invalid login credentials')) {
+            errorMessage = 'Email sau parolă incorectă';
+          } else if (result.error.message?.includes('Email not confirmed')) {
+            errorMessage = 'Vă rugăm să vă confirmați emailul înainte de a vă conecta';
+          } else if (result.error.message) {
+            errorMessage = result.error.message;
+          }
+          
+          setError(errorMessage);
         }
       } else {
         // Validation for sign up
@@ -48,10 +60,26 @@ const Auth = () => {
           return;
         }
 
+        console.log('Attempting signup for:', email, 'with name:', firstName, lastName);
         result = await signUp(email, password, firstName, lastName);
+        
         if (result.error) {
-          setError(`Eroare la înregistrare: ${result.error.message}`);
+          console.error('Signup error:', result.error);
+          let errorMessage = 'Eroare la înregistrare';
+          
+          if (result.error.message?.includes('User already registered')) {
+            errorMessage = 'Un utilizator cu acest email există deja';
+          } else if (result.error.message?.includes('Password should be at least')) {
+            errorMessage = 'Parola trebuie să aibă cel puțin 6 caractere';
+          } else if (result.error.message?.includes('Database error')) {
+            errorMessage = 'Eroare de bază de date. Vă rugăm să încercați din nou.';
+          } else if (result.error.message) {
+            errorMessage = result.error.message;
+          }
+          
+          setError(errorMessage);
         } else {
+          console.log('Signup successful');
           setSuccess('Cont creat cu succes! Verifică-ți emailul pentru confirmare.');
           // Reset form
           setEmail('');
@@ -61,7 +89,8 @@ const Auth = () => {
         }
       }
     } catch (err: any) {
-      setError(`Eroare neașteptată: ${err.message}`);
+      console.error('Auth exception:', err);
+      setError(`Eroare neașteptată: ${err.message || 'Ceva nu a mers bine'}`);
     } finally {
       setLoading(false);
     }
@@ -98,6 +127,7 @@ const Auth = () => {
                   onChange={(e) => setFirstName(e.target.value)}
                   required={!isLogin}
                   className="glass-input"
+                  disabled={loading}
                 />
                 <Input
                   type="text"
@@ -106,6 +136,7 @@ const Auth = () => {
                   onChange={(e) => setLastName(e.target.value)}
                   required={!isLogin}
                   className="glass-input"
+                  disabled={loading}
                 />
               </>
             )}
@@ -116,6 +147,7 @@ const Auth = () => {
               onChange={(e) => setEmail(e.target.value)}
               required
               className="glass-input"
+              disabled={loading}
             />
             <Input
               type="password"
@@ -125,6 +157,7 @@ const Auth = () => {
               required
               minLength={isLogin ? undefined : 6}
               className="glass-input"
+              disabled={loading}
             />
             
             {error && (
@@ -160,6 +193,7 @@ const Auth = () => {
                 setLastName('');
               }}
               className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+              disabled={loading}
             >
               {isLogin 
                 ? 'Nu ai cont? Înregistrează-te' 
