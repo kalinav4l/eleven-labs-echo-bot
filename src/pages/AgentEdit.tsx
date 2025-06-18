@@ -12,6 +12,7 @@ import { useClipboard } from '@/hooks/useClipboard';
 import { toast } from '@/components/ui/use-toast';
 import { API_CONFIG, VOICES, LANGUAGES } from '@/constants/constants';
 import AgentTestModal from '@/components/AgentTestModal';
+import AdditionalLanguagesSection from '@/components/AdditionalLanguagesSection';
 
 interface KnowledgeDocument {
   id: string;
@@ -33,6 +34,7 @@ const AgentEdit = () => {
   const [isAddingDoc, setIsAddingDoc] = useState(false);
   const [isUpdatingKnowledge, setIsUpdatingKnowledge] = useState(false);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
+  const [additionalLanguages, setAdditionalLanguages] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchAgentData = async () => {
@@ -405,6 +407,12 @@ const AgentEdit = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Additional Languages Section */}
+        <AdditionalLanguagesSection
+          selectedLanguages={additionalLanguages}
+          onLanguagesChange={setAdditionalLanguages}
+        />
 
         <Card className="liquid-glass">
           <CardHeader>
