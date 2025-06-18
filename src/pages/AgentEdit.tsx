@@ -460,10 +460,12 @@ const AgentEdit = () => {
                 </Select>
               </div>
 
-              <CreativitySelector
-                value={agentData.conversation_config?.agent?.temperature ?? 0.5}
-                onChange={handleCreativityChange}
-              />
+              <div className="w-full">
+                <CreativitySelector
+                  value={agentData.conversation_config?.agent?.temperature ?? 0.5}
+                  onChange={handleCreativityChange}
+                />
+              </div>
             </CardContent>
           </Card>
 
@@ -472,7 +474,7 @@ const AgentEdit = () => {
               <CardTitle className="text-foreground">Prompt Sistem</CardTitle>
             </CardHeader>
             <CardContent>
-              <div>
+              <div className="w-full">
                 <Label htmlFor="system-prompt" className="text-foreground">Prompt</Label>
                 <Textarea
                   id="system-prompt"
@@ -490,7 +492,7 @@ const AgentEdit = () => {
                       }
                     }
                   })}
-                  className="glass-input min-h-[300px]"
+                  className="glass-input min-h-[300px] w-full"
                   placeholder="Introdu prompt-ul pentru agent..."
                 />
               </div>
