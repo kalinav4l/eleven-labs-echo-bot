@@ -9,6 +9,8 @@ import { Languages, Loader2, Save } from 'lucide-react';
 import { LANGUAGE_MAP } from '@/constants/constants';
 import { toast } from '@/components/ui/use-toast';
 import { translationService } from '@/services/TranslationService';
+import { agentService } from '@/services/AgentService';
+import { AgentResponse } from '@/components/AgentResponse';
 
 interface MultilingualFirstMessageModalProps {
   isOpen: boolean;
@@ -17,6 +19,8 @@ interface MultilingualFirstMessageModalProps {
   additionalLanguages: string[];
   messages: Record<string, string>;
   onMessagesUpdate: (messages: Record<string, string>) => void;
+  agentId?: string;
+  agentData?: AgentResponse;
 }
 
 const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps> = ({
@@ -26,9 +30,12 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
   additionalLanguages,
   messages,
   onMessagesUpdate,
+  agentId,
+  agentData,
 }) => {
   const [selectedLanguage, setSelectedLanguage] = useState(defaultLanguage);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [localMessages, setLocalMessages] = useState<Record<string, string>>(messages);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -60,13 +67,76 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
     setHasChanges(true);
   };
 
-  const handleSaveChanges = () => {
-    onMessagesUpdate(localMessages);
-    setHasChanges(false);
-    toast({
-      title: "Succes!",
-      description: "Mesajele multilinguale au fost actualizate.",
-    });
+  const handleSaveChanges = async () => {
+    if (!agentId || !agentData) {
+      toast({
+        title: "Eroare",
+        description: "Nu s-a putut identifica agentul pentru salvare.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    
+    try {
+      // Prepare the update payload with only language_presets changes
+      const updatePayload = agentService.prepareUpdatePayload(agentData, localMessages);
+      
+      // Make the API call to update the agent
+      await agentService.updateAgent(agentId, updatePayload);
+      
+      // Update the parent component with the new messages
+      onMessagesUpdate(localMessages);
+      setHasChanges(false);
+      
+      toast({
+        title: "Succes!",
+        description: "Mesajele multilinguale au fost salvate cu succes.",
+      });
+
+      // Refresh the modal by fetching updated agent data
+      if (agentId) {
+        try {
+          const updatedAgentData = await agentService.getAgent(agentId);
+          
+          // Extract the updated multilingual messages
+          const updatedMessages: Record<string, string> = {};
+          
+          // Add default language message
+          if (updatedAgentData.conversation_config?.agent?.first_message) {
+            updatedMessages[defaultLanguage] = updatedAgentData.conversation_config.agent.first_message;
+          }
+          
+          // Add messages from language presets
+          if (updatedAgentData.conversation_config?.language_presets) {
+            Object.entries(updatedAgentData.conversation_config.language_presets).forEach(([languageId, preset]) => {
+              if (preset.overrides?.agent?.first_message) {
+                updatedMessages[languageId] = preset.overrides.agent.first_message;
+              } else if (preset.first_message_translation?.text) {
+                updatedMessages[languageId] = preset.first_message_translation.text;
+              }
+            });
+          }
+          
+          // Update local state with refreshed data
+          setLocalMessages(updatedMessages);
+        } catch (refreshError) {
+          console.error('Error refreshing agent data:', refreshError);
+          // Continue without refresh if there's an error
+        }
+      }
+      
+    } catch (error) {
+      console.error('Error saving multilingual messages:', error);
+      toast({
+        title: "Eroare",
+        description: "A apărut o eroare la salvarea mesajelor. Te rog încearcă din nou.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleClose = () => {
@@ -239,10 +309,15 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
               {hasChanges && (
                 <Button 
                   onClick={handleSaveChanges}
+                  disabled={isSaving}
                   className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
                 >
-                  <Save className="w-4 h-4" />
-                  Salvează modificările
+                  {isSaving ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
+                  {isSaving ? "Se salvează..." : "Salvează modificările"}
                 </Button>
               )}
             </div>

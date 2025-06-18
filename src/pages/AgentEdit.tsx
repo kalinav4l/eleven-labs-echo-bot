@@ -579,7 +579,16 @@ const AgentEdit = () => {
         <AgentTestModal agent={agentData} isOpen={isTestModalOpen} onClose={() => setIsTestModalOpen(false)} />
 
         {/* Multilingual First Message Modal */}
-        <MultilingualFirstMessageModal isOpen={isMultilingualModalOpen} onClose={() => setIsMultilingualModalOpen(false)} defaultLanguage={agentData?.conversation_config?.agent?.language || 'en'} additionalLanguages={additionalLanguages} messages={multilingualMessages} onMessagesUpdate={handleMultilingualMessagesUpdate} />
+        <MultilingualFirstMessageModal 
+          isOpen={isMultilingualModalOpen} 
+          onClose={() => setIsMultilingualModalOpen(false)} 
+          defaultLanguage={agentData?.conversation_config?.agent?.language || 'en'} 
+          additionalLanguages={additionalLanguages} 
+          messages={multilingualMessages} 
+          onMessagesUpdate={handleMultilingualMessagesUpdate}
+          agentId={agentId}
+          agentData={agentData}
+        />
       </div>
     </DashboardLayout>;
 };
