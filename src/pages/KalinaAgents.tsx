@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -10,6 +11,7 @@ import { useAgentOperations } from '@/hooks/useAgentOperations';
 import { useClipboard } from '@/hooks/useClipboard';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AgentTestCallModal } from '@/components/AgentTestCallModal';
 
 const KalinaAgents = () => {
   const {
@@ -27,6 +29,7 @@ const KalinaAgents = () => {
   } = useClipboard();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAgentForDeletion, setSelectedAgentForDeletion] = useState<any>(null);
+  const [testCallAgent, setTestCallAgent] = useState<any>(null);
   const navigate = useNavigate();
 
   // Filter agents based on search query
@@ -68,6 +71,10 @@ const KalinaAgents = () => {
 
   const handleCopyAgentId = async (agentId: string) => {
     await copyToClipboard(agentId);
+  };
+
+  const handleTestCall = (agent: any) => {
+    setTestCallAgent(agent);
   };
 
   if (isLoading) {
@@ -186,7 +193,12 @@ const KalinaAgents = () => {
                   </div>
 
                   <div className="flex space-x-2">
-                    <Button size="sm" className="flex-1 glass-button" disabled={!agent.is_active}>
+                    <Button 
+                      size="sm" 
+                      className="flex-1 glass-button" 
+                      disabled={!agent.is_active}
+                      onClick={() => handleTestCall(agent)}
+                    >
                       <Phone className="w-4 h-4 mr-2" />
                       Test Apel
                     </Button>
@@ -238,6 +250,13 @@ const KalinaAgents = () => {
             </Card>
         )}
       </div>
+
+      {/* Agent Test Call Modal */}
+      <AgentTestCallModal
+        isOpen={!!testCallAgent}
+        onClose={() => setTestCallAgent(null)}
+        agent={testCallAgent || { id: '', agent_id: '', name: '' }}
+      />
 
       <AlertDialog open={!!selectedAgentForDeletion} onOpenChange={(open) => {
         if (!open) setSelectedAgentForDeletion(null);
