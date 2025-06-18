@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 
 export const useGuestRateLimit = () => {
   const [guestUsage, setGuestUsage] = useState<number>(0);
@@ -17,22 +16,20 @@ export const useGuestRateLimit = () => {
       const response = await fetch('https://api.ipify.org?format=json');
       const { ip } = await response.json();
 
-      const { data, error } = await supabase
-        .from('guest_usage')
-        .select('usage_count')
-        .eq('ip_address', ip)
-        .single();
+      // Use localStorage as fallback since the guest_usage table might not be in types yet
+      const localStorageKey = `guest_usage_${ip}`;
+      const stored = localStorage.getItem(localStorageKey);
+      const currentUsage = stored ? parseInt(stored, 10) : 0;
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error checking guest usage:', error);
-        return;
-      }
-
-      const currentUsage = data?.usage_count || 0;
       setGuestUsage(currentUsage);
       setIsLimitReached(currentUsage >= GUEST_LIMIT);
     } catch (error) {
-      console.error('Error getting IP:', error);
+      console.error('Error checking guest usage:', error);
+      // Fallback to localStorage only
+      const stored = localStorage.getItem('guest_usage_fallback');
+      const currentUsage = stored ? parseInt(stored, 10) : 0;
+      setGuestUsage(currentUsage);
+      setIsLimitReached(currentUsage >= GUEST_LIMIT);
     }
   };
 
@@ -41,43 +38,38 @@ export const useGuestRateLimit = () => {
       const response = await fetch('https://api.ipify.org?format=json');
       const { ip } = await response.json();
 
-      // Check current usage
-      const { data: existingData } = await supabase
-        .from('guest_usage')
-        .select('usage_count')
-        .eq('ip_address', ip)
-        .single();
-
-      const currentUsage = existingData?.usage_count || 0;
+      const localStorageKey = `guest_usage_${ip}`;
+      const stored = localStorage.getItem(localStorageKey);
+      const currentUsage = stored ? parseInt(stored, 10) : 0;
       
       if (currentUsage >= GUEST_LIMIT) {
         setIsLimitReached(true);
         return false;
       }
 
-      // Increment usage
-      const { error } = await supabase
-        .from('guest_usage')
-        .upsert({
-          ip_address: ip,
-          usage_count: currentUsage + 1,
-          last_usage: new Date().toISOString()
-        }, {
-          onConflict: 'ip_address'
-        });
-
-      if (error) {
-        console.error('Error updating guest usage:', error);
-        return false;
-      }
-
+      // Increment usage in localStorage
       const newUsage = currentUsage + 1;
+      localStorage.setItem(localStorageKey, newUsage.toString());
+
       setGuestUsage(newUsage);
       setIsLimitReached(newUsage >= GUEST_LIMIT);
       return true;
     } catch (error) {
       console.error('Error incrementing guest usage:', error);
-      return false;
+      // Fallback to localStorage only
+      const stored = localStorage.getItem('guest_usage_fallback');
+      const currentUsage = stored ? parseInt(stored, 10) : 0;
+      
+      if (currentUsage >= GUEST_LIMIT) {
+        setIsLimitReached(true);
+        return false;
+      }
+
+      const newUsage = currentUsage + 1;
+      localStorage.setItem('guest_usage_fallback', newUsage.toString());
+      setGuestUsage(newUsage);
+      setIsLimitReached(newUsage >= GUEST_LIMIT);
+      return true;
     }
   };
 

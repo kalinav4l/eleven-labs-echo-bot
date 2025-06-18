@@ -15,6 +15,7 @@ const Auth = () => {
   const [lastName, setLastName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -24,22 +25,43 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
       let result;
       if (isLogin) {
         result = await signIn(email, password);
+        if (result.error) {
+          setError(`Eroare la conectare: ${result.error.message}`);
+        }
       } else {
-        result = await signUp(email, password, firstName, lastName);
-      }
+        // Validation for sign up
+        if (!firstName.trim() || !lastName.trim()) {
+          setError('Prenumele și numele sunt obligatorii');
+          setLoading(false);
+          return;
+        }
+        
+        if (password.length < 6) {
+          setError('Parola trebuie să aibă cel puțin 6 caractere');
+          setLoading(false);
+          return;
+        }
 
-      if (result.error) {
-        setError(result.error.message);
-      } else if (!isLogin) {
-        setError('Verifică-ți emailul pentru a confirma contul!');
+        result = await signUp(email, password, firstName, lastName);
+        if (result.error) {
+          setError(`Eroare la înregistrare: ${result.error.message}`);
+        } else {
+          setSuccess('Cont creat cu succes! Verifică-ți emailul pentru confirmare.');
+          // Reset form
+          setEmail('');
+          setPassword('');
+          setFirstName('');
+          setLastName('');
+        }
       }
     } catch (err: any) {
-      setError(err.message);
+      setError(`Eroare neașteptată: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -61,7 +83,7 @@ const Auth = () => {
           <CardDescription className="text-muted-foreground">
             {isLogin 
               ? 'Conectează-te la contul tău' 
-              : 'Creează un cont nou'
+              : 'Creează un cont nou pentru acces complet'
             }
           </CardDescription>
         </CardHeader>
@@ -74,6 +96,7 @@ const Auth = () => {
                   placeholder="Prenume"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
+                  required={!isLogin}
                   className="glass-input"
                 />
                 <Input
@@ -81,6 +104,7 @@ const Auth = () => {
                   placeholder="Nume"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
+                  required={!isLogin}
                   className="glass-input"
                 />
               </>
@@ -95,15 +119,24 @@ const Auth = () => {
             />
             <Input
               type="password"
-              placeholder="Parolă"
+              placeholder={isLogin ? "Parolă" : "Parolă (minim 6 caractere)"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              minLength={isLogin ? undefined : 6}
               className="glass-input"
             />
             
             {error && (
-              <p className="text-destructive text-sm text-center">{error}</p>
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+                <p className="text-destructive text-sm">{error}</p>
+              </div>
+            )}
+
+            {success && (
+              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                <p className="text-green-600 text-sm">{success}</p>
+              </div>
             )}
             
             <Button
@@ -111,13 +144,21 @@ const Auth = () => {
               disabled={loading}
               className="w-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
             >
-              {loading ? 'Se încarcă...' : (isLogin ? 'Conectare' : 'Înregistrare')}
+              {loading ? 'Se procesează...' : (isLogin ? 'Conectare' : 'Înregistrare')}
             </Button>
           </form>
           
           <div className="mt-4 text-center">
             <button
-              onClick={() => setIsLogin(!isLogin)}
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setError('');
+                setSuccess('');
+                setEmail('');
+                setPassword('');
+                setFirstName('');
+                setLastName('');
+              }}
               className="text-muted-foreground hover:text-foreground text-sm transition-colors"
             >
               {isLogin 
