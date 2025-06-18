@@ -112,15 +112,15 @@ export class AgentService {
       });
     }
     
+    // Create source hash for the default language message
+    const sourceHash = JSON.stringify({
+      firstMessage: multilingualMessages[defaultLanguage] || '',
+      language: defaultLanguage
+    });
+    
     // Update or add multilingual messages
     Object.entries(multilingualMessages).forEach(([language, message]) => {
-      if (language !== defaultLanguage && message.trim()) {
-        // Create proper source hash with the correct format
-        const sourceHash = JSON.stringify({
-          firstMessage: multilingualMessages[defaultLanguage] || '',
-          language: defaultLanguage
-        });
-        
+      if (language !== defaultLanguage) {
         // Check if this language already exists in language_presets
         const languageAlreadyExists = languagePresets[language] !== undefined;
         
@@ -132,7 +132,7 @@ export class AgentService {
               ...languagePresets[language].overrides,
               agent: {
                 ...languagePresets[language].overrides.agent,
-                first_message: message,
+                first_message: message || '',
                 // Keep existing language and prompt values if language already exists
                 language: languagePresets[language].overrides.agent.language,
                 prompt: languagePresets[language].overrides.agent.prompt
@@ -140,33 +140,34 @@ export class AgentService {
             },
             first_message_translation: {
               source_hash: sourceHash,
-              text: message
+              text: message || ''
             }
           };
         } else {
           // Create new preset - set agent.language and agent.prompt to null for new languages
+          // For new languages, set empty string for first_message and first_message_translation.text
           languagePresets[language] = {
             overrides: {
               tts: null,
               conversation: null,
               agent: {
-                first_message: message,
+                first_message: message || '', // Use the message from multilingualMessages (could be empty for new languages)
                 language: null, // Set to null for new languages
                 prompt: null    // Set to null for new languages
               }
             },
             first_message_translation: {
               source_hash: sourceHash,
-              text: message
+              text: message || '' // Use the message from multilingualMessages (could be empty for new languages)
             }
           };
         }
       }
     });
 
-    // Remove language presets for languages that no longer have messages
+    // Remove language presets for languages that no longer exist in multilingualMessages
     Object.keys(languagePresets).forEach(language => {
-      if (language !== defaultLanguage && !multilingualMessages[language]?.trim()) {
+      if (language !== defaultLanguage && !multilingualMessages.hasOwnProperty(language)) {
         delete languagePresets[language];
       }
     });

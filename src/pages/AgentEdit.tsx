@@ -17,22 +17,19 @@ import AgentTestModal from '@/components/AgentTestModal';
 import AdditionalLanguagesSection from '@/components/AdditionalLanguagesSection';
 import MultilingualFirstMessageModal from '@/components/MultilingualFirstMessageModal';
 import CreativitySelector from '@/components/CreativitySelector';
+
 interface KnowledgeDocument {
   id: string;
   name: string;
   content: string;
   uploadedAt: Date;
 }
+
 const AgentEdit = () => {
-  const {
-    agentId
-  } = useParams<{
-    agentId: string;
-  }>();
+  const { agentId } = useParams<{ agentId: string }>();
   const navigate = useNavigate();
-  const {
-    copyToClipboard
-  } = useClipboard();
+  const { copyToClipboard } = useClipboard();
+  
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [agentData, setAgentData] = useState<AgentResponse | null>(null);
@@ -63,6 +60,7 @@ const AgentEdit = () => {
       setAdditionalLanguages(prev => prev.filter(lang => lang !== currentLanguage));
     }
   }, [agentData?.conversation_config?.agent?.language]);
+
   useEffect(() => {
     const fetchAgentData = async () => {
       if (!agentId) return;
@@ -122,9 +120,36 @@ const AgentEdit = () => {
       setMultilingualMessages(currentMessages);
     }
   }, [agentData]);
+
+  // Handle additional languages change - add empty messages for new languages
+  const handleAdditionalLanguagesChange = (newLanguages: string[]) => {
+    setAdditionalLanguages(newLanguages);
+    
+    // Add empty messages for new languages that don't exist in multilingualMessages
+    const defaultLanguage = agentData?.conversation_config?.agent?.language || 'en';
+    const updatedMessages = { ...multilingualMessages };
+    
+    // Add empty string for new languages
+    newLanguages.forEach(language => {
+      if (!updatedMessages[language]) {
+        updatedMessages[language] = '';
+      }
+    });
+    
+    // Remove messages for languages that are no longer selected
+    Object.keys(updatedMessages).forEach(language => {
+      if (language !== defaultLanguage && !newLanguages.includes(language)) {
+        delete updatedMessages[language];
+      }
+    });
+    
+    setMultilingualMessages(updatedMessages);
+  };
+
   const getLanguageLabel = (languageId: string) => {
     return LANGUAGE_MAP[languageId as keyof typeof LANGUAGE_MAP] || languageId;
   };
+
   const handleSave = async () => {
     if (!agentId || !agentData) return;
     setIsSaving(true);
@@ -146,6 +171,7 @@ const AgentEdit = () => {
       setIsSaving(false);
     }
   };
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -166,6 +192,7 @@ const AgentEdit = () => {
     };
     reader.readAsText(file);
   };
+
   const addManualDocument = () => {
     if (!newDocName.trim() || !newDocContent.trim()) {
       toast({
@@ -190,6 +217,7 @@ const AgentEdit = () => {
       description: `Documentul "${newDocName}" a fost adăugat cu succes.`
     });
   };
+
   const handleRemoveDocument = (id: string) => {
     setDocuments(prev => prev.filter(doc => doc.id !== id));
     toast({
@@ -197,6 +225,7 @@ const AgentEdit = () => {
       description: "Documentul a fost șters."
     });
   };
+
   const updateKnowledgeBase = async () => {
     if (!agentId || documents.length === 0) {
       toast({
@@ -248,6 +277,7 @@ const AgentEdit = () => {
       setIsUpdatingKnowledge(false);
     }
   };
+
   const handleMultilingualMessagesUpdate = (messages: Record<string, string>) => {
     setMultilingualMessages(messages);
 
@@ -266,6 +296,7 @@ const AgentEdit = () => {
       });
     }
   };
+
   const openMultilingualModal = () => {
     const defaultLanguage = agentData?.conversation_config?.agent?.language || 'en';
     const currentMessage = agentData?.conversation_config?.agent?.first_message || '';
@@ -278,6 +309,7 @@ const AgentEdit = () => {
     setMultilingualMessages(initialMessages);
     setIsMultilingualModalOpen(true);
   };
+
   const handleCreativityChange = (temperature: number) => {
     setAgentData({
       ...agentData!,
@@ -293,25 +325,33 @@ const AgentEdit = () => {
       }
     });
   };
+
   if (isLoading) {
-    return <DashboardLayout>
+    return (
+      <DashboardLayout>
         <div className="p-6 space-y-6">
           <div className="flex justify-center items-center min-h-[400px]">
             <div className="text-muted-foreground">Se încarcă agentul...</div>
           </div>
         </div>
-      </DashboardLayout>;
+      </DashboardLayout>
+    );
   }
+
   if (!agentData) {
-    return <DashboardLayout>
+    return (
+      <DashboardLayout>
         <div className="p-6 space-y-6">
           <div className="flex justify-center items-center min-h-[400px]">
             <div className="text-muted-foreground">Agentul nu a fost găsit</div>
           </div>
         </div>
-      </DashboardLayout>;
+      </DashboardLayout>
+    );
   }
-  return <DashboardLayout>
+
+  return (
+    <DashboardLayout>
       <div className="p-6 space-y-6 px-[240px] my-[60px]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -447,39 +487,60 @@ const AgentEdit = () => {
                   Primul mesaj pe care îl va spune agentul. Dacă este gol, agentul va aștepta ca utilizatorul să înceapă conversația.
                 </p>
               </div>
-              {additionalLanguages.length > 0 && <Button onClick={openMultilingualModal} variant="outline" size="sm" className="flex items-center gap-2">
+              {additionalLanguages.length > 0 && (
+                <Button 
+                  onClick={openMultilingualModal} 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center gap-2"
+                >
                   <Languages className="w-4 h-4" />
                   Configurare multilingual
-                </Button>}
+                </Button>
+              )}
             </div>
           </CardHeader>
           <CardContent>
             <div>
               <Label htmlFor="first-message" className="text-foreground">
                 Mesaj
-                {additionalLanguages.length > 0 && <span className="text-xs text-muted-foreground ml-2">
+                {additionalLanguages.length > 0 && (
+                  <span className="text-xs text-muted-foreground ml-2">
                     (limba principală: {getLanguageLabel(agentData?.conversation_config?.agent?.language || 'en')})
-                  </span>}
+                  </span>
+                )}
               </Label>
-              <Textarea id="first-message" value={agentData.conversation_config?.agent?.first_message || ''} onChange={e => setAgentData({
-              ...agentData,
-              conversation_config: {
-                ...agentData.conversation_config,
-                agent: {
-                  ...agentData.conversation_config?.agent!,
-                  first_message: e.target.value
-                }
-              }
-            })} className="glass-input" placeholder="e.g. Hello, how can I help you today?" />
-              {additionalLanguages.length > 0 && <p className="text-xs text-muted-foreground mt-2">
+              <Textarea 
+                id="first-message" 
+                value={agentData.conversation_config?.agent?.first_message || ''} 
+                onChange={(e) => setAgentData({
+                  ...agentData,
+                  conversation_config: {
+                    ...agentData.conversation_config,
+                    agent: {
+                      ...agentData.conversation_config?.agent!,
+                      first_message: e.target.value
+                    }
+                  }
+                })} 
+                className="glass-input" 
+                placeholder="e.g. Hello, how can I help you today?" 
+              />
+              {additionalLanguages.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-2">
                   Pentru configurarea mesajelor în limbile adiționale, folosește butonul "Configurare multilingual".
-                </p>}
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
 
         {/* Additional Languages Section */}
-        <AdditionalLanguagesSection selectedLanguages={additionalLanguages} onLanguagesChange={setAdditionalLanguages} currentLanguage={agentData.conversation_config?.agent?.language} />
+        <AdditionalLanguagesSection 
+          selectedLanguages={additionalLanguages} 
+          onLanguagesChange={handleAdditionalLanguagesChange}
+          currentLanguage={agentData.conversation_config?.agent?.language} 
+        />
 
         {/* Knowledge Base Section */}
         <Card className="liquid-glass">
@@ -549,13 +610,17 @@ const AgentEdit = () => {
             </div>
 
             {documents.length > 0 && <Button onClick={updateKnowledgeBase} disabled={isUpdatingKnowledge} className="bg-accent text-white hover:bg-accent/90 w-full">
-                {isUpdatingKnowledge ? <>
+                {isUpdatingKnowledge ? (
+                  <>
                     <Save className="w-4 h-4 mr-2 animate-spin" />
                     Se Actualizează Knowledge Base pentru {agentId}
-                  </> : <>
+                  </>
+                ) : (
+                  <>
                     <Save className="w-4 h-4 mr-2" />
                     Actualizează Knowledge Base în ElevenLabs
-                  </>}
+                  </>
+                )}
               </Button>}
           </CardContent>
         </Card>
@@ -565,18 +630,26 @@ const AgentEdit = () => {
             Anulează
           </Button>
           <Button onClick={handleSave} disabled={isSaving} className="bg-accent text-white hover:bg-accent/90">
-            {isSaving ? <>
+            {isSaving ? (
+              <>
                 <Save className="w-4 h-4 mr-2 animate-spin" />
                 Se salvează...
-              </> : <>
+              </>
+            ) : (
+              <>
                 <Save className="w-4 h-4 mr-2" />
                 Salvează
-              </>}
+              </>
+            )}
           </Button>
         </div>
 
         {/* Test Modal */}
-        <AgentTestModal agent={agentData} isOpen={isTestModalOpen} onClose={() => setIsTestModalOpen(false)} />
+        <AgentTestModal 
+          agent={agentData} 
+          isOpen={isTestModalOpen} 
+          onClose={() => setIsTestModalOpen(false)} 
+        />
 
         {/* Multilingual First Message Modal */}
         <MultilingualFirstMessageModal 
@@ -590,6 +663,8 @@ const AgentEdit = () => {
           agentData={agentData}
         />
       </div>
-    </DashboardLayout>;
+    </DashboardLayout>
+  );
 };
+
 export default AgentEdit;
