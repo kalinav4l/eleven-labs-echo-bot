@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -415,6 +416,37 @@ const AgentEdit = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* First Message Section */}
+        <Card className="liquid-glass">
+          <CardHeader>
+            <CardTitle className="text-foreground">Primul mesaj</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Primul mesaj pe care îl va spune agentul. Dacă este gol, agentul va aștepta ca utilizatorul să înceapă conversația.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div>
+              <Label htmlFor="first-message" className="text-foreground">Mesaj</Label>
+              <Textarea
+                id="first-message"
+                value={agentData.conversation_config?.agent?.first_message || ''}
+                onChange={(e) => setAgentData({
+                  ...agentData,
+                  conversation_config: {
+                    ...agentData.conversation_config,
+                    agent: {
+                      ...agentData.conversation_config?.agent,
+                      first_message: e.target.value
+                    }
+                  }
+                })}
+                className="glass-input"
+                placeholder="e.g. Hello, how can I help you today?"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Additional Languages Section */}
         <AdditionalLanguagesSection
