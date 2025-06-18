@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Phone, Mic } from 'lucide-react';
 interface Step4Props {
+  cardTitle: string;
+  showAgentId: boolean;
   phoneNumber: string;
   setPhoneNumber: (phone: string) => void;
   finalAgentId: string;
@@ -15,6 +17,8 @@ interface Step4Props {
   isOnlineCallActive: boolean;
 }
 export const Step4CallInitiation: React.FC<Step4Props> = ({
+  cardTitle,
+  showAgentId,
   phoneNumber,
   setPhoneNumber,
   finalAgentId,
@@ -30,17 +34,16 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-foreground">
           <Phone className="w-5 h-5 text-accent" />
-          Pas 4: Inițiere Apeluri
+          {cardTitle}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div>
+        {showAgentId && <div>
           <Label htmlFor="final-agent-id" className="text-foreground">
             ID Agent
           </Label>
           <Input id="final-agent-id" value={finalAgentId} onChange={e => setFinalAgentId(e.target.value)} placeholder="Introdu ID-ul agentului" className="glass-input" />
-        </div>
-
+        </div>}
         <div className="grid md:grid-cols-2 gap-6">
           {/* Apel Telefonic */}
           <div className="space-y-4">

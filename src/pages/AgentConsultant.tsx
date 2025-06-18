@@ -108,7 +108,7 @@ const AgentConsultant: React.FC = () => {
       case 3:
         return <Step3AgentEditing agentIdForEdit={agentIdForEdit} setAgentIdForEdit={setAgentIdForEdit} onNextStep={handleStep3Next} />;
       case 4:
-        return <Step4CallInitiation phoneNumber={phoneNumber} setPhoneNumber={setPhoneNumber} finalAgentId={finalAgentId} setFinalAgentId={setFinalAgentId} onInitiateCall={handleInitiateCall} onInitiateOnlineCall={handleInitiateOnlineCall} isInitiatingCall={isInitiatingCall} isOnlineCallActive={isOnlineCallActive} />;
+        return <Step4CallInitiation cardTitle={"Pas 4: Inițiere Apeluri"} showAgentId={true} phoneNumber={phoneNumber} setPhoneNumber={setPhoneNumber} finalAgentId={finalAgentId} setFinalAgentId={setFinalAgentId} onInitiateCall={handleInitiateCall} onInitiateOnlineCall={handleInitiateOnlineCall} isInitiatingCall={isInitiatingCall} isOnlineCallActive={isOnlineCallActive} />;
       default:
         return null;
     }

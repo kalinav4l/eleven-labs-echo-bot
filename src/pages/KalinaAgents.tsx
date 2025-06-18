@@ -10,6 +10,7 @@ import { useAgentOperations } from '@/hooks/useAgentOperations';
 import { useClipboard } from '@/hooks/useClipboard';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import CallInitiationModal from "@/components/CallInitiationModal.tsx";
 
 const KalinaAgents = () => {
   const {
@@ -27,6 +28,8 @@ const KalinaAgents = () => {
   } = useClipboard();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAgentForDeletion, setSelectedAgentForDeletion] = useState<any>(null);
+  const [isCallInitiationModalOpen, setIsCallInitiationModalOpen] = useState(false);
+  const [selectedAgentForCall, setSelectedAgentForCall] = useState<any>(null);
   const navigate = useNavigate();
 
   // Filter agents based on search query
@@ -64,6 +67,11 @@ const KalinaAgents = () => {
 
   const handleEditAgent = (agentId: string) => {
     navigate(`/account/agent-edit/${agentId}`);
+  };
+
+  const handleInitiateCall = (agent: any) => {
+    setSelectedAgentForCall(agent);
+    setIsCallInitiationModalOpen(true);
   };
 
   const handleCopyAgentId = async (agentId: string) => {
@@ -186,7 +194,7 @@ const KalinaAgents = () => {
                   </div>
 
                   <div className="flex space-x-2">
-                    <Button size="sm" className="flex-1 glass-button" disabled={!agent.is_active}>
+                    <Button size="sm" className="flex-1 glass-button" disabled={!agent.is_active} onClick={() => handleInitiateCall(agent)}>
                       <Phone className="w-4 h-4 mr-2" />
                       Test Apel
                     </Button>
@@ -261,6 +269,14 @@ const KalinaAgents = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {selectedAgentForCall && (
+          <CallInitiationModal
+              isOpen={isCallInitiationModalOpen}
+              onClose={() => setIsCallInitiationModalOpen(false)}
+              agentId={selectedAgentForCall.agent_id}
+          />
+      )}
     </div>
   </DashboardLayout>;
 };
