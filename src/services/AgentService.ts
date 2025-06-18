@@ -1,6 +1,6 @@
 
 import { API_CONFIG } from '@/constants/constants';
-import {AgentResponse} from "@/components/AgentResponse.ts";
+import { AgentResponse, LanguagePreset } from "@/components/AgentResponse.ts";
 
 export interface AgentPrompt {
   prompt: string;
@@ -23,14 +23,6 @@ export interface TTSConfig {
 export interface LanguageOverrides {
   agent?: Partial<AgentConfig>;
   tts?: Partial<TTSConfig>;
-}
-
-export interface LanguagePreset {
-  overrides: LanguageOverrides;
-  first_message_translation?: {
-    source_hash: string;
-    text: string;
-  };
 }
 
 export interface ConversationConfig {
@@ -62,6 +54,8 @@ export class AgentService {
 
   async updateAgent(agentId: string, updateData: UpdateAgentRequest): Promise<boolean> {
     try {
+      console.log('Updating agent with data:', JSON.stringify(updateData, null, 2));
+      
       const response = await fetch(`${this.baseUrl}/convai/agents/${agentId}`, {
         method: 'PATCH',
         headers: this.getHeaders(),
@@ -74,6 +68,8 @@ export class AgentService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
+      const responseData = await response.json();
+      console.log('Agent updated successfully:', responseData);
       return true;
     } catch (error) {
       console.error('Error updating agent:', error);
@@ -93,7 +89,7 @@ export class AgentService {
       }
 
       const agentResponse = await response.json() as AgentResponse;
-      console.log(agentResponse);
+      console.log('Fetched agent data:', agentResponse);
       return agentResponse;
     } catch (error) {
       console.error('Error fetching agent:', error);
@@ -102,7 +98,7 @@ export class AgentService {
   }
 
   prepareUpdatePayload(
-    agentData: any,
+    agentData: AgentResponse,
     multilingualMessages: Record<string, string>
   ): UpdateAgentRequest {
     const defaultLanguage = agentData.conversation_config?.agent?.language || 'en';
@@ -110,20 +106,59 @@ export class AgentService {
     // Prepare language presets for additional languages
     const languagePresets: Record<string, LanguagePreset> = {};
     
+    // Add existing language presets first
+    if (agentData.conversation_config?.language_presets) {
+      Object.entries(agentData.conversation_config.language_presets).forEach(([language, preset]) => {
+        languagePresets[language] = { ...preset };
+      });
+    }
+    
+    // Update or add multilingual messages
     Object.entries(multilingualMessages).forEach(([language, message]) => {
       if (language !== defaultLanguage && message.trim()) {
-        languagePresets[language] = {
-          overrides: {
-            agent: {
-              first_message: message
+        const sourceHash = `"first_message": "${multilingualMessages[defaultLanguage] || ''}","language":"${defaultLanguage}"}`;
+        
+        if (languagePresets[language]) {
+          // Update existing preset
+          languagePresets[language] = {
+            ...languagePresets[language],
+            overrides: {
+              ...languagePresets[language].overrides,
+              agent: {
+                ...languagePresets[language].overrides.agent,
+                first_message: message,
+              }
             },
-            tts: {}
-          },
-          first_message_translation: {
-            source_hash: `"first_message": "${multilingualMessages[defaultLanguage]}","language":"${defaultLanguage}"}`,
-            text: message
-          }
-        };
+            first_message_translation: {
+              source_hash: sourceHash,
+              text: message
+            }
+          };
+        } else {
+          // Create new preset
+          languagePresets[language] = {
+            overrides: {
+              tts: null,
+              conversation: null,
+              agent: {
+                first_message: message,
+                language: null,
+                prompt: null
+              }
+            },
+            first_message_translation: {
+              source_hash: sourceHash,
+              text: message
+            }
+          };
+        }
+      }
+    });
+
+    // Remove language presets for languages that no longer have messages
+    Object.keys(languagePresets).forEach(language => {
+      if (language !== defaultLanguage && !multilingualMessages[language]?.trim()) {
+        delete languagePresets[language];
       }
     });
 
@@ -135,7 +170,7 @@ export class AgentService {
           prompt: agentData.conversation_config?.agent?.prompt?.prompt || '',
           knowledge_base: agentData.conversation_config?.agent?.prompt?.knowledge_base || [],
           rag: agentData.conversation_config?.agent?.prompt?.rag || {},
-          temperature: agentData.conversation_config?.agent?.temperature ?? 0.0
+          temperature: agentData.conversation_config?.agent?.prompt?.temperature ?? 0.5
         },
         multilingual_first_messages: multilingualMessages,
       },
@@ -149,10 +184,13 @@ export class AgentService {
       conversationConfig.language_presets = languagePresets;
     }
 
-    return {
+    const updatePayload = {
       name: agentData.name,
       conversation_config: conversationConfig
     };
+
+    console.log('Prepared update payload:', JSON.stringify(updatePayload, null, 2));
+    return updatePayload;
   }
 }
 
