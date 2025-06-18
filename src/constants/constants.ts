@@ -1,10 +1,13 @@
+
+import { ENV } from '@/config/environment';
+
 // Constants for the Agent Consultant application
 
 export const API_CONFIG = {
-  ELEVENLABS_API_KEY: 'sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873',
-  ELEVENLABS_BASE_URL: 'https://api.elevenlabs.io/v1',
-  DEFAULT_MODEL_ID: 'eleven_flash_v2_5',
-  AGENT_PHONE_NUMBER_ID: 'phnum_01jxaeyg3feh3tmx39d4ky63rd',
+  ELEVENLABS_API_KEY: ENV.ELEVENLABS_API_KEY,
+  ELEVENLABS_BASE_URL: ENV.ELEVENLABS_BASE_URL,
+  DEFAULT_MODEL_ID: ENV.DEFAULT_MODEL_ID,
+  AGENT_PHONE_NUMBER_ID: ENV.AGENT_PHONE_NUMBER_ID,
 } as const;
 
 export const VOICES = [

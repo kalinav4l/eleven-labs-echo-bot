@@ -1,0 +1,61 @@
+
+version: '3.8'
+
+services:
+  kalina-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      # Database Configuration
+      - SUPABASE_URL=${SUPABASE_URL:-https://pwfczzxwjfxomqzhhwvj.supabase.co}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3ZmN6enh3amZ4b21xemhod3ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0NDI5NDYsImV4cCI6MjA2NDAxODk0Nn0.IgOvpvhe3fW4OnRLN39eVfP5E1hq4lHat0lZH_1jQfs}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      
+      # AI & Voice Services
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY:-sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873}
+      
+      # Payment Processing
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+      
+      # Email Services
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      
+      # Application Configuration
+      - NODE_ENV=${NODE_ENV:-production}
+      - VITE_APP_URL=${VITE_APP_URL:-http://localhost:3000}
+      - VITE_ELEVENLABS_BASE_URL=${VITE_ELEVENLABS_BASE_URL:-https://api.elevenlabs.io/v1}
+      - VITE_DEFAULT_MODEL_ID=${VITE_DEFAULT_MODEL_ID:-eleven_flash_v2_5}
+      - VITE_AGENT_PHONE_NUMBER_ID=${VITE_AGENT_PHONE_NUMBER_ID:-phnum_01jxaeyg3feh3tmx39d4ky63rd}
+    
+    env_file:
+      - .env
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Add a development service
+  kalina-dev:
+    profiles: ["dev"]
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - .env.local
