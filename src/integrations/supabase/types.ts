@@ -179,45 +179,6 @@ export type Database = {
           },
         ]
       }
-      guest_usage: {
-        Row: {
-          created_at: string
-          id: string
-          ip_address: unknown
-          last_usage: string
-          usage_count: number
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          ip_address: unknown
-          last_usage?: string
-          usage_count?: number
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          ip_address?: unknown
-          last_usage?: string
-          usage_count?: number
-        }
-        Relationships: []
-      }
-      kalina: {
-        Row: {
-          created_at: string
-          id: number
-        }
-        Insert: {
-          created_at?: string
-          id?: number
-        }
-        Update: {
-          created_at?: string
-          id?: number
-        }
-        Relationships: []
-      }
       kalina_agents: {
         Row: {
           agent_id: string
@@ -371,39 +332,6 @@ export type Database = {
         }
         Relationships: []
       }
-      Outbound: {
-        Row: {
-          Concluzie: string | null
-          Cost: number | null
-          Data: number | null
-          Dialog: string | null
-          id: number
-          Number: number | null
-          Status: string
-          Telefon: string | null
-        }
-        Insert: {
-          Concluzie?: string | null
-          Cost?: number | null
-          Data?: number | null
-          Dialog?: string | null
-          id?: number
-          Number?: number | null
-          Status: string
-          Telefon?: string | null
-        }
-        Update: {
-          Concluzie?: string | null
-          Cost?: number | null
-          Data?: number | null
-          Dialog?: string | null
-          id?: number
-          Number?: number | null
-          Status?: string
-          Telefon?: string | null
-        }
-        Relationships: []
-      }
       products: {
         Row: {
           category: string | null
@@ -443,27 +371,6 @@ export type Database = {
         }
         Relationships: []
       }
-      produse_sushi: {
-        Row: {
-          descriere: string | null
-          id: number
-          nume_sushi: string
-          pret: number | null
-        }
-        Insert: {
-          descriere?: string | null
-          id?: number
-          nume_sushi: string
-          pret?: number | null
-        }
-        Update: {
-          descriere?: string | null
-          id?: number
-          nume_sushi?: string
-          pret?: number | null
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -494,21 +401,6 @@ export type Database = {
           last_name?: string | null
           plan?: string | null
           updated_at?: string
-        }
-        Relationships: []
-      }
-      telefonie: {
-        Row: {
-          id: number
-          number: number | null
-        }
-        Insert: {
-          id?: number
-          number?: number | null
-        }
-        Update: {
-          id?: number
-          number?: number | null
         }
         Relationships: []
       }

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Languages, Loader2 } from 'lucide-react';
 import { LANGUAGES } from '@/constants/constants';
 import { toast } from '@/components/ui/use-toast';
+import { translationService } from '@/services/TranslationService';
 
 interface MultilingualFirstMessageModalProps {
   isOpen: boolean;
@@ -66,23 +67,13 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
     setIsTranslating(true);
     
     try {
-      const translationPromises = additionalLanguages.map(async (language) => {
-        const targetLanguageLabel = getLanguageLabel(language);
-        
-        // Simple translation simulation - in a real app, you'd use a translation API
-        // For now, we'll just add a prefix to indicate translation
-        const translatedMessage = `[${targetLanguageLabel}] ${defaultMessage}`;
-        
-        return { language, message: translatedMessage };
-      });
-
-      const translations = await Promise.all(translationPromises);
+      const translations = await translationService.translateToMultipleLanguages(
+        defaultMessage,
+        defaultLanguage,
+        additionalLanguages
+      );
       
-      const updatedMessages = { ...localMessages };
-      translations.forEach(({ language, message }) => {
-        updatedMessages[language] = message;
-      });
-      
+      const updatedMessages = { ...localMessages, ...translations };
       setLocalMessages(updatedMessages);
       onMessagesUpdate(updatedMessages);
       
@@ -94,7 +85,7 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
       console.error('Translation error:', error);
       toast({
         title: "Eroare",
-        description: "A apărut o eroare la traducere.",
+        description: "A apărut o eroare la traducere. Te rog încearcă din nou.",
         variant: "destructive",
       });
     } finally {
@@ -111,7 +102,7 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
             Primul mesaj - Suport multilingual
           </DialogTitle>
           <p className="text-sm text-muted-foreground">
-            Configurează primul mesaj pentru fiecare limbă disponibilă.
+            Configurează primul mesaj pentru fiecare limbă disponibilă. Folosește traducerea automată pentru a genera mesajele în toate limbile.
           </p>
         </DialogHeader>
 
@@ -147,7 +138,7 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
                 ) : (
                   <Languages className="w-4 h-4" />
                 )}
-                Tradu în toate limbile
+                Tradu automat în toate limbile
               </Button>
             )}
           </div>
@@ -164,6 +155,11 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
               className="glass-input min-h-[100px] mt-2"
               placeholder={`Introdu primul mesaj în ${getLanguageLabel(selectedLanguage).toLowerCase()}...`}
             />
+            {selectedLanguage === defaultLanguage && additionalLanguages.length > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Acest mesaj va fi folosit ca sursă pentru traducerea automată în celelalte limbi.
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

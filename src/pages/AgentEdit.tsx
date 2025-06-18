@@ -11,6 +11,7 @@ import { ArrowLeft, Bot, Save, Copy, Upload, FileText, Trash2, TestTube, Languag
 import { useClipboard } from '@/hooks/useClipboard';
 import { toast } from '@/components/ui/use-toast';
 import { API_CONFIG, VOICES, LANGUAGES } from '@/constants/constants';
+import { agentService } from '@/services/AgentService';
 import AgentTestModal from '@/components/AgentTestModal';
 import AdditionalLanguagesSection from '@/components/AdditionalLanguagesSection';
 import MultilingualFirstMessageModal from '@/components/MultilingualFirstMessageModal';
@@ -53,28 +54,13 @@ const AgentEdit = () => {
       if (!agentId) return;
 
       try {
-        const response = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${agentId}`, {
-          method: 'GET',
-          headers: {
-            'Xi-Api-Key': API_CONFIG.ELEVENLABS_API_KEY,
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setAgentData(data);
-        } else {
-          toast({
-            title: "Eroare",
-            description: "Nu s-a putut încărca informațiile agentului",
-            variant: "destructive",
-          });
-        }
+        const data = await agentService.getAgent(agentId);
+        setAgentData(data);
       } catch (error) {
         console.error('Error fetching agent:', error);
         toast({
           title: "Eroare",
-          description: "A apărut o eroare la încărcarea agentului",
+          description: "Nu s-a putut încărca informațiile agentului",
           variant: "destructive",
         });
       } finally {
@@ -103,40 +89,14 @@ const AgentEdit = () => {
 
     setIsSaving(true);
     try {
-      // Prepare the conversation config with multilingual first messages and temperature
-      const conversationConfig = {
-        ...agentData.conversation_config,
-        agent: {
-          ...agentData.conversation_config?.agent,
-          first_message: agentData.conversation_config?.agent?.first_message,
-          multilingual_first_messages: multilingualMessages,
-          // Add temperature if it exists
-          ...(agentData.conversation_config?.agent?.temperature !== undefined && {
-            temperature: agentData.conversation_config.agent.temperature
-          })
-        }
-      };
-
-      const response = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${agentId}`, {
-        method: 'PATCH',
-        headers: {
-          'Xi-Api-Key': API_CONFIG.ELEVENLABS_API_KEY,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: agentData.name,
-          conversation_config: conversationConfig,
-        }),
+      const updatePayload = agentService.prepareUpdatePayload(agentData, multilingualMessages);
+      
+      await agentService.updateAgent(agentId, updatePayload);
+      
+      toast({
+        title: "Succes!",
+        description: "Agentul a fost salvat cu succes",
       });
-
-      if (response.ok) {
-        toast({
-          title: "Succes!",
-          description: "Agentul a fost salvat cu succes",
-        });
-      } else {
-        throw new Error('Failed to save agent');
-      }
     } catch (error) {
       console.error('Error saving agent:', error);
       toast({
@@ -359,7 +319,6 @@ const AgentEdit = () => {
             </div>
           </div>
           
-          {/* Test Agent Button */}
           <Button
             onClick={() => setIsTestModalOpen(true)}
             className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
