@@ -30,32 +30,44 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Ești un expert în procesarea transcripturilor. Analizează textul primit și transformă-l într-un dialog structurat între "Agent AI" și "User". 
+            content: `Ești un expert în procesarea transcripturilor. Analizează textul primit și transformă-l într-un dialog clar și structurat.
 
-Instrucțiuni:
-1. Identifică cine vorbește în fiecare segment
-2. Separă dialogul în replici clare
-3. Atribuie fiecare replică fie la "Agent AI" fie la "User"
-4. Returnează rezultatul în format JSON cu următoarea structură:
+Instrucțiuni IMPORTANTE:
+1. Identifică cu atenție momentele când se schimbă vorbitorul
+2. Recunoaște indicii ca: pauze, schimbări de ton, întrebări și răspunsuri
+3. Separă dialogul în replici clare, fiecare pe o linie nouă
+4. Primul vorbitor este "User", al doilea este "Agent AI"
+5. Alternează corect între "User" și "Agent AI" în funcție de context
+6. Fiecare replică să înceapă de pe un rând nou
+7. Returnează DOAR JSON-ul, fără text suplimentar sau markdown
+
+Format JSON obligatoriu:
 {
   "dialogue": [
     {
-      "speaker": "User" sau "Agent AI",
-      "text": "textul replicii",
+      "speaker": "User",
+      "text": "textul exact al replicii",
       "timestamp": "00:00"
+    },
+    {
+      "speaker": "Agent AI", 
+      "text": "textul exact al replicii",
+      "timestamp": "00:02"
     }
   ]
 }
 
-Important: Menține sensul original și nu adăuga informații care nu există în transcript.`
+FOARTE IMPORTANT: Nu adăuga ``` sau alte marcaje markdown. Returnează doar JSON-ul curat.`
           },
           {
             role: 'user',
-            content: `Te rog să procesezi următorul transcript și să îl transformi într-un dialog structurat: ${transcriptText}`
+            content: `Procesează următorul transcript și creează un dialog structurat cu replici clare pentru fiecare vorbitor:
+
+${transcriptText}`
           }
         ],
-        temperature: 0.3,
-        max_tokens: 2000
+        temperature: 0.2,
+        max_tokens: 3000
       }),
     });
 
@@ -66,7 +78,10 @@ Important: Menține sensul original și nu adăuga informații care nu există �
     }
 
     const data = await response.json();
-    const processedText = data.choices[0].message.content;
+    let processedText = data.choices[0].message.content;
+
+    // Clean up the response - remove markdown formatting if present
+    processedText = processedText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
 
     // Try to parse the JSON response from GPT-4o
     let structuredDialogue;
@@ -74,12 +89,28 @@ Important: Menține sensul original și nu adăuga informații care nu există �
       structuredDialogue = JSON.parse(processedText);
     } catch (parseError) {
       console.error('Failed to parse GPT-4o JSON response:', parseError);
-      // Fallback: create a simple structure
+      console.error('Raw response:', processedText);
+      
+      // Enhanced fallback: try to extract meaningful dialogue
+      const lines = processedText.split('\n').filter(line => line.trim());
+      const dialogueEntries = [];
+      
+      lines.forEach((line, index) => {
+        if (line.trim()) {
+          const speaker = index % 2 === 0 ? "User" : "Agent AI";
+          dialogueEntries.push({
+            speaker: speaker,
+            text: line.trim(),
+            timestamp: `00:${Math.floor(index * 3 / 60).toString().padStart(2, '0')}:${(index * 3 % 60).toString().padStart(2, '0')}`
+          });
+        }
+      });
+      
       structuredDialogue = {
-        dialogue: [
+        dialogue: dialogueEntries.length > 0 ? dialogueEntries : [
           {
             speaker: "Agent AI",
-            text: processedText,
+            text: "Nu s-a putut procesa transcriptul. Vă rugăm să încercați din nou.",
             timestamp: "00:00"
           }
         ]
