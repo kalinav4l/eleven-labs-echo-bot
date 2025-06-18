@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -8,12 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Bot, Save, Copy, Upload, FileText, Trash2, TestTube } from 'lucide-react';
+import { ArrowLeft, Bot, Save, Copy, Upload, FileText, Trash2, TestTube, Languages } from 'lucide-react';
 import { useClipboard } from '@/hooks/useClipboard';
 import { toast } from '@/components/ui/use-toast';
 import { API_CONFIG, VOICES, LANGUAGES } from '@/constants/constants';
 import AgentTestModal from '@/components/AgentTestModal';
 import AdditionalLanguagesSection from '@/components/AdditionalLanguagesSection';
+import MultilingualFirstMessageModal from '@/components/MultilingualFirstMessageModal';
 
 interface KnowledgeDocument {
   id: string;
@@ -36,6 +36,8 @@ const AgentEdit = () => {
   const [isUpdatingKnowledge, setIsUpdatingKnowledge] = useState(false);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [additionalLanguages, setAdditionalLanguages] = useState<string[]>([]);
+  const [isMultilingualModalOpen, setIsMultilingualModalOpen] = useState(false);
+  const [multilingualMessages, setMultilingualMessages] = useState<Record<string, string>>({});
 
   // Remove current language from additional languages when it changes
   useEffect(() => {
@@ -82,11 +84,34 @@ const AgentEdit = () => {
     fetchAgentData();
   }, [agentId]);
 
+  // Initialize multilingual messages when agent data loads
+  useEffect(() => {
+    if (agentData?.conversation_config?.agent?.multilingual_first_messages) {
+      setMultilingualMessages(agentData.conversation_config.agent.multilingual_first_messages);
+    } else if (agentData?.conversation_config?.agent?.first_message) {
+      // Initialize with the current first message for the default language
+      const defaultLanguage = agentData.conversation_config?.agent?.language || 'en';
+      setMultilingualMessages({
+        [defaultLanguage]: agentData.conversation_config.agent.first_message
+      });
+    }
+  }, [agentData]);
+
   const handleSave = async () => {
     if (!agentId || !agentData) return;
 
     setIsSaving(true);
     try {
+      // Prepare the conversation config with multilingual first messages
+      const conversationConfig = {
+        ...agentData.conversation_config,
+        agent: {
+          ...agentData.conversation_config?.agent,
+          first_message: agentData.conversation_config?.agent?.first_message,
+          multilingual_first_messages: multilingualMessages
+        }
+      };
+
       const response = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${agentId}`, {
         method: 'PATCH',
         headers: {
@@ -95,7 +120,7 @@ const AgentEdit = () => {
         },
         body: JSON.stringify({
           name: agentData.name,
-          conversation_config: agentData.conversation_config,
+          conversation_config: conversationConfig,
         }),
       });
 
@@ -233,6 +258,39 @@ const AgentEdit = () => {
     } finally {
       setIsUpdatingKnowledge(false);
     }
+  };
+
+  const handleMultilingualMessagesUpdate = (messages: Record<string, string>) => {
+    setMultilingualMessages(messages);
+    
+    // Update the main first_message with the default language message
+    const defaultLanguage = agentData?.conversation_config?.agent?.language || 'en';
+    if (messages[defaultLanguage]) {
+      setAgentData({
+        ...agentData,
+        conversation_config: {
+          ...agentData.conversation_config,
+          agent: {
+            ...agentData.conversation_config?.agent,
+            first_message: messages[defaultLanguage]
+          }
+        }
+      });
+    }
+  };
+
+  const openMultilingualModal = () => {
+    const defaultLanguage = agentData?.conversation_config?.agent?.language || 'en';
+    const currentMessage = agentData?.conversation_config?.agent?.first_message || '';
+    
+    // Initialize messages with current first message for default language
+    const initialMessages = {
+      ...multilingualMessages,
+      [defaultLanguage]: currentMessage
+    };
+    
+    setMultilingualMessages(initialMessages);
+    setIsMultilingualModalOpen(true);
   };
 
   if (isLoading) {
@@ -420,14 +478,36 @@ const AgentEdit = () => {
         {/* First Message Section */}
         <Card className="liquid-glass">
           <CardHeader>
-            <CardTitle className="text-foreground">Primul mesaj</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Primul mesaj pe care îl va spune agentul. Dacă este gol, agentul va aștepta ca utilizatorul să înceapă conversația.
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-foreground">Primul mesaj</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Primul mesaj pe care îl va spune agentul. Dacă este gol, agentul va aștepta ca utilizatorul să înceapă conversația.
+                </p>
+              </div>
+              {additionalLanguages.length > 0 && (
+                <Button
+                  onClick={openMultilingualModal}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Languages className="w-4 h-4" />
+                  Configurare multilingual
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             <div>
-              <Label htmlFor="first-message" className="text-foreground">Mesaj</Label>
+              <Label htmlFor="first-message" className="text-foreground">
+                Mesaj
+                {additionalLanguages.length > 0 && (
+                  <span className="text-xs text-muted-foreground ml-2">
+                    (limba principală: {LANGUAGES.find(l => l.value === agentData?.conversation_config?.agent?.language)?.label})
+                  </span>
+                )}
+              </Label>
               <Textarea
                 id="first-message"
                 value={agentData.conversation_config?.agent?.first_message || ''}
@@ -444,6 +524,11 @@ const AgentEdit = () => {
                 className="glass-input"
                 placeholder="e.g. Hello, how can I help you today?"
               />
+              {additionalLanguages.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Pentru configurarea mesajelor în limbile adiționale, folosește butonul "Configurare multilingual".
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -622,6 +707,16 @@ const AgentEdit = () => {
           agent={agentData}
           isOpen={isTestModalOpen}
           onClose={() => setIsTestModalOpen(false)}
+        />
+
+        {/* Multilingual First Message Modal */}
+        <MultilingualFirstMessageModal
+          isOpen={isMultilingualModalOpen}
+          onClose={() => setIsMultilingualModalOpen(false)}
+          defaultLanguage={agentData?.conversation_config?.agent?.language || 'en'}
+          additionalLanguages={additionalLanguages}
+          messages={multilingualMessages}
+          onMessagesUpdate={handleMultilingualMessagesUpdate}
         />
       </div>
     </DashboardLayout>
