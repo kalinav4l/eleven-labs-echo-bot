@@ -17,18 +17,22 @@ import AgentTestModal from '@/components/AgentTestModal';
 import AdditionalLanguagesSection from '@/components/AdditionalLanguagesSection';
 import MultilingualFirstMessageModal from '@/components/MultilingualFirstMessageModal';
 import CreativitySelector from '@/components/CreativitySelector';
-
 interface KnowledgeDocument {
   id: string;
   name: string;
   content: string;
   uploadedAt: Date;
 }
-
 const AgentEdit = () => {
-  const { agentId } = useParams<{ agentId: string }>();
+  const {
+    agentId
+  } = useParams<{
+    agentId: string;
+  }>();
   const navigate = useNavigate();
-  const { copyToClipboard } = useClipboard();
+  const {
+    copyToClipboard
+  } = useClipboard();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [agentData, setAgentData] = useState<AgentResponse | null>(null);
@@ -46,9 +50,8 @@ const AgentEdit = () => {
   const parseAdditionalLanguagesFromResponse = (agentResponse: AgentResponse): string[] => {
     const currentLanguage = agentResponse.conversation_config?.agent?.language;
     const languagePresets = agentResponse.conversation_config?.language_presets;
-    
     if (!languagePresets) return [];
-    
+
     // Extract language keys from language_presets, excluding the current language
     return Object.keys(languagePresets).filter(lang => lang !== currentLanguage);
   };
@@ -60,19 +63,17 @@ const AgentEdit = () => {
       setAdditionalLanguages(prev => prev.filter(lang => lang !== currentLanguage));
     }
   }, [agentData?.conversation_config?.agent?.language]);
-
   useEffect(() => {
     const fetchAgentData = async () => {
       if (!agentId) return;
-
       try {
         const data = await agentService.getAgent(agentId);
         setAgentData(data);
-        
+
         // Parse additional languages from the AgentResponse
         const parsedAdditionalLanguages = parseAdditionalLanguagesFromResponse(data);
         setAdditionalLanguages(parsedAdditionalLanguages);
-        
+
         // Load existing knowledge base documents if any
         if (data.conversation_config?.agent?.prompt?.knowledge_base) {
           const existingDocs = data.conversation_config.agent.prompt.knowledge_base.map((kb: any, index: number) => ({
@@ -88,13 +89,12 @@ const AgentEdit = () => {
         toast({
           title: "Eroare",
           description: "Nu s-a putut încărca informațiile agentului",
-          variant: "destructive",
+          variant: "destructive"
         });
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchAgentData();
   }, [agentId]);
 
@@ -108,7 +108,7 @@ const AgentEdit = () => {
       const currentMessages: Record<string, string> = {
         [defaultLanguage]: agentData.conversation_config.agent.first_message
       };
-      
+
       // Add messages from language presets if they exist
       if (agentData.conversation_config?.language_presets) {
         Object.entries(agentData.conversation_config.language_presets).forEach(([languageId, preset]) => {
@@ -119,115 +119,99 @@ const AgentEdit = () => {
           }
         });
       }
-      
       setMultilingualMessages(currentMessages);
     }
   }, [agentData]);
-
   const getLanguageLabel = (languageId: string) => {
     return LANGUAGE_MAP[languageId as keyof typeof LANGUAGE_MAP] || languageId;
   };
-
   const handleSave = async () => {
     if (!agentId || !agentData) return;
-
     setIsSaving(true);
     try {
       const updatePayload = agentService.prepareUpdatePayload(agentData, multilingualMessages);
-      
       await agentService.updateAgent(agentId, updatePayload);
-      
       toast({
         title: "Succes!",
-        description: "Agentul a fost salvat cu succes",
+        description: "Agentul a fost salvat cu succes"
       });
     } catch (error) {
       console.error('Error saving agent:', error);
       toast({
         title: "Eroare",
         description: "Nu s-a putut salva agentul",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsSaving(false);
     }
   };
-
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       const content = e.target?.result as string;
       const newDoc: KnowledgeDocument = {
         id: Date.now().toString(),
         name: file.name,
         content,
-        uploadedAt: new Date(),
+        uploadedAt: new Date()
       };
       setDocuments(prev => [...prev, newDoc]);
       toast({
         title: "Succes!",
-        description: `Documentul "${file.name}" a fost încărcat cu succes.`,
+        description: `Documentul "${file.name}" a fost încărcat cu succes.`
       });
     };
     reader.readAsText(file);
   };
-
   const addManualDocument = () => {
     if (!newDocName.trim() || !newDocContent.trim()) {
       toast({
         title: "Eroare",
         description: "Te rog completează numele și conținutul documentului.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     const newDoc: KnowledgeDocument = {
       id: Date.now().toString(),
       name: newDocName,
       content: newDocContent,
-      uploadedAt: new Date(),
+      uploadedAt: new Date()
     };
     setDocuments(prev => [...prev, newDoc]);
     setNewDocName('');
     setNewDocContent('');
     setIsAddingDoc(false);
-    
     toast({
       title: "Succes!",
-      description: `Documentul "${newDocName}" a fost adăugat cu succes.`,
+      description: `Documentul "${newDocName}" a fost adăugat cu succes.`
     });
   };
-
   const handleRemoveDocument = (id: string) => {
     setDocuments(prev => prev.filter(doc => doc.id !== id));
     toast({
       title: "Succes!",
-      description: "Documentul a fost șters.",
+      description: "Documentul a fost șters."
     });
   };
-
   const updateKnowledgeBase = async () => {
     if (!agentId || documents.length === 0) {
       toast({
         title: "Eroare",
         description: "Nu ai adăugat documente pentru actualizarea Knowledge Base.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     setIsUpdatingKnowledge(true);
-
     try {
       const knowledgeBase = documents.map(doc => ({
         name: doc.name,
         content: doc.content
       }));
-
       const response = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${agentId}`, {
         method: "PATCH",
         headers: {
@@ -242,36 +226,31 @@ const AgentEdit = () => {
               }
             }
           }
-        }),
+        })
       });
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
       const body = await response.json();
       console.log('Agent updated:', body);
-
       toast({
         title: "Succes!",
-        description: "Knowledge Base-ul a fost actualizat cu succes în ElevenLabs.",
+        description: "Knowledge Base-ul a fost actualizat cu succes în ElevenLabs."
       });
-
     } catch (error) {
       console.error('Error updating agent:', error);
       toast({
         title: "Eroare",
         description: `A apărut o eroare la actualizarea agentului ${agentId}. Te rog verifică ID-ul agentului.`,
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsUpdatingKnowledge(false);
     }
   };
-
   const handleMultilingualMessagesUpdate = (messages: Record<string, string>) => {
     setMultilingualMessages(messages);
-    
+
     // Update the main first_message with the default language message
     const defaultLanguage = agentData?.conversation_config?.agent?.language || 'en';
     if (messages[defaultLanguage]) {
@@ -287,21 +266,18 @@ const AgentEdit = () => {
       });
     }
   };
-
   const openMultilingualModal = () => {
     const defaultLanguage = agentData?.conversation_config?.agent?.language || 'en';
     const currentMessage = agentData?.conversation_config?.agent?.first_message || '';
-    
+
     // Initialize messages with current first message for default language
     const initialMessages = {
       ...multilingualMessages,
       [defaultLanguage]: currentMessage
     };
-    
     setMultilingualMessages(initialMessages);
     setIsMultilingualModalOpen(true);
   };
-
   const handleCreativityChange = (temperature: number) => {
     setAgentData({
       ...agentData!,
@@ -317,41 +293,29 @@ const AgentEdit = () => {
       }
     });
   };
-
   if (isLoading) {
-    return (
-      <DashboardLayout>
+    return <DashboardLayout>
         <div className="p-6 space-y-6">
           <div className="flex justify-center items-center min-h-[400px]">
             <div className="text-muted-foreground">Se încarcă agentul...</div>
           </div>
         </div>
-      </DashboardLayout>
-    );
+      </DashboardLayout>;
   }
-
   if (!agentData) {
-    return (
-      <DashboardLayout>
+    return <DashboardLayout>
         <div className="p-6 space-y-6">
           <div className="flex justify-center items-center min-h-[400px]">
             <div className="text-muted-foreground">Agentul nu a fost găsit</div>
           </div>
         </div>
-      </DashboardLayout>
-    );
+      </DashboardLayout>;
   }
-
-  return (
-    <DashboardLayout>
-      <div className="p-6 space-y-6">
+  return <DashboardLayout>
+      <div className="p-6 space-y-6 px-[240px] my-[60px]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              onClick={() => navigate('/account/kalina-agents')}
-              className="glass-button border-border"
-            >
+            <Button variant="outline" onClick={() => navigate('/account/kalina-agents')} className="glass-button border-border">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Înapoi
             </Button>
@@ -366,10 +330,7 @@ const AgentEdit = () => {
             </div>
           </div>
           
-          <Button
-            onClick={() => setIsTestModalOpen(true)}
-            className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
-          >
+          <Button onClick={() => setIsTestModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
             <TestTube className="w-4 h-4" />
             Testează Agent
           </Button>
@@ -383,28 +344,17 @@ const AgentEdit = () => {
             <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="agent-name" className="text-foreground">Numele Agentului</Label>
-                <Input
-                  id="agent-name"
-                  value={agentData.name || ''}
-                  onChange={(e) => setAgentData({ ...agentData, name: e.target.value })}
-                  className="glass-input"
-                />
+                <Input id="agent-name" value={agentData.name || ''} onChange={e => setAgentData({
+                ...agentData,
+                name: e.target.value
+              })} className="glass-input" />
               </div>
 
               <div>
                 <Label className="text-foreground">Agent ID</Label>
                 <div className="flex items-center gap-2">
-                  <Input
-                    value={agentData.agent_id || ''}
-                    readOnly
-                    className="glass-input bg-muted/50"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copyToClipboard(agentData.agent_id)}
-                    className="glass-button border-border"
-                  >
+                  <Input value={agentData.agent_id || ''} readOnly className="glass-input bg-muted/50" />
+                  <Button variant="outline" size="sm" onClick={() => copyToClipboard(agentData.agent_id)} className="glass-button border-border">
                     <Copy className="w-4 h-4" />
                   </Button>
                 </div>
@@ -412,65 +362,52 @@ const AgentEdit = () => {
 
               <div>
                 <Label htmlFor="voice-select" className="text-foreground">Voce</Label>
-                <Select
-                  value={agentData.conversation_config?.tts?.voice_id || ''}
-                  onValueChange={(value) => setAgentData({
-                    ...agentData,
-                    conversation_config: {
-                      ...agentData.conversation_config,
-                      tts: {
-                        ...agentData.conversation_config?.tts!,
-                        voice_id: value
-                      }
-                    }
-                  })}
-                >
+                <Select value={agentData.conversation_config?.tts?.voice_id || ''} onValueChange={value => setAgentData({
+                ...agentData,
+                conversation_config: {
+                  ...agentData.conversation_config,
+                  tts: {
+                    ...agentData.conversation_config?.tts!,
+                    voice_id: value
+                  }
+                }
+              })}>
                   <SelectTrigger className="glass-input">
                     <SelectValue placeholder="Selectează vocea" />
                   </SelectTrigger>
                   <SelectContent>
-                    {VOICES.map((voice) => (
-                      <SelectItem key={voice.id} value={voice.id}>
+                    {VOICES.map(voice => <SelectItem key={voice.id} value={voice.id}>
                         {voice.name}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
                 <Label htmlFor="language-select" className="text-foreground">Limba</Label>
-                <Select
-                  value={agentData.conversation_config?.agent?.language || ''}
-                  onValueChange={(value) => setAgentData({
-                    ...agentData,
-                    conversation_config: {
-                      ...agentData.conversation_config,
-                      agent: {
-                        ...agentData.conversation_config?.agent!,
-                        language: value
-                      }
-                    }
-                  })}
-                >
+                <Select value={agentData.conversation_config?.agent?.language || ''} onValueChange={value => setAgentData({
+                ...agentData,
+                conversation_config: {
+                  ...agentData.conversation_config,
+                  agent: {
+                    ...agentData.conversation_config?.agent!,
+                    language: value
+                  }
+                }
+              })}>
                   <SelectTrigger className="glass-input">
                     <SelectValue placeholder="Selectează limba" />
                   </SelectTrigger>
                   <SelectContent>
-                    {LANGUAGES.map((language) => (
-                      <SelectItem key={language.value} value={language.value}>
+                    {LANGUAGES.map(language => <SelectItem key={language.value} value={language.value}>
                         {language.label}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="w-full">
-                <CreativitySelector
-                  value={agentData.conversation_config?.agent?.prompt?.temperature ?? 0.5}
-                  onChange={handleCreativityChange}
-                />
+                <CreativitySelector value={agentData.conversation_config?.agent?.prompt?.temperature ?? 0.5} onChange={handleCreativityChange} />
               </div>
             </CardContent>
           </Card>
@@ -482,25 +419,19 @@ const AgentEdit = () => {
             <CardContent>
               <div className="w-full">
                 <Label htmlFor="system-prompt" className="text-foreground">Prompt</Label>
-                <Textarea
-                  id="system-prompt"
-                  value={agentData.conversation_config?.agent?.prompt?.prompt || ''}
-                  onChange={(e) => setAgentData({
-                    ...agentData,
-                    conversation_config: {
-                      ...agentData.conversation_config,
-                      agent: {
-                        ...agentData.conversation_config?.agent!,
-                        prompt: {
-                          ...agentData.conversation_config?.agent?.prompt!,
-                          prompt: e.target.value
-                        }
-                      }
+                <Textarea id="system-prompt" value={agentData.conversation_config?.agent?.prompt?.prompt || ''} onChange={e => setAgentData({
+                ...agentData,
+                conversation_config: {
+                  ...agentData.conversation_config,
+                  agent: {
+                    ...agentData.conversation_config?.agent!,
+                    prompt: {
+                      ...agentData.conversation_config?.agent?.prompt!,
+                      prompt: e.target.value
                     }
-                  })}
-                  className="glass-input min-h-[300px] w-full"
-                  placeholder="Introdu prompt-ul pentru agent..."
-                />
+                  }
+                }
+              })} className="glass-input min-h-[300px] w-full" placeholder="Introdu prompt-ul pentru agent..." />
               </div>
             </CardContent>
           </Card>
@@ -516,60 +447,39 @@ const AgentEdit = () => {
                   Primul mesaj pe care îl va spune agentul. Dacă este gol, agentul va aștepta ca utilizatorul să înceapă conversația.
                 </p>
               </div>
-              {additionalLanguages.length > 0 && (
-                <Button
-                  onClick={openMultilingualModal}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
-                >
+              {additionalLanguages.length > 0 && <Button onClick={openMultilingualModal} variant="outline" size="sm" className="flex items-center gap-2">
                   <Languages className="w-4 h-4" />
                   Configurare multilingual
-                </Button>
-              )}
+                </Button>}
             </div>
           </CardHeader>
           <CardContent>
             <div>
               <Label htmlFor="first-message" className="text-foreground">
                 Mesaj
-                {additionalLanguages.length > 0 && (
-                  <span className="text-xs text-muted-foreground ml-2">
+                {additionalLanguages.length > 0 && <span className="text-xs text-muted-foreground ml-2">
                     (limba principală: {getLanguageLabel(agentData?.conversation_config?.agent?.language || 'en')})
-                  </span>
-                )}
+                  </span>}
               </Label>
-              <Textarea
-                id="first-message"
-                value={agentData.conversation_config?.agent?.first_message || ''}
-                onChange={(e) => setAgentData({
-                  ...agentData,
-                  conversation_config: {
-                    ...agentData.conversation_config,
-                    agent: {
-                      ...agentData.conversation_config?.agent!,
-                      first_message: e.target.value
-                    }
-                  }
-                })}
-                className="glass-input"
-                placeholder="e.g. Hello, how can I help you today?"
-              />
-              {additionalLanguages.length > 0 && (
-                <p className="text-xs text-muted-foreground mt-2">
+              <Textarea id="first-message" value={agentData.conversation_config?.agent?.first_message || ''} onChange={e => setAgentData({
+              ...agentData,
+              conversation_config: {
+                ...agentData.conversation_config,
+                agent: {
+                  ...agentData.conversation_config?.agent!,
+                  first_message: e.target.value
+                }
+              }
+            })} className="glass-input" placeholder="e.g. Hello, how can I help you today?" />
+              {additionalLanguages.length > 0 && <p className="text-xs text-muted-foreground mt-2">
                   Pentru configurarea mesajelor în limbile adiționale, folosește butonul "Configurare multilingual".
-                </p>
-              )}
+                </p>}
             </div>
           </CardContent>
         </Card>
 
         {/* Additional Languages Section */}
-        <AdditionalLanguagesSection
-          selectedLanguages={additionalLanguages}
-          onLanguagesChange={setAdditionalLanguages}
-          currentLanguage={agentData.conversation_config?.agent?.language}
-        />
+        <AdditionalLanguagesSection selectedLanguages={additionalLanguages} onLanguagesChange={setAdditionalLanguages} currentLanguage={agentData.conversation_config?.agent?.language} />
 
         {/* Knowledge Base Section */}
         <Card className="liquid-glass">
@@ -588,171 +498,89 @@ const AgentEdit = () => {
                 </p>
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsAddingDoc(true)}
-                  className="flex items-center gap-2"
-                >
+                <Button variant="outline" size="sm" onClick={() => setIsAddingDoc(true)} className="flex items-center gap-2">
                   <FileText className="w-4 h-4" />
                   Adaugă Manual
                 </Button>
                 <label className="cursor-pointer">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                    asChild
-                  >
+                  <Button variant="outline" size="sm" className="flex items-center gap-2" asChild>
                     <span>
                       <Upload className="w-4 h-4" />
                       Încarcă Document
                     </span>
                   </Button>
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept=".txt,.md,.pdf,.doc,.docx"
-                    onChange={handleFileUpload}
-                  />
+                  <input type="file" className="hidden" accept=".txt,.md,.pdf,.doc,.docx" onChange={handleFileUpload} />
                 </label>
               </div>
             </div>
 
-            {isAddingDoc && (
-              <div className="p-4 border border-gray-200 rounded-lg space-y-3">
-                <Input
-                  value={newDocName}
-                  onChange={(e) => setNewDocName(e.target.value)}
-                  placeholder="Numele documentului"
-                  className="glass-input"
-                />
-                <Textarea
-                  value={newDocContent}
-                  onChange={(e) => setNewDocContent(e.target.value)}
-                  placeholder="Conținutul documentului..."
-                  className="glass-input min-h-[100px]"
-                />
+            {isAddingDoc && <div className="p-4 border border-gray-200 rounded-lg space-y-3">
+                <Input value={newDocName} onChange={e => setNewDocName(e.target.value)} placeholder="Numele documentului" className="glass-input" />
+                <Textarea value={newDocContent} onChange={e => setNewDocContent(e.target.value)} placeholder="Conținutul documentului..." className="glass-input min-h-[100px]" />
                 <div className="flex gap-2">
                   <Button onClick={addManualDocument} size="sm">
                     Adaugă
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setIsAddingDoc(false)}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => setIsAddingDoc(false)}>
                     Anulează
                   </Button>
                 </div>
-              </div>
-            )}
+              </div>}
 
             <div className="space-y-2">
-              {documents.length === 0 ? (
-                <p className="text-muted-foreground text-sm text-center py-8">
+              {documents.length === 0 ? <p className="text-muted-foreground text-sm text-center py-8">
                   Nu ai adăugat încă documente în Knowledge Base.
                   <br />
                   Adaugă documente pentru a îmbunătăți răspunsurile agentului.
-                </p>
-              ) : (
-                documents.map((doc) => (
-                  <div
-                    key={doc.id}
-                    className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border"
-                  >
+                </p> : documents.map(doc => <div key={doc.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
                     <div className="flex-1">
                       <h4 className="font-medium text-foreground">{doc.name}</h4>
                       <p className="text-sm text-muted-foreground">
                         Adăugat: {doc.uploadedAt.toLocaleDateString()}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {doc.content.length > 100 
-                          ? `${doc.content.substring(0, 100)}...` 
-                          : doc.content}
+                        {doc.content.length > 100 ? `${doc.content.substring(0, 100)}...` : doc.content}
                       </p>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRemoveDocument(doc.id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
+                    <Button variant="outline" size="sm" onClick={() => handleRemoveDocument(doc.id)} className="text-red-600 hover:text-red-700 hover:bg-red-50">
                       <Trash2 className="w-4 h-4" />
                     </Button>
-                  </div>
-                ))
-              )}
+                  </div>)}
             </div>
 
-            {documents.length > 0 && (
-              <Button
-                onClick={updateKnowledgeBase}
-                disabled={isUpdatingKnowledge}
-                className="bg-accent text-white hover:bg-accent/90 w-full"
-              >
-                {isUpdatingKnowledge ? (
-                  <>
+            {documents.length > 0 && <Button onClick={updateKnowledgeBase} disabled={isUpdatingKnowledge} className="bg-accent text-white hover:bg-accent/90 w-full">
+                {isUpdatingKnowledge ? <>
                     <Save className="w-4 h-4 mr-2 animate-spin" />
                     Se Actualizează Knowledge Base pentru {agentId}
-                  </>
-                ) : (
-                  <>
+                  </> : <>
                     <Save className="w-4 h-4 mr-2" />
                     Actualizează Knowledge Base în ElevenLabs
-                  </>
-                )}
-              </Button>
-            )}
+                  </>}
+              </Button>}
           </CardContent>
         </Card>
 
         <div className="flex justify-end gap-4">
-          <Button
-            variant="outline"
-            onClick={() => navigate('/account/kalina-agents')}
-            className="glass-button border-border"
-          >
+          <Button variant="outline" onClick={() => navigate('/account/kalina-agents')} className="glass-button border-border">
             Anulează
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="bg-accent text-white hover:bg-accent/90"
-          >
-            {isSaving ? (
-              <>
+          <Button onClick={handleSave} disabled={isSaving} className="bg-accent text-white hover:bg-accent/90">
+            {isSaving ? <>
                 <Save className="w-4 h-4 mr-2 animate-spin" />
                 Se salvează...
-              </>
-            ) : (
-              <>
+              </> : <>
                 <Save className="w-4 h-4 mr-2" />
                 Salvează
-              </>
-            )}
+              </>}
           </Button>
         </div>
 
         {/* Test Modal */}
-        <AgentTestModal
-          agent={agentData}
-          isOpen={isTestModalOpen}
-          onClose={() => setIsTestModalOpen(false)}
-        />
+        <AgentTestModal agent={agentData} isOpen={isTestModalOpen} onClose={() => setIsTestModalOpen(false)} />
 
         {/* Multilingual First Message Modal */}
-        <MultilingualFirstMessageModal
-          isOpen={isMultilingualModalOpen}
-          onClose={() => setIsMultilingualModalOpen(false)}
-          defaultLanguage={agentData?.conversation_config?.agent?.language || 'en'}
-          additionalLanguages={additionalLanguages}
-          messages={multilingualMessages}
-          onMessagesUpdate={handleMultilingualMessagesUpdate}
-        />
+        <MultilingualFirstMessageModal isOpen={isMultilingualModalOpen} onClose={() => setIsMultilingualModalOpen(false)} defaultLanguage={agentData?.conversation_config?.agent?.language || 'en'} additionalLanguages={additionalLanguages} messages={multilingualMessages} onMessagesUpdate={handleMultilingualMessagesUpdate} />
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
-
 export default AgentEdit;
