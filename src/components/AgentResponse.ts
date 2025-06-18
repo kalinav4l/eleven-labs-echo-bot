@@ -78,6 +78,7 @@ export interface PromptConfig {
 export interface AgentDetails {
     first_message: string;
     language: string;
+    multilingual_first_messages?: Record<string, string>;
     dynamic_variables: {
         dynamic_variable_placeholders: Record<string, any>;
     };
@@ -382,4 +383,3 @@ export interface AgentResponse {
     access_info: AccessInfo;
     tags: string[];
 }
-

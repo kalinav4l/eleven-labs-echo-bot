@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Languages, Loader2 } from 'lucide-react';
-import { LANGUAGES } from '@/constants/constants';
+import { LANGUAGE_MAP } from '@/constants/constants';
 import { toast } from '@/components/ui/use-toast';
 import { translationService } from '@/services/TranslationService';
 
@@ -41,8 +41,13 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
     }
   }, [isOpen, defaultLanguage]);
 
-  const getLanguageLabel = (value: string) => {
-    return LANGUAGES.find(lang => lang.value === value)?.label || value;
+  const getLanguageLabel = (languageId: string) => {
+    return LANGUAGE_MAP[languageId as keyof typeof LANGUAGE_MAP] || languageId;
+  };
+
+  const getLanguageDisplayName = (languageId: string) => {
+    const languageName = getLanguageLabel(languageId);
+    return `• ${languageId.toUpperCase()} ${languageName}`;
   };
 
   const allLanguages = [defaultLanguage, ...additionalLanguages];
@@ -111,13 +116,13 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
             <div className="flex items-center gap-2">
               <Label className="text-foreground">Limba selectată:</Label>
               <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                <SelectTrigger className="w-[200px] glass-input">
+                <SelectTrigger className="w-[250px] glass-input">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {allLanguages.map((language) => (
                     <SelectItem key={language} value={language}>
-                      {getLanguageLabel(language)}
+                      {getLanguageDisplayName(language)}
                       {language === defaultLanguage && " (principală)"}
                     </SelectItem>
                   ))}
@@ -145,7 +150,7 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
 
           <div>
             <Label htmlFor="multilingual-message" className="text-foreground">
-              Mesaj pentru {getLanguageLabel(selectedLanguage)}
+              Mesaj pentru {getLanguageDisplayName(selectedLanguage)}
               {selectedLanguage === defaultLanguage && " (limba principală)"}
             </Label>
             <Textarea
@@ -167,7 +172,7 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
               <div key={language} className="p-3 bg-muted/30 rounded-lg border">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-medium text-sm">
-                    {getLanguageLabel(language)}
+                    {getLanguageDisplayName(language)}
                     {language === defaultLanguage && " (principală)"}
                   </span>
                   <Button

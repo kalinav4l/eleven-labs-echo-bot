@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -11,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowLeft, Bot, Save, Copy, Upload, FileText, Trash2, TestTube, Languages } from 'lucide-react';
 import { useClipboard } from '@/hooks/useClipboard';
 import { toast } from '@/components/ui/use-toast';
-import { API_CONFIG, VOICES, LANGUAGES } from '@/constants/constants';
+import { API_CONFIG, VOICES, LANGUAGES, LANGUAGE_MAP } from '@/constants/constants';
 import { agentService } from '@/services/AgentService';
 import { AgentResponse } from '@/components/AgentResponse';
 import AgentTestModal from '@/components/AgentTestModal';
@@ -97,11 +96,28 @@ const AgentEdit = () => {
     } else if (agentData?.conversation_config?.agent?.first_message) {
       // Initialize with the current first message for the default language
       const defaultLanguage = agentData.conversation_config?.agent?.language || 'en';
-      setMultilingualMessages({
+      const currentMessages: Record<string, string> = {
         [defaultLanguage]: agentData.conversation_config.agent.first_message
-      });
+      };
+      
+      // Add messages from language presets if they exist
+      if (agentData.conversation_config?.language_presets) {
+        Object.entries(agentData.conversation_config.language_presets).forEach(([languageId, preset]) => {
+          if (preset.overrides?.agent?.first_message) {
+            currentMessages[languageId] = preset.overrides.agent.first_message;
+          } else if (preset.first_message_translation?.text) {
+            currentMessages[languageId] = preset.first_message_translation.text;
+          }
+        });
+      }
+      
+      setMultilingualMessages(currentMessages);
     }
   }, [agentData]);
+
+  const getLanguageLabel = (languageId: string) => {
+    return LANGUAGE_MAP[languageId as keyof typeof LANGUAGE_MAP] || languageId;
+  };
 
   const handleSave = async () => {
     if (!agentId || !agentData) return;
@@ -510,7 +526,7 @@ const AgentEdit = () => {
                 Mesaj
                 {additionalLanguages.length > 0 && (
                   <span className="text-xs text-muted-foreground ml-2">
-                    (limba principală: {LANGUAGES.find(l => l.value === agentData?.conversation_config?.agent?.language)?.label})
+                    (limba principală: {getLanguageLabel(agentData?.conversation_config?.agent?.language || 'en')})
                   </span>
                 )}
               </Label>
