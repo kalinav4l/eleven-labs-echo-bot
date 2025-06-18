@@ -73,21 +73,21 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             </Link>
 
             <Link 
-              to="/account/voices" 
-              className={`${location.pathname === '/account/voices' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
-              onClick={isMobile ? onClose : undefined}
-            >
-              <Volume2 className="mr-3 h-5 w-5 flex-shrink-0" />
-              <span className="truncate">voice</span>
-            </Link>
-
-            <Link 
               to="/account/voice" 
               className={`${location.pathname === '/account/voice' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
               onClick={isMobile ? onClose : undefined}
             >
               <BarChart3 className="mr-3 h-5 w-5 flex-shrink-0" />
               <span className="truncate">dashboard</span>
+            </Link>
+
+            <Link 
+              to="/account/voices" 
+              className={`${location.pathname === '/account/voices' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
+              onClick={isMobile ? onClose : undefined}
+            >
+              <Volume2 className="mr-3 h-5 w-5 flex-shrink-0" />
+              <span className="truncate">voice</span>
             </Link>
 
             <Link 

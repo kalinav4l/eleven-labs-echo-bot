@@ -1,56 +1,55 @@
 
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/components/AuthContext';
+import React, { useEffect, useState } from 'react';
 
-const SentimentWidget = () => {
-  const { user } = useAuth();
+interface SentimentWidgetProps {
+  data: any;
+  onRefresh: () => void;
+}
 
-  const { data: sentimentData } = useQuery({
-    queryKey: ['sentiment-data', user?.id],
-    queryFn: async () => {
-      if (!user) return { percentage: 0, emoji: '😐' };
-      
-      // Mock sentiment calculation - in real app, this would analyze call transcripts
-      const { data, error } = await supabase
-        .from('call_history')
-        .select('summary')
-        .eq('user_id', user.id)
-        .not('summary', 'is', null)
-        .limit(10);
+const SentimentWidget = ({ data }: SentimentWidgetProps) => {
+  const [sentiment, setSentiment] = useState({ emoji: '😊', percentage: 85, label: 'Positive' });
 
-      if (error) {
-        console.error('Error fetching sentiment data:', error);
-        return { percentage: 0, emoji: '😐' };
-      }
+  useEffect(() => {
+    // Calculate sentiment from call history
+    const calls = data?.recentCalls || [];
+    const positiveCalls = calls.filter((call: any) => 
+      call.summary?.includes('satisfied') || call.summary?.includes('happy')
+    ).length;
+    
+    const percentage = calls.length > 0 ? Math.round((positiveCalls / calls.length) * 100) : 85;
+    
+    let emoji = '😊';
+    let label = 'Positive';
+    
+    if (percentage < 30) {
+      emoji = '😔';
+      label = 'Negative';
+    } else if (percentage < 70) {
+      emoji = '😐';
+      label = 'Neutral';
+    }
+    
+    setSentiment({ emoji, percentage, label });
+  }, [data]);
 
-      // Mock positive sentiment percentage
-      const positivePercentage = Math.floor(Math.random() * 40) + 60; // 60-100%
-      let emoji = '😐';
-      
-      if (positivePercentage >= 80) emoji = '😊';
-      else if (positivePercentage >= 60) emoji = '🙂';
-      else if (positivePercentage >= 40) emoji = '😐';
-      else emoji = '😞';
-
-      return { percentage: positivePercentage, emoji };
-    },
-    enabled: !!user,
-  });
-
-  const { percentage = 0, emoji = '😐' } = sentimentData || {};
+  const getBgColor = () => {
+    if (sentiment.percentage < 30) return 'bg-red-50 border-red-200';
+    if (sentiment.percentage < 70) return 'bg-yellow-50 border-yellow-200';
+    return 'bg-green-50 border-green-200';
+  };
 
   return (
-    <div className="h-45 bg-white rounded-2xl border border-gray-100 p-6 flex flex-col items-center justify-center">
-      <div className="text-6xl mb-2 animate-bounce">
-        {emoji}
-      </div>
-      <div className="text-2xl font-semibold text-gray-900 mb-1">
-        {percentage}%
-      </div>
-      <div className="text-sm text-gray-500 font-medium">
-        Positive Sentiment
+    <div className={`h-full rounded-2xl p-6 border-2 transition-colors duration-500 ${getBgColor()}`}>
+      <div className="flex flex-col justify-center items-center h-full">
+        <div className="text-6xl mb-3 animate-bounce">
+          {sentiment.emoji}
+        </div>
+        <div className="text-3xl font-bold text-gray-900 mb-1">
+          {sentiment.percentage}%
+        </div>
+        <div className="text-sm font-medium text-gray-600">
+          {sentiment.label} Sentiment
+        </div>
       </div>
     </div>
   );

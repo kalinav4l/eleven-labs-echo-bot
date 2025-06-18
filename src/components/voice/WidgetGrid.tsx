@@ -1,51 +1,108 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import ActiveCallsWidget from './widgets/ActiveCallsWidget';
-import SentimentWidget from './widgets/SentimentWidget';
-import ConversionWidget from './widgets/ConversionWidget';
 import CallVolumeWidget from './widgets/CallVolumeWidget';
 import TopAgentsWidget from './widgets/TopAgentsWidget';
+import SentimentWidget from './widgets/SentimentWidget';
+import ConversionWidget from './widgets/ConversionWidget';
 import ActivityMapWidget from './widgets/ActivityMapWidget';
+import EmptyState from './EmptyState';
 
-const WidgetGrid = () => {
+interface WidgetGridProps {
+  data: any;
+  searchQuery: string;
+  onRefresh: () => void;
+}
+
+const WidgetGrid = ({ data, searchQuery, onRefresh }: WidgetGridProps) => {
+  const [widgets, setWidgets] = useState([
+    { id: 'active-calls', type: 'small', component: 'ActiveCallsWidget' },
+    { id: 'sentiment', type: 'small', component: 'SentimentWidget' },
+    { id: 'conversion', type: 'small', component: 'ConversionWidget' },
+    { id: 'call-volume', type: 'medium', component: 'CallVolumeWidget' },
+    { id: 'top-agents', type: 'medium', component: 'TopAgentsWidget' },
+    { id: 'activity-map', type: 'large', component: 'ActivityMapWidget' },
+  ]);
+
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return;
+
+    const items = Array.from(widgets);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    setWidgets(items);
+  };
+
+  const renderWidget = (widget: any) => {
+    const props = { data, onRefresh };
+    
+    switch (widget.component) {
+      case 'ActiveCallsWidget':
+        return <ActiveCallsWidget {...props} />;
+      case 'SentimentWidget':
+        return <SentimentWidget {...props} />;
+      case 'ConversionWidget':
+        return <ConversionWidget {...props} />;
+      case 'CallVolumeWidget':
+        return <CallVolumeWidget {...props} />;
+      case 'TopAgentsWidget':
+        return <TopAgentsWidget {...props} />;
+      case 'ActivityMapWidget':
+        return <ActivityMapWidget {...props} />;
+      default:
+        return null;
+    }
+  };
+
+  const getWidgetClasses = (type: string) => {
+    switch (type) {
+      case 'small':
+        return 'w-full md:w-45 h-45';
+      case 'medium':
+        return 'w-full md:w-95 h-45';
+      case 'large':
+        return 'w-full md:w-95 h-95';
+      default:
+        return 'w-full md:w-45 h-45';
+    }
+  };
+
+  if (!data || widgets.length === 0) {
+    return <EmptyState onAddWidget={() => {}} />;
+  }
+
   return (
-    <div className="grid grid-cols-12 gap-5 auto-rows-min">
-      {/* Small Widgets Row */}
-      <div className="col-span-3">
-        <ActiveCallsWidget />
-      </div>
-      <div className="col-span-3">
-        <SentimentWidget />
-      </div>
-      <div className="col-span-3">
-        <ConversionWidget />
-      </div>
-      <div className="col-span-3">
-        {/* Placeholder for future widget */}
-        <div className="h-45 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-center">
-          <span className="text-gray-400 text-sm">Add Widget</span>
-        </div>
-      </div>
-      
-      {/* Medium Widgets Row */}
-      <div className="col-span-6">
-        <CallVolumeWidget />
-      </div>
-      <div className="col-span-6">
-        <TopAgentsWidget />
-      </div>
-      
-      {/* Large Widget */}
-      <div className="col-span-6">
-        <ActivityMapWidget />
-      </div>
-      <div className="col-span-6">
-        {/* Placeholder for future large widget */}
-        <div className="h-96 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-center">
-          <span className="text-gray-400">Conversation Topics Cloud</span>
-        </div>
-      </div>
-    </div>
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <Droppable droppableId="widgets">
+        {(provided) => (
+          <div
+            {...provided.droppableProps}
+            ref={provided.innerRef}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 auto-rows-min"
+          >
+            {widgets.map((widget, index) => (
+              <Draggable key={widget.id} draggableId={widget.id} index={index}>
+                {(provided, snapshot) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    {...provided.dragHandleProps}
+                    className={`${getWidgetClasses(widget.type)} ${
+                      snapshot.isDragging ? 'rotate-3 scale-105' : ''
+                    } transition-transform duration-200`}
+                  >
+                    {renderWidget(widget)}
+                  </div>
+                )}
+              </Draggable>
+            ))}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
+    </DragDropContext>
   );
 };
 

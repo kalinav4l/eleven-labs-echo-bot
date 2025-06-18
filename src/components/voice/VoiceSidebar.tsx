@@ -1,67 +1,71 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   Home, 
   Users, 
-  BarChart3, 
-  MessageCircle, 
-  Users2,
-  Puzzle,
+  TrendingUp, 
+  MessageSquare, 
+  UsersRound, 
+  Zap, 
   Settings,
-  ChevronLeft,
-  ChevronRight
+  Menu
 } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Link, useLocation } from 'react-router-dom';
 
-const VoiceSidebar = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+interface VoiceSidebarProps {
+  collapsed: boolean;
+  onToggle: () => void;
+}
+
+const VoiceSidebar = ({ collapsed, onToggle }: VoiceSidebarProps) => {
+  const location = useLocation();
 
   const menuItems = [
-    { icon: Home, label: 'Dashboard', active: true },
-    { icon: Users, label: 'Agents' },
-    { icon: BarChart3, label: 'Analytics' },
-    { icon: MessageCircle, label: 'Conversations' },
-    { icon: Users2, label: 'Team' },
-    { icon: Puzzle, label: 'Integrations' },
-    { icon: Settings, label: 'Settings' },
+    { icon: Home, label: 'Dashboard', path: '/voice', active: true },
+    { icon: Users, label: 'Agents', path: '/voice/agents' },
+    { icon: TrendingUp, label: 'Analytics', path: '/voice/analytics' },
+    { icon: MessageSquare, label: 'Conversations', path: '/voice/conversations' },
+    { icon: UsersRound, label: 'Team', path: '/voice/team' },
+    { icon: Zap, label: 'Integrations', path: '/voice/integrations' },
+    { icon: Settings, label: 'Settings', path: '/voice/settings' },
   ];
 
   return (
-    <div className={`${isCollapsed ? 'w-20' : 'w-70'} bg-gray-50 h-screen transition-all duration-300 flex flex-col`}>
-      {/* Collapse Toggle */}
-      <div className="flex justify-end p-4">
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-1 rounded-lg hover:bg-gray-200 transition-colors"
+    <div className={`fixed left-0 top-0 h-full bg-gray-50 border-r border-gray-200 transition-all duration-300 z-30 ${
+      collapsed ? 'w-20' : 'w-70'
+    }`}>
+      {/* Header */}
+      <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
+        {!collapsed && (
+          <span className="font-semibold text-gray-900">Voice AI</span>
+        )}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={onToggle}
+          className="hover:bg-gray-100"
         >
-          {isCollapsed ? (
-            <ChevronRight className="w-5 h-5 text-gray-600" />
-          ) : (
-            <ChevronLeft className="w-5 h-5 text-gray-600" />
-          )}
-        </button>
+          <Menu className="w-5 h-5" />
+        </Button>
       </div>
-      
+
       {/* Menu Items */}
-      <nav className="flex-1 px-4">
-        <div className="space-y-2">
-          {menuItems.map((item, index) => (
-            <div
-              key={index}
-              className={`
-                flex items-center h-12 px-4 rounded-lg cursor-pointer transition-all duration-200
-                ${item.active 
-                  ? 'bg-blue-500 text-white shadow-sm' 
-                  : 'text-gray-700 hover:bg-gray-200'
-                }
-              `}
-            >
-              <item.icon className="w-6 h-6" />
-              {!isCollapsed && (
-                <span className="ml-3 font-medium">{item.label}</span>
-              )}
-            </div>
-          ))}
-        </div>
+      <nav className="mt-4 px-2">
+        {menuItems.map((item) => (
+          <Link
+            key={item.path}
+            to={item.path}
+            className={`flex items-center px-3 py-3 mb-1 rounded-lg transition-colors ${
+              item.active
+                ? 'bg-blue-500 text-white'
+                : 'text-gray-700 hover:bg-gray-100'
+            } ${collapsed ? 'justify-center' : ''}`}
+          >
+            <item.icon className={`w-6 h-6 ${collapsed ? '' : 'mr-3'}`} />
+            {!collapsed && <span className="font-medium">{item.label}</span>}
+          </Link>
+        ))}
       </nav>
     </div>
   );
