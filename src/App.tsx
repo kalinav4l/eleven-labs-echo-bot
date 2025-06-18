@@ -16,6 +16,7 @@ import Transcript from "./pages/Transcript";
 import Outbound from "./pages/Outbound";
 import ConversationAnalytics from "./pages/ConversationAnalytics";
 import TeamCollaborationHub from "./pages/TeamCollaborationHub";
+import IntegrationsSettings from "./pages/IntegrationsSettings";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import AgentConsultant from "./pages/AgentConsultant";
@@ -40,6 +41,7 @@ function App() {
             <Route path="/account/voices" element={<Voices />} />
             <Route path="/account/conversation-analytics" element={<ConversationAnalytics />} />
             <Route path="/account/team-collaboration" element={<TeamCollaborationHub />} />
+            <Route path="/account/integrations-settings" element={<IntegrationsSettings />} />
             <Route path="/account/transcript" element={<Transcript />} />
             <Route path="/account/outbound" element={<Outbound />} />
             <Route path="/account/settings" element={<AccountSettings />} />
