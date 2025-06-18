@@ -1,5 +1,4 @@
 
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -94,18 +93,48 @@
   body {
     @apply bg-background text-foreground;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    /* Improved mobile touch handling */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
   
+  /* Mobile-first responsive design */
   .glass-card {
     @apply bg-white/80 backdrop-blur-xl border border-gray-200/50 shadow-lg;
   }
   
   .glass-button {
     @apply bg-white/90 hover:bg-white backdrop-blur-xl border border-gray-200/50 text-foreground transition-all duration-200 hover:shadow-md;
+    /* Better touch targets on mobile */
+    min-height: 44px;
   }
   
   .glass-input {
     @apply bg-white/80 backdrop-blur-xl border border-gray-200/50 focus:border-accent/50 focus:ring-2 focus:ring-accent/20;
+    /* Better touch targets on mobile */
+    min-height: 44px;
+  }
+
+  /* Mobile-specific improvements */
+  @media (max-width: 768px) {
+    .liquid-glass {
+      @apply bg-white/90 backdrop-blur-xl border border-gray-200/40 shadow-lg;
+    }
+    
+    /* Improve text readability on mobile */
+    body {
+      font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    /* Better spacing for mobile */
+    .container {
+      @apply px-4;
+    }
+  }
+
+  /* Touch-friendly interactions */
+  .touch-manipulation {
+    touch-action: manipulation;
   }
 }
 
@@ -158,5 +187,20 @@
   .liquid-glass {
     @apply bg-white/80 backdrop-blur-xl border border-gray-200/30 shadow-xl;
   }
+  
+  /* Mobile-specific utilities */
+  @media (max-width: 768px) {
+    .mobile-padding {
+      @apply px-4 py-3;
+    }
+    
+    .mobile-text {
+      @apply text-sm;
+    }
+    
+    .mobile-button {
+      @apply px-4 py-3 text-base;
+      min-height: 44px;
+    }
+  }
 }
-

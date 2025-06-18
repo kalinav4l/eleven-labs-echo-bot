@@ -2,8 +2,11 @@
 import React from 'react'
 import AIAgentInterface from '@/components/AIAgentInterface'
 import HamburgerMenu from '@/components/HamburgerMenu'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 const Index = () => {
+  const isMobile = useIsMobile()
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center relative overflow-hidden">
       <HamburgerMenu />
@@ -14,7 +17,7 @@ const Index = () => {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-200/20 to-purple-200/20 rounded-full blur-3xl"></div>
       </div>
       
-      <div className="relative z-10 w-full">
+      <div className={`relative z-10 w-full ${isMobile ? 'px-2' : 'px-4'}`}>
         <AIAgentInterface />
       </div>
     </div>
