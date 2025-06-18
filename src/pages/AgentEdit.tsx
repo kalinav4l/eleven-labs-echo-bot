@@ -412,6 +412,7 @@ const AgentEdit = () => {
         <AdditionalLanguagesSection
           selectedLanguages={additionalLanguages}
           onLanguagesChange={setAdditionalLanguages}
+          currentLanguage={agentData.conversation_config?.agent?.language}
         />
 
         <Card className="liquid-glass">

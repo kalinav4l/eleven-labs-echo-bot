@@ -10,11 +10,13 @@ import { LANGUAGES } from '@/constants/constants';
 interface AdditionalLanguagesSectionProps {
   selectedLanguages: string[];
   onLanguagesChange: (languages: string[]) => void;
+  currentLanguage?: string;
 }
 
 const AdditionalLanguagesSection: React.FC<AdditionalLanguagesSectionProps> = ({
   selectedLanguages,
   onLanguagesChange,
+  currentLanguage,
 }) => {
   const [selectedLanguage, setSelectedLanguage] = useState<string>('');
 
@@ -33,18 +35,11 @@ const AdditionalLanguagesSection: React.FC<AdditionalLanguagesSectionProps> = ({
     return LANGUAGES.find(lang => lang.value === value)?.label || value;
   };
 
-  const getLanguageFlag = (value: string) => {
-    const flags: Record<string, string> = {
-      'ro': '🇷🇴',
-      'ru': '🇷🇺',
-      'en': '🇺🇸',
-      'es': '🇪🇸',
-      'fr': '🇫🇷',
-    };
-    return flags[value] || '🌐';
-  };
-
-  const availableLanguages = LANGUAGES.filter(lang => !selectedLanguages.includes(lang.value));
+  // Filter out already selected languages and the current agent language
+  const availableLanguages = LANGUAGES.filter(lang => 
+    !selectedLanguages.includes(lang.value) && 
+    lang.value !== currentLanguage
+  );
 
   return (
     <Card className="liquid-glass">
@@ -63,10 +58,7 @@ const AdditionalLanguagesSection: React.FC<AdditionalLanguagesSectionProps> = ({
             <SelectContent>
               {availableLanguages.map((language) => (
                 <SelectItem key={language.value} value={language.value}>
-                  <div className="flex items-center gap-2">
-                    <span>{getLanguageFlag(language.value)}</span>
-                    <span>{language.label}</span>
-                  </div>
+                  {language.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -94,7 +86,6 @@ const AdditionalLanguagesSection: React.FC<AdditionalLanguagesSectionProps> = ({
                 className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-lg">{getLanguageFlag(language)}</span>
                   <span className="font-medium text-foreground">
                     {getLanguageLabel(language)}
                   </span>
@@ -114,15 +105,6 @@ const AdditionalLanguagesSection: React.FC<AdditionalLanguagesSectionProps> = ({
             ))
           )}
         </div>
-
-        {selectedLanguages.length > 0 && (
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
-              Pentru a suporta limbile adiționale, override-urile de limbă vor fi activate. 
-              Poți vizualiza și configura toate override-urile în tab-ul "Security".
-            </p>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
