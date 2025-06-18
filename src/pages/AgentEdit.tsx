@@ -42,6 +42,17 @@ const AgentEdit = () => {
   const [isMultilingualModalOpen, setIsMultilingualModalOpen] = useState(false);
   const [multilingualMessages, setMultilingualMessages] = useState<Record<string, string>>({});
 
+  // Helper function to parse additional languages from AgentResponse
+  const parseAdditionalLanguagesFromResponse = (agentResponse: AgentResponse): string[] => {
+    const currentLanguage = agentResponse.conversation_config?.agent?.language;
+    const languagePresets = agentResponse.conversation_config?.language_presets;
+    
+    if (!languagePresets) return [];
+    
+    // Extract language keys from language_presets, excluding the current language
+    return Object.keys(languagePresets).filter(lang => lang !== currentLanguage);
+  };
+
   // Remove current language from additional languages when it changes
   useEffect(() => {
     const currentLanguage = agentData?.conversation_config?.agent?.language;
@@ -58,11 +69,9 @@ const AgentEdit = () => {
         const data = await agentService.getAgent(agentId);
         setAgentData(data);
         
-        // Extract additional languages from language_presets
-        if (data.conversation_config?.language_presets) {
-          const presetLanguages = Object.keys(data.conversation_config.language_presets);
-          setAdditionalLanguages(presetLanguages);
-        }
+        // Parse additional languages from the AgentResponse
+        const parsedAdditionalLanguages = parseAdditionalLanguagesFromResponse(data);
+        setAdditionalLanguages(parsedAdditionalLanguages);
         
         // Load existing knowledge base documents if any
         if (data.conversation_config?.agent?.prompt?.knowledge_base) {
