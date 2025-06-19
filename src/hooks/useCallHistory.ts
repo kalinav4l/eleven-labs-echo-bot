@@ -14,6 +14,7 @@ export interface CallHistoryRecord {
   cost_usd: number;
   agent_id?: string;
   language?: string;
+  conversation_id?: string;
 }
 
 export const useCallHistory = () => {
@@ -53,7 +54,8 @@ export const useCallHistory = () => {
           call_date: record.call_date ? new Date(record.call_date).toLocaleString('ro-RO') : '',
           cost_usd: record.cost_usd ? Number(record.cost_usd) : 0,
           agent_id: record.agent_id,
-          language: record.language
+          language: record.language,
+          conversation_id: record.conversation_id
         };
       }) || [];
 
@@ -72,8 +74,8 @@ export const useCallHistory = () => {
       const recordsToInsert = callResults.map((result) => {
         console.log('Processing call result:', result);
         
-        // Handle different response structures
-        let cleanConversations, callInfo, phoneNumbers, costInfo, status, summary, timestamps, language;
+        // Handle different response structures and extract conversation_id
+        let cleanConversations, callInfo, phoneNumbers, costInfo, status, summary, timestamps, language, conversationId;
         
         if (result?.clean_conversations) {
           cleanConversations = result.clean_conversations;
@@ -84,6 +86,12 @@ export const useCallHistory = () => {
           summary = cleanConversations?.summary ?? '';
           timestamps = cleanConversations?.timestamps ?? '';
           language = callInfo?.language ?? 'ro';
+          // Extract conversation_id from multiple possible locations
+          conversationId = result.conversation_id || 
+                          cleanConversations?.conversation_id || 
+                          callInfo?.conversation_id || 
+                          result?.metadata?.conversation_id ||
+                          null;
         } else {
           // Fallback for different response structure
           callInfo = result?.call_info ?? {};
@@ -93,6 +101,11 @@ export const useCallHistory = () => {
           summary = result?.summary ?? '';
           timestamps = result?.timestamps ?? '';
           language = callInfo?.language ?? 'ro';
+          // Extract conversation_id from multiple possible locations
+          conversationId = result.conversation_id || 
+                          callInfo?.conversation_id || 
+                          result?.metadata?.conversation_id ||
+                          null;
         }
         
         const phoneNumber = phoneNumbers?.user ?? phoneNumbers?.to ?? result?.phone_number ?? '';
@@ -123,10 +136,11 @@ export const useCallHistory = () => {
           call_date: callDate,
           cost_usd: costValue,
           language: language,
-          timestamps: timestamps
+          timestamps: timestamps,
+          conversation_id: conversationId // Include conversation_id in the record
         };
 
-        console.log('Record to insert:', record);
+        console.log('Record to insert with conversation_id:', record);
         return record;
       });
 
@@ -140,7 +154,7 @@ export const useCallHistory = () => {
         throw error;
       }
       
-      console.log('Successfully inserted call history:', data);
+      console.log('Successfully inserted call history with conversation_id:', data);
       return data;
     },
     onSuccess: () => {

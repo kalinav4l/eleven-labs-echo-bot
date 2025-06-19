@@ -24,11 +24,11 @@ const ConversationAnalytics = () => {
   const { callHistory, isLoading: callHistoryLoading } = useCallHistory();
   const { data: conversationData, isLoading: conversationLoading, error: conversationError } = useConversationById(conversationId);
 
-  // Auto-select conversation if ID provided in URL
+  // Auto-select conversation if ID provided in URL - funcționează exact ca la ElevenLabs
   useEffect(() => {
     if (conversationId && conversationData?.callHistory?.length > 0) {
       setSelectedCall(conversationData.callHistory[0]);
-      console.log('Auto-selected conversation from URL:', conversationId);
+      console.log('Auto-selected conversation from URL (ElevenLabs style):', conversationId);
     }
   }, [conversationId, conversationData]);
 
@@ -125,7 +125,7 @@ const ConversationAnalytics = () => {
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        {/* Futuristic Header */}
+        {/* Header with ElevenLabs-style navigation */}
         <div className="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-20">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
@@ -183,8 +183,9 @@ const ConversationAnalytics = () => {
           </div>
         </div>
 
+        {/* Main content with ElevenLabs-style layout */}
         <div className="flex h-[calc(100vh-120px)]">
-          {/* Left Panel - Call List */}
+          {/* Left Panel - Call List (ElevenLabs style) */}
           <div className="w-1/2 border-r border-gray-200/50 bg-white/50 backdrop-blur-xl">
             {/* Stats Cards */}
             <div className="p-4 grid grid-cols-3 gap-3 border-b border-gray-200/50">
@@ -204,7 +205,7 @@ const ConversationAnalytics = () => {
               </div>
             </div>
 
-            {/* Call List */}
+            {/* Call List - ElevenLabs style */}
             <div className="overflow-y-auto h-full">
               {filteredCalls.map((call, index) => {
                 const dateInfo = formatDate(call.call_date);
@@ -259,7 +260,7 @@ const ConversationAnalytics = () => {
             </div>
           </div>
 
-          {/* Right Panel - Analytics */}
+          {/* Right Panel - Analytics (ElevenLabs style) */}
           <div className="w-1/2 bg-white/30 backdrop-blur-xl">
             {selectedCall ? (
               <div className="h-full flex flex-col">
@@ -291,7 +292,7 @@ const ConversationAnalytics = () => {
                   </div>
                 </div>
 
-                {/* Audio Waveform */}
+                {/* Audio Waveform - ElevenLabs style */}
                 <div className="p-6 border-b border-gray-200/50">
                   <div className="bg-gradient-to-r from-gray-100 to-gray-200 rounded-xl p-6 mb-4">
                     <div className="flex items-center justify-center h-16">
@@ -328,7 +329,7 @@ const ConversationAnalytics = () => {
                   </div>
                 </div>
 
-                {/* Content Tabs */}
+                {/* Content Tabs - ElevenLabs style */}
                 <Tabs defaultValue="transcript" className="flex-1 flex flex-col">
                   <TabsList className="mx-6 mt-4 grid w-auto grid-cols-3 bg-gray-100/80">
                     <TabsTrigger value="transcript" className="data-[state=active]:bg-[#0A5B4C] data-[state=active]:text-white">

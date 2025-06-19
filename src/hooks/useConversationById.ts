@@ -30,7 +30,7 @@ export const useConversationById = (conversationId?: string) => {
         throw new Error('Conversation not found');
       }
 
-      // Fetch related call history
+      // Fetch related call history using the conversation_id
       const { data: callHistory, error: callError } = await supabase
         .from('call_history')
         .select('*')
@@ -44,7 +44,7 @@ export const useConversationById = (conversationId?: string) => {
       }
 
       console.log('Fetched conversation:', conversation);
-      console.log('Fetched call history:', callHistory);
+      console.log('Fetched call history for conversation:', callHistory);
 
       return {
         conversation,
