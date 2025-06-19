@@ -23,7 +23,7 @@
     --muted: 0 0% 96.1%;
     --muted-foreground: 0 0% 45.1%;
 
-    --accent: 142 76% 36%;
+    --accent: 153 84% 20%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 84.2% 60.2%;
@@ -64,7 +64,7 @@
     --muted: 0 0% 14.9%;
     --muted-foreground: 0 0% 63.9%;
 
-    --accent: 142 76% 36%;
+    --accent: 153 84% 20%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 30.6%;
@@ -92,49 +92,45 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    /* Improved mobile touch handling */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
   
-  /* Mobile-first responsive design */
   .glass-card {
-    @apply bg-white/80 backdrop-blur-xl border border-gray-200/50 shadow-lg;
+    @apply bg-white/95 backdrop-blur-xl border border-gray-200/30 shadow-lg;
   }
   
   .glass-button {
-    @apply bg-white/90 hover:bg-white backdrop-blur-xl border border-gray-200/50 text-foreground transition-all duration-200 hover:shadow-md;
-    /* Better touch targets on mobile */
+    @apply bg-gray-900 hover:bg-gray-800 text-white backdrop-blur-xl border border-gray-700 transition-all duration-200 hover:shadow-lg;
     min-height: 44px;
   }
   
   .glass-input {
-    @apply bg-white/80 backdrop-blur-xl border border-gray-200/50 focus:border-accent/50 focus:ring-2 focus:ring-accent/20;
-    /* Better touch targets on mobile */
+    @apply bg-white/90 backdrop-blur-xl border border-gray-200/50 focus:border-[#0A5B4C]/50 focus:ring-2 focus:ring-[#0A5B4C]/20;
     min-height: 44px;
   }
 
-  /* Mobile-specific improvements */
+  .futuristic-card {
+    @apply bg-gray-50/80 backdrop-blur-xl border border-gray-200/50 rounded-xl shadow-sm hover:shadow-md transition-all duration-300;
+  }
+
+  .neon-accent {
+    box-shadow: 0 0 20px rgba(10, 91, 76, 0.3);
+  }
+
   @media (max-width: 768px) {
     .liquid-glass {
-      @apply bg-white/90 backdrop-blur-xl border border-gray-200/40 shadow-lg;
+      @apply bg-white/95 backdrop-blur-xl border border-gray-200/40 shadow-lg;
     }
     
-    /* Improve text readability on mobile */
     body {
-      font-size: 16px; /* Prevents zoom on iOS */
+      font-size: 16px;
     }
     
-    /* Better spacing for mobile */
     .container {
       @apply px-4;
     }
-  }
-
-  /* Touch-friendly interactions */
-  .touch-manipulation {
-    touch-action: manipulation;
   }
 }
 
@@ -172,6 +168,15 @@
     }
   }
 
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 5px rgba(10, 91, 76, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba(10, 91, 76, 0.6);
+    }
+  }
+
   .animate-fade-in {
     animation: fade-in 0.6s ease-out forwards;
   }
@@ -183,12 +188,15 @@
   .animate-glass-shine {
     animation: glass-shine 2s ease-in-out infinite;
   }
-  
-  .liquid-glass {
-    @apply bg-white/80 backdrop-blur-xl border border-gray-200/30 shadow-xl;
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
   }
   
-  /* Mobile-specific utilities */
+  .liquid-glass {
+    @apply bg-white/90 backdrop-blur-xl border border-gray-200/30 shadow-xl;
+  }
+  
   @media (max-width: 768px) {
     .mobile-padding {
       @apply px-4 py-3;
