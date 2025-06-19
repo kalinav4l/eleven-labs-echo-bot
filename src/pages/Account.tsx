@@ -6,6 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/components/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useUserAgents } from '@/hooks/useUserAgents';
+import { useUserStats } from '@/hooks/useUserStats';
+import { useUserConversations } from '@/hooks/useUserConversations';
+import { useCallHistory } from '@/hooks/useCallHistory';
 import { 
   Bot, 
   Phone, 
@@ -21,6 +25,10 @@ import {
 const Account = () => {
   const { user, signOut } = useAuth();
   const { displayName, loading: profileLoading } = useUserProfile();
+  const { data: userAgents, isLoading: agentsLoading } = useUserAgents();
+  const { data: userStats, isLoading: statsLoading } = useUserStats();
+  const { data: recentConversations, isLoading: conversationsLoading } = useUserConversations();
+  const { callHistory, isLoading: callHistoryLoading } = useCallHistory();
 
   const handleSignOut = async () => {
     try {
@@ -30,21 +38,40 @@ const Account = () => {
     }
   };
 
+  // Calculate real stats from user data
+  const totalAgents = userAgents?.length || 0;
+  const totalCalls = callHistory?.length || 0;
+  const successfulCalls = callHistory?.filter(call => call.call_status === 'success')?.length || 0;
+  const successRate = totalCalls > 0 ? Math.round((successfulCalls / totalCalls) * 100) : 0;
+  const totalConversations = userStats?.total_conversations || 0;
+
   const quickStats = [
-    { label: 'Total Agents', value: '3', icon: Bot, color: 'text-blue-600' },
-    { label: 'Calls This Month', value: '127', icon: Phone, color: 'text-green-600' },
-    { label: 'Success Rate', value: '94%', icon: TrendingUp, color: 'text-purple-600' },
-    { label: 'Avg Rating', value: '4.8', icon: Star, color: 'text-yellow-600' },
+    { label: 'Total Agents', value: totalAgents.toString(), icon: Bot, color: 'text-blue-600' },
+    { label: 'Calls This Month', value: totalCalls.toString(), icon: Phone, color: 'text-green-600' },
+    { label: 'Success Rate', value: `${successRate}%`, icon: TrendingUp, color: 'text-purple-600' },
+    { label: 'Conversations', value: totalConversations.toString(), icon: Star, color: 'text-yellow-600' },
   ];
 
+  // Recent activity from actual user data
   const recentActivity = [
-    { action: 'Created new agent "Customer Support Pro"', time: '2 hours ago', icon: Bot },
-    { action: 'Completed 12 successful calls', time: '4 hours ago', icon: Phone },
-    { action: 'Updated voice settings for Sales Agent', time: '1 day ago', icon: Activity },
-    { action: 'Generated analytics report', time: '2 days ago', icon: BarChart3 },
-  ];
+    ...(userAgents?.slice(0, 2).map(agent => ({
+      action: `Created agent "${agent.name}"`,
+      time: new Date(agent.created_at).toLocaleDateString('ro-RO'),
+      icon: Bot
+    })) || []),
+    ...(callHistory?.slice(0, 2).map(call => ({
+      action: `Call to ${call.contact_name} - ${call.call_status}`,
+      time: call.call_date,
+      icon: Phone
+    })) || []),
+    ...(recentConversations?.slice(0, 2).map(conv => ({
+      action: `Conversation with ${conv.agent_name}`,
+      time: new Date(conv.created_at).toLocaleDateString('ro-RO'),
+      icon: Activity
+    })) || [])
+  ].slice(0, 4);
 
-  if (profileLoading) {
+  if (profileLoading || agentsLoading || statsLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-screen">
@@ -132,7 +159,7 @@ const Account = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentActivity.map((activity, index) => (
+                  {recentActivity.length > 0 ? recentActivity.map((activity, index) => (
                     <div key={index} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50/50 transition-colors">
                       <div className="w-8 h-8 rounded-full bg-[#0A5B4C]/10 flex items-center justify-center flex-shrink-0">
                         <activity.icon className="w-4 h-4 text-[#0A5B4C]" />
@@ -147,7 +174,9 @@ const Account = () => {
                         </p>
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <p className="text-gray-500 text-center py-4">Nu există activitate recentă</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -159,25 +188,31 @@ const Account = () => {
               <CardTitle className="text-gray-900">Agenții Tăi</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Sample Agents */}
-                {[
-                  { name: 'Kalina Sales Pro', type: 'Sales', status: 'active', calls: 45 },
-                  { name: 'Support Assistant', type: 'Support', status: 'active', calls: 32 },
-                  { name: 'Lead Qualifier', type: 'Marketing', status: 'paused', calls: 18 },
-                ].map((agent, index) => (
-                  <div key={index} className="p-4 border border-gray-200 rounded-xl hover:shadow-sm transition-all duration-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-semibold text-gray-900">{agent.name}</h3>
-                      <Badge variant={agent.status === 'active' ? 'default' : 'secondary'}>
-                        {agent.status}
-                      </Badge>
+              {userAgents && userAgents.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {userAgents.slice(0, 3).map((agent, index) => (
+                    <div key={index} className="p-4 border border-gray-200 rounded-xl hover:shadow-sm transition-all duration-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="font-semibold text-gray-900">{agent.name}</h3>
+                        <Badge variant={agent.is_active ? 'default' : 'secondary'}>
+                          {agent.is_active ? 'active' : 'paused'}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">{agent.description || 'Agent AI'}</p>
+                      <p className="text-xs text-gray-500">Creat: {new Date(agent.created_at).toLocaleDateString('ro-RO')}</p>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">{agent.type}</p>
-                    <p className="text-xs text-gray-500">{agent.calls} apeluri această lună</p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Bot className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">Nu ai încă agenți creați</p>
+                  <Button className="mt-4 bg-[#0A5B4C] hover:bg-[#0A5B4C]/90 text-white">
+                    <Bot className="w-4 h-4 mr-2" />
+                    Creează primul tău agent
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -8,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Search, Play, Volume2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/components/ui/use-toast';
+
 interface Voice {
   voice_id: string;
   name: string;
@@ -41,19 +43,21 @@ interface Voice {
   owner_id: string;
   permission_on_resource: any;
 }
+
 const Voices = () => {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
   const [voices, setVoices] = useState<Voice[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
+
   useEffect(() => {
     fetchVoices();
   }, []);
+
   const fetchVoices = async () => {
     try {
       const response = await fetch("https://api.elevenlabs.io/v2/voices", {
@@ -62,9 +66,11 @@ const Voices = () => {
           "Xi-Api-Key": "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873"
         }
       });
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
+
       const body = await response.json();
       console.log(body);
       setVoices(body.voices || []);
@@ -79,6 +85,7 @@ const Voices = () => {
       setLoading(false);
     }
   };
+
   const playVoice = (previewUrl: string, voiceName: string) => {
     if (previewUrl) {
       const audio = new Audio(previewUrl);
@@ -90,6 +97,7 @@ const Voices = () => {
           variant: "destructive"
         });
       });
+
       toast({
         title: "Se redă",
         description: `Preview pentru vocea "${voiceName}"`
@@ -102,18 +110,26 @@ const Voices = () => {
       });
     }
   };
-  const filteredVoices = voices.filter(voice => voice.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const filteredVoices = voices.filter(voice => 
+    voice.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (loading) {
-    return <DashboardLayout>
+    return (
+      <DashboardLayout>
         <div className="p-6">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200/50 rounded w-1/4 mb-4"></div>
             <div className="h-64 bg-gray-200/50 rounded-xl"></div>
           </div>
         </div>
-      </DashboardLayout>;
+      </DashboardLayout>
+    );
   }
-  return <DashboardLayout>
+
+  return (
+    <DashboardLayout>
       <div className="p-6 my-[60px]">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
@@ -127,7 +143,12 @@ const Voices = () => {
         <div className="mb-6">
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search voices..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 glass-input" />
+            <Input 
+              placeholder="Search voices..." 
+              value={searchTerm} 
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 glass-input" 
+            />
           </div>
         </div>
 
@@ -144,30 +165,44 @@ const Voices = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredVoices.map(voice => <TableRow key={voice.voice_id} className="border-b border-gray-100/50 hover:bg-gray-50/50">
+              {filteredVoices.map((voice) => (
+                <TableRow key={voice.voice_id} className="border-b border-gray-100/50 hover:bg-gray-50/50">
                   <TableCell className="font-medium text-foreground">{voice.name}</TableCell>
                   <TableCell className="text-muted-foreground">{voice.category || 'General'}</TableCell>
                   <TableCell className="text-muted-foreground">
                     {voice.description || 'No description available'}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {voice.voice_verification?.is_verified ? <span className="text-accent">✓ Verified</span> : <span className="text-muted-foreground">Not verified</span>}
+                    {voice.voice_verification?.is_verified ? (
+                      <span className="text-accent">✓ Verified</span>
+                    ) : (
+                      <span className="text-muted-foreground">Not verified</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="sm" onClick={() => playVoice(voice.preview_url, voice.name)} className="text-muted-foreground hover:text-accent hover:bg-accent/10" title="Play Preview">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => playVoice(voice.preview_url, voice.name)}
+                        className="text-muted-foreground hover:text-accent hover:bg-accent/10"
+                        title="Play Preview"
+                      >
                         <Play className="w-4 h-4" />
                       </Button>
                     </div>
                   </TableCell>
-                </TableRow>)}
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
 
-          {filteredVoices.length === 0 && !loading && <div className="p-8 text-center">
+          {filteredVoices.length === 0 && !loading && (
+            <div className="p-8 text-center">
               <Volume2 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">No voices found</p>
-            </div>}
+            </div>
+          )}
         </div>
 
         {/* Voice Count */}
@@ -175,6 +210,8 @@ const Voices = () => {
           Showing {filteredVoices.length} of {voices.length} voices
         </div>
       </div>
-    </DashboardLayout>;
+    </DashboardLayout>
+  );
 };
+
 export default Voices;
