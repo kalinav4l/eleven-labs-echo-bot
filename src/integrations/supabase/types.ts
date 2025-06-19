@@ -15,6 +15,7 @@ export type Database = {
           call_date: string
           call_status: string
           contact_name: string | null
+          conversation_id: string | null
           cost_usd: number | null
           created_at: string
           dialog_json: string | null
@@ -32,6 +33,7 @@ export type Database = {
           call_date?: string
           call_status?: string
           contact_name?: string | null
+          conversation_id?: string | null
           cost_usd?: number | null
           created_at?: string
           dialog_json?: string | null
@@ -49,6 +51,7 @@ export type Database = {
           call_date?: string
           call_status?: string
           contact_name?: string | null
+          conversation_id?: string | null
           cost_usd?: number | null
           created_at?: string
           dialog_json?: string | null
@@ -61,7 +64,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "call_history_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       conversations: {
         Row: {

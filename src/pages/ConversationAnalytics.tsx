@@ -1,22 +1,49 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useCallHistory } from '@/hooks/useCallHistory';
+import { useConversationById } from '@/hooks/useConversationById';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Play, Pause, Download, Calendar, Filter, X, Clock, Phone, User, Activity, Zap, TrendingUp, Headphones, Volume2 } from 'lucide-react';
+import { Search, Play, Pause, Download, Calendar, Filter, X, Clock, Phone, User, Activity, Zap, TrendingUp, Headphones, Volume2, ArrowLeft } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 
 const ConversationAnalytics = () => {
+  const { conversationId } = useParams();
+  const navigate = useNavigate();
   const [selectedCall, setSelectedCall] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAgent, setSelectedAgent] = useState('all');
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const { callHistory, isLoading } = useCallHistory();
+  const { callHistory, isLoading: callHistoryLoading } = useCallHistory();
+  const { data: conversationData, isLoading: conversationLoading, error: conversationError } = useConversationById(conversationId);
+
+  // Auto-select conversation if ID provided in URL
+  useEffect(() => {
+    if (conversationId && conversationData?.callHistory?.length > 0) {
+      setSelectedCall(conversationData.callHistory[0]);
+      console.log('Auto-selected conversation from URL:', conversationId);
+    }
+  }, [conversationId, conversationData]);
+
+  // Handle error cases
+  useEffect(() => {
+    if (conversationError) {
+      console.error('Conversation error:', conversationError);
+      toast({
+        title: "Eroare",
+        description: "Conversația nu a fost găsită sau nu aveți acces la ea.",
+        variant: "destructive"
+      });
+      navigate('/account/conversation-analytics');
+    }
+  }, [conversationError, navigate]);
 
   const convertCallToConversation = (call) => {
     let transcript = [];
@@ -49,7 +76,11 @@ const ConversationAnalytics = () => {
     };
   };
 
-  const filteredCalls = callHistory.filter(call => {
+  // Use conversation-specific data if available, otherwise use all call history
+  const dataSource = conversationId && conversationData ? conversationData.callHistory : callHistory;
+  const isLoading = conversationId ? conversationLoading : callHistoryLoading;
+
+  const filteredCalls = dataSource.filter(call => {
     const matchesSearch = call.phone_number.includes(searchTerm) || 
                          call.contact_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (call.summary && call.summary.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -78,6 +109,19 @@ const ConversationAnalytics = () => {
 
   const selectedConversation = selectedCall ? convertCallToConversation(selectedCall) : null;
 
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0A5B4C] mx-auto"></div>
+            <p className="mt-2 text-gray-600">Se încarcă conversația...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -86,36 +130,55 @@ const ConversationAnalytics = () => {
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
+                {conversationId && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate('/account/conversation-analytics')}
+                    className="mr-2"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Înapoi
+                  </Button>
+                )}
                 <div className="w-12 h-12 bg-gradient-to-r from-[#0A5B4C] to-[#0d6b56] rounded-xl flex items-center justify-center">
                   <Activity className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Analytics Hub</h1>
-                  <p className="text-gray-600">Real-time conversation insights</p>
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    {conversationId ? 'Analiza Conversației' : 'Analytics Hub'}
+                  </h1>
+                  <p className="text-gray-600">
+                    {conversationId && conversationData ? 
+                      `Conversație cu ${conversationData.conversation.agent_name}` :
+                      'Real-time conversation insights'
+                    }
+                  </p>
                 </div>
               </div>
               
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input 
-                    placeholder="Search conversations..." 
-                    value={searchTerm} 
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-80 bg-white/70 border-gray-200 focus:bg-white" 
-                  />
+              {!conversationId && (
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input 
+                      placeholder="Search conversations..." 
+                      value={searchTerm} 
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 w-80 bg-white/70 border-gray-200 focus:bg-white" 
+                    />
+                  </div>
+                  
+                  <Select value={selectedAgent} onValueChange={setSelectedAgent}>
+                    <SelectTrigger className="w-32 bg-white/70">
+                      <SelectValue placeholder="All Agents" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Agents</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                
-                <Select value={selectedAgent} onValueChange={setSelectedAgent}>
-                  <SelectTrigger className="w-32 bg-white/70">
-                    <SelectValue placeholder="Alex" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Agents</SelectItem>
-                    <SelectItem value="alex">Alex</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -188,7 +251,9 @@ const ConversationAnalytics = () => {
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Phone className="w-8 h-8 text-gray-400" />
                   </div>
-                  <p className="text-gray-500">No conversations found</p>
+                  <p className="text-gray-500">
+                    {conversationId ? 'No calls found for this conversation' : 'No conversations found'}
+                  </p>
                 </div>
               )}
             </div>
@@ -382,8 +447,12 @@ const ConversationAnalytics = () => {
                   <div className="w-20 h-20 bg-gradient-to-r from-[#0A5B4C] to-[#0d6b56] rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse-glow">
                     <Activity className="w-10 h-10 text-white" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Select a Conversation</h3>
-                  <p className="text-gray-600">Choose a call from the list to view detailed analytics</p>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {conversationId ? 'Loading Conversation...' : 'Select a Conversation'}
+                  </h3>
+                  <p className="text-gray-600">
+                    {conversationId ? 'Please wait while we load the conversation details' : 'Choose a call from the list to view detailed analytics'}
+                  </p>
                 </div>
               </div>
             )}
