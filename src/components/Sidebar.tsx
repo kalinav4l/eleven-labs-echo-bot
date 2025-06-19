@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { User, Settings, Volume2, Bot, MessageSquare, FileText, PhoneCall, X, BarChart3, Users, Menu } from 'lucide-react';
+import { User, Settings, Volume2, Bot, MessageSquare, FileText, PhoneCall, X, BarChart3, Menu } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from "@/components/ui/button";
@@ -87,15 +87,6 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             >
               <BarChart3 className="mr-3 h-5 w-5 flex-shrink-0" />
               <span className="truncate">analytics</span>
-            </Link>
-
-            <Link 
-              to="/account/team-collaboration" 
-              className={`${location.pathname === '/account/team-collaboration' ? 'text-[#0A5B4C] font-semibold border-r-2 border-[#0A5B4C]' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`}
-              onClick={isMobile ? onClose : undefined}
-            >
-              <Users className="mr-3 h-5 w-5 flex-shrink-0" />
-              <span className="truncate">team</span>
             </Link>
 
             <Link 
