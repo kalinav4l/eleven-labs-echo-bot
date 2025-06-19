@@ -244,7 +244,7 @@ const Outbound = () => {
             // Force refresh the call history
             setTimeout(() => {
               refetch();
-            }, 1000);
+            }, 100000);
           } catch (saveError) {
             console.error('Error saving call results:', saveError);
             toast({
@@ -323,7 +323,7 @@ const Outbound = () => {
 
         // Wait 2 seconds before next call (to prevent overwhelming the webhook)
         if (i < selectedContacts.length - 1 && !isPaused) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise(resolve => setTimeout(resolve, 200000));
         }
       } catch (error) {
         console.error(`Error processing contact ${contact.name}:`, error);
