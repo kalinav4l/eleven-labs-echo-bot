@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { User, Settings, Volume2, Bot, MessageSquare, FileText, PhoneCall, X, BarChart3, Users } from 'lucide-react';
@@ -46,7 +47,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           <div className="space-y-1">
             <Link 
               to="/account" 
-              className={`${location.pathname === '/account' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
+              className={`${location.pathname === '/account' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
               onClick={isMobile ? onClose : undefined}
             >
               <User className="mr-3 h-5 w-5 flex-shrink-0" />
@@ -55,7 +56,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             
             <Link 
               to="/account/kalina-agents" 
-              className={`${location.pathname === '/account/kalina-agents' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
+              className={`${location.pathname === '/account/kalina-agents' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
               onClick={isMobile ? onClose : undefined}
             >
               <Bot className="mr-3 h-5 w-5 flex-shrink-0" />
@@ -64,7 +65,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
             <Link 
               to="/account/agent-consultant" 
-              className={`${location.pathname === '/account/agent-consultant' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
+              className={`${location.pathname === '/account/agent-consultant' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
               onClick={isMobile ? onClose : undefined}
             >
               <MessageSquare className="mr-3 h-5 w-5 flex-shrink-0" />
@@ -73,7 +74,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
             <Link 
               to="/account/voices" 
-              className={`${location.pathname === '/account/voices' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
+              className={`${location.pathname === '/account/voices' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
               onClick={isMobile ? onClose : undefined}
             >
               <Volume2 className="mr-3 h-5 w-5 flex-shrink-0" />
@@ -82,7 +83,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
             <Link 
               to="/account/conversation-analytics" 
-              className={`${location.pathname === '/account/conversation-analytics' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
+              className={`${location.pathname === '/account/conversation-analytics' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
               onClick={isMobile ? onClose : undefined}
             >
               <BarChart3 className="mr-3 h-5 w-5 flex-shrink-0" />
@@ -91,7 +92,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
             <Link 
               to="/account/team-collaboration" 
-              className={`${location.pathname === '/account/team-collaboration' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
+              className={`${location.pathname === '/account/team-collaboration' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
               onClick={isMobile ? onClose : undefined}
             >
               <Users className="mr-3 h-5 w-5 flex-shrink-0" />
@@ -100,7 +101,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
             <Link 
               to="/account/transcript" 
-              className={`${location.pathname === '/account/transcript' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
+              className={`${location.pathname === '/account/transcript' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
               onClick={isMobile ? onClose : undefined}
             >
               <FileText className="mr-3 h-5 w-5 flex-shrink-0" />
@@ -109,7 +110,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
             <Link 
               to="/account/outbound" 
-              className={`${location.pathname === '/account/outbound' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
+              className={`${location.pathname === '/account/outbound' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
               onClick={isMobile ? onClose : undefined}
             >
               <PhoneCall className="mr-3 h-5 w-5 flex-shrink-0" />
@@ -118,7 +119,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
             <Link 
               to="/account/settings" 
-              className={`${location.pathname === '/account/settings' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
+              className={`${location.pathname === '/account/settings' ? 'bg-accent/10 text-accent border-r-2 border-accent' : 'text-foreground hover:bg-muted/50 hover:text-foreground'} group flex items-center px-2 py-3 text-base font-medium rounded-md transition-colors`}
               onClick={isMobile ? onClose : undefined}
             >
               <Settings className="mr-3 h-5 w-5 flex-shrink-0" />
