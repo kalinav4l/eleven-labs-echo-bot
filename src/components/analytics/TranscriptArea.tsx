@@ -19,9 +19,9 @@ const TranscriptArea = ({ transcript = [], currentTime, onSeek }: TranscriptArea
 
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
-      case 'positive': return 'bg-green-100 border-green-300';
-      case 'negative': return 'bg-red-100 border-red-300';
-      default: return 'bg-yellow-100 border-yellow-300';
+      case 'positive': return 'bg-green-50 border-green-200';
+      case 'negative': return 'bg-red-50 border-red-200';
+      default: return 'bg-yellow-50 border-yellow-200';
     }
   };
 
@@ -56,7 +56,7 @@ const TranscriptArea = ({ transcript = [], currentTime, onSeek }: TranscriptArea
   }, [currentMessageIndex]);
 
   return (
-    <div className="p-6 max-h-96 overflow-y-auto" ref={containerRef}>
+    <div className="p-6 max-h-96 overflow-y-auto bg-white" ref={containerRef}>
       <div className="space-y-4">
         {transcript.map((message, index) => (
           <div

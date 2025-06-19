@@ -316,14 +316,18 @@ Agent AI: De obicei, procesarea durează câteva minute, în funcție de lungime
 
   return (
     <DashboardLayout>
-      <div className="p-6 my-[60px]">
+      <div className="p-6 space-y-8">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Transcript Audio</h1>
-            <p className="text-muted-foreground">Generează transcripturi din fișiere audio folosind AI</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Transcript Audio</h1>
+            <p className="text-gray-600">Generează transcripturi din fișiere audio folosind AI</p>
           </div>
-          <Button onClick={testDemo} variant="outline" className="border-accent text-accent hover:bg-accent/10">
+          <Button 
+            onClick={testDemo} 
+            variant="outline" 
+            className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
+          >
             <Play className="w-4 h-4 mr-2" />
             Test Demo
           </Button>
@@ -331,22 +335,22 @@ Agent AI: De obicei, procesarea durează câteva minute, în funcție de lungime
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Upload Section */}
-          <Card className="liquid-glass">
+          <Card className="bg-white border-gray-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <Upload className="w-6 h-6 text-accent" />
+              <CardTitle className="flex items-center gap-3 text-gray-900">
+                <Upload className="w-6 h-6 text-[#0A5B4C]" />
                 Upload Audio
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-accent/50 transition-colors">
-                  <FileAudio className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-[#0A5B4C]/50 transition-colors bg-gray-50/50">
+                  <FileAudio className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-gray-600">
                       Drag & drop sau selectează un fișier audio
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-gray-500">
                       Formate acceptate: MP3, WAV, M4A, OGG (max 25MB)
                     </p>
                     <input
@@ -359,7 +363,7 @@ Agent AI: De obicei, procesarea durează câteva minute, în funcție de lungime
                     <Button
                       variant="outline"
                       onClick={() => document.getElementById('audio-upload')?.click()}
-                      className="mt-2"
+                      className="mt-4 bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
                     >
                       Selectează Fișier
                     </Button>
@@ -367,12 +371,12 @@ Agent AI: De obicei, procesarea durează câteva minute, în funcție de lungime
                 </div>
 
                 {audioFile && (
-                  <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                     <div className="flex items-center gap-3">
-                      <FileAudio className="w-5 h-5 text-accent" />
+                      <FileAudio className="w-5 h-5 text-[#0A5B4C]" />
                       <div className="flex-1">
-                        <p className="font-medium text-sm">{audioFile.name}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="font-medium text-sm text-gray-900">{audioFile.name}</p>
+                        <p className="text-xs text-gray-500">
                           {(audioFile.size / 1024 / 1024).toFixed(2)} MB
                         </p>
                       </div>
@@ -392,7 +396,7 @@ Agent AI: De obicei, procesarea durează câteva minute, în funcție de lungime
               <Button
                 onClick={handleUpload}
                 disabled={!audioFile || isUploading}
-                className="w-full bg-accent hover:bg-accent/90 text-white"
+                className="w-full bg-gray-900 hover:bg-gray-800 text-white border border-gray-700"
               >
                 {isUploading ? (
                   <div className="flex items-center gap-2">
@@ -413,7 +417,7 @@ Agent AI: De obicei, procesarea durează câteva minute, în funcție de lungime
                   onClick={processWithGPT4o}
                   disabled={isProcessingWithAI}
                   variant="outline"
-                  className="w-full border-purple-500 text-purple-500 hover:bg-purple-50"
+                  className="w-full bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
                 >
                   {isProcessingWithAI ? (
                     <div className="flex items-center gap-2">
@@ -432,11 +436,11 @@ Agent AI: De obicei, procesarea durează câteva minute, în funcție de lungime
           </Card>
 
           {/* Transcript Result Section */}
-          <Card className="liquid-glass">
+          <Card className="bg-white border-gray-200 shadow-sm">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-3">
-                  <MessageSquare className="w-6 h-6 text-accent" />
+                <CardTitle className="flex items-center gap-3 text-gray-900">
+                  <MessageSquare className="w-6 h-6 text-[#0A5B4C]" />
                   Transcript ({transcriptEntries.length} intrări)
                 </CardTitle>
                 {transcriptEntries.length > 0 && (
@@ -444,7 +448,7 @@ Agent AI: De obicei, procesarea durează câteva minute, în funcție de lungime
                     onClick={handleDownloadSRT}
                     variant="outline"
                     size="sm"
-                    className="border-accent text-accent hover:bg-accent/10"
+                    className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Export SRT
@@ -458,7 +462,7 @@ Agent AI: De obicei, procesarea durează câteva minute, în funcție de lungime
                   {transcriptEntries.map((entry, index) => (
                     <div
                       key={index}
-                      className="flex gap-3 p-3 rounded-lg bg-gray-50/50 hover:bg-gray-100/50 transition-colors"
+                      className="flex gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-100"
                     >
                       <div className="flex-shrink-0">
                         <div className={`w-8 h-8 rounded-full ${getSpeakerColor(entry.speaker)} flex items-center justify-center`}>
@@ -477,11 +481,11 @@ Agent AI: De obicei, procesarea durează câteva minute, în funcție de lungime
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <MessageSquare className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-                  <p className="text-muted-foreground mb-2">
+                  <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 mb-2">
                     Transcriptul va apărea aici după procesare
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-gray-400">
                     Poți testa cu demo-ul din dreapta sus
                   </p>
                 </div>
@@ -491,24 +495,24 @@ Agent AI: De obicei, procesarea durează câteva minute, în funcție de lungime
         </div>
 
         {/* Info Section */}
-        <Card className="liquid-glass mt-8">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
               <div>
-                <h3 className="font-semibold text-foreground mb-2">Formate Suportate</h3>
-                <p className="text-sm text-muted-foreground">MP3, WAV, M4A, OGG</p>
+                <h3 className="font-semibold text-gray-900 mb-2">Formate Suportate</h3>
+                <p className="text-sm text-gray-600">MP3, WAV, M4A, OGG</p>
               </div>
               <div>
-                <h3 className="font-semibold text-foreground mb-2">Mărime Maximă</h3>
-                <p className="text-sm text-muted-foreground">25 MB per fișier</p>
+                <h3 className="font-semibold text-gray-900 mb-2">Mărime Maximă</h3>
+                <p className="text-sm text-gray-600">25 MB per fișier</p>
               </div>
               <div>
-                <h3 className="font-semibold text-foreground mb-2">Calitate</h3>
-                <p className="text-sm text-muted-foreground">ElevenLabs Scribe v1</p>
+                <h3 className="font-semibold text-gray-900 mb-2">Calitate</h3>
+                <p className="text-sm text-gray-600">ElevenLabs Scribe v1</p>
               </div>
               <div>
-                <h3 className="font-semibold text-foreground mb-2">AI Processing</h3>
-                <p className="text-sm text-muted-foreground">GPT-4o Speaker Detection</p>
+                <h3 className="font-semibold text-gray-900 mb-2">AI Processing</h3>
+                <p className="text-sm text-gray-600">GPT-4o Speaker Detection</p>
               </div>
             </div>
           </CardContent>
