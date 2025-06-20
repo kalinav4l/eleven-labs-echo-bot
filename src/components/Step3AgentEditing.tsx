@@ -1,13 +1,13 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Edit, Upload, FileText, Trash2, Save } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Edit, Upload, FileText, Trash2, Save, Database, Plus } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { useAgentEditing } from '../hooks/useAgentEditing';
+import { useEnhancedKnowledgeBase } from '../hooks/useEnhancedKnowledgeBase';
 
 interface Step3Props {
   agentIdForEdit: string;
@@ -20,6 +20,8 @@ interface KnowledgeDocument {
   name: string;
   content: string;
   uploadedAt: Date;
+  type: 'existing' | 'manual';
+  elevenLabsId?: string;
 }
 
 export const Step3AgentEditing: React.FC<Step3Props> = ({
@@ -30,38 +32,36 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
   const [newDocContent, setNewDocContent] = useState('');
   const [newDocName, setNewDocName] = useState('');
   const [isAddingDoc, setIsAddingDoc] = useState(false);
+  const [selectedExistingDocId, setSelectedExistingDocId] = useState<string>('');
 
   const {
     documents,
-    addDocument,
-    removeDocument,
-    saveKnowledgeBase,
+    existingDocuments,
+    selectedExistingDocuments,
     isUpdating,
-  } = useAgentEditing({ agentIdForEdit });
+    isLoadingExisting,
+    loadExistingDocuments,
+    addExistingDocument,
+    addTextDocument,
+    addFileDocument,
+    removeDocument,
+    updateAgentKnowledgeBase
+  } = useEnhancedKnowledgeBase({ 
+    agentId: agentIdForEdit 
+  });
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target?.result as string;
-      const newDoc: KnowledgeDocument = {
-        id: Date.now().toString(),
-        name: file.name,
-        content,
-        uploadedAt: new Date(),
-      };
-      addDocument(newDoc);
-      toast({
-        title: "Succes!",
-        description: `Documentul "${file.name}" a fost încărcat cu succes.`,
-      });
-    };
-    reader.readAsText(file);
+    const success = await addFileDocument(file);
+    if (success) {
+      // Clear the input
+      event.target.value = '';
+    }
   };
 
-  const addManualDocument = () => {
+  const addManualDocument = async () => {
     if (!newDocName.trim() || !newDocContent.trim()) {
       toast({
         title: "Eroare",
@@ -71,39 +71,38 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
       return;
     }
 
-    const newDoc: KnowledgeDocument = {
-      id: Date.now().toString(),
-      name: newDocName,
-      content: newDocContent,
-      uploadedAt: new Date(),
-    };
-    addDocument(newDoc);
-    setNewDocName('');
-    setNewDocContent('');
-    setIsAddingDoc(false);
-    
-    toast({
-      title: "Succes!",
-      description: `Documentul "${newDocName}" a fost adăugat cu succes.`,
-    });
+    const success = await addTextDocument(newDocName, newDocContent);
+    if (success) {
+      setNewDocName('');
+      setNewDocContent('');
+      setIsAddingDoc(false);
+    }
   };
 
   const handleRemoveDocument = (id: string) => {
     removeDocument(id);
-    toast({
-      title: "Succes!",
-      description: "Documentul a fost șters.",
-    });
   };
 
-  const handleSaveKnowledgeBase = async () => {
-    const success = await saveKnowledgeBase();
-    if (success && documents.length > 0) {
+  const handleUpdateKnowledgeBase = async () => {
+    await updateAgentKnowledgeBase(false);
+  };
+
+  const handleAddExistingDocument = () => {
+    if (!selectedExistingDocId) {
       toast({
-        title: "Succes!",
-        description: "Knowledge Base-ul a fost actualizat cu succes în Eleven Labs.",
+        title: "Eroare",
+        description: "Te rog selectează un document.",
+        variant: "destructive",
       });
+      return;
     }
+
+    addExistingDocument(selectedExistingDocId);
+    setSelectedExistingDocId('');
+  };
+
+  const getAvailableExistingDocuments = () => {
+    return existingDocuments.filter(doc => !selectedExistingDocuments.has(doc.id));
   };
 
   const canProceed = agentIdForEdit.trim() !== '';
@@ -137,6 +136,16 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
               <Button
                 variant="outline"
                 size="sm"
+                onClick={loadExistingDocuments}
+                disabled={isLoadingExisting}
+                className="flex items-center gap-2"
+              >
+                <Database className="w-4 h-4" />
+                {isLoadingExisting ? 'Se încarcă...' : 'Selectează documente existente'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setIsAddingDoc(true)}
                 className="flex items-center gap-2"
               >
@@ -164,6 +173,39 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
               </label>
             </div>
           </div>
+
+          {/* Existing Documents Selection */}
+          {existingDocuments.length > 0 && (
+            <div className="p-4 border border-gray-200 rounded-lg space-y-3">
+              <Label className="text-foreground font-medium">Documente Existente în ElevenLabs</Label>
+              <div className="flex gap-2">
+                <Select 
+                  value={selectedExistingDocId} 
+                  onValueChange={setSelectedExistingDocId}
+                >
+                  <SelectTrigger className="glass-input flex-1">
+                    <SelectValue placeholder="Selectează un document existent" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                    {getAvailableExistingDocuments().map((doc) => (
+                      <SelectItem key={doc.id} value={doc.id}>
+                        {doc.name} ({doc.type})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button 
+                  onClick={handleAddExistingDocument}
+                  disabled={!selectedExistingDocId}
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Adaugă
+                </Button>
+              </div>
+            </div>
+          )}
 
           {isAddingDoc && (
             <div className="p-4 border border-gray-200 rounded-lg space-y-3">
@@ -208,15 +250,27 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
                   className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border"
                 >
                   <div className="flex-1">
-                    <h4 className="font-medium text-foreground">{doc.name}</h4>
+                    <h4 className="font-medium text-foreground">
+                      {doc.name} 
+                      <span className="text-xs text-muted-foreground ml-2">
+                        ({doc.type === 'existing' ? 'existent' : doc.type})
+                      </span>
+                    </h4>
                     <p className="text-sm text-muted-foreground">
                       Adăugat: {doc.uploadedAt.toLocaleDateString()}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {doc.content.length > 100 
-                        ? `${doc.content.substring(0, 100)}...` 
-                        : doc.content}
-                    </p>
+                    {doc.content && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {doc.content.length > 100 
+                          ? `${doc.content.substring(0, 100)}...` 
+                          : doc.content}
+                      </p>
+                    )}
+                    {doc.elevenLabsId && (
+                      <p className="text-xs text-blue-600 mt-1">
+                        ElevenLabs ID: {doc.elevenLabsId}
+                      </p>
+                    )}
                   </div>
                   <Button
                     variant="outline"
@@ -233,7 +287,7 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
 
           {documents.length > 0 && (
             <Button
-              onClick={handleSaveKnowledgeBase}
+              onClick={handleUpdateKnowledgeBase}
               disabled={isUpdating || !agentIdForEdit.trim()}
               className="bg-foreground text-background hover:bg-foreground/90 w-full"
             >
@@ -245,7 +299,7 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  Salvează Knowledge Base în Eleven Labs
+                  Actualizează Knowledge Base în ElevenLabs
                 </>
               )}
             </Button>

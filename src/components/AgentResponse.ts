@@ -55,6 +55,16 @@ export interface RagConfig {
 }
 
 /**
+ * Represents a knowledge base document in ElevenLabs format.
+ */
+export interface KnowledgeBaseDocument {
+    type: 'text' | 'file';
+    name: string;
+    id: string;
+    usage_mode: 'auto';
+}
+
+/**
  * Defines the LLM prompt configuration for the agent.
  */
 export interface PromptConfig {
@@ -66,7 +76,7 @@ export interface PromptConfig {
     tool_ids: string[];
     mcp_server_ids: string[];
     native_mcp_server_ids: string[];
-    knowledge_base: any[];
+    knowledge_base: KnowledgeBaseDocument[];
     custom_llm: any | null;
     ignore_default_personality: boolean;
     rag: RagConfig;

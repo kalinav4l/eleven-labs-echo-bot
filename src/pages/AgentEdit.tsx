@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Bot, Save, Copy, Upload, FileText, Trash2, TestTube, Languages } from 'lucide-react';
+import { ArrowLeft, Bot, Save, Copy, Upload, FileText, Trash2, TestTube, Languages, Database, Plus } from 'lucide-react';
 import { useClipboard } from '@/hooks/useClipboard';
 import { toast } from '@/components/ui/use-toast';
 import { API_CONFIG, VOICES, LANGUAGES, LANGUAGE_MAP } from '@/constants/constants';
@@ -17,6 +17,7 @@ import AgentTestModal from '@/components/AgentTestModal';
 import AdditionalLanguagesSection from '@/components/AdditionalLanguagesSection';
 import MultilingualFirstMessageModal from '@/components/MultilingualFirstMessageModal';
 import CreativitySelector from '@/components/CreativitySelector';
+import { useEnhancedKnowledgeBase } from '@/hooks/useEnhancedKnowledgeBase';
 
 interface KnowledgeDocument {
   id: string;
@@ -33,15 +34,37 @@ const AgentEdit = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [agentData, setAgentData] = useState<AgentResponse | null>(null);
-  const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
   const [newDocContent, setNewDocContent] = useState('');
   const [newDocName, setNewDocName] = useState('');
   const [isAddingDoc, setIsAddingDoc] = useState(false);
-  const [isUpdatingKnowledge, setIsUpdatingKnowledge] = useState(false);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [additionalLanguages, setAdditionalLanguages] = useState<string[]>([]);
   const [isMultilingualModalOpen, setIsMultilingualModalOpen] = useState(false);
   const [multilingualMessages, setMultilingualMessages] = useState<Record<string, string>>({});
+  const [selectedExistingDocId, setSelectedExistingDocId] = useState<string>('');
+
+  // Enhanced Knowledge Base Hook
+  const {
+    documents,
+    existingDocuments,
+    selectedExistingDocuments,
+    isUpdating: isUpdatingKnowledge,
+    isLoadingExisting,
+    loadExistingDocuments,
+    addExistingDocument,
+    addTextDocument,
+    addFileDocument,
+    removeDocument,
+    updateAgentKnowledgeBase
+  } = useEnhancedKnowledgeBase({ 
+    agentId: agentId || '',
+    onAgentRefresh: (refreshedAgentData) => {
+      setAgentData(refreshedAgentData);
+      // Update additional languages based on refreshed data
+      const parsedAdditionalLanguages = parseAdditionalLanguagesFromResponse(refreshedAgentData);
+      setAdditionalLanguages(parsedAdditionalLanguages);
+    }
+  });
 
   // Helper function to parse additional languages from AgentResponse
   const parseAdditionalLanguagesFromResponse = (agentResponse: AgentResponse): string[] => {
@@ -71,17 +94,6 @@ const AgentEdit = () => {
         // Parse additional languages from the AgentResponse
         const parsedAdditionalLanguages = parseAdditionalLanguagesFromResponse(data);
         setAdditionalLanguages(parsedAdditionalLanguages);
-
-        // Load existing knowledge base documents if any
-        if (data.conversation_config?.agent?.prompt?.knowledge_base) {
-          const existingDocs = data.conversation_config.agent.prompt.knowledge_base.map((kb: any, index: number) => ({
-            id: `existing-${index}`,
-            name: kb.name || `Document ${index + 1}`,
-            content: kb.content || '',
-            uploadedAt: new Date()
-          }));
-          setDocuments(existingDocs);
-        }
       } catch (error) {
         console.error('Error fetching agent:', error);
         toast({
@@ -165,10 +177,22 @@ const AgentEdit = () => {
     try {
       const updatePayload = agentService.prepareUpdatePayload(agentData, multilingualMessages);
       await agentService.updateAgent(agentId, updatePayload);
+      
+      // Also update knowledge base if there are documents
+      if (documents.length > 0) {
+        await updateAgentKnowledgeBase(true); // true = should reload after save
+      }
+      
       toast({
         title: "Succes!",
-        description: "Agentul a fost salvat cu succes"
+        description: "Agentul a fost salvat cu succes. Pagina se va reîncărca."
       });
+      
+      // Reload the page after successful save
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+      
     } catch (error) {
       console.error('Error saving agent:', error);
       toast({
@@ -181,110 +205,59 @@ const AgentEdit = () => {
     }
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      const content = e.target?.result as string;
-      const newDoc: KnowledgeDocument = {
-        id: Date.now().toString(),
-        name: file.name,
-        content,
-        uploadedAt: new Date()
-      };
-      setDocuments(prev => [...prev, newDoc]);
-      toast({
-        title: "Succes!",
-        description: `Documentul "${file.name}" a fost încărcat cu succes.`
-      });
-    };
-    reader.readAsText(file);
+
+    const success = await addFileDocument(file);
+    if (success) {
+      // Clear the input
+      event.target.value = '';
+    }
   };
 
-  const addManualDocument = () => {
+  const addManualDocument = async () => {
     if (!newDocName.trim() || !newDocContent.trim()) {
       toast({
         title: "Eroare",
         description: "Te rog completează numele și conținutul documentului.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    const newDoc: KnowledgeDocument = {
-      id: Date.now().toString(),
-      name: newDocName,
-      content: newDocContent,
-      uploadedAt: new Date()
-    };
-    setDocuments(prev => [...prev, newDoc]);
-    setNewDocName('');
-    setNewDocContent('');
-    setIsAddingDoc(false);
-    toast({
-      title: "Succes!",
-      description: `Documentul "${newDocName}" a fost adăugat cu succes.`
-    });
+
+    const success = await addTextDocument(newDocName, newDocContent);
+    if (success) {
+      setNewDocName('');
+      setNewDocContent('');
+      setIsAddingDoc(false);
+    }
   };
 
   const handleRemoveDocument = (id: string) => {
-    setDocuments(prev => prev.filter(doc => doc.id !== id));
-    toast({
-      title: "Succes!",
-      description: "Documentul a fost șters."
-    });
+    removeDocument(id);
   };
 
-  const updateKnowledgeBase = async () => {
-    if (!agentId || documents.length === 0) {
+  const handleUpdateKnowledgeBase = async () => {
+    await updateAgentKnowledgeBase(false);
+  };
+
+  const handleAddExistingDocument = () => {
+    if (!selectedExistingDocId) {
       toast({
         title: "Eroare",
-        description: "Nu ai adăugat documente pentru actualizarea Knowledge Base.",
-        variant: "destructive"
+        description: "Te rog selectează un document.",
+        variant: "destructive",
       });
       return;
     }
-    setIsUpdatingKnowledge(true);
-    try {
-      const knowledgeBase = documents.map(doc => ({
-        name: doc.name,
-        content: doc.content
-      }));
-      const response = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${agentId}`, {
-        method: "PATCH",
-        headers: {
-          "Xi-Api-Key": API_CONFIG.ELEVENLABS_API_KEY,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          "conversation_config": {
-            "agent": {
-              "prompt": {
-                "knowledge_base": knowledgeBase
-              }
-            }
-          }
-        })
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const body = await response.json();
-      console.log('Agent updated:', body);
-      toast({
-        title: "Succes!",
-        description: "Knowledge Base-ul a fost actualizat cu succes în ElevenLabs."
-      });
-    } catch (error) {
-      console.error('Error updating agent:', error);
-      toast({
-        title: "Eroare",
-        description: `A apărut o eroare la actualizarea agentului ${agentId}. Te rog verifică ID-ul agentului.`,
-        variant: "destructive"
-      });
-    } finally {
-      setIsUpdatingKnowledge(false);
-    }
+
+    addExistingDocument(selectedExistingDocId);
+    setSelectedExistingDocId('');
+  };
+
+  const getAvailableExistingDocuments = () => {
+    return existingDocuments.filter(doc => !selectedExistingDocuments.has(doc.id));
   };
 
   const handleMultilingualMessagesUpdate = (messages: Record<string, string>) => {
@@ -551,7 +524,7 @@ const AgentEdit = () => {
           currentLanguage={agentData.conversation_config?.agent?.language} 
         />
 
-        {/* Knowledge Base Section */}
+        {/* Enhanced Knowledge Base Section */}
         <Card className="liquid-glass">
           <CardHeader>
             <CardTitle className="text-foreground">Knowledge Base</CardTitle>
@@ -568,6 +541,16 @@ const AgentEdit = () => {
                 </p>
               </div>
               <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={loadExistingDocuments}
+                  disabled={isLoadingExisting}
+                  className="flex items-center gap-2"
+                >
+                  <Database className="w-4 h-4" />
+                  {isLoadingExisting ? 'Se încarcă...' : 'Selectează documente existente'}
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => setIsAddingDoc(true)} className="flex items-center gap-2">
                   <FileText className="w-4 h-4" />
                   Adaugă Manual
@@ -583,6 +566,39 @@ const AgentEdit = () => {
                 </label>
               </div>
             </div>
+
+            {/* Existing Documents Selection */}
+            {existingDocuments.length > 0 && (
+              <div className="p-4 border border-gray-200 rounded-lg space-y-3">
+                <Label className="text-foreground font-medium">Documente Existente în ElevenLabs</Label>
+                <div className="flex gap-2">
+                  <Select 
+                    value={selectedExistingDocId} 
+                    onValueChange={setSelectedExistingDocId}
+                  >
+                    <SelectTrigger className="glass-input flex-1">
+                      <SelectValue placeholder="Selectează un document existent" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                      {getAvailableExistingDocuments().map((doc) => (
+                        <SelectItem key={doc.id} value={doc.id}>
+                          {doc.name} ({doc.type})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    onClick={handleAddExistingDocument}
+                    disabled={!selectedExistingDocId}
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Adaugă
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {isAddingDoc && <div className="p-4 border border-gray-200 rounded-lg space-y-3">
                 <Input value={newDocName} onChange={e => setNewDocName(e.target.value)} placeholder="Numele documentului" className="glass-input" />
@@ -604,13 +620,25 @@ const AgentEdit = () => {
                   Adaugă documente pentru a îmbunătăți răspunsurile agentului.
                 </p> : documents.map(doc => <div key={doc.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
                     <div className="flex-1">
-                      <h4 className="font-medium text-foreground">{doc.name}</h4>
+                      <h4 className="font-medium text-foreground">
+                        {doc.name} 
+                        <span className="text-xs text-muted-foreground ml-2">
+                          ({doc.type === 'existing' ? 'existent' : doc.type})
+                        </span>
+                      </h4>
                       <p className="text-sm text-muted-foreground">
                         Adăugat: {doc.uploadedAt.toLocaleDateString()}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {doc.content.length > 100 ? `${doc.content.substring(0, 100)}...` : doc.content}
-                      </p>
+                      {doc.content && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {doc.content.length > 100 ? `${doc.content.substring(0, 100)}...` : doc.content}
+                        </p>
+                      )}
+                      {doc.elevenLabsId && (
+                        <p className="text-xs text-blue-600 mt-1">
+                          ElevenLabs ID: {doc.elevenLabsId}
+                        </p>
+                      )}
                     </div>
                     <Button variant="outline" size="sm" onClick={() => handleRemoveDocument(doc.id)} className="text-red-600 hover:text-red-700 hover:bg-red-50">
                       <Trash2 className="w-4 h-4" />
@@ -618,7 +646,7 @@ const AgentEdit = () => {
                   </div>)}
             </div>
 
-            {documents.length > 0 && <Button onClick={updateKnowledgeBase} disabled={isUpdatingKnowledge} className="bg-accent text-white hover:bg-accent/90 w-full">
+            {documents.length > 0 && <Button onClick={handleUpdateKnowledgeBase} disabled={isUpdatingKnowledge || !agentId} className="bg-accent text-white hover:bg-accent/90 w-full">
                 {isUpdatingKnowledge ? (
                   <>
                     <Save className="w-4 h-4 mr-2 animate-spin" />
@@ -642,7 +670,7 @@ const AgentEdit = () => {
             {isSaving ? (
               <>
                 <Save className="w-4 h-4 mr-2 animate-spin" />
-                Se salvează...
+                Se salvează și se reîncarcă...
               </>
             ) : (
               <>
