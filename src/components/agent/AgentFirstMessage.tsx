@@ -28,7 +28,7 @@ const AgentFirstMessage: React.FC<AgentFirstMessageProps> = ({
   return (
     <Card className="liquid-glass">
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
           <div>
             <CardTitle className="text-foreground">Primul mesaj</CardTitle>
             <p className="text-sm text-muted-foreground">
@@ -40,7 +40,7 @@ const AgentFirstMessage: React.FC<AgentFirstMessageProps> = ({
               onClick={onOpenMultilingualModal} 
               variant="outline" 
               size="sm" 
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 w-full lg:w-auto"
             >
               <Languages className="w-4 h-4" />
               Configurare multilingual
@@ -53,7 +53,7 @@ const AgentFirstMessage: React.FC<AgentFirstMessageProps> = ({
           <Label htmlFor="first-message" className="text-foreground">
             Mesaj
             {additionalLanguages.length > 0 && (
-              <span className="text-xs text-muted-foreground ml-2">
+              <span className="text-xs text-muted-foreground ml-2 block lg:inline">
                 (limba principală: {getLanguageLabel(agentData?.conversation_config?.agent?.language || 'en')})
               </span>
             )}
@@ -71,7 +71,7 @@ const AgentFirstMessage: React.FC<AgentFirstMessageProps> = ({
                 }
               }
             })} 
-            className="glass-input" 
+            className="glass-input min-h-[120px] lg:min-h-[80px]" 
             placeholder="e.g. Hello, how can I help you today?" 
           />
           {additionalLanguages.length > 0 && (

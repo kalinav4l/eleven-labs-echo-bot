@@ -14,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
 
-    --primary: 0 0% 9%;
+    --primary: 0 0%9;
     --primary-foreground: 0 0% 98%;
 
     --secondary: 0 0% 96.1%;
@@ -131,6 +131,26 @@
     .container {
       @apply px-4;
     }
+
+    /* Mobile-specific improvements for forms */
+    .glass-input {
+      @apply text-base; /* Prevents zoom on iOS */
+    }
+    
+    /* Improved mobile button sizing */
+    .mobile-button {
+      @apply min-h-[48px] text-base;
+    }
+
+    /* Better mobile spacing */
+    .mobile-spacing {
+      @apply space-y-4;
+    }
+
+    /* Mobile-friendly card padding */
+    .liquid-glass .card-content {
+      @apply p-4;
+    }
   }
 }
 
@@ -209,6 +229,34 @@
     .mobile-button {
       @apply px-4 py-3 text-base;
       min-height: 44px;
+    }
+
+    /* Responsive grid for mobile */
+    .mobile-grid {
+      @apply grid-cols-1 gap-4;
+    }
+
+    /* Mobile-friendly flex layouts */
+    .mobile-flex {
+      @apply flex-col space-y-3;
+    }
+
+    /* Mobile form improvements */
+    .mobile-form {
+      @apply space-y-4;
+    }
+
+    .mobile-form input,
+    .mobile-form textarea,
+    .mobile-form select {
+      @apply text-base; /* Prevents zoom on iOS */
+    }
+  }
+
+  /* Desktop-specific improvements */
+  @media (min-width: 1024px) {
+    .desktop-layout {
+      @apply px-[240px] my-[60px];
     }
   }
 }

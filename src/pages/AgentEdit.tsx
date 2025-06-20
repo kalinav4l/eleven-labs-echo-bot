@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -271,7 +272,7 @@ const AgentEdit = () => {
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="p-6 space-y-6">
+        <div className="p-4 lg:p-6 space-y-6">
           <div className="flex justify-center items-center min-h-[400px]">
             <div className="text-muted-foreground">Se încarcă agentul...</div>
           </div>
@@ -283,7 +284,7 @@ const AgentEdit = () => {
   if (!agentData) {
     return (
       <DashboardLayout>
-        <div className="p-6 space-y-6">
+        <div className="p-4 lg:p-6 space-y-6">
           <div className="flex justify-center items-center min-h-[400px]">
             <div className="text-muted-foreground">Agentul nu a fost găsit</div>
           </div>
@@ -294,8 +295,9 @@ const AgentEdit = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6 px-[240px] my-[60px]">
-        <div className="flex items-center justify-between">
+      <div className="p-4 lg:p-6 space-y-4 lg:space-y-6 lg:px-[240px] lg:my-[60px]">
+        {/* Header - Mobile optimized */}
+        <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
           <div className="flex items-center gap-4">
             <Button variant="outline" onClick={() => navigate('/account/kalina-agents')} className="glass-button border-border">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -306,19 +308,20 @@ const AgentEdit = () => {
                 <Bot className="w-5 h-5 text-accent" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Editare Agent</h1>
-                <p className="text-muted-foreground">Modifică setările agentului tău AI</p>
+                <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Editare Agent</h1>
+                <p className="text-sm text-muted-foreground">Modifică setările agentului tău AI</p>
               </div>
             </div>
           </div>
           
-          <Button onClick={() => setIsTestModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
+          <Button onClick={() => setIsTestModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 w-full lg:w-auto">
             <TestTube className="w-4 h-4" />
             Testează Agent
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 gap-6">
+        {/* Main Content - Mobile optimized grid */}
+        <div className="grid grid-cols-1 gap-4 lg:gap-6">
           {/* General Information */}
           <AgentGeneralInfo agentData={agentData} setAgentData={setAgentData} />
 
@@ -326,7 +329,7 @@ const AgentEdit = () => {
           <AgentSystemPrompt agentData={agentData} setAgentData={setAgentData} />
         </div>
 
-        {/* First Message Section */}
+        {/* First Message Section - Mobile optimized */}
         <AgentFirstMessage 
           agentData={agentData} 
           setAgentData={setAgentData} 
@@ -341,7 +344,7 @@ const AgentEdit = () => {
           currentLanguage={agentData.conversation_config?.agent?.language} 
         />
 
-        {/* Enhanced Knowledge Base Section */}
+        {/* Enhanced Knowledge Base Section - Mobile optimized */}
         <Card className="liquid-glass">
           <CardHeader>
             <CardTitle className="text-foreground">Knowledge Base</CardTitle>
@@ -350,30 +353,30 @@ const AgentEdit = () => {
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="space-y-4 lg:flex lg:items-center lg:justify-between lg:space-y-0">
               <div className="space-y-1">
                 <Label className="text-foreground font-medium">Retrieval-Augmented Generation (RAG)</Label>
                 <p className="text-xs text-muted-foreground">
                   RAG mărește dimensiunea maximă a Knowledge Base-ului agentului. Agentul va avea acces la informații relevante din Knowledge Base în timpul generării răspunsului.
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col space-y-2 lg:flex-row lg:gap-2 lg:space-y-0">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={loadExistingDocuments}
                   disabled={isLoadingExisting}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 w-full lg:w-auto"
                 >
                   <Database className="w-4 h-4" />
                   {isLoadingExisting ? 'Se încarcă...' : 'Selectează documente existente'}
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setIsAddingDoc(true)} className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => setIsAddingDoc(true)} className="flex items-center gap-2 w-full lg:w-auto">
                   <FileText className="w-4 h-4" />
                   Adaugă Manual
                 </Button>
-                <label className="cursor-pointer">
-                  <Button variant="outline" size="sm" className="flex items-center gap-2" asChild>
+                <label className="cursor-pointer w-full lg:w-auto">
+                  <Button variant="outline" size="sm" className="flex items-center gap-2 w-full lg:w-auto" asChild>
                     <span>
                       <Upload className="w-4 h-4" />
                       Încarcă Document
@@ -388,7 +391,7 @@ const AgentEdit = () => {
             {existingDocuments.length > 0 && (
               <div className="p-4 border border-gray-200 rounded-lg space-y-3">
                 <Label className="text-foreground font-medium">Documente Existente în ElevenLabs</Label>
-                <div className="flex gap-2">
+                <div className="flex flex-col space-y-2 lg:flex-row lg:gap-2 lg:space-y-0">
                   <Select 
                     value={selectedExistingDocId} 
                     onValueChange={setSelectedExistingDocId}
@@ -408,7 +411,7 @@ const AgentEdit = () => {
                     onClick={handleAddExistingDocument}
                     disabled={!selectedExistingDocId}
                     size="sm"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 w-full lg:w-auto"
                   >
                     <Plus className="w-4 h-4" />
                     Adaugă
@@ -417,21 +420,23 @@ const AgentEdit = () => {
               </div>
             )}
 
+            {/* Manual Document Addition - Mobile optimized */}
             {isAddingDoc && (
               <div className="p-4 border border-gray-200 rounded-lg space-y-3">
                 <Input value={newDocName} onChange={e => setNewDocName(e.target.value)} placeholder="Numele documentului" className="glass-input" />
                 <Textarea value={newDocContent} onChange={e => setNewDocContent(e.target.value)} placeholder="Conținutul documentului..." className="glass-input min-h-[100px]" />
-                <div className="flex gap-2">
-                  <Button onClick={addManualDocument} size="sm">
+                <div className="flex flex-col space-y-2 lg:flex-row lg:gap-2 lg:space-y-0">
+                  <Button onClick={addManualDocument} size="sm" className="w-full lg:w-auto">
                     Adaugă
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setIsAddingDoc(false)}>
+                  <Button variant="outline" size="sm" onClick={() => setIsAddingDoc(false)} className="w-full lg:w-auto">
                     Anulează
                   </Button>
                 </div>
               </div>
             )}
 
+            {/* Documents List - Mobile optimized */}
             <div className="space-y-2">
               {documents.length === 0 ? (
                 <p className="text-muted-foreground text-sm text-center py-8">
@@ -441,7 +446,7 @@ const AgentEdit = () => {
                 </p>
               ) : (
                 documents.map(doc => (
-                  <div key={doc.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
+                  <div key={doc.id} className="flex flex-col space-y-2 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 p-3 bg-muted/30 rounded-lg border">
                     <div className="flex-1">
                       <h4 className="font-medium text-foreground">
                         {doc.name} 
@@ -463,7 +468,7 @@ const AgentEdit = () => {
                         </p>
                       )}
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => handleRemoveDocument(doc.id)} className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                    <Button variant="outline" size="sm" onClick={() => handleRemoveDocument(doc.id)} className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full lg:w-auto">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -489,11 +494,12 @@ const AgentEdit = () => {
           </CardContent>
         </Card>
 
-        <div className="flex justify-end gap-4">
-          <Button variant="outline" onClick={() => navigate('/account/kalina-agents')} className="glass-button border-border">
+        {/* Bottom Action Buttons - Mobile optimized */}
+        <div className="flex flex-col space-y-2 lg:flex-row lg:justify-end lg:gap-4 lg:space-y-0">
+          <Button variant="outline" onClick={() => navigate('/account/kalina-agents')} className="glass-button border-border w-full lg:w-auto">
             Anulează
           </Button>
-          <Button onClick={handleSave} disabled={isSaving} className="bg-accent text-white hover:bg-accent/90">
+          <Button onClick={handleSave} disabled={isSaving} className="bg-accent text-white hover:bg-accent/90 w-full lg:w-auto">
             {isSaving ? (
               <>
                 <Save className="w-4 h-4 mr-2 animate-spin" />
