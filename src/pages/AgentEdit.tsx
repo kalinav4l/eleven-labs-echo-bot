@@ -353,30 +353,30 @@ const AgentEdit = () => {
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-4 lg:flex lg:items-center lg:justify-between lg:space-y-0">
+            <div className="space-y-4">
               <div className="space-y-1">
                 <Label className="text-foreground font-medium">Retrieval-Augmented Generation (RAG)</Label>
                 <p className="text-xs text-muted-foreground">
                   RAG mărește dimensiunea maximă a Knowledge Base-ului agentului. Agentul va avea acces la informații relevante din Knowledge Base în timpul generării răspunsului.
                 </p>
               </div>
-              <div className="flex flex-col space-y-2 lg:flex-row lg:gap-2 lg:space-y-0">
+              <div className="flex flex-col space-y-2 sm:flex-row sm:flex-wrap sm:gap-2 sm:space-y-0 md:flex-col md:space-y-2 xl:flex-row xl:gap-2 xl:space-y-0">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={loadExistingDocuments}
                   disabled={isLoadingExisting}
-                  className="flex items-center gap-2 w-full lg:w-auto"
+                  className="flex items-center gap-2 w-full sm:flex-1 sm:min-w-0 md:w-full xl:flex-1 xl:min-w-0"
                 >
                   <Database className="w-4 h-4" />
                   {isLoadingExisting ? 'Se încarcă...' : 'Selectează documente existente'}
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setIsAddingDoc(true)} className="flex items-center gap-2 w-full lg:w-auto">
+                <Button variant="outline" size="sm" onClick={() => setIsAddingDoc(true)} className="flex items-center gap-2 w-full sm:flex-1 sm:min-w-0 md:w-full xl:flex-1 xl:min-w-0">
                   <FileText className="w-4 h-4" />
                   Adaugă Manual
                 </Button>
-                <label className="cursor-pointer w-full lg:w-auto">
-                  <Button variant="outline" size="sm" className="flex items-center gap-2 w-full lg:w-auto" asChild>
+                <label className="cursor-pointer w-full sm:flex-1 sm:min-w-0 md:w-full xl:flex-1 xl:min-w-0">
+                  <Button variant="outline" size="sm" className="flex items-center gap-2 w-full" asChild>
                     <span>
                       <Upload className="w-4 h-4" />
                       Încarcă Document
@@ -391,7 +391,7 @@ const AgentEdit = () => {
             {existingDocuments.length > 0 && (
               <div className="p-4 border border-gray-200 rounded-lg space-y-3">
                 <Label className="text-foreground font-medium">Documente Existente în ElevenLabs</Label>
-                <div className="flex flex-col space-y-2 lg:flex-row lg:gap-2 lg:space-y-0">
+                <div className="flex flex-col space-y-2 sm:flex-row sm:gap-2 sm:space-y-0">
                   <Select 
                     value={selectedExistingDocId} 
                     onValueChange={setSelectedExistingDocId}
@@ -411,7 +411,7 @@ const AgentEdit = () => {
                     onClick={handleAddExistingDocument}
                     disabled={!selectedExistingDocId}
                     size="sm"
-                    className="flex items-center gap-2 w-full lg:w-auto"
+                    className="flex items-center gap-2 w-full sm:w-auto"
                   >
                     <Plus className="w-4 h-4" />
                     Adaugă
@@ -425,11 +425,11 @@ const AgentEdit = () => {
               <div className="p-4 border border-gray-200 rounded-lg space-y-3">
                 <Input value={newDocName} onChange={e => setNewDocName(e.target.value)} placeholder="Numele documentului" className="glass-input" />
                 <Textarea value={newDocContent} onChange={e => setNewDocContent(e.target.value)} placeholder="Conținutul documentului..." className="glass-input min-h-[100px]" />
-                <div className="flex flex-col space-y-2 lg:flex-row lg:gap-2 lg:space-y-0">
-                  <Button onClick={addManualDocument} size="sm" className="w-full lg:w-auto">
+                <div className="flex flex-col space-y-2 sm:flex-row sm:gap-2 sm:space-y-0">
+                  <Button onClick={addManualDocument} size="sm" className="w-full sm:w-auto">
                     Adaugă
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setIsAddingDoc(false)} className="w-full lg:w-auto">
+                  <Button variant="outline" size="sm" onClick={() => setIsAddingDoc(false)} className="w-full sm:w-auto">
                     Anulează
                   </Button>
                 </div>
@@ -446,7 +446,7 @@ const AgentEdit = () => {
                 </p>
               ) : (
                 documents.map(doc => (
-                  <div key={doc.id} className="flex flex-col space-y-2 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 p-3 bg-muted/30 rounded-lg border">
+                  <div key={doc.id} className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-3 bg-muted/30 rounded-lg border">
                     <div className="flex-1">
                       <h4 className="font-medium text-foreground">
                         {doc.name} 
@@ -468,7 +468,7 @@ const AgentEdit = () => {
                         </p>
                       )}
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => handleRemoveDocument(doc.id)} className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full lg:w-auto">
+                    <Button variant="outline" size="sm" onClick={() => handleRemoveDocument(doc.id)} className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full sm:w-auto">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
