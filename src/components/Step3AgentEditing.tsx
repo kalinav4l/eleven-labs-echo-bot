@@ -56,7 +56,6 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
 
     const success = await addFileDocument(file);
     if (success) {
-      // Clear the input
       event.target.value = '';
     }
   };
