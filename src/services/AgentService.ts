@@ -1,9 +1,10 @@
+
 import { API_CONFIG } from '@/constants/constants';
-import { AgentResponse, LanguagePreset } from "@/components/AgentResponse.ts";
+import { AgentResponse, LanguagePreset, KnowledgeBaseDocument } from "@/components/AgentResponse.ts";
 
 export interface AgentPrompt {
   prompt: string;
-  knowledge_base: Array<{ name: string; content: string }>;
+  knowledge_base: KnowledgeBaseDocument[];
   rag?: Record<string, any>;
   temperature?: number;
 }

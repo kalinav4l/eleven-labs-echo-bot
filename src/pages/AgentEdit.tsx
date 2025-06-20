@@ -55,7 +55,8 @@ const AgentEdit = () => {
     addTextDocument,
     addFileDocument,
     removeDocument,
-    updateAgentKnowledgeBase
+    updateAgentKnowledgeBase,
+    processAgentKnowledgeBase
   } = useEnhancedKnowledgeBase({ 
     agentId: agentId || '',
     onAgentRefresh: (refreshedAgentData) => {
@@ -94,6 +95,9 @@ const AgentEdit = () => {
         // Parse additional languages from the AgentResponse
         const parsedAdditionalLanguages = parseAdditionalLanguagesFromResponse(data);
         setAdditionalLanguages(parsedAdditionalLanguages);
+
+        // Process existing knowledge base documents
+        processAgentKnowledgeBase(data);
       } catch (error) {
         console.error('Error fetching agent:', error);
         toast({
@@ -106,7 +110,7 @@ const AgentEdit = () => {
       }
     };
     fetchAgentData();
-  }, [agentId]);
+  }, [agentId, processAgentKnowledgeBase]);
 
   // Initialize multilingual messages when agent data loads
   useEffect(() => {

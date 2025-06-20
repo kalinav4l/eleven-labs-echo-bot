@@ -26,6 +26,34 @@ export const useEnhancedKnowledgeBase = ({ agentId, onAgentRefresh }: UseEnhance
   const [existingDocuments, setExistingDocuments] = useState<ExistingDocument[]>([]);
   const [selectedExistingDocuments, setSelectedExistingDocuments] = useState<Set<string>>(new Set());
 
+  // Process agent's existing knowledge base documents
+  const processAgentKnowledgeBase = useCallback((agentData: AgentResponse) => {
+    const knowledgeBase = agentData.conversation_config?.agent?.prompt?.knowledge_base || [];
+    
+    if (knowledgeBase.length > 0) {
+      console.log('Processing existing knowledge base documents:', knowledgeBase);
+      
+      const processedDocs: KnowledgeDocumentLocal[] = knowledgeBase.map((doc) => ({
+        id: `existing-${doc.id}`,
+        name: doc.name,
+        uploadedAt: new Date(), // We don't have creation date from this API
+        type: 'existing',
+        elevenLabsId: doc.id
+      }));
+      
+      setDocuments(processedDocs);
+      
+      // Update selected existing documents set
+      const selectedIds = new Set(knowledgeBase.map(doc => doc.id));
+      setSelectedExistingDocuments(selectedIds);
+      
+      console.log('Processed knowledge base documents:', processedDocs);
+    } else {
+      setDocuments([]);
+      setSelectedExistingDocuments(new Set());
+    }
+  }, []);
+
   const loadExistingDocuments = useCallback(async () => {
     setIsLoadingExisting(true);
     try {
@@ -185,6 +213,8 @@ export const useEnhancedKnowledgeBase = ({ agentId, onAgentRefresh }: UseEnhance
         try {
           const refreshedAgent = await agentService.getAgent(agentId);
           onAgentRefresh(refreshedAgent);
+          // Process the refreshed agent's knowledge base
+          processAgentKnowledgeBase(refreshedAgent);
         } catch (error) {
           console.error('Error refreshing agent data:', error);
         }
@@ -202,7 +232,7 @@ export const useEnhancedKnowledgeBase = ({ agentId, onAgentRefresh }: UseEnhance
     } finally {
       setIsUpdating(false);
     }
-  }, [agentId, documents, onAgentRefresh]);
+  }, [agentId, documents, onAgentRefresh, processAgentKnowledgeBase]);
 
   return {
     documents,
@@ -215,6 +245,7 @@ export const useEnhancedKnowledgeBase = ({ agentId, onAgentRefresh }: UseEnhance
     addTextDocument,
     addFileDocument,
     removeDocument,
-    updateAgentKnowledgeBase
+    updateAgentKnowledgeBase,
+    processAgentKnowledgeBase
   };
 };
