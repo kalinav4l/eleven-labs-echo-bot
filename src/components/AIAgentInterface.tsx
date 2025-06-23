@@ -44,39 +44,57 @@ const AIAgentInterface = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen">
-      {/* Main Circle */}
+      {/* Main Circle with Liquid Glass Effect */}
       <div 
-        className="relative cursor-pointer"
+        className="relative cursor-pointer group"
         onClick={handleStartConversation}
       >
-        {/* Outer Ring */}
+        {/* Outer Ring with Liquid Glass */}
         <div 
           className={cn(
-            "w-48 h-48 rounded-full border-2 transition-all duration-700 flex items-center justify-center",
+            "w-64 h-64 rounded-full border transition-all duration-700 flex items-center justify-center relative overflow-hidden",
+            "bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl",
             isActive || isConnected
-              ? "border-green-400 shadow-lg shadow-green-400/30" 
-              : "border-gray-600 hover:border-gray-500"
+              ? "shadow-teal-400/30 border-teal-400/30" 
+              : "hover:shadow-white/20 hover:border-white/30"
           )}
+          style={{
+            background: isActive || isConnected 
+              ? 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(20,184,166,0.1) 100%)'
+              : 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)'
+          }}
         >
-          {/* Inner Circle */}
+          {/* Glass reflection effect */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-60" />
+          
+          {/* Inner Circle with Enhanced Glass Effect */}
           <div 
             className={cn(
-              "w-32 h-32 rounded-full border-2 transition-all duration-500 flex items-center justify-center",
+              "w-44 h-44 rounded-full border transition-all duration-500 flex items-center justify-center relative overflow-hidden",
+              "bg-white/15 backdrop-blur-lg border-white/25 shadow-lg",
               isActive || isConnected
-                ? "border-green-400" 
-                : "border-gray-600"
+                ? "border-teal-300/40 shadow-teal-300/20" 
+                : "border-white/25"
             )}
+            style={{
+              background: isActive || isConnected 
+                ? 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(20,184,166,0.08) 100%)'
+                : 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)'
+            }}
           >
-            {/* Center Text */}
-            <div className="text-center">
+            {/* Inner glass reflection */}
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/30 via-transparent to-transparent opacity-50" />
+            
+            {/* Center Content */}
+            <div className="text-center relative z-10">
               <div className={cn(
-                "text-sm font-medium transition-colors duration-300",
-                isActive || isConnected ? "text-green-400" : "text-gray-400"
+                "text-lg font-semibold transition-colors duration-300 mb-2",
+                isActive || isConnected ? "text-teal-700" : "text-gray-700"
               )}>
                 {isSpeaking ? "SPEAKING" : (isConnected ? "LISTENING" : "CLICK TO START")}
               </div>
               {!isConnected && (
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-sm text-gray-500">
                   Click to disconnect
                 </div>
               )}
@@ -84,9 +102,35 @@ const AIAgentInterface = () => {
           </div>
         </div>
 
-        {/* Pulsing effect when speaking */}
-        {isSpeaking && (
-          <div className="absolute inset-0 w-48 h-48 rounded-full border-2 border-green-400 animate-ping opacity-30" />
+        {/* Animated glow effects when active */}
+        {(isActive || isConnected) && (
+          <>
+            {/* Outer glow ring */}
+            <div className="absolute inset-0 w-64 h-64 rounded-full bg-gradient-to-r from-teal-400/20 to-cyan-400/20 blur-xl animate-pulse" />
+            
+            {/* Speaking pulse effect */}
+            {isSpeaking && (
+              <div className="absolute inset-0 w-64 h-64 rounded-full border-2 border-teal-400/40 animate-ping" />
+            )}
+          </>
+        )}
+
+        {/* Floating particles when active */}
+        {(isActive || isConnected) && (
+          <div className="absolute inset-0 pointer-events-none">
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-1 h-1 bg-teal-400/60 rounded-full animate-pulse"
+                style={{
+                  top: `${50 + 35 * Math.sin((i * Math.PI) / 3)}%`,
+                  left: `${50 + 35 * Math.cos((i * Math.PI) / 3)}%`,
+                  animationDelay: `${i * 0.3}s`,
+                  animationDuration: '2s'
+                }}
+              />
+            ))}
+          </div>
         )}
       </div>
     </div>
