@@ -18,7 +18,7 @@ export interface TranslationResult {
 }
 
 export interface TranslationResultMultipleLangauges {
-    translation: TranslationResult[];
+    translations: TranslationResult[];
 }
 
 export interface PromptGenerationRequest {
@@ -553,7 +553,7 @@ export interface StyleSettings {
     base_border?: string;
     base_subtle?: string;
     base_primary?: string;
-    base_error?:.string;
+    base_error?: string;
     accent?: string;
     accent_hover?: string;
     accent_active?: string;
