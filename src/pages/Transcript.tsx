@@ -7,7 +7,6 @@ import { Upload, Download, FileAudio, MessageSquare, User, Bot, Wand2, Loader2, 
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-
 interface TranscriptEntry {
   speaker: string;
   text: string;
@@ -15,9 +14,10 @@ interface TranscriptEntry {
   startTime: number;
   endTime: number;
 }
-
 const Transcript = () => {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessingWithAI, setIsProcessingWithAI] = useState(false);
   const [transcriptEntries, setTranscriptEntries] = useState<TranscriptEntry[]>([]);
@@ -25,11 +25,9 @@ const Transcript = () => {
   const [rawTranscript, setRawTranscript] = useState<string>('');
   const [audioUrl, setAudioUrl] = useState<string>('');
   const [isPlaying, setIsPlaying] = useState(false);
-
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
-
   const getSpeakerColor = (speaker: string) => {
     if (speaker.toLowerCase().includes('agent') || speaker.toLowerCase().includes('ai')) {
       return 'bg-purple-500';
@@ -40,20 +38,17 @@ const Transcript = () => {
     const index = parseInt(speaker.replace(/\D/g, '')) || 0;
     return colors[index % colors.length];
   };
-
   const getSpeakerIcon = (speaker: string) => {
     if (speaker.toLowerCase().includes('agent') || speaker.toLowerCase().includes('ai')) {
       return <Bot className="w-4 h-4 text-white" />;
     }
     return <User className="w-4 h-4 text-white" />;
   };
-
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
-
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -77,7 +72,6 @@ const Transcript = () => {
         });
         return;
       }
-
       setAudioFile(file);
       setAudioUrl(URL.createObjectURL(file));
       toast({
@@ -86,11 +80,9 @@ const Transcript = () => {
       });
     }
   };
-
   const parseTranscriptResponse = (text: string): TranscriptEntry[] => {
     const entries: TranscriptEntry[] = [];
     const lines = text.split('\n').filter(line => line.trim());
-    
     lines.forEach((line, index) => {
       if (line.trim()) {
         // Detectează dacă linia conține un speaker
@@ -114,10 +106,8 @@ const Transcript = () => {
         }
       }
     });
-    
     return entries;
   };
-
   const handleUpload = async () => {
     if (!audioFile) {
       toast({
@@ -127,15 +117,12 @@ const Transcript = () => {
       });
       return;
     }
-
     setIsUploading(true);
     try {
       const formData = new FormData();
       formData.append("file", audioFile);
       formData.append("model_id", "scribe_v1");
-
       console.log('Uploading file:', audioFile.name, 'Size:', audioFile.size);
-
       const response = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
         method: "POST",
         headers: {
@@ -143,23 +130,18 @@ const Transcript = () => {
         },
         body: formData
       });
-
       console.log('Response status:', response.status);
-
       if (!response.ok) {
         const errorText = await response.text();
         console.error('ElevenLabs error:', errorText);
         throw new Error(`Eroare API: ${response.status}`);
       }
-
       const body = await response.json();
       console.log('ElevenLabs response:', body);
-
       if (body.text) {
         setRawTranscript(body.text);
         const entries = parseTranscriptResponse(body.text);
         setTranscriptEntries(entries);
-        
         toast({
           title: "Succes",
           description: `Transcript generat cu succes! (${entries.length} intrări)`
@@ -178,7 +160,6 @@ const Transcript = () => {
       setIsUploading(false);
     }
   };
-
   const processWithGPT4o = async () => {
     if (!rawTranscript) {
       toast({
@@ -188,24 +169,22 @@ const Transcript = () => {
       });
       return;
     }
-
     setIsProcessingWithAI(true);
     try {
       console.log('Processing with GPT-4o, transcript length:', rawTranscript.length);
-
-      const { data, error } = await supabase.functions.invoke('process-transcript', {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('process-transcript', {
         body: {
           transcriptText: rawTranscript
         }
       });
-
       if (error) {
         console.error('Supabase function error:', error);
         throw new Error(error.message || 'Eroare la procesarea cu AI');
       }
-
       console.log('GPT-4o response:', data);
-
       if (data && data.dialogue && Array.isArray(data.dialogue)) {
         const processedEntries: TranscriptEntry[] = data.dialogue.map((item: any, index: number) => ({
           speaker: item.speaker || 'Unknown',
@@ -214,7 +193,6 @@ const Transcript = () => {
           startTime: index * 5,
           endTime: (index + 1) * 5
         }));
-
         setTranscriptEntries(processedEntries);
         toast({
           title: "Succes",
@@ -234,7 +212,6 @@ const Transcript = () => {
       setIsProcessingWithAI(false);
     }
   };
-
   const handleDownloadSRT = () => {
     if (transcriptEntries.length === 0) {
       toast({
@@ -244,16 +221,14 @@ const Transcript = () => {
       });
       return;
     }
-
     let srtContent = '';
     transcriptEntries.forEach((entry, index) => {
       // Convert seconds to SRT timestamp format (HH:MM:SS,mmm)
       const formatSRTTime = (seconds: number) => {
         const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
+        const minutes = Math.floor(seconds % 3600 / 60);
         const secs = Math.floor(seconds % 60);
-        const milliseconds = Math.floor((seconds % 1) * 1000);
-        
+        const milliseconds = Math.floor(seconds % 1 * 1000);
         return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')},${milliseconds.toString().padStart(3, '0')}`;
       };
 
@@ -273,15 +248,14 @@ const Transcript = () => {
           return (index % 2).toString();
         }
       };
-
       const startTime = formatSRTTime(entry.startTime);
       const endTime = formatSRTTime(entry.endTime);
       const speakerNumber = getSpeakerNumber(entry.speaker);
-      
       srtContent += `${startTime} --> ${endTime} [Speaker ${speakerNumber}]\n${entry.text}\n\n`;
     });
-
-    const blob = new Blob([srtContent], { type: 'text/plain;charset=utf-8' });
+    const blob = new Blob([srtContent], {
+      type: 'text/plain;charset=utf-8'
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -290,32 +264,26 @@ const Transcript = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-
     toast({
       title: "Descărcare",
       description: "Fișierul SRT a fost descărcat cu succes în formatul cerut."
     });
   };
-
   const testDemo = () => {
     const demoText = `Agent AI: Bună ziua! Cum vă pot ajuta astăzi?
 User: Salut! Aș vrea să știu mai multe despre serviciile voastre.
 Agent AI: Cu plăcere! Oferim transcripturi automate pentru fișiere audio folosind tehnologia ElevenLabs.
 User: Sună interesant. Cât durează să procesez un fișier?
 Agent AI: De obicei, procesarea durează câteva minute, în funcție de lungimea fișierului audio.`;
-
     setRawTranscript(demoText);
     const entries = parseTranscriptResponse(demoText);
     setTranscriptEntries(entries);
-    
     toast({
       title: "Demo încărcat",
       description: "Un exemplu de transcript a fost încărcat pentru testare."
     });
   };
-
-  return (
-    <DashboardLayout>
+  return <DashboardLayout>
       <div className="p-6 space-y-8">
         {/* Header */}
         <div className="flex justify-between items-center">
@@ -323,11 +291,7 @@ Agent AI: De obicei, procesarea durează câteva minute, în funcție de lungime
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Transcript Audio</h1>
             <p className="text-gray-600">Generează transcripturi din fișiere audio folosind AI</p>
           </div>
-          <Button 
-            onClick={testDemo} 
-            variant="outline" 
-            className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
-          >
+          <Button onClick={testDemo} variant="outline" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
             <Play className="w-4 h-4 mr-2" />
             Test Demo
           </Button>
@@ -353,25 +317,14 @@ Agent AI: De obicei, procesarea durează câteva minute, în funcție de lungime
                     <p className="text-xs text-gray-500">
                       Formate acceptate: MP3, WAV, M4A, OGG (max 25MB)
                     </p>
-                    <input
-                      type="file"
-                      accept="audio/*"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      id="audio-upload"
-                    />
-                    <Button
-                      variant="outline"
-                      onClick={() => document.getElementById('audio-upload')?.click()}
-                      className="mt-4 bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
-                    >
+                    <input type="file" accept="audio/*" onChange={handleFileSelect} className="hidden" id="audio-upload" />
+                    <Button variant="outline" onClick={() => document.getElementById('audio-upload')?.click()} className="mt-4 bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
                       Selectează Fișier
                     </Button>
                   </div>
                 </div>
 
-                {audioFile && (
-                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                {audioFile && <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                     <div className="flex items-center gap-3">
                       <FileAudio className="w-5 h-5 text-[#0A5B4C]" />
                       <div className="flex-1">
@@ -381,57 +334,35 @@ Agent AI: De obicei, procesarea durează câteva minute, în funcție de lungime
                         </p>
                       </div>
                     </div>
-                    {audioUrl && (
-                      <div className="mt-3">
+                    {audioUrl && <div className="mt-3">
                         <audio controls className="w-full">
                           <source src={audioUrl} type={audioFile.type} />
                           Browser-ul tău nu suportă redarea audio.
                         </audio>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      </div>}
+                  </div>}
               </div>
 
-              <Button
-                onClick={handleUpload}
-                disabled={!audioFile || isUploading}
-                className="w-full bg-gray-900 hover:bg-gray-800 text-white border border-gray-700"
-              >
-                {isUploading ? (
-                  <div className="flex items-center gap-2">
+              <Button onClick={handleUpload} disabled={!audioFile || isUploading} className="w-full bg-gray-900 hover:bg-gray-800 text-white border border-gray-700">
+                {isUploading ? <div className="flex items-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Procesează...
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
+                  </div> : <div className="flex items-center gap-2">
                     <Upload className="w-4 h-4" />
                     Generează Transcript
-                  </div>
-                )}
+                  </div>}
               </Button>
 
               {/* GPT-4o Processing Button */}
-              {rawTranscript && (
-                <Button
-                  onClick={processWithGPT4o}
-                  disabled={isProcessingWithAI}
-                  variant="outline"
-                  className="w-full bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
-                >
-                  {isProcessingWithAI ? (
-                    <div className="flex items-center gap-2">
+              {rawTranscript && <Button onClick={processWithGPT4o} disabled={isProcessingWithAI} variant="outline" className="w-full bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
+                  {isProcessingWithAI ? <div className="flex items-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Procesează cu GPT-4o...
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
+                    </div> : <div className="flex items-center gap-2">
                       <Wand2 className="w-4 h-4" />
                       Îmbunătățește cu GPT-4o
-                    </div>
-                  )}
-                </Button>
-              )}
+                    </div>}
+                </Button>}
             </CardContent>
           </Card>
 
@@ -443,27 +374,15 @@ Agent AI: De obicei, procesarea durează câteva minute, în funcție de lungime
                   <MessageSquare className="w-6 h-6 text-[#0A5B4C]" />
                   Transcript ({transcriptEntries.length} intrări)
                 </CardTitle>
-                {transcriptEntries.length > 0 && (
-                  <Button
-                    onClick={handleDownloadSRT}
-                    variant="outline"
-                    size="sm"
-                    className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
-                  >
+                {transcriptEntries.length > 0 && <Button onClick={handleDownloadSRT} variant="outline" size="sm" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
                     <Download className="w-4 h-4 mr-2" />
                     Export SRT
-                  </Button>
-                )}
+                  </Button>}
               </div>
             </CardHeader>
-            <CardContent>
-              {transcriptEntries.length > 0 ? (
-                <div className="space-y-4 max-h-96 overflow-y-auto">
-                  {transcriptEntries.map((entry, index) => (
-                    <div
-                      key={index}
-                      className="flex gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-100"
-                    >
+            <CardContent className="px-[14px] my-[14px] mx-0 py-[27px]">
+              {transcriptEntries.length > 0 ? <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {transcriptEntries.map((entry, index) => <div key={index} className="flex gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-100">
                       <div className="flex-shrink-0">
                         <div className={`w-8 h-8 rounded-full ${getSpeakerColor(entry.speaker)} flex items-center justify-center`}>
                           {getSpeakerIcon(entry.speaker)}
@@ -476,11 +395,8 @@ Agent AI: De obicei, procesarea durează câteva minute, în funcție de lungime
                         </div>
                         <p className="text-sm text-gray-700 leading-relaxed">{entry.text}</p>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
+                    </div>)}
+                </div> : <div className="text-center py-12">
                   <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                   <p className="text-gray-500 mb-2">
                     Transcriptul va apărea aici după procesare
@@ -488,8 +404,7 @@ Agent AI: De obicei, procesarea durează câteva minute, în funcție de lungime
                   <p className="text-xs text-gray-400">
                     Poți testa cu demo-ul din dreapta sus
                   </p>
-                </div>
-              )}
+                </div>}
             </CardContent>
           </Card>
         </div>
@@ -518,8 +433,6 @@ Agent AI: De obicei, procesarea durează câteva minute, în funcție de lungime
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
-
 export default Transcript;
