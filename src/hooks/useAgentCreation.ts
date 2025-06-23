@@ -3,7 +3,8 @@ import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
-import { elevenLabsApi, CreateAgentRequest, TTSConfig } from '../utils/apiService';
+import { ElevenLabsController } from '../controllers/ElevenLabsController';
+import { AgentCreateRequest, TtsCreate } from '../types/dtos';
 import { API_CONFIG, MESSAGES } from '../constants/constants';
 import { useClipboard } from './useClipboard.ts';
 
@@ -58,17 +59,13 @@ export const useAgentCreation = ({
 
     try {
       // Prepare TTS configuration based on language
-      const ttsConfig: TTSConfig = agentLanguage !== 'en'
-          ? {
-            voice_id: selectedVoice,
-            model_id: API_CONFIG.DEFAULT_MODEL_ID,
-          }
-          : {
-            voice_id: selectedVoice,
-          };
+      const ttsConfig: TtsCreate = {
+        voice_id: selectedVoice,
+        model_id: API_CONFIG.DEFAULT_MODEL_ID,
+      };
 
       // Prepare request body
-      const requestBody: CreateAgentRequest = {
+      const requestBody: AgentCreateRequest = {
         conversation_config: {
           agent: {
             language: agentLanguage,
@@ -81,8 +78,7 @@ export const useAgentCreation = ({
         name: agentName,
       };
 
-      // Create agent via API
-      const agentData = await elevenLabsApi.createAgent(requestBody);
+      const agentData = await ElevenLabsController.createAgent(requestBody);
       console.log('Agent created:', agentData);
 
       // Save to Supabase with the correct ElevenLabs agent ID

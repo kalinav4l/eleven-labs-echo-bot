@@ -25,15 +25,12 @@ export const usePromptGeneration = () => {
 
     setIsGenerating(true);
     try {
-        alert (`Generating prompt...\n WebsiteUrl = ${websiteUrl}\n AgentRole = ${agentRole}\n AdditionalPrompt = ${additionalPrompt}`);
       const request: PromptGenerationRequest = {
         websiteUrl,
         agentRole,
         additionalPrompt,
       };
       const response = await PromptGenerationController.generatePrompt(request);
-
-      alert(`Response = ${response.response}`)
 
       toast({
         title: "Succes!",
