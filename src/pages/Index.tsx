@@ -1,25 +1,25 @@
 
 import React from 'react'
-import AIAgentInterface from '@/components/AIAgentInterface'
 import HamburgerMenu from '@/components/HamburgerMenu'
-import { useIsMobile } from '@/hooks/use-mobile'
+import Header from '@/components/homepage/Header'
+import HeroSection from '@/components/homepage/HeroSection'
+import FeaturesSection from '@/components/homepage/FeaturesSection'
+import TestimonialsSection from '@/components/homepage/TestimonialsSection'
+import FAQSection from '@/components/homepage/FAQSection'
+import FinalCTASection from '@/components/homepage/FinalCTASection'
+import Footer from '@/components/homepage/Footer'
 
 const Index = () => {
-  const isMobile = useIsMobile()
-  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#FDFDFF] via-white to-gray-50 relative overflow-hidden">
       <HamburgerMenu />
-      
-      {/* Background Glass Effects */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-green-200/20 to-blue-200/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-200/20 to-purple-200/20 rounded-full blur-3xl"></div>
-      </div>
-      
-      <div className={`relative z-10 w-full ${isMobile ? 'px-2' : 'px-4'}`}>
-        <AIAgentInterface />
-      </div>
+      <Header />
+      <HeroSection />
+      <FeaturesSection />
+      <TestimonialsSection />
+      <FAQSection />
+      <FinalCTASection />
+      <Footer />
     </div>
   )
 }
