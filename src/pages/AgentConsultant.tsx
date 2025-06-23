@@ -75,7 +75,8 @@ const AgentConsultant: React.FC = () => {
   const handleGeneratePrompt = async () => {
     const prompt = await generatePrompt({
       websiteUrl,
-      additionalPrompt: `${additionalPrompt} Rolul agentului: ${agentRole}`
+      agentRole,
+      additionalPrompt
     });
     if (prompt) {
       setGeneratedPrompt(prompt);

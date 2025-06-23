@@ -1,6 +1,7 @@
 
 // Environment configuration that works both in development and Docker
 interface EnvironmentConfig {
+  BACKEND_URL: string;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
   ELEVENLABS_API_KEY: string;
@@ -20,6 +21,7 @@ const getEnvironmentConfig = (): EnvironmentConfig => {
 
   // Fallback to Vite environment variables for development
   return {
+    BACKEND_URL: import.meta.env.VITE_BACKEND_URL || 'https://eleven-labs-echo-bot-backend-production.up.railway.app',
     SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL || 'https://pwfczzxwjfxomqzhhwvj.supabase.co',
     SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3ZmN6enh3amZ4b21xemhod3ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0NDI5NDYsImV4cCI6MjA2NDAxODk0Nn0.IgOvpvhe3fW4OnRLN39eVfP5E1hq4lHat0lZH_1jQfs',
     ELEVENLABS_API_KEY: import.meta.env.VITE_ELEVENLABS_API_KEY || 'sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873',
