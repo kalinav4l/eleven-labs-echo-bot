@@ -183,7 +183,7 @@ export const useJarvis = () => {
       const { data, error } = await supabase.functions.invoke('text-to-speech', {
         body: { 
           text: response, 
-          voice: 'onwK4e9ZLuTAKqWW03F9' // Daniel - masculine voice
+          voice: 'Gfhrma537MvDQAJskf28' // Daniel - masculine voice
         }
       })
       
