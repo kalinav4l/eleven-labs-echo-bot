@@ -1,180 +1,89 @@
 
 import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/components/AuthContext';
-import { elevenLabsApi, CreateAgentRequest, TTSConfig } from '../utils/apiService';
-import { API_CONFIG, MESSAGES } from '../constants/constants';
-import { useClipboard } from './useClipboard.ts';
+import { agentService } from '../services/AgentService';
 
 interface CreateAgentParams {
-  agentName: string;
-  agentLanguage: string;
-  selectedVoice: string;
-  websiteUrl: string;
+  name: string;
   prompt: string;
+  language: string;
+  voiceId: string;
+  temperature: number;
 }
 
-interface UseAgentCreationProps {
-  websiteUrl: string;
-  additionalPrompt: string;
-  agentName: string;
-  agentLanguage: string;
-  selectedVoice: string;
-  generatePrompt: (params: { websiteUrl: string; additionalPrompt: string }) => Promise<string | null>;
-}
-
-export const useAgentCreation = ({
-                                   websiteUrl,
-                                   additionalPrompt,
-                                   agentName,
-                                   agentLanguage,
-                                   selectedVoice,
-                                   generatePrompt,
-                                 }: UseAgentCreationProps) => {
+export const useAgentCreation = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [createdAgentId, setCreatedAgentId] = useState('');
-  const { user } = useAuth();
-  const { copyToClipboard } = useClipboard();
 
   const createAgent = useCallback(async ({
-                                           agentName,
-                                           agentLanguage,
-                                           selectedVoice,
-                                           websiteUrl,
-                                           prompt,
-                                         }: CreateAgentParams): Promise<string | null> => {
-    if (!agentName.trim()) {
+    name,
+    prompt,
+    language,
+    voiceId,
+    temperature
+  }: CreateAgentParams): Promise<string> => {
+    if (!name.trim() || !prompt.trim() || !voiceId.trim()) {
       toast({
         title: "Eroare",
-        description: MESSAGES.ERRORS.MISSING_AGENT_NAME,
+        description: "Te rog completează toate câmpurile obligatorii.",
         variant: "destructive",
       });
-      return null;
+      return '';
     }
 
     setIsCreating(true);
-    setCreatedAgentId('');
 
     try {
-      // Prepare TTS configuration based on language
-      const ttsConfig: TTSConfig = agentLanguage !== 'en'
-          ? {
-            voice_id: selectedVoice,
-            model_id: API_CONFIG.DEFAULT_MODEL_ID,
-          }
-          : {
-            voice_id: selectedVoice,
-          };
-
-      // Prepare request body
-      const requestBody: CreateAgentRequest = {
+      const agentData = {
+        name: name.trim(),
         conversation_config: {
           agent: {
-            language: agentLanguage,
+            language: language,
             prompt: {
-              prompt,
-            },
+              prompt: prompt.trim(),
+              temperature: temperature
+            }
           },
-          tts: ttsConfig,
-        },
-        name: agentName,
+          tts: {
+            voice_id: voiceId,
+            model_id: "eleven_turbo_v2_5"
+          }
+        }
       };
 
-      // Create agent via API
-      const agentData = await elevenLabsApi.createAgent(requestBody);
-      console.log('Agent created:', agentData);
-
-      // Save to Supabase with the correct ElevenLabs agent ID
-      if (user) {
-        const { error: supabaseError } = await supabase
-            .from('kalina_agents')
-            .insert({
-              agent_id: agentData.agent_id, // Use the actual ElevenLabs agent ID
-              elevenlabs_agent_id: agentData.agent_id,
-              name: agentName,
-              description: `Agent consultant generat automat pentru ${websiteUrl}`,
-              system_prompt: prompt,
-              voice_id: selectedVoice,
-              user_id: user.id,
-              provider: 'elevenlabs',
-              is_active: true,
-            });
-
-        if (supabaseError) {
-          console.error('Error saving to Supabase:', supabaseError);
-          toast({
-            title: "Avertisment",
-            description: "Agentul a fost creat în ElevenLabs dar nu a putut fi salvat în baza de date.",
-            variant: "destructive",
-          });
-        }
-      }
-
-      setCreatedAgentId(agentData.agent_id);
-
+      console.log('Creating agent with data:', agentData);
+      
+      const response = await agentService.createAgent(agentData);
+      
+      setCreatedAgentId(response.agent_id);
+      
       toast({
         title: "Succes!",
-        description: `Agentul "${agentName}" ${MESSAGES.SUCCESS.AGENT_CREATED}`,
+        description: `Agentul "${name}" a fost creat cu ID-ul: ${response.agent_id}`,
       });
 
-      // Copy agent ID to clipboard without showing success message
-      await copyToClipboard(agentData.agent_id, false);
-
-      return agentData.agent_id;
+      return response.agent_id;
     } catch (error) {
       console.error('Error creating agent:', error);
       toast({
         title: "Eroare",
-        description: MESSAGES.ERRORS.AGENT_CREATION_FAILED,
+        description: "Nu s-a putut crea agentul. Te rog verifică setările și încearcă din nou.",
         variant: "destructive",
       });
-      return null;
+      return '';
     } finally {
       setIsCreating(false);
     }
-  }, [user, copyToClipboard]);
+  }, []);
 
-  // Handler for creating agent - moved into the hook
-  const handleCreateAgent = useCallback(async () => {
-    const prompt = await generatePrompt({ websiteUrl, additionalPrompt });
-
-    if (!prompt) {
-      console.log("Prompt generation failed, stopping agent creation.");
-      return;
-    }
-
-    console.log("Creating agent with Name:", agentName);
-    console.log("Creating agent with Prompt:", prompt);
-
-    await createAgent({
-      agentName,
-      agentLanguage,
-      selectedVoice,
-      websiteUrl,
-      prompt,
-    });
-  }, [
-    generatePrompt,
-    createAgent,
-    websiteUrl,
-    additionalPrompt,
-    agentName,
-    agentLanguage,
-    selectedVoice,
-  ]);
-
-  // Handler for copying agent ID - moved into the hook
-  const handleCopyAgentId = useCallback(async () => {
-    await copyToClipboard(createdAgentId);
-  }, [copyToClipboard, createdAgentId]);
+  const resetCreatedAgentId = useCallback(() => {
+    setCreatedAgentId('');
+  }, []);
 
   return {
     createAgent,
     isCreating,
     createdAgentId,
-    setCreatedAgentId,
-    handleCreateAgent,
-    handleCopyAgentId,
+    resetCreatedAgentId
   };
 };

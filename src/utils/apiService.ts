@@ -1,4 +1,4 @@
-import { API_CONFIG } from '../constants/constants';
+import { BACKEND_CONFIG, getBackendHeaders } from '@/config/backendConfig';
 
 // Types for API requests and responses
 export interface TTSConfig {
@@ -35,32 +35,27 @@ export interface InitiateCallRequest {
 }
 
 class ElevenLabsApiService {
-  private readonly apiKey: string;
   private readonly baseUrl: string;
 
   constructor() {
-    this.apiKey = API_CONFIG.ELEVENLABS_API_KEY;
-    this.baseUrl = API_CONFIG.ELEVENLABS_BASE_URL;
+    this.baseUrl = BACKEND_CONFIG.BASE_URL;
   }
 
   private getHeaders(): HeadersInit {
-    return {
-      'Xi-Api-Key': this.apiKey,
-      'Content-Type': 'application/json',
-    };
+    return getBackendHeaders();
   }
 
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('API Error:', errorData);
+      console.error('Backend API Error:', errorData);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     return response.json();
   }
 
   async createAgent(request: CreateAgentRequest): Promise<CreateAgentResponse> {
-    const response = await fetch(`${this.baseUrl}/convai/agents/create`, {
+    const response = await fetch(`${this.baseUrl}/api/eleven-labs/agent/create`, {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify(request),
@@ -70,7 +65,8 @@ class ElevenLabsApiService {
   }
 
   async initiateCall(request: InitiateCallRequest): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/convai/sip-trunk/outbound-call`, {
+    // This endpoint might not exist in your backend yet, but keeping the structure
+    const response = await fetch(`${this.baseUrl}/api/eleven-labs/call/initiate`, {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify(request),
@@ -81,4 +77,3 @@ class ElevenLabsApiService {
 }
 
 export const elevenLabsApi = new ElevenLabsApiService();
-

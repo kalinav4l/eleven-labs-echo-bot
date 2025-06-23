@@ -1,29 +1,15 @@
 
-import { API_CONFIG } from '@/constants/constants';
+import { BACKEND_CONFIG, getBackendHeaders } from '@/config/backendConfig';
 
 export interface ExistingDocument {
   id: string;
   name: string;
   type: 'file' | 'text';
-  metadata: {
-    created_at_unix_secs: number;
-    last_updated_at_unix_secs: number;
-    size_bytes?: number;
-  };
-  supported_usages: string[];
-  access_info: {
-    is_creator: boolean;
-    creator_name: string;
-    creator_email: string;
-    role: string;
-  };
-  dependent_agents: any[];
+  usage_mode: string;
 }
 
 export interface KnowledgeBaseResponse {
   documents: ExistingDocument[];
-  next_cursor: string | null;
-  has_more: boolean;
 }
 
 export interface KnowledgeBaseDocument {
@@ -40,27 +26,23 @@ export interface CreateTextDocumentRequest {
 
 export interface CreateDocumentResponse {
   id: string;
+  name: string;
 }
 
 export class KnowledgeBaseService {
-  private readonly apiKey: string;
   private readonly baseUrl: string;
 
   constructor() {
-    this.apiKey = API_CONFIG.ELEVENLABS_API_KEY;
-    this.baseUrl = 'https://api.elevenlabs.io/v1';
+    this.baseUrl = BACKEND_CONFIG.BASE_URL;
   }
 
   private getHeaders(): HeadersInit {
-    return {
-      'Xi-Api-Key': this.apiKey,
-      'Api-Key': 'xi-api-key',
-    };
+    return getBackendHeaders();
   }
 
   async getExistingDocuments(): Promise<KnowledgeBaseResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/convai/knowledge-base?show_only_owned_documents=true`, {
+      const response = await fetch(`${this.baseUrl}/api/knowledge-base/documents`, {
         method: 'GET',
         headers: this.getHeaders(),
       });
@@ -70,22 +52,19 @@ export class KnowledgeBaseService {
       }
 
       const data = await response.json() as KnowledgeBaseResponse;
-      console.log('Fetched existing documents:', data);
+      console.log('Fetched existing documents from backend:', data);
       return data;
     } catch (error) {
-      console.error('Error fetching existing documents:', error);
+      console.error('Error fetching existing documents from backend:', error);
       throw error;
     }
   }
 
   async createTextDocument(request: CreateTextDocumentRequest): Promise<CreateDocumentResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/convai/knowledge-base/text`, {
+      const response = await fetch(`${this.baseUrl}/api/knowledge-base/documents/text`, {
         method: 'POST',
-        headers: {
-          ...this.getHeaders(),
-          'Content-Type': 'application/json',
-        },
+        headers: this.getHeaders(),
         body: JSON.stringify(request),
       });
 
@@ -94,10 +73,10 @@ export class KnowledgeBaseService {
       }
 
       const data = await response.json() as CreateDocumentResponse;
-      console.log('Created text document:', data);
+      console.log('Created text document via backend:', data);
       return data;
     } catch (error) {
-      console.error('Error creating text document:', error);
+      console.error('Error creating text document via backend:', error);
       throw error;
     }
   }
@@ -106,11 +85,13 @@ export class KnowledgeBaseService {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('name', name);
 
-      const response = await fetch(`${this.baseUrl}/convai/knowledge-base/file`, {
+      const response = await fetch(`${this.baseUrl}/api/knowledge-base/documents/file?name=${encodeURIComponent(name)}`, {
         method: 'POST',
-        headers: this.getHeaders(),
+        headers: {
+          // Don't set Content-Type for FormData, let the browser set it
+          'Accept': 'application/json',
+        },
         body: formData,
       });
 
@@ -119,31 +100,30 @@ export class KnowledgeBaseService {
       }
 
       const data = await response.json() as CreateDocumentResponse;
-      console.log('Uploaded file document:', data);
+      console.log('Uploaded file document via backend:', data);
       return data;
     } catch (error) {
-      console.error('Error uploading file document:', error);
+      console.error('Error uploading file document via backend:', error);
       throw error;
     }
   }
 
   async updateAgentKnowledgeBase(agentId: string, knowledgeBase: KnowledgeBaseDocument[]): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/convai/agents/${agentId}`, {
-        method: 'PATCH',
-        headers: {
-          ...this.getHeaders(),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          conversation_config: {
-            agent: {
-              prompt: {
-                knowledge_base: knowledgeBase
-              }
+      const updateData = {
+        conversation_config: {
+          agent: {
+            prompt: {
+              knowledge_base: knowledgeBase
             }
           }
-        }),
+        }
+      };
+
+      const response = await fetch(`${this.baseUrl}/api/eleven-labs/agent/${agentId}`, {
+        method: 'PATCH',
+        headers: this.getHeaders(),
+        body: JSON.stringify(updateData),
       });
 
       if (!response.ok) {
@@ -151,10 +131,10 @@ export class KnowledgeBaseService {
       }
 
       const data = await response.json();
-      console.log('Updated agent knowledge base:', data);
+      console.log('Updated agent knowledge base via backend:', data);
       return true;
     } catch (error) {
-      console.error('Error updating agent knowledge base:', error);
+      console.error('Error updating agent knowledge base via backend:', error);
       throw error;
     }
   }

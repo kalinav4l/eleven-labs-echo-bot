@@ -12,6 +12,10 @@ export class AgentService {
     return agentApiService.getAgent(agentId);
   }
 
+  async createAgent(agentData: any): Promise<{ agent_id: string }> {
+    return agentApiService.createAgent(agentData);
+  }
+
   prepareUpdatePayload(
     agentData: AgentResponse,
     multilingualMessages: Record<string, string>
