@@ -1,70 +1,99 @@
-// Backend Configuration
-export const BACKEND_CONFIG = {
-  BASE_URL: 'https://eleven-labs-echo-bot-backend-production.up.railway.app',
-  TIMEOUT: 30000,
-} as const;
 
-// Application Configuration  
+import { ENV } from '@/config/environment';
+
+// Constants for the Agent Consultant application
+
 export const API_CONFIG = {
-  // Keep this for any remaining legacy code, but it won't be used
-  ELEVENLABS_API_KEY: '',
-  ELEVENLABS_BASE_URL: 'https://api.elevenlabs.io/v1',
-  // This should be configured in your backend now
-  AGENT_PHONE_NUMBER_ID: 'pn_c4fa062b1e2649d892c26cc32defd39e',
+  ELEVENLABS_API_KEY: ENV.ELEVENLABS_API_KEY,
+  ELEVENLABS_BASE_URL: ENV.ELEVENLABS_BASE_URL,
+  DEFAULT_MODEL_ID: ENV.DEFAULT_MODEL_ID,
+  AGENT_PHONE_NUMBER_ID: ENV.AGENT_PHONE_NUMBER_ID,
 } as const;
 
-// Messages
+export const VOICES = [
+  { id: 'cjVigY5qzO86Huf0OWal', name: 'Eric' },
+  { id: '9BWtsMINqrJLrRacOk9x', name: 'Aria' },
+  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah' },
+  { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura' },
+  { id: 'IKne3meq5aSn9XLyUdCD', name: 'Charlie' },
+] as const;
+
+// Complete language map with language IDs as keys
+export const LANGUAGE_MAP = {
+  'af': 'Afrikaans',
+  'ar': 'العربية',
+  'bg': 'Български',
+  'bn': 'বাংলা',
+  'bs': 'Bosanski',
+  'ca': 'Català',
+  'cs': 'Čeština',
+  'da': 'Dansk',
+  'de': 'Deutsch',
+  'el': 'Ελληνικά',
+  'en': 'English',
+  'es': 'Español',
+  'et': 'Eesti',
+  'fi': 'Suomi',
+  'fr': 'Français',
+  'hi': 'हिन्दी',
+  'hr': 'Hrvatski',
+  'hu': 'Magyar',
+  'id': 'Bahasa Indonesia',
+  'it': 'Italiano',
+  'ja': '日本語',
+  'ko': '한국어',
+  'lt': 'Lietuvių',
+  'lv': 'Latviešu',
+  'ms': 'Bahasa Melayu',
+  'nl': 'Nederlands',
+  'no': 'Norsk',
+  'pl': 'Polski',
+  'pt': 'Português',
+  'ro': 'Română',
+  'ru': 'Русский',
+  'sk': 'Slovenčina',
+  'sl': 'Slovenščina',
+  'sv': 'Svenska',
+  'ta': 'தமிழ்',
+  'th': 'ไทย',
+  'tr': 'Türkçe',
+  'uk': 'Українська',
+  'ur': 'اردو',
+  'vi': 'Tiếng Việt',
+  'zh': '中文',
+} as const;
+
+export const LANGUAGES = [
+  { value: 'ro', label: 'Română' },
+  { value: 'ru', label: 'Русский' },
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Español' },
+  { value: 'fr', label: 'Français' },
+] as const;
+
+export const DEFAULT_VALUES = {
+  VOICE_ID: 'cjVigY5qzO86Huf0OWal',
+  LANGUAGE: 'ro',
+} as const;
+
 export const MESSAGES = {
-  SUCCESS: {
-    CALL_INITIATED: "Apelul a fost inițiat cu succes!",
-    AGENT_CREATED: "Agentul a fost creat cu succes!",
-    AGENT_UPDATED: "Agentul a fost actualizat cu succes!",
-    PROMPT_GENERATED: "Prompt-ul a fost generat cu succes!",
-  },
   ERRORS: {
-    CALL_INITIATION_FAILED: "Nu s-a putut iniția apelul. Te rog încearcă din nou.",
-    AGENT_CREATION_FAILED: "Nu s-a putut crea agentul. Te rog verifică setările.",
-    AGENT_UPDATE_FAILED: "Nu s-a putut actualiza agentul.",
-    PROMPT_GENERATION_FAILED: "Nu s-a putut genera prompt-ul.",
-    MISSING_AGENT_ID_OR_PHONE: "Te rog introdu ID-ul agentului și numărul de telefon.",
-    NETWORK_ERROR: "Eroare de rețea. Te rog verifică conexiunea.",
+    INVALID_URL: 'Te rog introdu un URL valid',
+    MISSING_AGENT_NAME: 'Te rog completează numele agentului.',
+    MISSING_AGENT_ID_OR_PHONE: 'Te rog introdu ID-ul agentului și numărul de telefon',
+    PROMPT_GENERATION_FAILED: 'Nu am putut genera promptul',
+    AGENT_CREATION_FAILED: 'Nu am putut crea agentul',
+    CALL_INITIATION_FAILED: 'Nu am putut iniția apelul',
+    CLIPBOARD_COPY_FAILED: 'Nu am putut copia ID-ul agentului',
+  },
+  SUCCESS: {
+    PROMPT_GENERATED: 'Promptul a fost generat cu succes',
+    AGENT_CREATED: 'a fost creat cu succes și a fost copiat în clipboard',
+    CALL_INITIATED: 'Apelul a fost inițiat cu succes',
+    CLIPBOARD_COPIED: 'ID-ul agentului a fost copiat în clipboard',
   },
   LOADING: {
-    CREATING_AGENT: "Se creează agentul...",
-    UPDATING_AGENT: "Se actualizează agentul...",
-    GENERATING_PROMPT: "Se generează prompt-ul...",
-    INITIATING_CALL: "Se inițiază apelul...",
+    GENERATING_PROMPT: 'Se Generează Prompt',
+    GENERATING_AGENT: 'Se Generează Agent',
   },
-} as const;
-
-// Voice Configuration
-export const VOICE_CONFIG = {
-  DEFAULT_VOICE_ID: 'pNInz6obpgDQGcFmaJgB', // Adam voice
-  DEFAULT_MODEL_ID: 'eleven_turbo_v2_5',
-  SUPPORTED_LANGUAGES: [
-    { code: 'en', name: 'English' },
-    { code: 'ro', name: 'Română' },
-    { code: 'es', name: 'Español' },
-    { code: 'fr', name: 'Français' },
-    { code: 'de', name: 'Deutsch' },
-    { code: 'it', name: 'Italiano' },
-    { code: 'pt', name: 'Português' },
-    { code: 'pl', name: 'Polski' },
-    { code: 'tr', name: 'Türkçe' },
-    { code: 'ru', name: 'Русский' },
-    { code: 'nl', name: 'Nederlands' },
-    { code: 'cs', name: 'Čeština' },
-    { code: 'ar', name: 'العربية' },
-    { code: 'zh', name: '中文' },
-    { code: 'ja', name: '日本語' },
-    { code: 'hi', name: 'हिन्दी' },
-    { code: 'ko', name: '한국어' },
-  ],
-} as const;
-
-// UI Configuration
-export const UI_CONFIG = {
-  TOAST_DURATION: 5000,
-  ANIMATION_DURATION: 300,
-  DEBOUNCE_DELAY: 500,
 } as const;

@@ -1,21 +1,26 @@
 
-import { BACKEND_CONFIG, getBackendHeaders } from '@/config/backendConfig';
+import { API_CONFIG } from '@/constants/constants';
 import { AgentResponse } from "@/components/AgentResponse";
 
 export class AgentApiService {
+  private readonly apiKey: string;
   private readonly baseUrl: string;
 
   constructor() {
-    this.baseUrl = BACKEND_CONFIG.BASE_URL;
+    this.apiKey = API_CONFIG.ELEVENLABS_API_KEY;
+    this.baseUrl = 'https://api.elevenlabs.io/v1';
   }
 
   private getHeaders(): HeadersInit {
-    return getBackendHeaders();
+    return {
+      'Xi-Api-Key': this.apiKey,
+      'Content-Type': 'application/json',
+    };
   }
 
   async getAgent(agentId: string): Promise<AgentResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/eleven-labs/agent/${agentId}`, {
+      const response = await fetch(`${this.baseUrl}/convai/agents/${agentId}`, {
         method: 'GET',
         headers: this.getHeaders(),
       });
@@ -25,19 +30,19 @@ export class AgentApiService {
       }
 
       const agentResponse = await response.json() as AgentResponse;
-      console.log('Fetched agent data from backend:', agentResponse);
+      console.log('Fetched agent data:', agentResponse);
       return agentResponse;
     } catch (error) {
-      console.error('Error fetching agent from backend:', error);
+      console.error('Error fetching agent:', error);
       throw error;
     }
   }
 
   async updateAgent(agentId: string, updateData: any): Promise<boolean> {
     try {
-      console.log('Updating agent via backend with data:', JSON.stringify(updateData, null, 2));
+      console.log('Updating agent with data:', JSON.stringify(updateData, null, 2));
       
-      const response = await fetch(`${this.baseUrl}/api/eleven-labs/agent/${agentId}`, {
+      const response = await fetch(`${this.baseUrl}/convai/agents/${agentId}`, {
         method: 'PATCH',
         headers: this.getHeaders(),
         body: JSON.stringify(updateData),
@@ -45,40 +50,15 @@ export class AgentApiService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('Agent update error via backend:', errorData);
+        console.error('Agent update error:', errorData);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const responseData = await response.json();
-      console.log('Agent updated successfully via backend:', responseData);
+      console.log('Agent updated successfully:', responseData);
       return true;
     } catch (error) {
-      console.error('Error updating agent via backend:', error);
-      throw error;
-    }
-  }
-
-  async createAgent(agentData: any): Promise<{ agent_id: string }> {
-    try {
-      console.log('Creating agent via backend with data:', JSON.stringify(agentData, null, 2));
-      
-      const response = await fetch(`${this.baseUrl}/api/eleven-labs/agent/create`, {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify(agentData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Agent creation error via backend:', errorData);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const responseData = await response.json();
-      console.log('Agent created successfully via backend:', responseData);
-      return responseData;
-    } catch (error) {
-      console.error('Error creating agent via backend:', error);
+      console.error('Error updating agent:', error);
       throw error;
     }
   }
