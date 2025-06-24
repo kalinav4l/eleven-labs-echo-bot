@@ -1,4 +1,4 @@
-// Fișierul: src/components/DashboardLayout.tsx
+// Fișier: src/components/DashboardLayout.tsx (Varianta finală și corectă)
 
 import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
@@ -12,6 +12,10 @@ interface DashboardLayoutProps {
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     const stored = localStorage.getItem('sidebar-open');
+    // Pe desktop, meniul este mereu deschis inițial
+    if (window.innerWidth >= 1024) {
+      return stored ? JSON.parse(stored) : true;
+    }
     return stored ? JSON.parse(stored) : false;
   });
 
@@ -20,35 +24,17 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   }, [sidebarOpen]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    // ---- AICI ESTE MODIFICAREA CHEIE ----
+    // Am schimbat 'min-h-screen' în 'h-screen' și am adăugat 'overflow-hidden'
+    // Asta blochează layout-ul la dimensiunea ecranului și previne scroll-ul întregii pagini.
+    <div className="h-screen bg-gray-50 flex overflow-hidden">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
-      {/* Containerul din dreapta, care va avea scroll intern */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col">
+        {/* Butonul de meniu pentru mobil, dacă ai nevoie de el în afara sidebar-ului */}
+        {/* Poți adăuga aici un header fix dacă dorești */}
         
-        {/* Top bar with menu toggle (for mobile) */}
-        <div className="lg:hidden flex items-center justify-between p-4 bg-white border-b border-gray-200">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSidebarOpen(true)}
-            className="text-gray-600 hover:text-gray-900"
-          >
-            <Menu className="h-6 w-6" />
-          </Button>
-        </div>
-        
-        {/* Toggle button for desktop */}
-        {!sidebarOpen && (
-          <Button
-            onClick={() => setSidebarOpen(true)}
-            className="fixed top-4 left-4 z-30 bg-[#0A5B4C] hover:bg-[#084a3f] text-white rounded-lg p-2 shadow-lg lg:block hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-        )}
-        
-        {/* Aici este cheia: main are overflow-y-auto */}
+        {/* Zona principală de conținut care va avea scroll */}
         <main className="flex-1 overflow-x-hidden overflow-y-auto">
           {children}
         </main>
