@@ -4,19 +4,25 @@ import { User, Settings, Volume2, Bot, MessageSquare, FileText, PhoneCall, X, Ba
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from "@/components/ui/button";
+
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
-const Sidebar = ({
-  isOpen,
-  onClose
-}: SidebarProps) => {
+
+const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const location = useLocation();
   const isMobile = useIsMobile();
-  return <>
+  
+  return (
+    <>
       {/* Mobile overlay */}
-      {isMobile && isOpen && <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 lg:hidden" onClick={onClose} />}
+      {isMobile && isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 lg:hidden"
+          onClick={onClose}
+        />
+      )}
       
       {/* Containerul principal al sidebar-ului */}
       {/* MODIFICAREA 1: Am adăugat 'flex flex-col' pentru a activa layout-ul flexibil pe verticală */}
@@ -31,57 +37,94 @@ const Sidebar = ({
             </Avatar>
             <span className="hidden sm:block">Kalina AI</span>
           </Link>
-          <button onClick={onClose} className="text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0A5B4C]/20 rounded-lg p-1 transition-colors lg:hidden">
+          <button 
+            onClick={onClose} 
+            className="text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0A5B4C]/20 rounded-lg p-1 transition-colors lg:hidden"
+          >
             <X className="h-6 w-6" />
           </button>
         </div>
         
         {/* Containerul cu link-urile de navigație */}
         {/* MODIFICAREA 2: Am adăugat clase pentru a ocupa spațiul și a centra conținutul */}
-        <div className="flex-1 flex flex-col justify-center px-[8px] py-[37px] my-[29px] mx-[32px]">
+        <div className="px-3 py-2 flex-1 flex flex-col justify-center">
           <div className="space-y-1">
-            <Link to="/account" className={`${location.pathname === '/account' ? 'text-[#0A5B4C] font-semibold border-r-2 border-[#0A5B4C]' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`} onClick={isMobile ? onClose : undefined}>
+            <Link 
+              to="/account" 
+              className={`${location.pathname === '/account' ? 'text-[#0A5B4C] font-semibold border-r-2 border-[#0A5B4C]' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`}
+              onClick={isMobile ? onClose : undefined}
+            >
               <User className="mr-3 h-5 w-5 flex-shrink-0" />
               <span className="truncate">home</span>
             </Link>
             
-            <Link to="/account/kalina-agents" className={`${location.pathname === '/account/kalina-agents' ? 'text-[#0A5B4C] font-semibold border-r-2 border-[#0A5B4C]' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`} onClick={isMobile ? onClose : undefined}>
+            <Link 
+              to="/account/kalina-agents" 
+              className={`${location.pathname === '/account/kalina-agents' ? 'text-[#0A5B4C] font-semibold border-r-2 border-[#0A5B4C]' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`}
+              onClick={isMobile ? onClose : undefined}
+            >
               <Bot className="mr-3 h-5 w-5 flex-shrink-0" />
               <span className="truncate">agents</span>
             </Link>
 
-            <Link to="/account/agent-consultant" className={`${location.pathname === '/account/agent-consultant' ? 'text-[#0A5B4C] font-semibold border-r-2 border-[#0A5B4C]' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`} onClick={isMobile ? onClose : undefined}>
+            <Link 
+              to="/account/agent-consultant" 
+              className={`${location.pathname === '/account/agent-consultant' ? 'text-[#0A5B4C] font-semibold border-r-2 border-[#0A5B4C]' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`}
+              onClick={isMobile ? onClose : undefined}
+            >
               <MessageSquare className="mr-3 h-5 w-5 flex-shrink-0" />
               <span className="truncate">create</span>
             </Link>
 
-            <Link to="/account/voices" className={`${location.pathname === '/account/voices' ? 'text-[#0A5B4C] font-semibold border-r-2 border-[#0A5B4C]' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`} onClick={isMobile ? onClose : undefined}>
+            <Link 
+              to="/account/voices" 
+              className={`${location.pathname === '/account/voices' ? 'text-[#0A5B4C] font-semibold border-r-2 border-[#0A5B4C]' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`}
+              onClick={isMobile ? onClose : undefined}
+            >
               <Volume2 className="mr-3 h-5 w-5 flex-shrink-0" />
               <span className="truncate">voice</span>
             </Link>
 
-            <Link to="/account/conversation-analytics" className={`${location.pathname === '/account/conversation-analytics' ? 'text-[#0A5B4C] font-semibold border-r-2 border-[#0A5B4C]' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`} onClick={isMobile ? onClose : undefined}>
+            <Link 
+              to="/account/conversation-analytics" 
+              className={`${location.pathname === '/account/conversation-analytics' ? 'text-[#0A5B4C] font-semibold border-r-2 border-[#0A5B4C]' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`}
+              onClick={isMobile ? onClose : undefined}
+            >
               <BarChart3 className="mr-3 h-5 w-5 flex-shrink-0" />
               <span className="truncate">analytics</span>
             </Link>
 
-            <Link to="/account/transcript" className={`${location.pathname === '/account/transcript' ? 'text-[#0A5B4C] font-semibold border-r-2 border-[#0A5B4C]' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`} onClick={isMobile ? onClose : undefined}>
+            <Link 
+              to="/account/transcript" 
+              className={`${location.pathname === '/account/transcript' ? 'text-[#0A5B4C] font-semibold border-r-2 border-[#0A5B4C]' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`}
+              onClick={isMobile ? onClose : undefined}
+            >
               <FileText className="mr-3 h-5 w-5 flex-shrink-0" />
               <span className="truncate">transcript</span>
             </Link>
 
-            <Link to="/account/outbound" className={`${location.pathname === '/account/outbound' ? 'text-[#0A5B4C] font-semibold border-r-2 border-[#0A5B4C]' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`} onClick={isMobile ? onClose : undefined}>
+            <Link 
+              to="/account/outbound" 
+              className={`${location.pathname === '/account/outbound' ? 'text-[#0A5B4C] font-semibold border-r-2 border-[#0A5B4C]' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`}
+              onClick={isMobile ? onClose : undefined}
+            >
               <PhoneCall className="mr-3 h-5 w-5 flex-shrink-0" />
               <span className="truncate">outbound</span>
             </Link>
 
-            <Link to="/account/settings" className={`${location.pathname === '/account/settings' ? 'text-[#0A5B4C] font-semibold border-r-2 border-[#0A5B4C]' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`} onClick={isMobile ? onClose : undefined}>
+            <Link 
+              to="/account/settings" 
+              className={`${location.pathname === '/account/settings' ? 'text-[#0A5B4C] font-semibold border-r-2 border-[#0A5B4C]' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`}
+              onClick={isMobile ? onClose : undefined}
+            >
               <Settings className="mr-3 h-5 w-5 flex-shrink-0" />
               <span className="truncate">setări</span>
             </Link>
           </div>
         </div>
       </div>
-    </>;
+    </>
+  );
 };
+
 export default Sidebar;
