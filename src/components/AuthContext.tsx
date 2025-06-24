@@ -10,8 +10,6 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, firstName?: string, lastName?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
-  updateEmail: (newEmail: string) => Promise<{ error: any }>;
-  updatePassword: (newPassword: string) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -57,11 +55,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
 
         if (event === 'SIGNED_IN') {
-          // Defer data fetching to prevent deadlocks and redirect to dashboard
+          // Defer data fetching to prevent deadlocks
           setTimeout(() => {
-            console.log('User signed in successfully, redirecting to dashboard');
-            window.location.href = '/account';
-          }, 100);
+            console.log('User signed in successfully');
+          }, 0);
         }
       }
     );
@@ -101,9 +98,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (data.user) {
         console.log('Sign in successful, redirecting...');
-        // Force page reload for clean state and redirect to dashboard
+        // Force page reload for clean state
         setTimeout(() => {
-          window.location.href = '/account';
+          window.location.href = '/';
         }, 100);
       }
 
@@ -121,7 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Clean up existing state first
       cleanupAuthState();
 
-      const redirectUrl = `${window.location.origin}/account`;
+      const redirectUrl = `${window.location.origin}/`;
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -161,24 +158,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateEmail = async (newEmail: string) => {
-    try {
-      const { error } = await supabase.auth.updateUser({ email: newEmail });
-      return { error };
-    } catch (err: any) {
-      return { error: err };
-    }
-  };
-
-  const updatePassword = async (newPassword: string) => {
-    try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      return { error };
-    } catch (err: any) {
-      return { error: err };
-    }
-  };
-
   const signOut = async () => {
     try {
       // Clean up auth state first
@@ -207,8 +186,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signUp,
     signOut,
-    updateEmail,
-    updatePassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
