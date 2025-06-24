@@ -95,71 +95,35 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
-  }
-  
-  /* Enhanced Liquid Glass Effects */
-  .liquid-glass {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 
-      0 8px 32px 0 rgba(31, 38, 135, 0.37),
-      inset 0 1px 0 rgba(255, 255, 255, 0.4),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .liquid-glass::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.3),
-      transparent
-    );
-    transition: left 0.5s;
-  }
-
-  .liquid-glass:hover::before {
-    left: 100%;
   }
   
   .glass-card {
-    @apply liquid-glass rounded-xl shadow-xl;
+    @apply bg-white/95 backdrop-blur-xl border border-gray-200/30 shadow-lg;
   }
   
   .glass-button {
-    @apply liquid-glass hover:bg-white/25 text-gray-800 font-medium backdrop-blur-xl border border-white/30 transition-all duration-300 hover:shadow-lg hover:scale-105;
+    @apply bg-gray-900 hover:bg-gray-800 text-white backdrop-blur-xl border border-gray-700 transition-all duration-200 hover:shadow-lg;
     min-height: 44px;
   }
   
   .glass-input {
-    @apply liquid-glass border border-white/30 focus:border-white/50 focus:ring-2 focus:ring-white/20 placeholder:text-gray-500;
+    @apply bg-white/90 backdrop-blur-xl border border-gray-200/50 focus:border-[#0A5B4C]/50 focus:ring-2 focus:ring-[#0A5B4C]/20;
     min-height: 44px;
   }
 
   .futuristic-card {
-    @apply liquid-glass rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105;
+    @apply bg-gray-50/80 backdrop-blur-xl border border-gray-200/50 rounded-xl shadow-sm hover:shadow-md transition-all duration-300;
   }
 
   .neon-accent {
-    box-shadow: 
-      0 0 20px rgba(10, 91, 76, 0.5),
-      0 0 40px rgba(10, 91, 76, 0.3),
-      0 0 60px rgba(10, 91, 76, 0.1);
+    box-shadow: 0 0 20px rgba(10, 91, 76, 0.3);
   }
 
-  /* Enhanced mobile support */
   @media (max-width: 768px) {
+    .liquid-glass {
+      @apply bg-white/95 backdrop-blur-xl border border-gray-200/40 shadow-lg;
+    }
+    
     body {
       font-size: 16px;
     }
@@ -168,18 +132,22 @@
       @apply px-4;
     }
 
+    /* Mobile-specific improvements for forms */
     .glass-input {
-      @apply text-base;
+      @apply text-base; /* Prevents zoom on iOS */
     }
     
+    /* Improved mobile button sizing */
     .mobile-button {
       @apply min-h-[48px] text-base;
     }
 
+    /* Better mobile spacing */
     .mobile-spacing {
       @apply space-y-4;
     }
 
+    /* Mobile-friendly card padding */
     .liquid-glass .card-content {
       @apply p-4;
     }
@@ -222,19 +190,10 @@
 
   @keyframes pulse-glow {
     0%, 100% {
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+      box-shadow: 0 0 5px rgba(10, 91, 76, 0.3);
     }
     50% {
-      box-shadow: 0 0 30px rgba(255, 255, 255, 0.6);
-    }
-  }
-
-  @keyframes liquid-morph {
-    0%, 100% {
-      border-radius: 1rem;
-    }
-    50% {
-      border-radius: 2rem;
+      box-shadow: 0 0 20px rgba(10, 91, 76, 0.6);
     }
   }
 
@@ -253,12 +212,11 @@
   .animate-pulse-glow {
     animation: pulse-glow 2s ease-in-out infinite;
   }
-
-  .animate-liquid-morph {
-    animation: liquid-morph 4s ease-in-out infinite;
+  
+  .liquid-glass {
+    @apply bg-white/90 backdrop-blur-xl border border-gray-200/30 shadow-xl;
   }
   
-  /* Enhanced mobile utilities */
   @media (max-width: 768px) {
     .mobile-padding {
       @apply px-4 py-3;
@@ -273,14 +231,17 @@
       min-height: 44px;
     }
 
+    /* Responsive grid for mobile */
     .mobile-grid {
       @apply grid-cols-1 gap-4;
     }
 
+    /* Mobile-friendly flex layouts */
     .mobile-flex {
       @apply flex-col space-y-3;
     }
 
+    /* Mobile form improvements */
     .mobile-form {
       @apply space-y-4;
     }
@@ -288,7 +249,7 @@
     .mobile-form input,
     .mobile-form textarea,
     .mobile-form select {
-      @apply text-base;
+      @apply text-base; /* Prevents zoom on iOS */
     }
   }
 
@@ -297,14 +258,5 @@
     .desktop-layout {
       @apply px-[240px] my-[60px];
     }
-  }
-
-  /* Global Liquid Glass theme */
-  .bg-gradient-glass {
-    background: linear-gradient(135deg, 
-      rgba(255, 255, 255, 0.1) 0%,
-      rgba(255, 255, 255, 0.05) 50%,
-      rgba(255, 255, 255, 0.1) 100%
-    );
   }
 }
