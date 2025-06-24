@@ -1,3 +1,5 @@
+// Fișierul: src/components/DashboardLayout.tsx
+
 import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import { Menu } from 'lucide-react';
@@ -21,9 +23,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
-      {/* --- MODIFICAREA ESTE AICI --- */}
-      <div className="flex-1 flex flex-col"> {/* <-- Am șters 'overflow-hidden' */}
-        {/* Top bar with menu toggle */}
+      {/* Containerul din dreapta, care va avea scroll intern */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        
+        {/* Top bar with menu toggle (for mobile) */}
         <div className="lg:hidden flex items-center justify-between p-4 bg-white border-b border-gray-200">
           <Button
             variant="ghost"
@@ -45,8 +48,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </Button>
         )}
         
-        {/* --- ȘI AICI --- */}
-        <main className="flex-1 overflow-x-hidden"> {/* <-- Am șters 'overflow-y-auto' */}
+        {/* Aici este cheia: main are overflow-y-auto */}
+        <main className="flex-1 overflow-x-hidden overflow-y-auto">
           {children}
         </main>
       </div>
