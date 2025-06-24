@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import { Menu } from 'lucide-react';
@@ -10,12 +9,10 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(() => {
-    // Check if we have a stored preference, default to false (closed)
     const stored = localStorage.getItem('sidebar-open');
     return stored ? JSON.parse(stored) : false;
   });
 
-  // Persist sidebar state to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('sidebar-open', JSON.stringify(sidebarOpen));
   }, [sidebarOpen]);
@@ -24,7 +21,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* --- MODIFICAREA ESTE AICI --- */}
+      <div className="flex-1 flex flex-col"> {/* <-- Am șters 'overflow-hidden' */}
         {/* Top bar with menu toggle */}
         <div className="lg:hidden flex items-center justify-between p-4 bg-white border-b border-gray-200">
           <Button
@@ -47,7 +45,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </Button>
         )}
         
-        <main className="flex-1 overflow-x-hidden overflow-y-auto">
+        {/* --- ȘI AICI --- */}
+        <main className="flex-1 overflow-x-hidden"> {/* <-- Am șters 'overflow-y-auto' */}
           {children}
         </main>
       </div>
