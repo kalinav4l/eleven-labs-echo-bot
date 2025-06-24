@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { User, Settings, Volume2, Bot, MessageSquare, FileText, PhoneCall, X, BarChart3, Menu } from 'lucide-react';
@@ -25,7 +24,11 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         />
       )}
       
-      <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 transition-transform duration-300 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:z-auto`}>
+      {/* Containerul principal al sidebar-ului */}
+      {/* MODIFICAREA 1: Am adăugat 'flex flex-col' pentru a activa layout-ul flexibil pe verticală */}
+      <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 transition-transform duration-300 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:z-auto flex flex-col`}>
+        
+        {/* Header-ul sidebar-ului (rămâne neschimbat) */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
           <Link to="/account" className="flex items-center text-xl font-bold text-gray-900" onClick={isMobile ? onClose : undefined}>
             <Avatar className="mr-2 w-8 h-8">
@@ -42,7 +45,9 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           </button>
         </div>
         
-        <div className="px-3 py-2 overflow-y-auto">
+        {/* Containerul cu link-urile de navigație */}
+        {/* MODIFICAREA 2: Am adăugat clase pentru a ocupa spațiul și a centra conținutul */}
+        <div className="px-3 py-2 flex-1 flex flex-col justify-center">
           <div className="space-y-1">
             <Link 
               to="/account" 
