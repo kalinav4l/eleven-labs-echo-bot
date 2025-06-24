@@ -25,7 +25,7 @@ const getEnvironmentConfig = (): EnvironmentConfig => {
     ELEVENLABS_API_KEY: import.meta.env.VITE_ELEVENLABS_API_KEY || 'sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873',
     ELEVENLABS_BASE_URL: import.meta.env.VITE_ELEVENLABS_BASE_URL || 'https://api.elevenlabs.io/v1',
     DEFAULT_MODEL_ID: import.meta.env.VITE_DEFAULT_MODEL_ID || 'eleven_flash_v2_5',
-    AGENT_PHONE_NUMBER_ID: import.meta.env.VITE_AGENT_PHONE_NUMBER_ID || 'phnum_01jxaeyg3feh3tmx39d4ky63rd',
+    AGENT_PHONE_NUMBER_ID: import.meta.env.VITE_AGENT_PHONE_NUMBER_ID || 'phnum_01jxfh7ntmf29bmvd0k9m4g4h6',
     APP_URL: import.meta.env.VITE_APP_URL || 'http://localhost:8080',
     NODE_ENV: import.meta.env.NODE_ENV || 'development',
   };
