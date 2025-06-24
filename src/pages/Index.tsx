@@ -98,7 +98,7 @@ const Transcript = () => {
       } else {
         throw new Error('Răspuns invalid de la AI. Se afișează textul brut.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error processing with AI:', error);
       toast({
         title: "Avertisment",
@@ -259,9 +259,15 @@ Agent AI: Un minut de convorbire cu un agent AI consumă 1.000 de credite. Deci 
                 <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                   <div className="flex items-center gap-3">
                     <FileAudio className="w-5 h-5 text-[#0A5B4C]" />
-                    <div className="flex-1">
-                      <p className="font-medium text-sm text-gray-900">{audioFile.name}</p>
-                      <p className="text-xs text-gray-500">{(audioFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                    {/* MODIFICARE: Am adăugat `min-w-0` pentru a permite trunchierea textului */}
+                    <div className="flex-1 min-w-0">
+                      {/* MODIFICARE: Am adăugat clasa `truncate` și un `title` pentru a afișa numele complet la hover */}
+                      <p className="font-medium text-sm text-gray-900 truncate" title={audioFile.name}>
+                        {audioFile.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {(audioFile.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
                     </div>
                   </div>
                   {audioUrl && (
