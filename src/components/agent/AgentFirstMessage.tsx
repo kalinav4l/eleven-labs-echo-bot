@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Languages } from 'lucide-react';
-import { AgentResponse } from '@/components/AgentResponse';
 import { LANGUAGE_MAP } from '@/constants/constants';
+import {AgentResponse} from "@/types/dtos.ts";
 
 interface AgentFirstMessageProps {
   agentData: AgentResponse;
@@ -66,7 +66,7 @@ const AgentFirstMessage: React.FC<AgentFirstMessageProps> = ({
               conversation_config: {
                 ...agentData.conversation_config,
                 agent: {
-                  ...agentData.conversation_config?.agent!,
+                  ...agentData.conversation_config?.agent,
                   first_message: e.target.value
                 }
               }

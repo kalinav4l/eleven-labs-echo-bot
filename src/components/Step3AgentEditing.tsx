@@ -15,15 +15,6 @@ interface Step3Props {
   onNextStep: () => void;
 }
 
-interface KnowledgeDocument {
-  id: string;
-  name: string;
-  content: string;
-  uploadedAt: Date;
-  type: 'existing' | 'manual';
-  elevenLabsId?: string;
-}
-
 export const Step3AgentEditing: React.FC<Step3Props> = ({
   agentIdForEdit,
   setAgentIdForEdit,
@@ -255,16 +246,6 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
                         ({doc.type === 'existing' ? 'existent' : doc.type})
                       </span>
                     </h4>
-                    <p className="text-sm text-muted-foreground">
-                      Adăugat: {doc.uploadedAt.toLocaleDateString()}
-                    </p>
-                    {doc.content && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {doc.content.length > 100 
-                          ? `${doc.content.substring(0, 100)}...` 
-                          : doc.content}
-                      </p>
-                    )}
                     {doc.elevenLabsId && (
                       <p className="text-xs text-blue-600 mt-1">
                         ElevenLabs ID: {doc.elevenLabsId}

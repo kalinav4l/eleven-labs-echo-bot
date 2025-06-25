@@ -7,9 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Languages, Loader2, Save } from 'lucide-react';
 import { LANGUAGE_MAP } from '@/constants/constants';
 import { toast } from '@/components/ui/use-toast';
-import { translationService } from '@/services/TranslationService';
-import { agentService } from '@/services/AgentService';
-import { AgentResponse } from '@/components/AgentResponse';
+import { TranslationController } from '../controllers/TranslationController';
+import { AgentResponse } from '../types/dtos';
+import { ElevenLabsController } from "@/controllers/ElevenLabsController.ts";
 
 interface MultilingualFirstMessageModalProps {
   isOpen: boolean;
@@ -79,30 +79,30 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
     }
 
     setIsSaving(true);
-    
+
     try {
       // Prepare the update payload with only language_presets changes
-      const updatePayload = agentService.prepareUpdatePayload(agentData, localMessages);
-      
+      const updatePayload = ElevenLabsController.prepareUpdatePayload(agentData, localMessages);
+
       // Make the API call to update the agent
-      await agentService.updateAgent(agentId, updatePayload);
-      
+      await ElevenLabsController.updateAgent(agentId, updatePayload);
+
       toast({
         title: "Succes!",
         description: "Mesajele multilinguale au fost salvate cu succes.",
       });
 
       // Fetch fresh agent data to get the updated state
-      const refreshedAgentData = await agentService.getAgent(agentId);
-      
+      const refreshedAgentData = await ElevenLabsController.getAgent(agentId);
+
       // Extract the updated multilingual messages
       const updatedMessages: Record<string, string> = {};
-      
+
       // Add default language message
       if (refreshedAgentData.conversation_config?.agent?.first_message) {
         updatedMessages[defaultLanguage] = refreshedAgentData.conversation_config.agent.first_message;
       }
-      
+
       // Add messages from language presets
       if (refreshedAgentData.conversation_config?.language_presets) {
         Object.entries(refreshedAgentData.conversation_config.language_presets).forEach(([languageId, preset]) => {
@@ -113,19 +113,21 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
           }
         });
       }
-      
+
+      console.log("updatedMessages = " + JSON.stringify(updatedMessages))
+
       // Update local state with refreshed data
       setLocalMessages(updatedMessages);
       setHasChanges(false);
-      
+
       // Update the parent component with the new messages
       onMessagesUpdate(updatedMessages);
-      
+
       // Refresh the agent data on the edit page
       if (onAgentDataRefresh) {
         onAgentDataRefresh(refreshedAgentData);
       }
-      
+
     } catch (error) {
       console.error('Error saving multilingual messages:', error);
       toast({
@@ -161,15 +163,23 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
     }
 
     setIsTranslating(true);
-    
+
     try {
-      const translations = await translationService.translateToMultipleLanguages(
-        defaultMessage,
-        defaultLanguage,
-        additionalLanguages
-      );
-      
+      // Use TranslationController.translateToMultipleLanguages for batch translation
+      const request = {
+        text: defaultMessage,
+        fromLanguage: defaultLanguage,
+        toLanguages: additionalLanguages,
+      };
+      const result = await TranslationController.translateToMultipleLanguages(request);
+      const translations: Record<string, string> = {};
+      if (result && Array.isArray(result.translations)) {
+          for (const t of result.translations) {
+              translations[t.targetLanguage] = t.translatedText;
+          }
+      }
       const updatedMessages = { ...localMessages, ...translations };
+      console.log("updatedMessages = " + JSON.stringify(updatedMessages))
       setLocalMessages(updatedMessages);
       setHasChanges(true);
       

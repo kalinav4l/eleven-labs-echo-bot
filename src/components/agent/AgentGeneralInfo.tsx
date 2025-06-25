@@ -6,10 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Copy } from 'lucide-react';
-import { AgentResponse } from '@/components/AgentResponse';
 import { VOICES, LANGUAGES } from '@/constants/constants';
 import { useClipboard } from '@/hooks/useClipboard';
 import CreativitySelector from '@/components/CreativitySelector';
+import {AgentResponse} from "@/types/dtos.ts";
 
 interface AgentGeneralInfoProps {
   agentData: AgentResponse;
@@ -25,9 +25,9 @@ const AgentGeneralInfo: React.FC<AgentGeneralInfoProps> = ({ agentData, setAgent
       conversation_config: {
         ...agentData.conversation_config,
         agent: {
-          ...agentData.conversation_config?.agent!,
+          ...agentData.conversation_config?.agent,
           prompt: {
-            ...agentData.conversation_config?.agent?.prompt!,
+            ...agentData.conversation_config?.agent?.prompt,
             temperature: temperature
           }
         }
@@ -73,7 +73,7 @@ const AgentGeneralInfo: React.FC<AgentGeneralInfoProps> = ({ agentData, setAgent
               conversation_config: {
                 ...agentData.conversation_config,
                 tts: {
-                  ...agentData.conversation_config?.tts!,
+                  ...agentData.conversation_config?.tts,
                   voice_id: value
                 }
               }
@@ -101,7 +101,7 @@ const AgentGeneralInfo: React.FC<AgentGeneralInfoProps> = ({ agentData, setAgent
               conversation_config: {
                 ...agentData.conversation_config,
                 agent: {
-                  ...agentData.conversation_config?.agent!,
+                  ...agentData.conversation_config?.agent,
                   language: value
                 }
               }

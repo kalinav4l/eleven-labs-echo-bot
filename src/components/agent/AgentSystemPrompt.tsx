@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { AgentResponse } from '@/components/AgentResponse';
+import {AgentResponse} from "@/types/dtos.ts";
 
 interface AgentSystemPromptProps {
   agentData: AgentResponse;
@@ -27,9 +27,9 @@ const AgentSystemPrompt: React.FC<AgentSystemPromptProps> = ({ agentData, setAge
               conversation_config: {
                 ...agentData.conversation_config,
                 agent: {
-                  ...agentData.conversation_config?.agent!,
+                  ...agentData.conversation_config?.agent,
                   prompt: {
-                    ...agentData.conversation_config?.agent?.prompt!,
+                    ...agentData.conversation_config?.agent?.prompt,
                     prompt: e.target.value
                   }
                 }

@@ -1,16 +1,8 @@
 
 import { useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
-import { knowledgeBaseService } from '../services/KnowledgeBaseService';
-
-interface KnowledgeDocumentLocal {
-  id: string;
-  name: string;
-  content?: string;
-  uploadedAt: Date;
-  type: 'text' | 'file' | 'existing';
-  elevenLabsId?: string;
-}
+import { KnowledgeBaseController } from '../controllers/KnowledgeBaseController';
+import { KnowledgeDocumentLocal} from "@/types/dtos.ts";
 
 interface UseDocumentCreationProps {
   setDocuments: React.Dispatch<React.SetStateAction<KnowledgeDocumentLocal[]>>;
@@ -19,13 +11,11 @@ interface UseDocumentCreationProps {
 export const useDocumentCreation = ({ setDocuments }: UseDocumentCreationProps) => {
   const addTextDocument = useCallback(async (name: string, content: string): Promise<boolean> => {
     try {
-      const response = await knowledgeBaseService.createTextDocument({ name, text: content });
+      const response = await KnowledgeBaseController.createTextDocument({ name, text: content });
       
       const newDoc: KnowledgeDocumentLocal = {
-        id: Date.now().toString(),
+        id: response.id,
         name,
-        content,
-        uploadedAt: new Date(),
         type: 'text',
         elevenLabsId: response.id
       };
@@ -52,12 +42,11 @@ export const useDocumentCreation = ({ setDocuments }: UseDocumentCreationProps) 
   const addFileDocument = useCallback(async (file: File): Promise<boolean> => {
     try {
       const fileName = file.name.split('.')[0];
-      const response = await knowledgeBaseService.uploadFileDocument(file, fileName);
+      const response = await KnowledgeBaseController.uploadFileDocument(fileName, file);
       
       const newDoc: KnowledgeDocumentLocal = {
-        id: Date.now().toString(),
-        name: file.name,
-        uploadedAt: new Date(),
+        id: response.id,
+        name: response.name,
         type: 'file',
         elevenLabsId: response.id
       };
