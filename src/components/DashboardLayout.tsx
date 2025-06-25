@@ -1,58 +1,27 @@
-// Fișierul: src/components/DashboardLayout.tsx
+import React from 'react';
+import Sidebar from './Sidebar'; // Presupunând că ai o componentă separată pentru meniu.
+                                // Numele poate fi altul, ex: HamburgerMenu.
 
-import React, { useState, useEffect } from 'react';
-import Sidebar from './Sidebar';
-import { Menu } from 'lucide-react';
-import { Button } from './ui/button';
+// Prop-ul 'children' este esențial. Aici va fi randată pagina ta,
+// cum ar fi componenta 'Transcript'.
 
-interface DashboardLayoutProps {
-  children: React.ReactNode;
-}
-
-const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const [sidebarOpen, setSidebarOpen] = useState(() => {
-    const stored = localStorage.getItem('sidebar-open');
-    return stored ? JSON.parse(stored) : false;
-  });
-
-  useEffect(() => {
-    localStorage.setItem('sidebar-open', JSON.stringify(sidebarOpen));
-  }, [sidebarOpen]);
-
+const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+    // 1. CONTAINERUL PRINCIPAL: Ocupă tot ecranul și folosește flex.
+    // Acesta este părintele care controlează tot.
+    <div className="flex h-screen overflow-hidden bg-gray-50">
       
-      {/* Containerul din dreapta, care va avea scroll intern */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        
-        {/* Top bar with menu toggle (for mobile) */}
-        <div className="lg:hidden flex items-center justify-between p-4 bg-white border-b border-gray-200">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSidebarOpen(true)}
-            className="text-gray-600 hover:text-gray-900"
-          >
-            <Menu className="h-6 w-6" />
-          </Button>
-        </div>
-        
-        {/* Toggle button for desktop */}
-        {!sidebarOpen && (
-          <Button
-            onClick={() => setSidebarOpen(true)}
-            className="fixed top-4 left-4 z-30 bg-[#0A5B4C] hover:bg-[#084a3f] text-white rounded-lg p-2 shadow-lg lg:block hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-        )}
-        
-        {/* Aici este cheia: main are overflow-y-auto */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto">
-          {children}
-        </main>
-      </div>
+      {/* 2. BARA LATERALĂ (SIDEBAR): Are lățime fixă și NU are scroll. */}
+      {/* Înlocuiește <Sidebar /> cu componenta ta reală de meniu dacă are alt nume. */}
+      <Sidebar />
+
+      {/* 3. CONȚINUTUL PRINCIPAL: Ocupă restul spațiului și ARE SCROLL. */}
+      {/* Clasa 'flex-1' îl face să se extindă, iar 'overflow-y-auto' îi dă scroll. */}
+      {/* Aici va fi randat automat tot ce pui între <DashboardLayout> și </DashboardLayout>. */}
+      <main className="flex-1 overflow-y-auto">
+        {children}
+      </main>
+
     </div>
   );
 };
