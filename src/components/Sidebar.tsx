@@ -62,14 +62,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               <span className="truncate">agents</span>
             </Link>
 
-            <Link 
-              to="/account/agent-consultant" 
-              className={`${location.pathname === '/account/agent-consultant' ? 'text-[#0A5B4C] font-semibold border-r-2 border-[#0A5B4C]' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`}
-              onClick={isMobile ? onClose : undefined}
-            >
-              <MessageSquare className="mr-3 h-5 w-5 flex-shrink-0" />
-              <span className="truncate">create</span>
-            </Link>
+           
 
             <Link 
               to="/account/voices" 
