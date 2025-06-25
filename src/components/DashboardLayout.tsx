@@ -24,10 +24,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         {children}
       </main>
 
-      {/* ========================================================= */}
-      {/* VERSIUNEA ADAUGATĂ AICI                                  */}
-      {/* ========================================================= */}
-      <div className="fixed bottom-4 right-5 z-50 text-xs text-gray-400 hover:text-gray-600 transition-colors">
+      {/* VERSIUNEA MUTATĂ ÎN STÂNGA */}
+      <div className="fixed bottom-4 left-5 z-50 text-xs text-gray-400 hover:text-gray-600 transition-colors">
         v1.0.0
       </div>
       
