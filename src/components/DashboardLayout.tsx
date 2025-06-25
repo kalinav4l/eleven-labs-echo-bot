@@ -23,6 +23,14 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       <main className="flex-1 overflow-y-auto">
         {children}
       </main>
+
+      {/* ========================================================= */}
+      {/* VERSIUNEA ADAUGATĂ AICI                                  */}
+      {/* ========================================================= */}
+      <div className="fixed bottom-4 right-5 z-50 text-xs text-gray-400 hover:text-gray-600 transition-colors">
+        v1.0.0
+      </div>
+      
     </div>
   );
 };
