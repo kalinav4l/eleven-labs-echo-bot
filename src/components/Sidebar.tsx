@@ -1,10 +1,12 @@
+// Locație: src/components/Sidebar.tsx
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { User, Settings, Bot, BarChart3, FileText, PhoneCall, X, ChevronsLeft } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from '@/hooks/use-mobile';
 
-// Proprietățile componentei, actualizate pentru a primi o funcție de setare a stării
+// Interfața actualizată pentru a primi funcția de setare a stării
 interface SidebarProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
@@ -14,7 +16,6 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   const location = useLocation();
   const isMobile = useIsMobile();
   
-  // Funcție locală pentru a închide meniul doar pe mobil
   const handleMobileClose = () => {
     if (isMobile) {
       setIsOpen(false);
@@ -23,7 +24,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
 
   return (
     <>
-      {/* Overlay pentru mobil - rămâne neschimbat */}
+      {/* Overlay pentru mobil */}
       {isMobile && isOpen && (
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 lg:hidden"
@@ -31,7 +32,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         />
       )}
       
-      {/* Containerul principal cu clase dinamice pentru lățime și tranziție */}
+      {/* Containerul principal al barei laterale cu toate clasele corecte */}
       <div className={`
         fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 
         transition-transform duration-300 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
@@ -39,7 +40,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         ${isOpen ? 'lg:w-64' : 'lg:w-20'}
         relative flex flex-col`}
       >
-        {/* Butonul de închidere/deschidere pentru DESKTOP */}
+        {/* Butonul de închidere/deschidere pentru Desktop */}
         <button 
           onClick={() => setIsOpen(!isOpen)}
           className="hidden lg:flex items-center justify-center absolute -right-3 top-8 w-6 h-6 bg-white border-2 border-gray-200 rounded-full text-gray-600 hover:bg-gray-100 transition-all z-50"
@@ -47,14 +48,17 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
           <ChevronsLeft className={`h-4 w-4 transition-transform duration-300 ${!isOpen && 'rotate-180'}`} />
         </button>
 
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+        {/* Header-ul barei laterale */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 h-16">
           <Link to="/account" className="flex items-center text-xl font-bold text-gray-900" onClick={handleMobileClose}>
             <Avatar className="mr-2 w-8 h-8">
               <AvatarImage alt="@shadcn" src="/lovable-uploads/f617a44e-5bc3-46cb-8232-3110c0cee83d.png" />
               <AvatarFallback>SC</AvatarFallback>
             </Avatar>
+            {/* Textul logo-ului se afișează doar dacă meniul e deschis */}
             {isOpen && <span className="transition-opacity duration-200">Kalina AI</span>}
           </Link>
+          {/* Butonul X pentru mobil */}
           <button 
             onClick={() => setIsOpen(false)} 
             className="text-gray-600 hover:text-gray-900 rounded-lg p-1 lg:hidden"
@@ -63,8 +67,10 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
           </button>
         </div>
         
-        <div className="px-3 py-2 overflow-y-auto">
+        {/* Navigarea principală */}
+        <div className="flex-1 px-3 py-2 overflow-y-auto">
           <div className="space-y-1">
+            {/* Toate link-urile sunt modificate pentru a ascunde textul când meniul e închis */}
             <Link 
               to="/account" 
               className={`${location.pathname === '/account' ? 'text-[#0A5B4C] font-semibold bg-green-50' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`}
