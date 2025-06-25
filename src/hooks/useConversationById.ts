@@ -7,49 +7,24 @@ export const useConversationById = (conversationId?: string) => {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['conversation', conversationId, user?.id],
+    queryKey: ['elevenlabs_conversation', conversationId, user?.id],
     queryFn: async () => {
       if (!user || !conversationId) return null;
       
-      console.log('Fetching conversation by ID:', conversationId);
+      console.log('Fetching ElevenLabs conversation details for ID:', conversationId);
       
-      // Fetch conversation details
-      const { data: conversation, error: convError } = await supabase
-        .from('conversations')
-        .select('*')
-        .eq('id', conversationId)
-        .eq('user_id', user.id)
-        .single();
+      // Call our Supabase edge function to get ElevenLabs data
+      const { data, error } = await supabase.functions.invoke('get-elevenlabs-conversation', {
+        body: { conversationId },
+      });
 
-      if (convError) {
-        console.error('Error fetching conversation:', convError);
-        throw convError;
+      if (error) {
+        console.error('Error calling ElevenLabs function:', error);
+        throw new Error(error.message || 'Failed to fetch conversation details');
       }
 
-      if (!conversation) {
-        throw new Error('Conversation not found');
-      }
-
-      // Fetch related call history using the conversation_id
-      const { data: callHistory, error: callError } = await supabase
-        .from('call_history')
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .eq('user_id', user.id)
-        .order('call_date', { ascending: false });
-
-      if (callError) {
-        console.error('Error fetching call history:', callError);
-        // Don't throw error for call history as it might not exist
-      }
-
-      console.log('Fetched conversation:', conversation);
-      console.log('Fetched call history for conversation:', callHistory);
-
-      return {
-        conversation,
-        callHistory: callHistory || []
-      };
+      console.log('Successfully fetched conversation data from ElevenLabs:', data);
+      return data;
     },
     enabled: !!user && !!conversationId,
   });

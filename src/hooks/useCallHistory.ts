@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
@@ -15,6 +14,7 @@ export interface CallHistoryRecord {
   agent_id?: string;
   language?: string;
   conversation_id?: string;
+  elevenlabs_history_id?: string; // Added this field for ElevenLabs integration
 }
 
 export const useCallHistory = () => {
@@ -28,10 +28,10 @@ export const useCallHistory = () => {
       
       console.log('Fetching call history for user:', user.id);
       
+      // Simple query that will be automatically filtered by RLS
       const { data, error } = await supabase
         .from('call_history')
         .select('*')
-        .eq('user_id', user.id)
         .order('call_date', { ascending: false });
 
       if (error) {
@@ -55,7 +55,8 @@ export const useCallHistory = () => {
           cost_usd: record.cost_usd ? Number(record.cost_usd) : 0,
           agent_id: record.agent_id,
           language: record.language,
-          conversation_id: record.conversation_id
+          conversation_id: record.conversation_id,
+          elevenlabs_history_id: record.elevenlabs_history_id // Include ElevenLabs ID
         };
       }) || [];
 
@@ -74,8 +75,8 @@ export const useCallHistory = () => {
       const recordsToInsert = callResults.map((result) => {
         console.log('Processing call result:', result);
         
-        // Handle different response structures and extract conversation_id
-        let cleanConversations, callInfo, phoneNumbers, costInfo, status, summary, timestamps, language, conversationId;
+        // Handle different response structures and extract conversation_id and elevenlabs_history_id
+        let cleanConversations, callInfo, phoneNumbers, costInfo, status, summary, timestamps, language, conversationId, elevenLabsHistoryId;
         
         if (result?.clean_conversations) {
           cleanConversations = result.clean_conversations;
@@ -86,12 +87,17 @@ export const useCallHistory = () => {
           summary = cleanConversations?.summary ?? '';
           timestamps = cleanConversations?.timestamps ?? '';
           language = callInfo?.language ?? 'ro';
-          // Extract conversation_id from multiple possible locations
           conversationId = result.conversation_id || 
                           cleanConversations?.conversation_id || 
                           callInfo?.conversation_id || 
                           result?.metadata?.conversation_id ||
                           null;
+          // Extract ElevenLabs history ID
+          elevenLabsHistoryId = result.elevenlabs_history_id || 
+                               cleanConversations?.elevenlabs_history_id || 
+                               callInfo?.elevenlabs_history_id || 
+                               result?.history_item_id ||
+                               null;
         } else {
           // Fallback for different response structure
           callInfo = result?.call_info ?? {};
@@ -101,11 +107,14 @@ export const useCallHistory = () => {
           summary = result?.summary ?? '';
           timestamps = result?.timestamps ?? '';
           language = callInfo?.language ?? 'ro';
-          // Extract conversation_id from multiple possible locations
           conversationId = result.conversation_id || 
                           callInfo?.conversation_id || 
                           result?.metadata?.conversation_id ||
                           null;
+          elevenLabsHistoryId = result.elevenlabs_history_id || 
+                               callInfo?.elevenlabs_history_id || 
+                               result?.history_item_id ||
+                               null;
         }
         
         const phoneNumber = phoneNumbers?.user ?? phoneNumbers?.to ?? result?.phone_number ?? '';
@@ -137,10 +146,11 @@ export const useCallHistory = () => {
           cost_usd: costValue,
           language: language,
           timestamps: timestamps,
-          conversation_id: conversationId // Include conversation_id in the record
+          conversation_id: conversationId,
+          elevenlabs_history_id: elevenLabsHistoryId // Include ElevenLabs history ID
         };
 
-        console.log('Record to insert with conversation_id:', record);
+        console.log('Record to insert with ElevenLabs history ID:', record);
         return record;
       });
 
@@ -154,7 +164,7 @@ export const useCallHistory = () => {
         throw error;
       }
       
-      console.log('Successfully inserted call history with conversation_id:', data);
+      console.log('Successfully inserted call history with ElevenLabs history ID:', data);
       return data;
     },
     onSuccess: () => {

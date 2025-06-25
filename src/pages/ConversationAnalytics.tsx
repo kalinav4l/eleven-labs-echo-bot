@@ -22,20 +22,24 @@ const ConversationAnalytics = () => {
   const [isPlaying, setIsPlaying] = useState(false);
 
   const { callHistory, isLoading: callHistoryLoading } = useCallHistory();
-  const { data: conversationData, isLoading: conversationLoading, error: conversationError } = useConversationById(conversationId);
+  const { data: elevenLabsData, isLoading: conversationLoading, error: conversationError } = useConversationById(conversationId);
 
-  // Auto-select conversation if ID provided in URL - funcționează exact ca la ElevenLabs
+  // Auto-select conversation if ID provided in URL
   useEffect(() => {
-    if (conversationId && conversationData?.callHistory?.length > 0) {
-      setSelectedCall(conversationData.callHistory[0]);
-      console.log('Auto-selected conversation from URL (ElevenLabs style):', conversationId);
+    if (conversationId && elevenLabsData) {
+      // Find the corresponding call in our history
+      const correspondingCall = callHistory.find(call => call.elevenlabs_history_id === conversationId);
+      if (correspondingCall) {
+        setSelectedCall(correspondingCall);
+      }
+      console.log('Auto-selected conversation from ElevenLabs:', conversationId);
     }
-  }, [conversationId, conversationData]);
+  }, [conversationId, elevenLabsData, callHistory]);
 
   // Handle error cases
   useEffect(() => {
     if (conversationError) {
-      console.error('Conversation error:', conversationError);
+      console.error('ElevenLabs conversation error:', conversationError);
       toast({
         title: "Eroare",
         description: "Conversația nu a fost găsită sau nu aveți acces la ea.",
@@ -45,22 +49,46 @@ const ConversationAnalytics = () => {
     }
   }, [conversationError, navigate]);
 
-  const convertCallToConversation = (call) => {
+  const handleCallClick = (call) => {
+    if (call.elevenlabs_history_id) {
+      // Navigate to the specific conversation using ElevenLabs history ID
+      navigate(`/account/conversation-analytics/${call.elevenlabs_history_id}`);
+    } else {
+      // Fallback: just select the call without navigation
+      setSelectedCall(call);
+    }
+  };
+
+  const convertElevenLabsToConversation = (call, elevenLabsData) => {
     let transcript = [];
     
     try {
-      const parsedDialog = JSON.parse(call.dialog_json);
-      const cleanConversations = parsedDialog?.clean_conversations;
-      const dialog = cleanConversations?.dialog || [];
-      
-      if (Array.isArray(dialog)) {
-        transcript = dialog.map((item, index) => ({
-          speaker: item.speaker === 'user' ? 'Client' : 'Kalina',
-          text: item.message || '',
+      // Parse transcript from ElevenLabs data or fallback to our stored data
+      if (elevenLabsData?.text) {
+        // If ElevenLabs provides structured dialogue, use it
+        const lines = elevenLabsData.text.split('\n').filter(line => line.trim());
+        transcript = lines.map((line, index) => ({
+          speaker: index % 2 === 0 ? 'Kalina' : 'Client',
+          text: line,
           timestamp: `0:${(index * 10).toString().padStart(2, '0')}`,
           time: index * 10,
           sentiment: Math.random() > 0.5 ? 'positive' : 'neutral'
         }));
+      } else {
+        // Fallback to our stored dialog_json
+        const parsedDialog = JSON.parse(call.dialog_json);
+        const cleanConversations = parsedDialog?.clean_conversations;
+        const dialog = cleanConversations?.dialog || [];
+        
+        if (Array.isArray(dialog)) {
+          transcript = dialog.map((item, index) => ({
+            speaker: item.speaker === 'user' ? 'Client' : 'Kalina',
+            text: item.message || '',
+            timestamp: `0:${(index * 10).toString().padStart(2, '0')}`,
+            time: index * 10,
+            sentiment: Math.random() > 0.5 ? 'positive' : 'neutral'
+          }));
+        }
       }
     } catch (error) {
       console.error('Error parsing dialog:', error);
@@ -69,18 +97,17 @@ const ConversationAnalytics = () => {
     return {
       ...call,
       transcript,
-      duration: '57s',
+      duration: elevenLabsData?.date_unix ? 
+        `${Math.floor((Date.now() / 1000 - elevenLabsData.date_unix) / 60)}m` : 
+        '57s',
       cost: call.cost_usd || 0,
       sentiment: 'positive',
-      satisfaction: Math.floor(Math.random() * 20) + 80
+      satisfaction: Math.floor(Math.random() * 20) + 80,
+      elevenLabsData // Include the raw ElevenLabs data
     };
   };
 
-  // Use conversation-specific data if available, otherwise use all call history
-  const dataSource = conversationId && conversationData ? conversationData.callHistory : callHistory;
-  const isLoading = conversationId ? conversationLoading : callHistoryLoading;
-
-  const filteredCalls = dataSource.filter(call => {
+  const filteredCalls = callHistory.filter(call => {
     const matchesSearch = call.phone_number.includes(searchTerm) || 
                          call.contact_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (call.summary && call.summary.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -107,7 +134,9 @@ const ConversationAnalytics = () => {
     };
   };
 
-  const selectedConversation = selectedCall ? convertCallToConversation(selectedCall) : null;
+  const selectedConversation = selectedCall ? convertElevenLabsToConversation(selectedCall, elevenLabsData) : null;
+
+  const isLoading = callHistoryLoading || (conversationId && conversationLoading);
 
   if (isLoading) {
     return (
@@ -149,8 +178,8 @@ const ConversationAnalytics = () => {
                     {conversationId ? 'Analiza Conversației' : 'Analytics Hub'}
                   </h1>
                   <p className="text-gray-600">
-                    {conversationId && conversationData ? 
-                      `Conversație cu ${conversationData.conversation.agent_name}` :
+                    {conversationId && elevenLabsData ? 
+                      `Conversație ElevenLabs ID: ${conversationId}` :
                       'Real-time conversation insights'
                     }
                   </p>
@@ -209,13 +238,16 @@ const ConversationAnalytics = () => {
             <div className="overflow-y-auto h-full">
               {filteredCalls.map((call, index) => {
                 const dateInfo = formatDate(call.call_date);
+                const isSelected = selectedCall?.id === call.id || 
+                                 (conversationId && call.elevenlabs_history_id === conversationId);
+                
                 return (
                   <div 
                     key={call.id} 
                     className={`p-4 border-b border-gray-100/50 cursor-pointer hover:bg-white/70 transition-all duration-200 ${
-                      selectedCall?.id === call.id ? 'bg-[#0A5B4C]/5 border-l-4 border-l-[#0A5B4C]' : ''
+                      isSelected ? 'bg-[#0A5B4C]/5 border-l-4 border-l-[#0A5B4C]' : ''
                     }`}
-                    onClick={() => setSelectedCall(call)}
+                    onClick={() => handleCallClick(call)}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-3">
@@ -225,6 +257,9 @@ const ConversationAnalytics = () => {
                         <div>
                           <div className="font-semibold text-gray-900">{call.phone_number}</div>
                           <div className="text-sm text-gray-600">{dateInfo.date} • {dateInfo.time}</div>
+                          {call.elevenlabs_history_id && (
+                            <div className="text-xs text-blue-600">ElevenLabs: {call.elevenlabs_history_id}</div>
+                          )}
                         </div>
                       </div>
                       <Badge className={`${getStatusColor(call.call_status)} border`}>
@@ -252,9 +287,7 @@ const ConversationAnalytics = () => {
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Phone className="w-8 h-8 text-gray-400" />
                   </div>
-                  <p className="text-gray-500">
-                    {conversationId ? 'No calls found for this conversation' : 'No conversations found'}
-                  </p>
+                  <p className="text-gray-500">No conversations found</p>
                 </div>
               )}
             </div>
@@ -270,7 +303,10 @@ const ConversationAnalytics = () => {
                     <h3 className="text-lg font-semibold text-gray-900">
                       Conversation Analysis
                     </h3>
-                    <Button variant="ghost" size="sm" onClick={() => setSelectedCall(null)}>
+                    <Button variant="ghost" size="sm" onClick={() => {
+                      setSelectedCall(null);
+                      if (conversationId) navigate('/account/conversation-analytics');
+                    }}>
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
@@ -290,6 +326,20 @@ const ConversationAnalytics = () => {
                       <div className="text-xs text-gray-600">Sentiment</div>
                     </div>
                   </div>
+
+                  {/* ElevenLabs Data Display */}
+                  {elevenLabsData && (
+                    <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="text-sm font-medium text-blue-900 mb-2">ElevenLabs Data</div>
+                      <div className="text-xs text-blue-700 space-y-1">
+                        {elevenLabsData.history_item_id && <div>ID: {elevenLabsData.history_item_id}</div>}
+                        {elevenLabsData.date_unix && <div>Date: {new Date(elevenLabsData.date_unix * 1000).toLocaleString()}</div>}
+                        {elevenLabsData.character_count_change_from && (
+                          <div>Characters: {elevenLabsData.character_count_change_from} → {elevenLabsData.character_count_change_to}</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Audio Waveform - ElevenLabs style */}
@@ -449,10 +499,10 @@ const ConversationAnalytics = () => {
                     <Activity className="w-10 h-10 text-white" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {conversationId ? 'Loading Conversation...' : 'Select a Conversation'}
+                    Select a Conversation
                   </h3>
                   <p className="text-gray-600">
-                    {conversationId ? 'Please wait while we load the conversation details' : 'Choose a call from the list to view detailed analytics'}
+                    Choose a call from the list to view detailed analytics powered by ElevenLabs
                   </p>
                 </div>
               </div>
