@@ -3,10 +3,13 @@ import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, Download, FileAudio, MessageSquare, User, Bot, Loader2, Play } from 'lucide-react';
+import { Upload, Download, FileAudio, MessageSquare, User, Bot, Loader2, Play, Save } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import TranscriptHistory from '@/components/transcript/TranscriptHistory';
+import SaveTranscriptDialog from '@/components/transcript/SaveTranscriptDialog';
+import { useTranscripts } from '@/hooks/useTranscripts';
 
 interface TranscriptEntry {
   speaker: string;
@@ -22,7 +25,11 @@ const Transcript = () => {
   const [transcriptEntries, setTranscriptEntries] = useState<TranscriptEntry[]>([]);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>('');
+  const [rawTranscriptText, setRawTranscriptText] = useState<string>('');
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  
+  const { saveTranscript, isSaving, exportToSRT, exportToTXT, exportToJSON } = useTranscripts();
 
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -79,6 +86,8 @@ const Transcript = () => {
       });
       return;
     }
+    
+    setRawTranscriptText(rawText);
     
     try {
       toast({ title: "Analiză AI", description: "Transcriptul este procesat pentru a identifica vorbitorii..." });
@@ -225,6 +234,34 @@ Agent AI: Un minut de convorbire cu un agent AI consumă 1.000 de credite. Deci 
     await processAndSetTranscript(demoText);
   };
 
+  const handleSaveTranscript = () => {
+    if (transcriptEntries.length === 0) {
+      toast({
+        title: "Eroare",
+        description: "Nu există transcript pentru salvare.",
+        variant: "destructive"
+      });
+      return;
+    }
+    setShowSaveDialog(true);
+  };
+
+  const handleSaveConfirm = (data: any) => {
+    saveTranscript(data);
+    setShowSaveDialog(false);
+  };
+
+  const handleLoadTranscript = (entries: TranscriptEntry[]) => {
+    setTranscriptEntries(entries);
+    setAudioFile(null);
+    setAudioUrl('');
+    setRawTranscriptText('');
+    toast({
+      title: "Transcript încărcat",
+      description: "Transcriptul a fost încărcat cu succes.",
+    });
+  };
+
   return (
     <DashboardLayout>
       <div className="p-6 space-y-8">
@@ -259,9 +296,7 @@ Agent AI: Un minut de convorbire cu un agent AI consumă 1.000 de credite. Deci 
                 <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                   <div className="flex items-center gap-3">
                     <FileAudio className="w-5 h-5 text-[#0A5B4C]" />
-                    {/* MODIFICARE: Am adăugat `min-w-0` pentru a permite trunchierea textului */}
                     <div className="flex-1 min-w-0">
-                      {/* MODIFICARE: Am adăugat clasa `truncate` și un `title` pentru a afișa numele complet la hover */}
                       <p className="font-medium text-sm text-gray-900 truncate" title={audioFile.name}>
                         {audioFile.name}
                       </p>
@@ -304,10 +339,16 @@ Agent AI: Un minut de convorbire cu un agent AI consumă 1.000 de credite. Deci 
                   Dialog ({transcriptEntries.length} replici)
                 </CardTitle>
                 {transcriptEntries.length > 0 && (
-                  <Button onClick={handleDownloadSRT} variant="outline" size="sm" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
-                    <Download className="w-4 h-4 mr-2" />
-                    Export SRT
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button onClick={handleSaveTranscript} variant="outline" size="sm" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
+                      <Save className="w-4 h-4 mr-2" />
+                      Salvează
+                    </Button>
+                    <Button onClick={() => exportToSRT(transcriptEntries, audioFile?.name?.split('.')[0] || 'transcript')} variant="outline" size="sm" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
+                      <Download className="w-4 h-4 mr-2" />
+                      Export SRT
+                    </Button>
+                  </div>
                 )}
               </div>
             </CardHeader>
@@ -340,6 +381,22 @@ Agent AI: Un minut de convorbire cu un agent AI consumă 1.000 de credite. Deci 
             </CardContent>
           </Card>
         </div>
+
+        {/* Istoric Transcrieri */}
+        <TranscriptHistory onLoadTranscript={handleLoadTranscript} />
+
+        {/* Dialog pentru salvare */}
+        <SaveTranscriptDialog
+          open={showSaveDialog}
+          onOpenChange={setShowSaveDialog}
+          transcriptEntries={transcriptEntries}
+          originalFilename={audioFile?.name}
+          rawText={rawTranscriptText}
+          durationSeconds={audioFile ? Math.floor(audioFile.size / 44100) : undefined}
+          fileSizeMb={audioFile ? Number((audioFile.size / 1024 / 1024).toFixed(2)) : undefined}
+          onSave={handleSaveConfirm}
+          isSaving={isSaving}
+        />
       </div>
     </DashboardLayout>
   );

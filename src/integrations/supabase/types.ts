@@ -508,6 +508,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_transcripts: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          file_size_mb: number | null
+          id: string
+          original_filename: string | null
+          raw_text: string | null
+          title: string
+          transcript_entries: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          file_size_mb?: number | null
+          id?: string
+          original_filename?: string | null
+          raw_text?: string | null
+          title: string
+          transcript_entries: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          file_size_mb?: number | null
+          id?: string
+          original_filename?: string | null
+          raw_text?: string | null
+          title?: string
+          transcript_entries?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
