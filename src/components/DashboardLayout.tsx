@@ -1,37 +1,28 @@
-// Locație: src/components/DashboardLayout.tsx
-
 import React from 'react';
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import Sidebar from './Sidebar'; // Continuăm să folosim Sidebar pentru conținut
+import Sidebar from './Sidebar'; // Presupunând că ai o componentă separată pentru meniu.
+                                // Numele poate fi altul, ex: HamburgerMenu.
+
+// Prop-ul 'children' este esențial. Aici va fi randată pagina ta,
+// cum ar fi componenta 'Transcript'.
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    // PanelGroup este containerul principal care gestionează redimensionarea
-    <PanelGroup direction="horizontal" className="h-screen w-screen bg-gray-50">
+    // 1. CONTAINERUL PRINCIPAL: Ocupă tot ecranul și folosește flex.
+    // Acesta este părintele care controlează tot.
+    <div className="flex h-screen overflow-hidden bg-gray-50">
       
-      {/* PANoul 1: Bara Laterală (Sidebar) */}
-      {/* Aici setăm dimensiunea implicită și minimă/maximă a barei laterale. */}
-      {/* Dimensiunile sunt în procente. */}
-      <Panel defaultSize={20} minSize={15} maxSize={25}>
-        {/* Componenta Sidebar este plasată în interiorul primului panou. */}
-        {/* Vom simplifica Sidebar.tsx în pasul următor. */}
-        <Sidebar />
-      </Panel>
+      {/* 2. BARA LATERALĂ (SIDEBAR): Are lățime fixă și NU are scroll. */}
+      {/* Înlocuiește <Sidebar /> cu componenta ta reală de meniu dacă are alt nume. */}
+      <Sidebar />
 
-      {/* Mânerul de Redimensionare */}
-      {/* Acesta este elementul vizibil pe care utilizatorul îl va trage. */}
-      <PanelResizeHandle className="w-[4px] bg-gray-200 hover:bg-green-600 active:bg-green-700 transition-colors duration-200" />
-      
-      {/* PANoul 2: Conținutul Principal */}
-      {/* Acest panou va ocupa restul spațiului și va avea scroll. */}
-      <Panel className="overflow-y-auto">
-        {/* plasăm 'children' (pagina ta) în interiorul celui de-al doilea panou */}
-        <main className="h-full">
-            {children}
-        </main>
-      </Panel>
+      {/* 3. CONȚINUTUL PRINCIPAL: Ocupă restul spațiului și ARE SCROLL. */}
+      {/* Clasa 'flex-1' îl face să se extindă, iar 'overflow-y-auto' îi dă scroll. */}
+      {/* Aici va fi randat automat tot ce pui între <DashboardLayout> și </DashboardLayout>. */}
+      <main className="flex-1 overflow-y-auto">
+        {children}
+      </main>
 
-    </PanelGroup>
+    </div>
   );
 };
 
