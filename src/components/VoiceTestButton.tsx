@@ -1,9 +1,9 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff } from 'lucide-react';
 import { useConversation } from '@11labs/react';
 import { toast } from '@/components/ui/use-toast';
+import { useConversationTracking } from '@/hooks/useConversationTracking';
 
 interface Message {
   id: string;
@@ -14,23 +14,30 @@ interface Message {
 
 interface VoiceTestButtonProps {
   agentId: string;
+  agentName?: string;
   onSpeakingChange?: (isSpeaking: boolean) => void;
   onTranscription?: (message: Message) => void;
 }
 
 const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({ 
   agentId, 
+  agentName = 'Kalina Agent',
   onSpeakingChange, 
   onTranscription 
 }) => {
   const [isActive, setIsActive] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [conversationStart, setConversationStart] = useState<Date | null>(null);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const { saveConversation, updateConversation } = useConversationTracking();
 
   const conversation = useConversation({
     onConnect: () => {
       console.log('Connected to ElevenLabs agent');
       setIsConnecting(false);
       setIsActive(true);
+      setConversationStart(new Date());
       toast({
         title: "Conectat!",
         description: "Poți vorbi acum cu agentul",
@@ -38,6 +45,7 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
     },
     onDisconnect: () => {
       console.log('Disconnected from ElevenLabs agent');
+      handleConversationEnd();
       setIsActive(false);
       setIsConnecting(false);
       toast({
@@ -48,7 +56,6 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
     onMessage: (message) => {
       console.log('Message received:', message);
       
-      // Handle the actual ElevenLabs message structure: { message: string; source: Role; }
       if (message.message && typeof message.message === 'string') {
         const transcriptionMessage: Message = {
           id: Date.now().toString() + '_' + message.source,
@@ -58,6 +65,7 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
         };
         
         console.log('Adding transcription:', transcriptionMessage);
+        setMessages(prev => [...prev, transcriptionMessage]);
         onTranscription?.(transcriptionMessage);
       }
     },
@@ -72,6 +80,43 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
       });
     }
   });
+
+  const handleConversationEnd = async () => {
+    if (conversationStart && messages.length > 0) {
+      const duration = Math.floor((Date.now() - conversationStart.getTime()) / 1000);
+      
+      try {
+        // Save the conversation to Analytics Hub
+        const conversationData = {
+          agent_id: agentId,
+          agent_name: agentName,
+          phone_number: 'Voice Chat',
+          contact_name: `Conversație cu ${agentName}`,
+          summary: `Conversație vocală cu ${agentName} - ${messages.length} mesaje`,
+          duration_seconds: duration,
+          cost_usd: 0.05 * (duration / 60), // Estimate cost
+          transcript: messages,
+          status: 'success' as const,
+          conversation_id: currentConversationId,
+          elevenlabs_history_id: currentConversationId // This would come from ElevenLabs response
+        };
+
+        await saveConversation.mutateAsync(conversationData);
+        
+        toast({
+          title: "Conversație salvată",
+          description: "Conversația a fost salvată în Analytics Hub",
+        });
+      } catch (error) {
+        console.error('Error saving conversation:', error);
+      }
+    }
+    
+    // Reset state
+    setMessages([]);
+    setConversationStart(null);
+    setCurrentConversationId(null);
+  };
 
   // Monitor speaking state
   useEffect(() => {
@@ -105,7 +150,8 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
         await navigator.mediaDevices.getUserMedia({ audio: true });
         
         // Start session with agent ID
-        await conversation.startSession({ agentId });
+        const sessionId = await conversation.startSession({ agentId });
+        setCurrentConversationId(sessionId);
       } catch (error) {
         console.error('Error starting conversation:', error);
         setIsConnecting(false);
@@ -180,6 +226,15 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
         <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2">
           <div className="px-4 py-2 bg-black/90 text-white text-xs rounded-full backdrop-blur-sm">
             {conversation.isSpeaking ? 'Agentul vorbește...' : 'Ascultă...'}
+          </div>
+        </div>
+      )}
+
+      {/* Conversation counter */}
+      {isActive && messages.length > 0 && (
+        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2">
+          <div className="px-3 py-1 bg-blue-500 text-white text-xs rounded-full">
+            {messages.length} mesaje
           </div>
         </div>
       )}
