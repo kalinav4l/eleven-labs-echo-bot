@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -12,17 +11,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Play, Pause, Download, Calendar, Filter, X, Clock, Phone, User, Activity, Zap, TrendingUp, Headphones, Volume2, ArrowLeft } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-
 const ConversationAnalytics = () => {
-  const { conversationId } = useParams();
+  const {
+    conversationId
+  } = useParams();
   const navigate = useNavigate();
   const [selectedCall, setSelectedCall] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAgent, setSelectedAgent] = useState('all');
   const [isPlaying, setIsPlaying] = useState(false);
-
-  const { callHistory, isLoading: callHistoryLoading } = useCallHistory();
-  const { data: elevenLabsData, isLoading: conversationLoading, error: conversationError } = useConversationById(conversationId);
+  const {
+    callHistory,
+    isLoading: callHistoryLoading
+  } = useCallHistory();
+  const {
+    data: elevenLabsData,
+    isLoading: conversationLoading,
+    error: conversationError
+  } = useConversationById(conversationId);
 
   // Auto-select conversation if ID provided in URL
   useEffect(() => {
@@ -48,8 +54,7 @@ const ConversationAnalytics = () => {
       navigate('/account/conversation-analytics');
     }
   }, [conversationError, navigate]);
-
-  const handleCallClick = (call) => {
+  const handleCallClick = call => {
     if (call.elevenlabs_history_id) {
       // Navigate to the specific conversation using ElevenLabs history ID
       navigate(`/account/conversation-analytics/${call.elevenlabs_history_id}`);
@@ -58,10 +63,8 @@ const ConversationAnalytics = () => {
       setSelectedCall(call);
     }
   };
-
   const convertElevenLabsToConversation = (call, elevenLabsData) => {
     let transcript = [];
-    
     try {
       // Parse transcript from ElevenLabs data or fallback to our stored data
       if (elevenLabsData?.text) {
@@ -79,7 +82,6 @@ const ConversationAnalytics = () => {
         const parsedDialog = JSON.parse(call.dialog_json);
         const cleanConversations = parsedDialog?.clean_conversations;
         const dialog = cleanConversations?.dialog || [];
-        
         if (Array.isArray(dialog)) {
           transcript = dialog.map((item, index) => ({
             speaker: item.speaker === 'user' ? 'Client' : 'Kalina',
@@ -93,29 +95,21 @@ const ConversationAnalytics = () => {
     } catch (error) {
       console.error('Error parsing dialog:', error);
     }
-
     return {
       ...call,
       transcript,
-      duration: elevenLabsData?.date_unix ? 
-        `${Math.floor((Date.now() / 1000 - elevenLabsData.date_unix) / 60)}m` : 
-        '57s',
+      duration: elevenLabsData?.date_unix ? `${Math.floor((Date.now() / 1000 - elevenLabsData.date_unix) / 60)}m` : '57s',
       cost: call.cost_usd || 0,
       sentiment: 'positive',
       satisfaction: Math.floor(Math.random() * 20) + 80,
       elevenLabsData // Include the raw ElevenLabs data
     };
   };
-
   const filteredCalls = callHistory.filter(call => {
-    const matchesSearch = call.phone_number.includes(searchTerm) || 
-                         call.contact_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (call.summary && call.summary.toLowerCase().includes(searchTerm.toLowerCase()));
-    
+    const matchesSearch = call.phone_number.includes(searchTerm) || call.contact_name.toLowerCase().includes(searchTerm.toLowerCase()) || call.summary && call.summary.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
-
-  const getStatusColor = (status) => {
+  const getStatusColor = status => {
     switch (status) {
       case 'success':
         return 'bg-[#0A5B4C]/10 text-[#0A5B4C] border-[#0A5B4C]/20';
@@ -125,51 +119,42 @@ const ConversationAnalytics = () => {
         return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
-
-  const formatDate = (dateString) => {
+  const formatDate = dateString => {
     const date = new Date(dateString);
     return {
-      date: date.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit' }),
-      time: date.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })
+      date: date.toLocaleDateString('ro-RO', {
+        day: '2-digit',
+        month: '2-digit'
+      }),
+      time: date.toLocaleTimeString('ro-RO', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
     };
   };
-
   const selectedConversation = selectedCall ? convertElevenLabsToConversation(selectedCall, elevenLabsData) : null;
-
-  const isLoading = callHistoryLoading || (conversationId && conversationLoading);
-
+  const isLoading = callHistoryLoading || conversationId && conversationLoading;
   if (isLoading) {
-    return (
-      <DashboardLayout>
+    return <DashboardLayout>
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0A5B4C] mx-auto"></div>
             <p className="mt-2 text-gray-600">Se încarcă conversația...</p>
           </div>
         </div>
-      </DashboardLayout>
-    );
+      </DashboardLayout>;
   }
-
-  return (
-    <DashboardLayout>
+  return <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         {/* Header with ElevenLabs-style navigation */}
         <div className="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-20">
-          <div className="px-6 py-4">
+          <div className="px-[33px] py-[51px]">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                {conversationId && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate('/account/conversation-analytics')}
-                    className="mr-2"
-                  >
+                {conversationId && <Button variant="ghost" size="sm" onClick={() => navigate('/account/conversation-analytics')} className="mr-2">
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Înapoi
-                  </Button>
-                )}
+                  </Button>}
                 <div className="w-12 h-12 bg-gradient-to-r from-[#0A5B4C] to-[#0d6b56] rounded-xl flex items-center justify-center">
                   <Activity className="w-6 h-6 text-white" />
                 </div>
@@ -178,24 +163,15 @@ const ConversationAnalytics = () => {
                     {conversationId ? 'Analiza Conversației' : 'Analytics Hub'}
                   </h1>
                   <p className="text-gray-600">
-                    {conversationId && elevenLabsData ? 
-                      `Conversație ElevenLabs ID: ${conversationId}` :
-                      'Real-time conversation insights'
-                    }
+                    {conversationId && elevenLabsData ? `Conversație ElevenLabs ID: ${conversationId}` : 'Real-time conversation insights'}
                   </p>
                 </div>
               </div>
               
-              {!conversationId && (
-                <div className="flex items-center space-x-4">
+              {!conversationId && <div className="flex items-center space-x-4">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input 
-                      placeholder="Search conversations..." 
-                      value={searchTerm} 
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 w-80 bg-white/70 border-gray-200 focus:bg-white" 
-                    />
+                    <Input placeholder="Search conversations..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 w-80 bg-white/70 border-gray-200 focus:bg-white" />
                   </div>
                   
                   <Select value={selectedAgent} onValueChange={setSelectedAgent}>
@@ -206,8 +182,7 @@ const ConversationAnalytics = () => {
                       <SelectItem value="all">All Agents</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-              )}
+                </div>}
             </div>
           </div>
         </div>
@@ -237,18 +212,9 @@ const ConversationAnalytics = () => {
             {/* Call List - ElevenLabs style */}
             <div className="overflow-y-auto h-full">
               {filteredCalls.map((call, index) => {
-                const dateInfo = formatDate(call.call_date);
-                const isSelected = selectedCall?.id === call.id || 
-                                 (conversationId && call.elevenlabs_history_id === conversationId);
-                
-                return (
-                  <div 
-                    key={call.id} 
-                    className={`p-4 border-b border-gray-100/50 cursor-pointer hover:bg-white/70 transition-all duration-200 ${
-                      isSelected ? 'bg-[#0A5B4C]/5 border-l-4 border-l-[#0A5B4C]' : ''
-                    }`}
-                    onClick={() => handleCallClick(call)}
-                  >
+              const dateInfo = formatDate(call.call_date);
+              const isSelected = selectedCall?.id === call.id || conversationId && call.elevenlabs_history_id === conversationId;
+              return <div key={call.id} className={`p-4 border-b border-gray-100/50 cursor-pointer hover:bg-white/70 transition-all duration-200 ${isSelected ? 'bg-[#0A5B4C]/5 border-l-4 border-l-[#0A5B4C]' : ''}`} onClick={() => handleCallClick(call)}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-gradient-to-r from-[#0A5B4C] to-[#0d6b56] rounded-full flex items-center justify-center">
@@ -257,9 +223,7 @@ const ConversationAnalytics = () => {
                         <div>
                           <div className="font-semibold text-gray-900">{call.phone_number}</div>
                           <div className="text-sm text-gray-600">{dateInfo.date} • {dateInfo.time}</div>
-                          {call.elevenlabs_history_id && (
-                            <div className="text-xs text-blue-600">ElevenLabs: {call.elevenlabs_history_id}</div>
-                          )}
+                          {call.elevenlabs_history_id && <div className="text-xs text-blue-600">ElevenLabs: {call.elevenlabs_history_id}</div>}
                         </div>
                       </div>
                       <Badge className={`${getStatusColor(call.call_status)} border`}>
@@ -278,25 +242,21 @@ const ConversationAnalytics = () => {
                       </span>
                       <span>${call.cost_usd?.toFixed(4) || '0.0000'}</span>
                     </div>
-                  </div>
-                );
-              })}
+                  </div>;
+            })}
               
-              {filteredCalls.length === 0 && (
-                <div className="p-12 text-center">
+              {filteredCalls.length === 0 && <div className="p-12 text-center">
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Phone className="w-8 h-8 text-gray-400" />
                   </div>
                   <p className="text-gray-500">No conversations found</p>
-                </div>
-              )}
+                </div>}
             </div>
           </div>
 
           {/* Right Panel - Analytics (ElevenLabs style) */}
           <div className="w-1/2 bg-white/30 backdrop-blur-xl">
-            {selectedCall ? (
-              <div className="h-full flex flex-col">
+            {selectedCall ? <div className="h-full flex flex-col">
                 {/* Header */}
                 <div className="p-6 border-b border-gray-200/50">
                   <div className="flex items-center justify-between mb-4">
@@ -304,9 +264,9 @@ const ConversationAnalytics = () => {
                       Conversation Analysis
                     </h3>
                     <Button variant="ghost" size="sm" onClick={() => {
-                      setSelectedCall(null);
-                      if (conversationId) navigate('/account/conversation-analytics');
-                    }}>
+                  setSelectedCall(null);
+                  if (conversationId) navigate('/account/conversation-analytics');
+                }}>
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
@@ -328,18 +288,14 @@ const ConversationAnalytics = () => {
                   </div>
 
                   {/* ElevenLabs Data Display */}
-                  {elevenLabsData && (
-                    <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  {elevenLabsData && <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                       <div className="text-sm font-medium text-blue-900 mb-2">ElevenLabs Data</div>
                       <div className="text-xs text-blue-700 space-y-1">
                         {elevenLabsData.history_item_id && <div>ID: {elevenLabsData.history_item_id}</div>}
                         {elevenLabsData.date_unix && <div>Date: {new Date(elevenLabsData.date_unix * 1000).toLocaleString()}</div>}
-                        {elevenLabsData.character_count_change_from && (
-                          <div>Characters: {elevenLabsData.character_count_change_from} → {elevenLabsData.character_count_change_to}</div>
-                        )}
+                        {elevenLabsData.character_count_change_from && <div>Characters: {elevenLabsData.character_count_change_from} → {elevenLabsData.character_count_change_to}</div>}
                       </div>
-                    </div>
-                  )}
+                    </div>}
                 </div>
 
                 {/* Audio Waveform - ElevenLabs style */}
@@ -347,24 +303,18 @@ const ConversationAnalytics = () => {
                   <div className="bg-gradient-to-r from-gray-100 to-gray-200 rounded-xl p-6 mb-4">
                     <div className="flex items-center justify-center h-16">
                       <div className="flex items-center space-x-1 h-full">
-                        {Array.from({ length: 40 }, (_, i) => (
-                          <div 
-                            key={i} 
-                            className="bg-[#0A5B4C] w-1 rounded-full transition-all duration-300 hover:bg-[#0d6b56]"
-                            style={{ height: `${Math.random() * 60 + 20}%` }}
-                          />
-                        ))}
+                        {Array.from({
+                      length: 40
+                    }, (_, i) => <div key={i} className="bg-[#0A5B4C] w-1 rounded-full transition-all duration-300 hover:bg-[#0d6b56]" style={{
+                      height: `${Math.random() * 60 + 20}%`
+                    }} />)}
                       </div>
                     </div>
                   </div>
                   
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <Button 
-                        size="sm" 
-                        className="rounded-full w-10 h-10 p-0 bg-[#0A5B4C] hover:bg-[#0d6b56]"
-                        onClick={() => setIsPlaying(!isPlaying)}
-                      >
+                      <Button size="sm" className="rounded-full w-10 h-10 p-0 bg-[#0A5B4C] hover:bg-[#0d6b56]" onClick={() => setIsPlaying(!isPlaying)}>
                         {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                       </Button>
                       <div className="flex items-center space-x-2 text-sm text-gray-600">
@@ -395,25 +345,19 @@ const ConversationAnalytics = () => {
 
                   <TabsContent value="transcript" className="flex-1 px-6 pb-6 overflow-y-auto">
                     <div className="space-y-4 mt-4">
-                      {selectedConversation.transcript.map((message, index) => (
-                        <div key={index} className="flex space-x-3 group">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
-                            message.speaker === 'Kalina' ? 'bg-[#0A5B4C] text-white' : 'bg-gray-200 text-gray-700'
-                          }`}>
+                      {selectedConversation.transcript.map((message, index) => <div key={index} className="flex space-x-3 group">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${message.speaker === 'Kalina' ? 'bg-[#0A5B4C] text-white' : 'bg-gray-200 text-gray-700'}`}>
                             {message.speaker === 'Kalina' ? 'K' : 'C'}
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center space-x-2 mb-1">
                               <span className="font-medium text-sm">{message.speaker}</span>
                               <span className="text-xs text-gray-500">{message.timestamp}</span>
-                              <div className={`w-2 h-2 rounded-full ${
-                                message.sentiment === 'positive' ? 'bg-green-400' : 'bg-yellow-400'
-                              }`} />
+                              <div className={`w-2 h-2 rounded-full ${message.sentiment === 'positive' ? 'bg-green-400' : 'bg-yellow-400'}`} />
                             </div>
                             <p className="text-sm text-gray-700 leading-relaxed">{message.text}</p>
                           </div>
-                        </div>
-                      ))}
+                        </div>)}
                     </div>
                   </TabsContent>
 
@@ -491,9 +435,7 @@ const ConversationAnalytics = () => {
                     </div>
                   </TabsContent>
                 </Tabs>
-              </div>
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
+              </div> : <div className="flex-1 flex items-center justify-center">
                 <div className="text-center">
                   <div className="w-20 h-20 bg-gradient-to-r from-[#0A5B4C] to-[#0d6b56] rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse-glow">
                     <Activity className="w-10 h-10 text-white" />
@@ -505,13 +447,10 @@ const ConversationAnalytics = () => {
                     Choose a call from the list to view detailed analytics powered by ElevenLabs
                   </p>
                 </div>
-              </div>
-            )}
+              </div>}
           </div>
         </div>
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
-
 export default ConversationAnalytics;
