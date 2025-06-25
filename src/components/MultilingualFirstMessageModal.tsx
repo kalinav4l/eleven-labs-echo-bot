@@ -8,9 +8,8 @@ import { Languages, Loader2, Save } from 'lucide-react';
 import { LANGUAGE_MAP } from '@/constants/constants';
 import { toast } from '@/components/ui/use-toast';
 import { TranslationController } from '../controllers/TranslationController';
-import { TranslationRequest } from '../types/dtos';
-import { agentService } from '@/services/AgentService';
-import { AgentResponse } from '@/components/AgentResponse';
+import { AgentResponse } from '../types/dtos';
+import { ElevenLabsController } from "@/controllers/ElevenLabsController.ts";
 
 interface MultilingualFirstMessageModalProps {
   isOpen: boolean;
@@ -83,10 +82,10 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
 
     try {
       // Prepare the update payload with only language_presets changes
-      const updatePayload = agentService.prepareUpdatePayload(agentData, localMessages);
+      const updatePayload = ElevenLabsController.prepareUpdatePayload(agentData, localMessages);
 
       // Make the API call to update the agent
-      await agentService.updateAgent(agentId, updatePayload);
+      await ElevenLabsController.updateAgent(agentId, updatePayload);
 
       toast({
         title: "Succes!",
@@ -94,7 +93,7 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
       });
 
       // Fetch fresh agent data to get the updated state
-      const refreshedAgentData = await agentService.getAgent(agentId);
+      const refreshedAgentData = await ElevenLabsController.getAgent(agentId);
 
       // Extract the updated multilingual messages
       const updatedMessages: Record<string, string> = {};
@@ -114,6 +113,8 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
           }
         });
       }
+
+      console.log("updatedMessages = " + JSON.stringify(updatedMessages))
 
       // Update local state with refreshed data
       setLocalMessages(updatedMessages);
@@ -178,6 +179,7 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
           }
       }
       const updatedMessages = { ...localMessages, ...translations };
+      console.log("updatedMessages = " + JSON.stringify(updatedMessages))
       setLocalMessages(updatedMessages);
       setHasChanges(true);
       

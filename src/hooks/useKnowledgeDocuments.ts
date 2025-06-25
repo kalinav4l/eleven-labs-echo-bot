@@ -1,21 +1,12 @@
 
 import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
-import { knowledgeBaseService, ExistingDocument } from '../services/KnowledgeBaseService';
-import { AgentResponse } from '../components/AgentResponse';
-
-interface KnowledgeDocumentLocal {
-  id: string;
-  name: string;
-  content?: string;
-  uploadedAt: Date;
-  type: 'text' | 'file' | 'existing';
-  elevenLabsId?: string;
-}
+import { KnowledgeBaseController } from '../controllers/KnowledgeBaseController';
+import { AgentResponse, KnowledgeBaseDocument, KnowledgeDocumentLocal } from "@/types/dtos.ts";
 
 export const useKnowledgeDocuments = () => {
   const [documents, setDocuments] = useState<KnowledgeDocumentLocal[]>([]);
-  const [existingDocuments, setExistingDocuments] = useState<ExistingDocument[]>([]);
+  const [existingDocuments, setExistingDocuments] = useState<KnowledgeBaseDocument[]>([]);
   const [selectedExistingDocuments, setSelectedExistingDocuments] = useState<Set<string>>(new Set());
   const [isLoadingExisting, setIsLoadingExisting] = useState(false);
 
@@ -48,7 +39,7 @@ export const useKnowledgeDocuments = () => {
   const loadExistingDocuments = useCallback(async () => {
     setIsLoadingExisting(true);
     try {
-      const response = await knowledgeBaseService.getExistingDocuments();
+      const response = await KnowledgeBaseController.getExistingDocuments();
       setExistingDocuments(response.documents);
       console.log('Loaded existing documents:', response.documents);
     } catch (error) {
@@ -68,10 +59,9 @@ export const useKnowledgeDocuments = () => {
     if (!existingDoc) return;
 
     const newDoc: KnowledgeDocumentLocal = {
-      id: `existing-${documentId}`,
+      id: `${documentId}`,
       name: existingDoc.name,
-      uploadedAt: new Date(existingDoc.metadata.created_at_unix_secs * 1000),
-      type: 'existing',
+      type: existingDoc.type,
       elevenLabsId: existingDoc.id
     };
 

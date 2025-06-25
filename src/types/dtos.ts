@@ -85,7 +85,6 @@ export interface ConversationConfigUpdate {
     conversation?: ConversationDetailsUpdate;
     language_presets?: { [key: string]: LanguagePresetUpdate };
     agent?: AgentDetailsUpdate;
-    multilingual_first_messages?: { [key: string]: string };
 }
 
 export interface AsrConfigUpdate {
@@ -433,6 +432,13 @@ export interface PromptConfig {
     ignore_default_personality?: boolean;
     rag?: RagConfig;
     tools?: any[];
+}
+
+export interface KnowledgeDocumentLocal {
+    id: string;
+    name: string;
+    type: string;
+    elevenLabsId?: string;
 }
 
 export interface KnowledgeBaseDocument {

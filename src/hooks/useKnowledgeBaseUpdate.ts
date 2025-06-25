@@ -1,18 +1,13 @@
 
 import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
-import { knowledgeBaseService, KnowledgeBaseDocument } from '../services/KnowledgeBaseService';
-import { agentService } from '../services/AgentService';
-import { AgentResponse } from '../components/AgentResponse';
-
-interface KnowledgeDocumentLocal {
-  id: string;
-  name: string;
-  content?: string;
-  uploadedAt: Date;
-  type: 'text' | 'file' | 'existing';
-  elevenLabsId?: string;
-}
+import { ElevenLabsController } from "@/controllers/ElevenLabsController.ts";
+import {
+    AgentResponse,
+    AgentUpdateRequest,
+    KnowledgeBaseDocumentUpdate,
+    KnowledgeDocumentLocal
+} from "@/types/dtos.ts";
 
 interface UseKnowledgeBaseUpdateProps {
   agentId: string;
@@ -42,7 +37,7 @@ export const useKnowledgeBaseUpdate = ({
     setIsUpdating(true);
 
     try {
-      const knowledgeBase: KnowledgeBaseDocument[] = documents
+      const knowledgeBase: KnowledgeBaseDocumentUpdate[] = documents
         .filter(doc => doc.elevenLabsId)
         .map(doc => ({
           type: doc.type === 'existing' ? 'file' : doc.type as 'text' | 'file',
@@ -53,8 +48,18 @@ export const useKnowledgeBaseUpdate = ({
 
       console.log('Updating agent knowledge base with:', knowledgeBase);
 
-      await knowledgeBaseService.updateAgentKnowledgeBase(agentId, knowledgeBase);
-
+      const agentUpdateRequest: AgentUpdateRequest = {
+          conversation_config: {
+              agent: {
+                  prompt: {
+                      knowledge_base: knowledgeBase
+                  }
+              }
+          }
+      }
+      console.log(JSON.stringify(agentUpdateRequest))
+      const response = await ElevenLabsController.updateAgent(agentId, agentUpdateRequest);
+        console.log("response=" + JSON.stringify(response))
       toast({
         title: "Succes!",
         description: "Knowledge Base-ul agentului a fost actualizat cu succes în ElevenLabs.",
@@ -62,7 +67,7 @@ export const useKnowledgeBaseUpdate = ({
 
       if (shouldReload && onAgentRefresh) {
         try {
-          const refreshedAgent = await agentService.getAgent(agentId);
+          const refreshedAgent = await ElevenLabsController.getAgent(agentId);
           onAgentRefresh(refreshedAgent);
           processAgentKnowledgeBase(refreshedAgent);
         } catch (error) {

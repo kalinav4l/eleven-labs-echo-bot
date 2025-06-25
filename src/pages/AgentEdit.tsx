@@ -10,8 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Bot, Save, Upload, FileText, Trash2, TestTube, Database, Plus } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { agentService } from '@/services/AgentService';
-import { AgentResponse } from '@/components/AgentResponse';
 import AgentTestModal from '@/components/AgentTestModal';
 import AdditionalLanguagesSection from '@/components/AdditionalLanguagesSection';
 import MultilingualFirstMessageModal from '@/components/MultilingualFirstMessageModal';
@@ -19,6 +17,8 @@ import { useEnhancedKnowledgeBase } from '@/hooks/useEnhancedKnowledgeBase';
 import AgentGeneralInfo from '@/components/agent/AgentGeneralInfo';
 import AgentSystemPrompt from '@/components/agent/AgentSystemPrompt';
 import AgentFirstMessage from '@/components/agent/AgentFirstMessage';
+import {AgentResponse, LanguagePreset} from "@/types/dtos.ts";
+import {ElevenLabsController} from "@/controllers/ElevenLabsController.ts";
 
 const AgentEdit = () => {
   const { agentId } = useParams<{ agentId: string }>();
@@ -80,7 +80,7 @@ const AgentEdit = () => {
     const fetchAgentData = async () => {
       if (!agentId) return;
       try {
-        const data = await agentService.getAgent(agentId);
+        const data = await ElevenLabsController.getAgent(agentId);
         setAgentData(data);
 
         const parsedAdditionalLanguages = parseAdditionalLanguagesFromResponse(data);
@@ -102,27 +102,29 @@ const AgentEdit = () => {
   }, [agentId, processAgentKnowledgeBase]);
 
   // Initialize multilingual messages when agent data loads
-  useEffect(() => {
-    if (agentData?.conversation_config?.agent?.multilingual_first_messages) {
-      setMultilingualMessages(agentData.conversation_config.agent.multilingual_first_messages);
-    } else if (agentData?.conversation_config?.agent?.first_message) {
-      const defaultLanguage = agentData.conversation_config?.agent?.language || 'en';
-      const currentMessages: Record<string, string> = {
-        [defaultLanguage]: agentData.conversation_config.agent.first_message
-      };
+    useEffect(() => {
+        if (agentData?.conversation_config) {
+            const defaultLanguage = agentData.conversation_config.agent?.language || 'en';
+            const defaultFirstMessage = agentData.conversation_config.agent?.first_message || '';
+            // Start with the default language and its first message
+            const currentMessages: Record<string, string> = {
+                [defaultLanguage]: defaultFirstMessage
+            };
 
-      if (agentData.conversation_config?.language_presets) {
-        Object.entries(agentData.conversation_config.language_presets).forEach(([languageId, preset]) => {
-          if (preset.overrides?.agent?.first_message) {
-            currentMessages[languageId] = preset.overrides.agent.first_message;
-          } else if (preset.first_message_translation?.text) {
-            currentMessages[languageId] = preset.first_message_translation.text;
-          }
-        });
-      }
-      setMultilingualMessages(currentMessages);
-    }
-  }, [agentData]);
+            // Add/override with language presets
+            if (agentData.conversation_config.language_presets) {
+                Object.entries(agentData.conversation_config.language_presets).forEach(([languageId, preset]) => {
+                    if (preset.overrides?.agent?.first_message) {
+                        currentMessages[languageId] = preset.overrides.agent.first_message;
+                    } else if (preset.first_message_translation?.text) {
+                        currentMessages[languageId] = preset.first_message_translation.text;
+                    }
+                });
+            }
+
+            setMultilingualMessages(currentMessages);
+        }
+    }, [agentData]);
 
   // Handle additional languages change - add empty messages for new languages
   const handleAdditionalLanguagesChange = (newLanguages: string[]) => {
@@ -157,8 +159,9 @@ const AgentEdit = () => {
     if (!agentId || !agentData) return;
     setIsSaving(true);
     try {
-      const updatePayload = agentService.prepareUpdatePayload(agentData, multilingualMessages);
-      await agentService.updateAgent(agentId, updatePayload);
+      const updatePayload = ElevenLabsController.prepareUpdatePayload(agentData, multilingualMessages);
+      const data = await ElevenLabsController.updateAgent(agentId, updatePayload);
+      handleAgentDataRefresh(data)
       
       if (documents.length > 0) {
         await updateAgentKnowledgeBase(true);
@@ -168,10 +171,6 @@ const AgentEdit = () => {
         title: "Succes!",
         description: "Agentul a fost salvat cu succes. Pagina se va reîncărca."
       });
-      
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
       
     } catch (error) {
       console.error('Error saving agent:', error);
@@ -241,17 +240,41 @@ const AgentEdit = () => {
 
   const handleMultilingualMessagesUpdate = (messages: Record<string, string>) => {
     setMultilingualMessages(messages);
+      const defaultLanguage = agentData?.conversation_config?.agent?.language || 'en';
+      const defaultLanguageFirstMessage = messages[defaultLanguage];
 
-    const defaultLanguage = agentData?.conversation_config?.agent?.language || 'en';
+      const sourceHash = JSON.stringify({
+          firstMessage: defaultLanguageFirstMessage,
+          language: defaultLanguage
+      });
+
+      const language_presets: { [key: string]: LanguagePreset } = Object.entries(messages)
+          .filter(([lang]) => lang !== defaultLanguage)
+          .reduce((acc, [lang, firstMessageText]) => {
+              acc[lang] = {
+                  overrides: {
+                      agent: {
+                          first_message: firstMessageText
+                      }
+                  },
+                  first_message_translation: {
+                      source_hash: sourceHash,
+                      text: firstMessageText
+                  }
+              };
+              return acc;
+          }, {} as { [key: string]: LanguagePreset });
+
     if (messages[defaultLanguage]) {
       setAgentData({
         ...agentData!,
         conversation_config: {
           ...agentData!.conversation_config,
           agent: {
-            ...agentData!.conversation_config?.agent!,
+            ...agentData!.conversation_config?.agent,
             first_message: messages[defaultLanguage]
-          }
+          },
+          language_presets: language_presets
         }
       });
     }
@@ -454,19 +477,9 @@ const AgentEdit = () => {
                           ({doc.type === 'existing' ? 'existent' : doc.type})
                         </span>
                       </h4>
-                      <p className="text-sm text-muted-foreground">
-                        Adăugat: {doc.uploadedAt.toLocaleDateString()}
-                      </p>
-                      {doc.content && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {doc.content.length > 100 ? `${doc.content.substring(0, 100)}...` : doc.content}
-                        </p>
-                      )}
-                      {doc.elevenLabsId && (
                         <p className="text-xs text-blue-600 mt-1">
                           ElevenLabs ID: {doc.elevenLabsId}
                         </p>
-                      )}
                     </div>
                     <Button variant="outline" size="sm" onClick={() => handleRemoveDocument(doc.id)} className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full sm:w-auto">
                       <Trash2 className="w-4 h-4" />

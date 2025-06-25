@@ -9,7 +9,8 @@ interface UseEnhancedKnowledgeBaseProps {
   onAgentRefresh?: (agentData: AgentResponse) => void;
 }
 
-export const useEnhancedKnowledgeBase = ({ agentId, onAgentRefresh }: UseEnhancedKnowledgeBaseProps) => {
+export const useEnhancedKnowledgeBase =
+    ({ agentId, onAgentRefresh }: UseEnhancedKnowledgeBaseProps) => {
   const {
     documents,
     setDocuments,
