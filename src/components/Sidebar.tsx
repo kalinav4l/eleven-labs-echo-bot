@@ -2,132 +2,64 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { User, Settings, Bot, BarChart3, FileText, PhoneCall, X, ChevronsLeft } from 'lucide-react';
+import { User, Settings, Bot, BarChart3, FileText, PhoneCall } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useIsMobile } from '@/hooks/use-mobile';
 
-// Interfața actualizată pentru a primi funcția de setare a stării
-interface SidebarProps {
-  isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
-}
-
-const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
+const Sidebar = () => {
   const location = useLocation();
-  const isMobile = useIsMobile();
-  
-  const handleMobileClose = () => {
-    if (isMobile) {
-      setIsOpen(false);
-    }
-  };
+
+  const linkClasses = "text-gray-700 hover:bg-gray-100 hover:text-gray-900 group flex items-center px-2 py-3 text-base rounded-md transition-colors";
 
   return (
-    <>
-      {/* Overlay pentru mobil */}
-      {isMobile && isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 lg:hidden"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+    // Containerul nu mai are nevoie de clase de lățime sau tranziție.
+    // 'h-full' asigură că umple tot spațiul vertical al panoului său.
+    <div className="flex flex-col h-full bg-white border-r">
+      {/* Header-ul barei laterale */}
+      <div className="flex items-center px-4 py-3 border-b h-16">
+        <Link to="/account" className="flex items-center text-xl font-bold text-gray-900 overflow-hidden">
+          <Avatar className="mr-2 w-8 h-8">
+            <AvatarImage alt="@shadcn" src="/lovable-uploads/f617a44e-5bc3-46cb-8232-3110c0cee83d.png" />
+            <AvatarFallback>SC</AvatarFallback>
+          </Avatar>
+          <span className="truncate">Kalina AI</span>
+        </Link>
+      </div>
       
-      {/* Containerul principal al barei laterale cu toate clasele corecte */}
-      <div className={`
-        fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 
-        transition-transform duration-300 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
-        lg:static lg:z-auto lg:translate-x-0 lg:transition-all lg:duration-300 
-        ${isOpen ? 'lg:w-64' : 'lg:w-20'}
-        relative flex flex-col`}
-      >
-        {/* Butonul de închidere/deschidere pentru Desktop */}
-        <button 
-          onClick={() => setIsOpen(!isOpen)}
-          className="hidden lg:flex items-center justify-center absolute -right-3 top-8 w-6 h-6 bg-white border-2 border-gray-200 rounded-full text-gray-600 hover:bg-gray-100 transition-all z-50"
-        >
-          <ChevronsLeft className={`h-4 w-4 transition-transform duration-300 ${!isOpen && 'rotate-180'}`} />
-        </button>
-
-        {/* Header-ul barei laterale */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 h-16">
-          <Link to="/account" className="flex items-center text-xl font-bold text-gray-900" onClick={handleMobileClose}>
-            <Avatar className="mr-2 w-8 h-8">
-              <AvatarImage alt="@shadcn" src="/lovable-uploads/f617a44e-5bc3-46cb-8232-3110c0cee83d.png" />
-              <AvatarFallback>SC</AvatarFallback>
-            </Avatar>
-            {/* Textul logo-ului se afișează doar dacă meniul e deschis */}
-            {isOpen && <span className="transition-opacity duration-200">Kalina AI</span>}
+      {/* Navigarea principală */}
+      <div className="flex-1 px-3 py-2 overflow-y-auto">
+        <div className="space-y-1">
+          <Link to="/account" className={linkClasses}>
+            <User className="flex-shrink-0 h-5 w-5 mr-3" />
+            <span className="truncate">home</span>
           </Link>
-          {/* Butonul X pentru mobil */}
-          <button 
-            onClick={() => setIsOpen(false)} 
-            className="text-gray-600 hover:text-gray-900 rounded-lg p-1 lg:hidden"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-        
-        {/* Navigarea principală */}
-        <div className="flex-1 px-3 py-2 overflow-y-auto">
-          <div className="space-y-1">
-            {/* Toate link-urile sunt modificate pentru a ascunde textul când meniul e închis */}
-            <Link 
-              to="/account" 
-              className={`${location.pathname === '/account' ? 'text-[#0A5B4C] font-semibold bg-green-50' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`}
-              onClick={handleMobileClose}
-            >
-              <User className={`flex-shrink-0 h-5 w-5 ${isOpen && 'mr-3'}`} />
-              {isOpen && <span className="truncate">home</span>}
-            </Link>
-            
-            <Link 
-              to="/account/kalina-agents" 
-              className={`${location.pathname === '/account/kalina-agents' ? 'text-[#0A5B4C] font-semibold bg-green-50' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`}
-              onClick={handleMobileClose}
-            >
-              <Bot className={`flex-shrink-0 h-5 w-5 ${isOpen && 'mr-3'}`} />
-              {isOpen && <span className="truncate">agents</span>}
-            </Link>
+          
+          <Link to="/account/kalina-agents" className={linkClasses}>
+            <Bot className="flex-shrink-0 h-5 w-5 mr-3" />
+            <span className="truncate">agents</span>
+          </Link>
 
-            <Link 
-              to="/account/conversation-analytics" 
-              className={`${location.pathname === '/account/conversation-analytics' ? 'text-[#0A5B4C] font-semibold bg-green-50' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`}
-              onClick={handleMobileClose}
-            >
-              <BarChart3 className={`flex-shrink-0 h-5 w-5 ${isOpen && 'mr-3'}`} />
-              {isOpen && <span className="truncate">analytics</span>}
-            </Link>
+          <Link to="/account/conversation-analytics" className={linkClasses}>
+            <BarChart3 className="flex-shrink-0 h-5 w-5 mr-3" />
+            <span className="truncate">analytics</span>
+          </Link>
 
-            <Link 
-              to="/account/transcript" 
-              className={`${location.pathname === '/account/transcript' ? 'text-[#0A5B4C] font-semibold bg-green-50' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`}
-              onClick={handleMobileClose}
-            >
-              <FileText className={`flex-shrink-0 h-5 w-5 ${isOpen && 'mr-3'}`} />
-              {isOpen && <span className="truncate">transcript</span>}
-            </Link>
+          <Link to="/account/transcript" className={linkClasses}>
+            <FileText className="flex-shrink-0 h-5 w-5 mr-3" />
+            <span className="truncate">transcript</span>
+          </Link>
 
-            <Link 
-              to="/account/outbound" 
-              className={`${location.pathname === '/account/outbound' ? 'text-[#0A5B4C] font-semibold bg-green-50' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`}
-              onClick={handleMobileClose}
-            >
-              <PhoneCall className={`flex-shrink-0 h-5 w-5 ${isOpen && 'mr-3'}`} />
-              {isOpen && <span className="truncate">outbound</span>}
-            </Link>
+          <Link to="/account/outbound" className={linkClasses}>
+            <PhoneCall className="flex-shrink-0 h-5 w-5 mr-3" />
+            <span className="truncate">outbound</span>
+          </Link>
 
-            <Link 
-              to="/account/settings" 
-              className={`${location.pathname === '/account/settings' ? 'text-[#0A5B4C] font-semibold bg-green-50' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'} group flex items-center px-2 py-3 text-base rounded-md transition-colors`}
-              onClick={handleMobileClose}
-            >
-              <Settings className={`flex-shrink-0 h-5 w-5 ${isOpen && 'mr-3'}`} />
-              {isOpen && <span className="truncate">setări</span>}
-            </Link>
-          </div>
+          <Link to="/account/settings" className={linkClasses}>
+            <Settings className="flex-shrink-0 h-5 w-5 mr-3" />
+            <span className="truncate">setări</span>
+          </Link>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
