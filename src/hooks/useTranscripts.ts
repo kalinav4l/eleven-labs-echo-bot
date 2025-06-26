@@ -77,15 +77,17 @@ export const useTranscripts = () => {
 
       const { data, error } = await supabase
         .from('user_transcripts')
-        .insert({
-          user_id: user.id,
-          title,
-          original_filename: originalFilename || null,
-          transcript_entries: transcriptEntries as any, // Cast to any to satisfy Json type
-          raw_text: rawText || null,
-          duration_seconds: durationSeconds || 0,
-          file_size_mb: fileSizeMb || null,
-        })
+        .insert([
+          {
+            user_id: user.id,
+            title,
+            original_filename: originalFilename || null,
+            transcript_entries: transcriptEntries,
+            raw_text: rawText || null,
+            duration_seconds: durationSeconds || 0,
+            file_size_mb: fileSizeMb || null,
+          }
+        ])
         .select()
         .single();
 
