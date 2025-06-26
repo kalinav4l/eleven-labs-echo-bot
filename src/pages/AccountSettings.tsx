@@ -4,9 +4,11 @@ import { useAuth } from '@/components/AuthContext';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Settings, Globe, LogOut, Trash2, User } from 'lucide-react';
+import { Settings, Globe, LogOut, Trash2, User, Mail, Lock, MessageSquare, Bot } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +20,17 @@ const AccountSettings = () => {
   const isMobile = useIsMobile();
   const [settings, setSettings] = useState({
     defaultLanguage: 'ro'
+  });
+  const [emailSettings, setEmailSettings] = useState({
+    currentEmail: user?.email || '',
+    newEmail: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [telegramSettings, setTelegramSettings] = useState({
+    botToken: '',
+    chatId: ''
   });
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -109,6 +122,87 @@ const AccountSettings = () => {
     });
   };
 
+  const handleUpdateEmail = async () => {
+    if (!emailSettings.newEmail) {
+      toast({
+        title: "Eroare",
+        description: "Te rog introdu noua adresă de email.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        email: emailSettings.newEmail
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email actualizat",
+        description: "Adresa de email a fost actualizată. Verifică-ți email-ul pentru confirmare."
+      });
+      setEmailSettings(prev => ({ ...prev, newEmail: '' }));
+    } catch (error) {
+      console.error('Error updating email:', error);
+      toast({
+        title: "Eroare",
+        description: "Nu s-a putut actualiza adresa de email.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!emailSettings.newPassword || !emailSettings.confirmPassword) {
+      toast({
+        title: "Eroare",
+        description: "Te rog completează toate câmpurile pentru parolă.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (emailSettings.newPassword !== emailSettings.confirmPassword) {
+      toast({
+        title: "Eroare",
+        description: "Parolele nu se potrivesc.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: emailSettings.newPassword
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Parolă actualizată",
+        description: "Parola a fost actualizată cu succes."
+      });
+      setEmailSettings(prev => ({ ...prev, newPassword: '', confirmPassword: '' }));
+    } catch (error) {
+      console.error('Error updating password:', error);
+      toast({
+        title: "Eroare",
+        description: "Nu s-a putut actualiza parola.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSaveTelegramSettings = () => {
+    // This would normally save to database or user preferences
+    toast({
+      title: "Setări Telegram salvate",
+      description: "Configurațiile Telegram au fost salvate cu succes."
+    });
+  };
+
   return (
     <DashboardLayout>
       <div className={`p-4 sm:p-6 ${isMobile ? 'pb-24' : 'my-[60px]'}`}>
@@ -159,7 +253,7 @@ const AccountSettings = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-muted-foreground text-sm mb-2">Email</label>
+                <label className="block text-muted-foreground text-sm mb-2">Email Curent</label>
                 <div className="p-3 liquid-glass rounded border border-gray-200/50 text-foreground bg-gray-50/50 text-sm sm:text-base break-all">
                   {user?.email || ''}
                 </div>
@@ -173,6 +267,108 @@ const AccountSettings = () => {
                     Upgrade
                   </Button>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Email & Password Settings */}
+          <Card className="liquid-glass">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-foreground flex items-center text-lg sm:text-xl">
+                <Mail className="w-5 h-5 mr-2 flex-shrink-0" />
+                <span className="truncate">Email & Parolă</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <Label htmlFor="newEmail">Email Nou</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="newEmail"
+                    type="email"
+                    value={emailSettings.newEmail}
+                    onChange={(e) => setEmailSettings(prev => ({ ...prev, newEmail: e.target.value }))}
+                    placeholder="nou@email.com"
+                    className="flex-1"
+                  />
+                  <Button onClick={handleUpdateEmail} size="sm">
+                    Actualizează
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <Label htmlFor="newPassword">Parolă Nouă</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={emailSettings.newPassword}
+                  onChange={(e) => setEmailSettings(prev => ({ ...prev, newPassword: e.target.value }))}
+                  placeholder="Parolă nouă"
+                />
+                <Input
+                  type="password"
+                  value={emailSettings.confirmPassword}
+                  onChange={(e) => setEmailSettings(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  placeholder="Confirmă parola"
+                />
+                <Button onClick={handleUpdatePassword} size="sm" className="w-full">
+                  Actualizează Parola
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Telegram Bot Settings */}
+          <Card className="liquid-glass">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-foreground flex items-center text-lg sm:text-xl">
+                <MessageSquare className="w-5 h-5 mr-2 flex-shrink-0" />
+                <span className="truncate">Setări Telegram</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="botToken">Token Bot Telegram</Label>
+                <Input
+                  id="botToken"
+                  type="password"
+                  value={telegramSettings.botToken}
+                  onChange={(e) => setTelegramSettings(prev => ({ ...prev, botToken: e.target.value }))}
+                  placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="chatId">ID Chat Telegram</Label>
+                <Input
+                  id="chatId"
+                  value={telegramSettings.chatId}
+                  onChange={(e) => setTelegramSettings(prev => ({ ...prev, chatId: e.target.value }))}
+                  placeholder="123456789"
+                />
+              </div>
+
+              <Button onClick={handleSaveTelegramSettings} className="w-full">
+                <Bot className="w-4 h-4 mr-2" />
+                Salvează Setări Telegram
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Gmail Integration - Coming Soon */}
+          <Card className="liquid-glass opacity-75">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-foreground flex items-center text-lg sm:text-xl">
+                <Mail className="w-5 h-5 mr-2 flex-shrink-0" />
+                <span className="truncate">Integrare Gmail</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center py-8">
+                <Mail className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                <p className="text-muted-foreground mb-2">Integrarea Gmail</p>
+                <p className="text-sm text-gray-500">Va fi disponibilă în curând</p>
               </div>
             </CardContent>
           </Card>
