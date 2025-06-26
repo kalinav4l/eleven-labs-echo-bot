@@ -1,348 +1,309 @@
-import React, { useState, useRef } from 'react';
+
+import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
-import { Navigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Navigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Upload, Download, FileAudio, MessageSquare, User, Bot, Loader2, Play } from 'lucide-react';
-import DashboardLayout from '@/components/DashboardLayout';
-import { toast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Play, Bot, MessageSquare, BarChart3, Calendar, PhoneCall, Users, Zap, Shield, ArrowRight, CheckCircle } from 'lucide-react';
 
-interface TranscriptEntry {
-  speaker: string;
-  text: string;
-  timestamp: string;
-  startTime: number;
-  endTime: number;
-}
-
-const Transcript = () => {
+const Index = () => {
   const { user } = useAuth();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [transcriptEntries, setTranscriptEntries] = useState<TranscriptEntry[]>([]);
-  const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string>('');
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
+  if (user) {
+    return <Navigate to="/account" replace />;
   }
 
-  const getSpeakerColor = (speaker: string) => {
-    if (speaker.toLowerCase().includes('agent') || speaker.toLowerCase().includes('ai')) {
-      return 'bg-purple-500';
+  const features = [
+    {
+      icon: Bot,
+      title: "Agenți AI Avansați",
+      description: "Creează agenți AI cu voci naturale și conversații inteligente pentru business-ul tău."
+    },
+    {
+      icon: MessageSquare,
+      title: "Transcripturi Precise",
+      description: "Generează transcripturi structurate din fișiere audio cu identificare automată a vorbitorilor."
+    },
+    {
+      icon: BarChart3,
+      title: "Analiză Conversații",
+      description: "Monitorizează performanța și obține insights din conversațiile cu clienții tăi."
+    },
+    {
+      icon: Calendar,
+      title: "Programare Apeluri",
+      description: "Gestionează și programează apeluri cu un calendar integrat și notificări automate."
+    },
+    {
+      icon: PhoneCall,
+      title: "Apeluri Outbound",
+      description: "Inițiază campanii de apeluri automate cu agenți AI pentru prospectare și follow-up."
+    },
+    {
+      icon: Shield,
+      title: "Securitate Avansată",
+      description: "Date protejate cu criptare end-to-end și conformitate GDPR completă."
     }
-    return 'bg-blue-500';
-  };
+  ];
 
-  const getSpeakerIcon = (speaker: string) => {
-    if (speaker.toLowerCase().includes('agent') || speaker.toLowerCase().includes('ai')) {
-      return <Bot className="w-4 h-4 text-white" />;
+  const stats = [
+    { value: "99.9%", label: "Uptime" },
+    { value: "10M+", label: "Apeluri procesate" },
+    { value: "500+", label: "Clienți mulțumiți" },
+    { value: "24/7", label: "Suport disponibil" }
+  ];
+
+  const testimonials = [
+    {
+      name: "Maria Popescu",
+      role: "CEO, TechStart",
+      content: "Kalina AI a transformat complet modul în care gestionăm apelurile cu clienții. Eficiența echipei a crescut cu 300%.",
+      avatar: "MP"
+    },
+    {
+      name: "Alexandru Ionescu",
+      role: "Director Vânzări, SalesPro",
+      content: "Cel mai bun investiment în tehnologie pe care l-am făcut. Agenții AI sunt incredibil de naturali și eficienți.",
+      avatar: "AI"
+    },
+    {
+      name: "Elena Radu",
+      role: "Manager Customer Success",
+      content: "Analizele conversațiilor ne-au ajutat să înțelegem mai bine nevoile clienților și să îmbunătățim serviciile.",
+      avatar: "ER"
     }
-    return <User className="w-4 h-4 text-white" />;
-  };
+  ];
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  // Parses the final, structured dialogue from the AI
-  const parseStructuredDialogue = (dialogue: any[]): TranscriptEntry[] => {
-    return dialogue.map((item: any, index: number) => ({
-      speaker: item.speaker || 'Necunoscut',
-      text: item.text || '',
-      timestamp: formatTime(index * 5), // Mock timestamp, can be improved
-      startTime: index * 5,
-      endTime: (index + 1) * 5,
-    }));
-  };
-  
-  // A simple fallback parser if AI processing fails
-  const fallbackParse = (text: string): TranscriptEntry[] => {
-    return text.split('\n').filter(line => line.trim()).map((line, index) => ({
-      speaker: `Vorbitor ${index % 2 + 1}`,
-      text: line,
-      timestamp: formatTime(index * 5),
-      startTime: index * 5,
-      endTime: (index + 1) * 5,
-    }));
-  };
-
-  const processAndSetTranscript = async (rawText: string) => {
-    if (!rawText) {
-      toast({
-        title: "Eroare",
-        description: "Transcriptul generat este gol.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    try {
-      toast({ title: "Analiză AI", description: "Transcriptul este procesat pentru a identifica vorbitorii..." });
-      const { data, error } = await supabase.functions.invoke('process-transcript', {
-        body: { transcriptText: rawText }
-      });
-
-      if (error) throw error;
-
-      if (data && data.dialogue && Array.isArray(data.dialogue)) {
-        const processedEntries = parseStructuredDialogue(data.dialogue);
-        setTranscriptEntries(processedEntries);
-        toast({
-          title: "Succes",
-          description: `Dialog structurat generat cu succes! (${processedEntries.length} intrări)`
-        });
-      } else {
-        throw new Error('Răspuns invalid de la AI. Se afișează textul brut.');
-      }
-    } catch (error: any) {
-      console.error('Error processing with AI:', error);
-      toast({
-        title: "Avertisment",
-        description: "Procesarea AI a eșuat. Se afișează transcriptul nestructurat.",
-        variant: "destructive"
-      });
-      // Fallback to simple parsing on error
-      const entries = fallbackParse(rawText);
-      setTranscriptEntries(entries);
-    }
-  };
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const validTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/m4a', 'audio/ogg'];
-      if (!validTypes.some(type => file.type.startsWith('audio/'))) {
-        toast({
-          title: "Eroare",
-          description: "Te rog selectează un fișier audio valid.",
-          variant: "destructive"
-        });
-        return;
-      }
-      if (file.size > 25 * 1024 * 1024) {
-        toast({
-          title: "Eroare",
-          description: "Fișierul este prea mare. Mărimea maximă este 25 MB.",
-          variant: "destructive"
-        });
-        return;
-      }
-      setAudioFile(file);
-      setAudioUrl(URL.createObjectURL(file));
-      setTranscriptEntries([]);
-      toast({
-        title: "Fișier selectat",
-        description: `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`
-      });
-    }
-  };
-
-  const handleGenerateTranscript = async () => {
-    if (!audioFile) {
-      toast({ title: "Eroare", description: "Te rog selectează un fișier audio.", variant: "destructive" });
-      return;
-    }
-    
-    setIsProcessing(true);
-    setTranscriptEntries([]);
-
-    try {
-      const formData = new FormData();
-      formData.append("file", audioFile);
-      formData.append("model_id", "scribe_v1"); // Using ElevenLabs' speech-to-text
-      
-      toast({ title: "Procesare Audio", description: "Fișierul tău este transcris..." });
-
-      const response = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
-        method: "POST",
-        headers: { "Xi-Api-Key": "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873" },
-        body: formData
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Eroare API ElevenLabs: ${errorText}`);
-      }
-      
-      const body = await response.json();
-      
-      if (body.text) {
-        // Automatically process the raw text to structure the dialogue
-        await processAndSetTranscript(body.text);
-      } else {
-        throw new Error('Nu s-a primit text în răspuns de la ElevenLabs');
-      }
-    } catch (error: any) {
-      console.error('Error during transcript generation:', error);
-      toast({
-        title: "Eroare Generală",
-        description: `Nu s-a putut procesa fișierul audio: ${error.message}`,
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-  
-  const handleDownloadSRT = () => {
-    if (transcriptEntries.length === 0) return;
-    let srtContent = '';
-    transcriptEntries.forEach((entry, index) => {
-      const formatSRTTime = (seconds: number) => {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor(seconds % 3600 / 60);
-        const secs = Math.floor(seconds % 60);
-        const milliseconds = Math.floor(seconds % 1 * 1000);
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')},${milliseconds.toString().padStart(3, '0')}`;
-      };
-
-      const speakerId = entry.speaker.toLowerCase().includes('agent') ? 'Agent AI' : 'User';
-      srtContent += `${index + 1}\n${formatSRTTime(entry.startTime)} --> ${formatSRTTime(entry.endTime)}\n[${speakerId}] ${entry.text}\n\n`;
-    });
-    
-    const blob = new Blob([srtContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `transcript_${Date.now()}.srt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast({ title: "Descărcare Completă", description: "Fișierul SRT a fost salvat." });
-  };
-  
-  const testDemo = async () => {
-    const demoText = `Agent AI: Bună ziua! Numele meu este Alex și sunt un agent AI. Cum vă pot ajuta astăzi?
-User: Salut, Alex! Aș dori să aflu mai multe despre pachetele voastre de credite.
-Agent AI: Desigur! Avem mai multe pachete disponibile, concepute pentru nevoi diferite. Cel mai popular este pachetul "Starter" care oferă 100.000 de credite.
-User: Și ce pot face cu aceste credite?
-Agent AI: Un minut de convorbire cu un agent AI consumă 1.000 de credite. Deci pachetul Starter vă oferă aproximativ 100 de minute de conversație.`;
-    await processAndSetTranscript(demoText);
+  const handleDemoPlay = () => {
+    setIsPlaying(!isPlaying);
   };
 
   return (
-    <DashboardLayout>
-      <div className="p-6 space-y-8">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Transcript Audio</h1>
-            <p className="text-gray-600">Generează și structurează dialoguri din fișiere audio</p>
-          </div>
-          <Button onClick={testDemo} variant="outline" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
-            <Play className="w-4 h-4 mr-2" />
-            Test Demo
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card className="bg-white border-gray-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3 text-gray-900">
-                <Upload className="w-6 h-6 text-[#0A5B4C]" />
-                Upload Audio
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-[#0A5B4C]/50 transition-colors bg-gray-50/50">
-                <input type="file" accept="audio/*" onChange={handleFileSelect} className="hidden" id="audio-upload" />
-                <Button variant="outline" onClick={() => document.getElementById('audio-upload')?.click()} className="mt-4 bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
-                  Selectează Fișier
-                </Button>
-              </div>
-
-              {audioFile && (
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <FileAudio className="w-5 h-5 text-[#0A5B4C]" />
-                    {/* MODIFICARE: Am adăugat `min-w-0` pentru a permite trunchierea textului */}
-                    <div className="flex-1 min-w-0">
-                      {/* MODIFICARE: Am adăugat clasa `truncate` și un `title` pentru a afișa numele complet la hover */}
-                      <p className="font-medium text-sm text-gray-900 truncate" title={audioFile.name}>
-                        {audioFile.name}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {(audioFile.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                    </div>
-                  </div>
-                  {audioUrl && (
-                    <div className="mt-3">
-                      <audio controls className="w-full" src={audioUrl}>
-                        Browser-ul tău nu suportă redarea audio.
-                      </audio>
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              <Button onClick={handleGenerateTranscript} disabled={!audioFile || isProcessing} className="w-full bg-gray-900 hover:bg-gray-800 text-white">
-                {isProcessing ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Se procesează...
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Upload className="w-4 h-4" />
-                    Generează Transcript
-                  </div>
-                )}
+    <div className="min-h-screen bg-white">
+      {/* Navigation */}
+      <nav className="border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <img src="/lovable-uploads/f617a44e-5bc3-46cb-8232-3110c0cee83d.png" alt="Kalina AI" className="h-8 w-8 mr-3" />
+              <span className="text-xl font-bold text-gray-900">Kalina AI</span>
+            </div>
+            <div className="hidden md:flex items-center space-x-8">
+              <Link to="/info" className="text-gray-600 hover:text-gray-900 transition-colors">Info</Link>
+              <Link to="/pricing" className="text-gray-600 hover:text-gray-900 transition-colors">Prețuri</Link>
+              <Link to="/auth" className="text-gray-600 hover:text-gray-900 transition-colors">Conectare</Link>
+              <Button asChild className="bg-[#0A5B4C] hover:bg-[#0A5B4C]/90">
+                <Link to="/auth">Începe Gratuit</Link>
               </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border-gray-200 shadow-sm">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-3 text-gray-900">
-                  <MessageSquare className="w-6 h-6 text-[#0A5B4C]" />
-                  Dialog ({transcriptEntries.length} replici)
-                </CardTitle>
-                {transcriptEntries.length > 0 && (
-                  <Button onClick={handleDownloadSRT} variant="outline" size="sm" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
-                    <Download className="w-4 h-4 mr-2" />
-                    Export SRT
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4 max-h-96 overflow-y-auto pr-4">
-                {transcriptEntries.length > 0 ? (
-                  transcriptEntries.map((entry, index) => (
-                    <div key={index} className="flex gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100">
-                      <div className="flex-shrink-0">
-                        <div className={`w-8 h-8 rounded-full ${getSpeakerColor(entry.speaker)} flex items-center justify-center`}>
-                          {getSpeakerIcon(entry.speaker)}
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-sm text-gray-900">{entry.speaker}</span>
-                          <span className="text-xs text-gray-500">{entry.timestamp}</span>
-                        </div>
-                        <p className="text-sm text-gray-700 leading-relaxed">{entry.text}</p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-12">
-                    <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">Dialogul structurat va apărea aici.</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
-      </div>
-    </DashboardLayout>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="relative pt-20 pb-32 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-purple-50"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <Badge className="mb-4 bg-[#0A5B4C]/10 text-[#0A5B4C] border-[#0A5B4C]/20">
+              🚀 Platforma AI Vocală Cea Mai Realistă
+            </Badge>
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+              Conversații AI<br />
+              <span className="bg-gradient-to-r from-[#0A5B4C] to-blue-600 bg-clip-text text-transparent">
+                Indistinguibile de Realitate
+              </span>
+            </h1>
+            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+              Creează agenți AI cu voci naturale care gestionează apeluri, programează întâlniri și 
+              oferă suport clienților 24/7. Tehnologie de ultimă generație pentru business-ul tău.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+              <Button size="lg" asChild className="bg-[#0A5B4C] hover:bg-[#0A5B4C]/90 text-lg px-8 py-4">
+                <Link to="/auth">Începe Gratuit <ArrowRight className="ml-2 w-5 h-5" /></Link>
+              </Button>
+              <Button size="lg" variant="outline" onClick={handleDemoPlay} className="text-lg px-8 py-4">
+                <Play className="mr-2 w-5 h-5" />
+                Ascultă Demo
+              </Button>
+            </div>
+          </div>
+
+          {/* Demo Section */}
+          <div className="max-w-4xl mx-auto">
+            <Card className="bg-white/60 backdrop-blur-sm border border-white/20 shadow-2xl">
+              <CardContent className="p-8">
+                <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-xl p-6 text-white">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    </div>
+                    <span className="text-sm text-gray-300">Kalina AI Console</span>
+                  </div>
+                  <div className="space-y-3 font-mono text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-400">$</span>
+                      <span>kalina agent create --voice=natural --language=ro</span>
+                    </div>
+                    <div className="text-blue-300">✓ Agent creat cu succes</div>
+                    <div className="text-blue-300">✓ Voce naturală configurată</div>
+                    <div className="text-blue-300">✓ Limba română activată</div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-400">$</span>
+                      <span className="opacity-60">Agent pregătit pentru apeluri...</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className="text-3xl md:text-4xl font-bold text-[#0A5B4C] mb-2">{stat.value}</div>
+                <div className="text-gray-600">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Funcționalități Avansate
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Tot ce ai nevoie pentru a automatiza și optimiza comunicarea cu clienții tăi.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <Card key={index} className="group hover:shadow-lg transition-all duration-300 border-gray-100 hover:border-[#0A5B4C]/20">
+                <CardContent className="p-6">
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 bg-[#0A5B4C]/10 rounded-lg flex items-center justify-center group-hover:bg-[#0A5B4C]/20 transition-colors">
+                      <feature.icon className="w-6 h-6 text-[#0A5B4C]" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
+                  <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Utilizat de Milioane de Creatori
+            </h2>
+            <p className="text-xl text-gray-600">
+              Companii de top au ales Kalina AI pentru transformarea digitală.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <Card key={index} className="bg-white border-gray-100">
+                <CardContent className="p-6">
+                  <p className="text-gray-600 mb-6 italic">"{testimonial.content}"</p>
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-[#0A5B4C] rounded-full flex items-center justify-center text-white font-semibold mr-4">
+                      {testimonial.avatar}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-gray-900">{testimonial.name}</div>
+                      <div className="text-sm text-gray-500">{testimonial.role}</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-[#0A5B4C] to-blue-600">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+            Gata să Transformi Business-ul Tău?
+          </h2>
+          <p className="text-xl text-white/90 mb-8">
+            Alătură-te miilor de companii care au ales Kalina AI pentru viitorul comunicării.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" variant="secondary" asChild className="text-lg px-8 py-4">
+              <Link to="/auth">Începe Gratuit <ArrowRight className="ml-2 w-5 h-5" /></Link>
+            </Button>
+            <Button size="lg" variant="outline" className="text-white border-white hover:bg-white hover:text-[#0A5B4C] text-lg px-8 py-4">
+              Contactează Echipa
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div>
+              <div className="flex items-center mb-4">
+                <img src="/lovable-uploads/f617a44e-5bc3-46cb-8232-3110c0cee83d.png" alt="Kalina AI" className="h-8 w-8 mr-3" />
+                <span className="text-xl font-bold">Kalina AI</span>
+              </div>
+              <p className="text-gray-400">
+                Platforma AI vocală cea mai avansată pentru business-ul modern.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Produs</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li><Link to="/info" className="hover:text-white transition-colors">Funcționalități</Link></li>
+                <li><Link to="/pricing" className="hover:text-white transition-colors">Prețuri</Link></li>
+                <li><a href="#" className="hover:text-white transition-colors">Documentație</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Companie</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li><a href="#" className="hover:text-white transition-colors">Despre noi</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Cariere</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Suport</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li><a href="#" className="hover:text-white transition-colors">Centru de ajutor</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Status</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Termeni</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; 2024 Kalina AI. Toate drepturile rezervate.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 };
 
-export default Transcript;
+export default Index;
