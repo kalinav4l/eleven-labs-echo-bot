@@ -82,7 +82,7 @@ export const useTranscripts = () => {
             user_id: user.id,
             title,
             original_filename: originalFilename || null,
-            transcript_entries: transcriptEntries,
+            transcript_entries: transcriptEntries as any,
             raw_text: rawText || null,
             duration_seconds: durationSeconds || 0,
             file_size_mb: fileSizeMb || null,

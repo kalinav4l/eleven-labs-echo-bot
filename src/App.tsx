@@ -40,6 +40,7 @@ function App() {
             <Route path="/account/conversation-analytics" element={<ConversationAnalytics />} />
             <Route path="/account/transcript" element={<Transcript />} />
             <Route path="/account/outbound" element={<Outbound />} />
+            <Route path="/account/outbound/call-scheduler" element={<CallScheduler />} />
             <Route path="/account/settings" element={<AccountSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
