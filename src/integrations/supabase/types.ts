@@ -9,42 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      audio_generations: {
-        Row: {
-          audio_url: string | null
-          character_count: number
-          created_at: string
-          credits_used: number
-          id: string
-          text: string
-          user_id: string | null
-          voice_id: string
-          voice_name: string
-        }
-        Insert: {
-          audio_url?: string | null
-          character_count: number
-          created_at?: string
-          credits_used: number
-          id?: string
-          text: string
-          user_id?: string | null
-          voice_id: string
-          voice_name: string
-        }
-        Update: {
-          audio_url?: string | null
-          character_count?: number
-          created_at?: string
-          credits_used?: number
-          id?: string
-          text?: string
-          user_id?: string | null
-          voice_id?: string
-          voice_name?: string
-        }
-        Relationships: []
-      }
       call_history: {
         Row: {
           agent_id: string | null
@@ -225,33 +189,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      custom_voices: {
-        Row: {
-          created_at: string
-          id: string
-          is_active: boolean
-          user_id: string | null
-          voice_id: string
-          voice_name: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          user_id?: string | null
-          voice_id: string
-          voice_name: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          user_id?: string | null
-          voice_id?: string
-          voice_name?: string
-        }
-        Relationships: []
       }
       kalina_agents: {
         Row: {
@@ -478,54 +415,6 @@ export type Database = {
           last_name?: string | null
           plan?: string | null
           updated_at?: string
-        }
-        Relationships: []
-      }
-      scheduled_calls: {
-        Row: {
-          agent_id: string | null
-          call_duration_minutes: number | null
-          client_name: string
-          created_at: string
-          description: string | null
-          id: string
-          notes: string | null
-          phone_number: string
-          priority: string | null
-          scheduled_datetime: string
-          status: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          agent_id?: string | null
-          call_duration_minutes?: number | null
-          client_name: string
-          created_at?: string
-          description?: string | null
-          id?: string
-          notes?: string | null
-          phone_number: string
-          priority?: string | null
-          scheduled_datetime: string
-          status?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          agent_id?: string | null
-          call_duration_minutes?: number | null
-          client_name?: string
-          created_at?: string
-          description?: string | null
-          id?: string
-          notes?: string | null
-          phone_number?: string
-          priority?: string | null
-          scheduled_datetime?: string
-          status?: string | null
-          updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }
