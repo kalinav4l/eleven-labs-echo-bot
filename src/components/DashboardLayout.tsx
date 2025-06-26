@@ -1,28 +1,27 @@
-// Locație: src/components/DashboardLayout.tsx
+import React from 'react';
+import Sidebar from './Sidebar'; // Presupunând că ai o componentă separată pentru meniu.
+                                // Numele poate fi altul, ex: HamburgerMenu.
 
-import React, { useState } from 'react';
-import Sidebar from './Sidebar'; // Asigură-te că calea este corectă
+// Prop-ul 'children' este esențial. Aici va fi randată pagina ta,
+// cum ar fi componenta 'Transcript'.
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
-  // Starea care controlează meniul este definită aici
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-
   return (
-    // Containerul principal care folosește flexbox pentru a crea cele 2 coloane
+    // 1. CONTAINERUL PRINCIPAL: Ocupă tot ecranul și folosește flex.
+    // Acesta este părintele care controlează tot.
     <div className="flex h-screen overflow-hidden bg-gray-50">
       
-      {/* Componenta Sidebar primește starea curentă (isOpen) și funcția 
-        pentru a o modifica (setIsOpen). Aceasta este legătura cheie.
-      */}
-      <Sidebar 
-        isOpen={isSidebarOpen} 
-        setIsOpen={setIsSidebarOpen} 
-      />
+      {/* 2. BARA LATERALĂ (SIDEBAR): Are lățime fixă și NU are scroll. */}
+      {/* Înlocuiește <Sidebar /> cu componenta ta reală de meniu dacă are alt nume. */}
+      <Sidebar />
 
-      {/* Conținutul paginii (care va avea scroll) */}
+      {/* 3. CONȚINUTUL PRINCIPAL: Ocupă restul spațiului și ARE SCROLL. */}
+      {/* Clasa 'flex-1' îl face să se extindă, iar 'overflow-y-auto' îi dă scroll. */}
+      {/* Aici va fi randat automat tot ce pui între <DashboardLayout> și </DashboardLayout>. */}
       <main className="flex-1 overflow-y-auto">
         {children}
       </main>
+
     </div>
   );
 };
