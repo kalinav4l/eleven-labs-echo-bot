@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Calendar } from '@/components/ui/calendar';
@@ -294,7 +293,7 @@ const CallScheduler = () => {
                   <div key={call.id} className="p-3 border rounded-lg">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-medium text-sm">{call.clientName}</h4>
-                      <Badge className={getPriorityColor(call.priority)} size="sm">
+                      <Badge className={getPriorityColor(call.priority)}>
                         {call.priority}
                       </Badge>
                     </div>
