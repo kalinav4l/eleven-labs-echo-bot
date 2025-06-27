@@ -25,6 +25,7 @@ interface ScheduledCall {
   priority: 'low' | 'medium' | 'high';
   status: 'scheduled' | 'completed' | 'cancelled';
   notes: string;
+  agent_id?: string;
 }
 
 const Calendar = () => {
@@ -39,12 +40,29 @@ const Calendar = () => {
     scheduled_datetime: '',
     description: '',
     priority: 'medium' as 'low' | 'medium' | 'high',
-    notes: ''
+    notes: '',
+    agent_id: ''
   });
 
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
+
+  // Fetch user's agents for the dropdown
+  const { data: userAgents = [] } = useQuery({
+    queryKey: ['user-agents', user.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('kalina_agents')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true);
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
 
   // Fetch scheduled calls
   const { data: scheduledCalls = [], isLoading } = useQuery({
@@ -65,12 +83,16 @@ const Calendar = () => {
   // Create scheduled call mutation
   const createCallMutation = useMutation({
     mutationFn: async (callData: Omit<ScheduledCall, 'id'>) => {
+      // Convert local time to Moldova timezone (UTC+2/UTC+3)
+      const moldovaDate = new Date(callData.scheduled_datetime);
+      
       const { data, error } = await supabase
         .from('scheduled_calls')
         .insert({
           ...callData,
           user_id: user.id,
-          status: 'scheduled'
+          status: 'scheduled',
+          scheduled_datetime: moldovaDate.toISOString()
         })
         .select()
         .single();
@@ -82,7 +104,7 @@ const Calendar = () => {
       queryClient.invalidateQueries({ queryKey: ['scheduled-calls', user.id] });
       toast({
         title: "Apel programat!",
-        description: "Apelul a fost programat cu succes.",
+        description: "Apelul a fost programat cu succes în fusul orar din Moldova.",
       });
       setIsDialogOpen(false);
       setFormData({
@@ -91,7 +113,8 @@ const Calendar = () => {
         scheduled_datetime: '',
         description: '',
         priority: 'medium',
-        notes: ''
+        notes: '',
+        agent_id: ''
       });
     },
     onError: (error) => {
@@ -151,6 +174,15 @@ const Calendar = () => {
     }
   };
 
+  // Format datetime for Moldova timezone
+  const getMoldovaDateTime = () => {
+    const now = new Date();
+    // Moldova is UTC+2 (UTC+3 during daylight saving)
+    const moldovaOffset = 2; // hours
+    const moldovaTime = new Date(now.getTime() + (moldovaOffset * 60 * 60 * 1000));
+    return moldovaTime.toISOString().slice(0, 16);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.client_name || !formData.phone_number || !formData.scheduled_datetime) {
@@ -167,8 +199,10 @@ const Calendar = () => {
 
   const handleDateClick = (date: Date) => {
     setSelectedDate(date);
-    const formattedDate = date.toISOString().slice(0, 16);
-    setFormData(prev => ({ ...prev, scheduled_datetime: formattedDate }));
+    // Set time to current Moldova time but with selected date
+    const moldovaTime = getMoldovaDateTime();
+    const selectedDateTime = date.toISOString().slice(0, 10) + 'T' + moldovaTime.slice(11);
+    setFormData(prev => ({ ...prev, scheduled_datetime: selectedDateTime }));
     setIsDialogOpen(true);
   };
 
@@ -186,7 +220,7 @@ const Calendar = () => {
       <div className="p-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Calendar Apeluri</h1>
-          <p className="text-muted-foreground">Programează și gestionează apelurile tale</p>
+          <p className="text-muted-foreground">Programează și gestionează apelurile tale (Ora Moldovei)</p>
         </div>
 
         {/* Statistics Cards */}
@@ -275,80 +309,113 @@ const Calendar = () => {
                         Programează Apel
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Programează un apel nou</DialogTitle>
-                      </DialogHeader>
-                      <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                          <Label htmlFor="client_name">Nume Client *</Label>
-                          <Input
-                            id="client_name"
-                            value={formData.client_name}
-                            onChange={(e) => setFormData(prev => ({ ...prev, client_name: e.target.value }))}
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="phone_number">Număr Telefon *</Label>
-                          <Input
-                            id="phone_number"
-                            type="tel"
-                            value={formData.phone_number}
-                            onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="scheduled_datetime">Data și Ora *</Label>
-                          <Input
-                            id="scheduled_datetime"
-                            type="datetime-local"
-                            value={formData.scheduled_datetime}
-                            onChange={(e) => setFormData(prev => ({ ...prev, scheduled_datetime: e.target.value }))}
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="priority">Prioritate</Label>
-                          <Select
-                            value={formData.priority}
-                            onValueChange={(value: 'low' | 'medium' | 'high') => 
-                              setFormData(prev => ({ ...prev, priority: value }))
-                            }
+                    <DialogContent className="max-w-md bg-white/90 backdrop-blur-md border border-white/20 shadow-2xl">
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50 rounded-lg"></div>
+                      <div className="relative z-10">
+                        <DialogHeader>
+                          <DialogTitle className="text-gray-800">Programează un apel nou</DialogTitle>
+                        </DialogHeader>
+                        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+                          <div>
+                            <Label htmlFor="client_name" className="text-gray-700">Nume Client *</Label>
+                            <Input
+                              id="client_name"
+                              value={formData.client_name}
+                              onChange={(e) => setFormData(prev => ({ ...prev, client_name: e.target.value }))}
+                              className="bg-white/70 border-white/30 backdrop-blur-sm"
+                              placeholder="Numele clientului"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="phone_number" className="text-gray-700">Număr Telefon *</Label>
+                            <Input
+                              id="phone_number"
+                              type="tel"
+                              value={formData.phone_number}
+                              onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
+                              className="bg-white/70 border-white/30 backdrop-blur-sm"
+                              placeholder="+373xxxxxxxx"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="scheduled_datetime" className="text-gray-700">Data și Ora (Moldova) *</Label>
+                            <Input
+                              id="scheduled_datetime"
+                              type="datetime-local"
+                              value={formData.scheduled_datetime}
+                              onChange={(e) => setFormData(prev => ({ ...prev, scheduled_datetime: e.target.value }))}
+                              className="bg-white/70 border-white/30 backdrop-blur-sm"
+                              min={getMoldovaDateTime()}
+                              required
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="agent_id" className="text-gray-700">Agent</Label>
+                            <Select
+                              value={formData.agent_id}
+                              onValueChange={(value) => setFormData(prev => ({ ...prev, agent_id: value }))}
+                            >
+                              <SelectTrigger className="bg-white/70 border-white/30 backdrop-blur-sm">
+                                <SelectValue placeholder="Selectează agentul" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-white/95 backdrop-blur-md">
+                                {userAgents.map((agent) => (
+                                  <SelectItem key={agent.id} value={agent.agent_id}>
+                                    {agent.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor="priority" className="text-gray-700">Urgență</Label>
+                            <Select
+                              value={formData.priority}
+                              onValueChange={(value: 'low' | 'medium' | 'high') => 
+                                setFormData(prev => ({ ...prev, priority: value }))
+                              }
+                            >
+                              <SelectTrigger className="bg-white/70 border-white/30 backdrop-blur-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-white/95 backdrop-blur-md">
+                                <SelectItem value="low">Scăzută</SelectItem>
+                                <SelectItem value="medium">Medie</SelectItem>
+                                <SelectItem value="high">Ridicată</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor="description" className="text-gray-700">Descriere</Label>
+                            <Textarea
+                              id="description"
+                              value={formData.description}
+                              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                              className="bg-white/70 border-white/30 backdrop-blur-sm"
+                              placeholder="Motivul apelului..."
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="notes" className="text-gray-700">Note</Label>
+                            <Textarea
+                              id="notes"
+                              value={formData.notes}
+                              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                              className="bg-white/70 border-white/30 backdrop-blur-sm"
+                              placeholder="Note suplimentare..."
+                            />
+                          </div>
+                          <Button 
+                            type="submit" 
+                            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white" 
+                            disabled={createCallMutation.isPending}
                           >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="low">Scăzută</SelectItem>
-                              <SelectItem value="medium">Medie</SelectItem>
-                              <SelectItem value="high">Ridicată</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label htmlFor="description">Descriere</Label>
-                          <Textarea
-                            id="description"
-                            value={formData.description}
-                            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                            placeholder="Motivul apelului..."
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="notes">Note</Label>
-                          <Textarea
-                            id="notes"
-                            value={formData.notes}
-                            onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                            placeholder="Note suplimentare..."
-                          />
-                        </div>
-                        <Button type="submit" className="w-full" disabled={createCallMutation.isPending}>
-                          {createCallMutation.isPending ? 'Se programează...' : 'Programează Apelul'}
-                        </Button>
-                      </form>
+                            {createCallMutation.isPending ? 'Se programează...' : 'Programează Apelul'}
+                          </Button>
+                        </form>
+                      </div>
                     </DialogContent>
                   </Dialog>
                 </div>
@@ -433,7 +500,7 @@ const Calendar = () => {
                             day: 'numeric',
                             hour: '2-digit',
                             minute: '2-digit'
-                          })}
+                          })} (Moldova)
                         </div>
                       </div>
                       {call.description && (
