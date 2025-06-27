@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -43,7 +42,7 @@ const Calendar = () => {
     priority: 'medium' as 'low' | 'medium' | 'high',
     notes: '',
     agent_id: '',
-    agent_phone_number: '+40123456789' // Numărul implicit al agentului
+    agent_phone_number: 'phnum_01jxfh7ntmf29bmvd0k9m4g4h6' // Numărul specific pe care trebuie să sune
   });
 
   if (!user) {
@@ -127,7 +126,7 @@ const Calendar = () => {
         priority: 'medium',
         notes: '',
         agent_id: '',
-        agent_phone_number: '+40123456789'
+        agent_phone_number: 'phnum_01jxfh7ntmf29bmvd0k9m4g4h6'
       });
     },
     onError: (error) => {
@@ -220,7 +219,7 @@ const Calendar = () => {
         body: {
           agent_id: call.agent_id,
           phone_number: call.phone_number,
-          agent_phone_number_id: call.agent_phone_number || '+40123456789'
+          agent_phone_number_id: call.agent_phone_number || 'phnum_01jxfh7ntmf29bmvd0k9m4g4h6'
         }
       });
 
@@ -503,13 +502,13 @@ const Calendar = () => {
                             <Label htmlFor="agent_phone_number" className="text-gray-700">Număr Telefon Agent</Label>
                             <Input
                               id="agent_phone_number"
-                              type="tel"
+                              type="text"
                               value={formData.agent_phone_number}
                               onChange={(e) => setFormData(prev => ({ ...prev, agent_phone_number: e.target.value }))}
                               className="bg-white/70 border-white/30 backdrop-blur-sm"
-                              placeholder="+40123456789"
+                              placeholder="phnum_01jxfh7ntmf29bmvd0k9m4g4h6"
                             />
-                            <p className="text-xs text-gray-600 mt-1">Numărul de telefon de pe care agentul va suna</p>
+                            <p className="text-xs text-gray-600 mt-1">ID-ul numărului de telefon din ElevenLabs de pe care agentul va suna</p>
                           </div>
                           <div>
                             <Label htmlFor="scheduled_datetime" className="text-gray-700">Data și Ora (Moldova) *</Label>

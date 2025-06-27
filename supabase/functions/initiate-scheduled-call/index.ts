@@ -33,7 +33,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         agent_id: agent_id,
-        agent_phone_number_id: agent_phone_number_id || 'your-default-phone-id',
+        agent_phone_number_id: agent_phone_number_id || 'phnum_01jxfh7ntmf29bmvd0k9m4g4h6',
         to_number: phone_number,
       }),
     })
