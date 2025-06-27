@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -25,6 +26,7 @@ interface ScheduledCall {
   status: 'scheduled' | 'completed' | 'cancelled' | 'in_progress';
   notes: string;
   agent_id?: string;
+  agent_phone_number?: string; // Numărul de telefon al agentului
 }
 
 const Calendar = () => {
@@ -40,7 +42,8 @@ const Calendar = () => {
     description: '',
     priority: 'medium' as 'low' | 'medium' | 'high',
     notes: '',
-    agent_id: ''
+    agent_id: '',
+    agent_phone_number: '+40123456789' // Numărul implicit al agentului
   });
 
   if (!user) {
@@ -88,22 +91,22 @@ const Calendar = () => {
   // Create scheduled call mutation
   const createCallMutation = useMutation({
     mutationFn: async (callData: Omit<ScheduledCall, 'id'>) => {
-      // Convert local time to Moldova timezone (UTC+2/UTC+3)
-      const moldovaDate = new Date(callData.scheduled_datetime);
-      
       const { data, error } = await supabase
         .from('scheduled_calls')
         .insert({
           ...callData,
           user_id: user.id,
           status: 'scheduled',
-          scheduled_datetime: moldovaDate.toISOString()
         })
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+      return {
+        ...data,
+        priority: data.priority as 'low' | 'medium' | 'high',
+        status: data.status as 'scheduled' | 'completed' | 'cancelled' | 'in_progress'
+      } as ScheduledCall;
     },
     onSuccess: (newCall) => {
       queryClient.invalidateQueries({ queryKey: ['scheduled-calls', user.id] });
@@ -123,7 +126,8 @@ const Calendar = () => {
         description: '',
         priority: 'medium',
         notes: '',
-        agent_id: ''
+        agent_id: '',
+        agent_phone_number: '+40123456789'
       });
     },
     onError: (error) => {
@@ -170,25 +174,28 @@ const Calendar = () => {
     const callTime = new Date(call.scheduled_datetime);
     const timeUntilCall = callTime.getTime() - now.getTime();
 
+    console.log(`Apel programat pentru ${call.client_name} la ${callTime.toLocaleString('ro-RO')}`);
+    console.log(`Timp până la apel: ${Math.round(timeUntilCall / 1000)} secunde`);
+
     if (timeUntilCall > 0) {
-      console.log(`Apel programat pentru ${call.client_name} la ${callTime.toLocaleString('ro-RO')}`);
-      
       setTimeout(async () => {
         try {
+          console.log(`Inițiere apel pentru ${call.client_name} la ${call.phone_number}`);
+          
           // Update call status to in_progress
           await supabase
             .from('scheduled_calls')
             .update({ status: 'in_progress' })
             .eq('id', call.id);
 
-          // Make the actual call using ElevenLabs API
+          // Make the actual call using Supabase Edge Function
           if (call.agent_id) {
             await initiateScheduledCall(call);
           }
           
           toast({
             title: "Apel inițiat!",
-            description: `Se apelează ${call.client_name} la ${call.phone_number}`,
+            description: `Se apelează ${call.client_name} la ${call.phone_number} de pe ${call.agent_phone_number}`,
           });
         } catch (error) {
           console.error('Error initiating scheduled call:', error);
@@ -199,35 +206,39 @@ const Calendar = () => {
           });
         }
       }, timeUntilCall);
+    } else {
+      console.log('Apelul este programat în trecut, nu se va executa');
     }
   };
 
   // Function to initiate the actual call
   const initiateScheduledCall = async (call: ScheduledCall) => {
     try {
-      // This would integrate with your existing call initiation logic
-      const response = await fetch('https://api.elevenlabs.io/v1/convai/conversations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'xi-api-key': process.env.ELEVENLABS_API_KEY || '',
-        },
-        body: JSON.stringify({
+      console.log('Apelare edge function pentru inițierea apelului...');
+      
+      const { data, error } = await supabase.functions.invoke('initiate-scheduled-call', {
+        body: {
           agent_id: call.agent_id,
-          agent_phone_number_id: 'your-phone-number-id', // Add your phone number ID
-          to_number: call.phone_number,
-        }),
+          phone_number: call.phone_number,
+          agent_phone_number_id: call.agent_phone_number || '+40123456789'
+        }
       });
 
-      if (response.ok) {
-        // Update call status to completed
-        await supabase
-          .from('scheduled_calls')
-          .update({ status: 'completed' })
-          .eq('id', call.id);
-          
-        queryClient.invalidateQueries({ queryKey: ['scheduled-calls', user.id] });
+      if (error) {
+        console.error('Eroare edge function:', error);
+        throw error;
       }
+
+      console.log('Apel inițiat cu succes:', data);
+
+      // Update call status to completed
+      await supabase
+        .from('scheduled_calls')
+        .update({ status: 'completed' })
+        .eq('id', call.id);
+        
+      queryClient.invalidateQueries({ queryKey: ['scheduled-calls', user.id] });
+      
     } catch (error) {
       console.error('Error making scheduled call:', error);
       // Update call status to cancelled if failed
@@ -235,6 +246,12 @@ const Calendar = () => {
         .from('scheduled_calls')
         .update({ status: 'cancelled' })
         .eq('id', call.id);
+        
+      toast({
+        title: "Eroare apel",
+        description: "Apelul nu a putut fi inițiat. Verifică configurarea ElevenLabs.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -329,9 +346,18 @@ const Calendar = () => {
 
   const handleDateClick = (date: Date) => {
     setSelectedDate(date);
-    // Set time to current Moldova time but with selected date
-    const moldovaTime = getMoldovaDateTime();
-    const selectedDateTime = date.toISOString().slice(0, 10) + 'T' + moldovaTime.slice(11);
+    // Fix timezone issue - use the exact date clicked without timezone conversion
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const currentTime = new Date();
+    const hours = String(currentTime.getHours()).padStart(2, '0');
+    const minutes = String(currentTime.getMinutes()).padStart(2, '0');
+    
+    const selectedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+    
+    console.log(`Data selectată: ${date.toDateString()}, DateTime format: ${selectedDateTime}`);
+    
     setFormData(prev => ({ ...prev, scheduled_datetime: selectedDateTime }));
     setIsDialogOpen(true);
   };
@@ -462,7 +488,7 @@ const Calendar = () => {
                             />
                           </div>
                           <div>
-                            <Label htmlFor="phone_number" className="text-gray-700">Număr Telefon *</Label>
+                            <Label htmlFor="phone_number" className="text-gray-700">Număr Telefon Client *</Label>
                             <Input
                               id="phone_number"
                               type="tel"
@@ -472,6 +498,18 @@ const Calendar = () => {
                               placeholder="+373xxxxxxxx"
                               required
                             />
+                          </div>
+                          <div>
+                            <Label htmlFor="agent_phone_number" className="text-gray-700">Număr Telefon Agent</Label>
+                            <Input
+                              id="agent_phone_number"
+                              type="tel"
+                              value={formData.agent_phone_number}
+                              onChange={(e) => setFormData(prev => ({ ...prev, agent_phone_number: e.target.value }))}
+                              className="bg-white/70 border-white/30 backdrop-blur-sm"
+                              placeholder="+40123456789"
+                            />
+                            <p className="text-xs text-gray-600 mt-1">Numărul de telefon de pe care agentul va suna</p>
                           </div>
                           <div>
                             <Label htmlFor="scheduled_datetime" className="text-gray-700">Data și Ora (Moldova) *</Label>
@@ -654,6 +692,12 @@ const Calendar = () => {
                             minute: '2-digit'
                           })} (Moldova)
                         </div>
+                        {call.agent_phone_number && (
+                          <div className="flex items-center">
+                            <Phone className="h-3 w-3 mr-1" />
+                            Agent: {call.agent_phone_number}
+                          </div>
+                        )}
                       </div>
                       {call.description && (
                         <p className="text-xs text-gray-600 line-clamp-2">
