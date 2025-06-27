@@ -25,7 +25,7 @@ interface ScheduledCall {
   status: 'scheduled' | 'completed' | 'cancelled' | 'in_progress';
   notes: string;
   agent_id?: string;
-  agent_phone_number?: string; // Numărul de telefon al agentului
+  agent_phone_number?: string;
 }
 
 const Calendar = () => {
@@ -42,7 +42,7 @@ const Calendar = () => {
     priority: 'medium' as 'low' | 'medium' | 'high',
     notes: '',
     agent_id: '',
-    agent_phone_number: 'phnum_01jxfh7ntmf29bmvd0k9m4g4h6' // Numărul specific pe care trebuie să sune
+    agent_phone_number: '' // Se va obține din Supabase Secrets
   });
 
   if (!user) {
@@ -126,7 +126,7 @@ const Calendar = () => {
         priority: 'medium',
         notes: '',
         agent_id: '',
-        agent_phone_number: 'phnum_01jxfh7ntmf29bmvd0k9m4g4h6'
+        agent_phone_number: ''
       });
     },
     onError: (error) => {
@@ -210,7 +210,7 @@ const Calendar = () => {
     }
   };
 
-  // Function to initiate the actual call
+  // Function to initiate the actual call - now uses secure backend
   const initiateScheduledCall = async (call: ScheduledCall) => {
     try {
       console.log('Apelare edge function pentru inițierea apelului...');
@@ -219,7 +219,7 @@ const Calendar = () => {
         body: {
           agent_id: call.agent_id,
           phone_number: call.phone_number,
-          agent_phone_number_id: call.agent_phone_number || 'phnum_01jxfh7ntmf29bmvd0k9m4g4h6'
+          agent_phone_number_id: call.agent_phone_number // Doar ID-ul, nu valoarea hardcodată
         }
       });
 
@@ -248,7 +248,7 @@ const Calendar = () => {
         
       toast({
         title: "Eroare apel",
-        description: "Apelul nu a putut fi inițiat. Verifică configurarea ElevenLabs.",
+        description: "Apelul nu a putut fi inițiat. Verifică configurarea din setări.",
         variant: "destructive",
       });
     }
@@ -497,18 +497,6 @@ const Calendar = () => {
                               placeholder="+373xxxxxxxx"
                               required
                             />
-                          </div>
-                          <div>
-                            <Label htmlFor="agent_phone_number" className="text-gray-700">Număr Telefon Agent</Label>
-                            <Input
-                              id="agent_phone_number"
-                              type="text"
-                              value={formData.agent_phone_number}
-                              onChange={(e) => setFormData(prev => ({ ...prev, agent_phone_number: e.target.value }))}
-                              className="bg-white/70 border-white/30 backdrop-blur-sm"
-                              placeholder="phnum_01jxfh7ntmf29bmvd0k9m4g4h6"
-                            />
-                            <p className="text-xs text-gray-600 mt-1">ID-ul numărului de telefon din ElevenLabs de pe care agentul va suna</p>
                           </div>
                           <div>
                             <Label htmlFor="scheduled_datetime" className="text-gray-700">Data și Ora (Moldova) *</Label>

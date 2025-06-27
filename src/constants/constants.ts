@@ -4,10 +4,6 @@ import { ENV } from '@/config/environment';
 // Constants for the Agent Consultant application
 
 export const API_CONFIG = {
-  ELEVENLABS_API_KEY: ENV.ELEVENLABS_API_KEY,
-  ELEVENLABS_BASE_URL: ENV.ELEVENLABS_BASE_URL,
-  DEFAULT_MODEL_ID: ENV.DEFAULT_MODEL_ID,
-  AGENT_PHONE_NUMBER_ID: ENV.AGENT_PHONE_NUMBER_ID,
   BACKEND_URL: ENV.BACKEND_URL
 } as const;
 

@@ -18,9 +18,16 @@ serve(async (req) => {
       throw new Error('Agent ID și numărul de telefon sunt obligatorii')
     }
 
+    // Obține toate secretele din Supabase Secrets
     const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY')
+    const defaultAgentPhoneId = Deno.env.get('DEFAULT_AGENT_PHONE_ID')
+    
     if (!elevenLabsApiKey) {
-      throw new Error('ElevenLabs API key nu este configurat')
+      throw new Error('ElevenLabs API key nu este configurat în Supabase Secrets')
+    }
+
+    if (!defaultAgentPhoneId) {
+      throw new Error('Default Agent Phone ID nu este configurat în Supabase Secrets')
     }
 
     console.log(`Inițiere apel pentru ${phone_number} cu agentul ${agent_id}`)
@@ -33,7 +40,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         agent_id: agent_id,
-        agent_phone_number_id: agent_phone_number_id || 'phnum_01jxfh7ntmf29bmvd0k9m4g4h6',
+        agent_phone_number_id: agent_phone_number_id || defaultAgentPhoneId,
         to_number: phone_number,
       }),
     })
