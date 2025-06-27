@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIcon, Clock, Phone, Plus, ChevronLeft, ChevronRight, Users, CheckCircle, AlertCircle } from 'lucide-react';
+import { CalendarIcon, Clock, Phone, Plus, ChevronLeft, ChevronRight, Users, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -23,7 +23,7 @@ interface ScheduledCall {
   scheduled_datetime: string;
   description: string;
   priority: 'low' | 'medium' | 'high';
-  status: 'scheduled' | 'completed' | 'cancelled';
+  status: 'scheduled' | 'completed' | 'cancelled' | 'in_progress';
   notes: string;
   agent_id?: string;
 }
@@ -100,12 +100,16 @@ const Calendar = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (newCall) => {
       queryClient.invalidateQueries({ queryKey: ['scheduled-calls', user.id] });
       toast({
         title: "Apel programat!",
         description: "Apelul a fost programat cu succes în fusul orar din Moldova.",
       });
+      
+      // Schedule the actual call
+      scheduleAutomaticCall(newCall);
+      
       setIsDialogOpen(false);
       setFormData({
         client_name: '',
@@ -126,6 +130,117 @@ const Calendar = () => {
       });
     },
   });
+
+  // Delete scheduled call mutation
+  const deleteCallMutation = useMutation({
+    mutationFn: async (callId: string) => {
+      const { error } = await supabase
+        .from('scheduled_calls')
+        .delete()
+        .eq('id', callId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scheduled-calls', user.id] });
+      toast({
+        title: "Apel șters",
+        description: "Apelul programat a fost șters cu succes.",
+      });
+    },
+    onError: (error) => {
+      console.error('Error deleting scheduled call:', error);
+      toast({
+        title: "Eroare",
+        description: "Nu s-a putut șterge apelul programat.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Function to schedule automatic call
+  const scheduleAutomaticCall = (call: ScheduledCall) => {
+    const now = new Date();
+    const callTime = new Date(call.scheduled_datetime);
+    const timeUntilCall = callTime.getTime() - now.getTime();
+
+    if (timeUntilCall > 0) {
+      console.log(`Apel programat pentru ${call.client_name} la ${callTime.toLocaleString('ro-RO')}`);
+      
+      setTimeout(async () => {
+        try {
+          // Update call status to in_progress
+          await supabase
+            .from('scheduled_calls')
+            .update({ status: 'in_progress' })
+            .eq('id', call.id);
+
+          // Make the actual call using ElevenLabs API
+          if (call.agent_id) {
+            await initiateScheduledCall(call);
+          }
+          
+          toast({
+            title: "Apel inițiat!",
+            description: `Se apelează ${call.client_name} la ${call.phone_number}`,
+          });
+        } catch (error) {
+          console.error('Error initiating scheduled call:', error);
+          toast({
+            title: "Eroare apel",
+            description: "Nu s-a putut iniția apelul programat.",
+            variant: "destructive",
+          });
+        }
+      }, timeUntilCall);
+    }
+  };
+
+  // Function to initiate the actual call
+  const initiateScheduledCall = async (call: ScheduledCall) => {
+    try {
+      // This would integrate with your existing call initiation logic
+      const response = await fetch('https://api.elevenlabs.io/v1/convai/conversations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'xi-api-key': process.env.ELEVENLABS_API_KEY || '',
+        },
+        body: JSON.stringify({
+          agent_id: call.agent_id,
+          agent_phone_number_id: 'your-phone-number-id', // Add your phone number ID
+          to_number: call.phone_number,
+        }),
+      });
+
+      if (response.ok) {
+        // Update call status to completed
+        await supabase
+          .from('scheduled_calls')
+          .update({ status: 'completed' })
+          .eq('id', call.id);
+          
+        queryClient.invalidateQueries({ queryKey: ['scheduled-calls', user.id] });
+      }
+    } catch (error) {
+      console.error('Error making scheduled call:', error);
+      // Update call status to cancelled if failed
+      await supabase
+        .from('scheduled_calls')
+        .update({ status: 'cancelled' })
+        .eq('id', call.id);
+    }
+  };
+
+  // Initialize automatic calls for existing scheduled calls
+  React.useEffect(() => {
+    scheduledCalls.forEach(call => {
+      if (call.status === 'scheduled') {
+        scheduleAutomaticCall(call);
+      }
+    });
+  }, [scheduledCalls]);
 
   // Calendar navigation functions
   const goToPreviousMonth = () => {
@@ -174,6 +289,16 @@ const Calendar = () => {
     }
   };
 
+  // Get status color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   // Format datetime for Moldova timezone
   const getMoldovaDateTime = () => {
     const now = new Date();
@@ -204,6 +329,10 @@ const Calendar = () => {
     const selectedDateTime = date.toISOString().slice(0, 10) + 'T' + moldovaTime.slice(11);
     setFormData(prev => ({ ...prev, scheduled_datetime: selectedDateTime }));
     setIsDialogOpen(true);
+  };
+
+  const handleDeleteCall = (callId: string) => {
+    deleteCallMutation.mutate(callId);
   };
 
   const calendarDays = getCalendarDays();
@@ -479,13 +608,31 @@ const Calendar = () => {
                   {weekCalls.slice(0, 10).map((call) => (
                     <div
                       key={call.id}
-                      className="p-3 border rounded-lg space-y-2"
+                      className="p-3 border rounded-lg space-y-2 relative"
                     >
                       <div className="flex items-center justify-between">
                         <h4 className="font-medium text-sm">{call.client_name}</h4>
-                        <Badge className={getPriorityColor(call.priority)}>
-                          {call.priority === 'high' ? 'Ridicată' : 
-                           call.priority === 'medium' ? 'Medie' : 'Scăzută'}
+                        <div className="flex items-center space-x-2">
+                          <Badge className={getPriorityColor(call.priority)}>
+                            {call.priority === 'high' ? 'Ridicată' : 
+                             call.priority === 'medium' ? 'Medie' : 'Scăzută'}
+                          </Badge>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteCall(call.id)}
+                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Badge className={getStatusColor(call.status)}>
+                          {call.status === 'scheduled' ? 'Programat' :
+                           call.status === 'completed' ? 'Finalizat' :
+                           call.status === 'in_progress' ? 'În progres' :
+                           'Anulat'}
                         </Badge>
                       </div>
                       <div className="text-xs text-muted-foreground space-y-1">
