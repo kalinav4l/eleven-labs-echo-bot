@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -75,7 +74,13 @@ const Calendar = () => {
         .order('scheduled_datetime', { ascending: true });
 
       if (error) throw error;
-      return data as ScheduledCall[];
+      
+      // Properly cast the data to ensure type compatibility
+      return (data || []).map(call => ({
+        ...call,
+        priority: call.priority as 'low' | 'medium' | 'high',
+        status: call.status as 'scheduled' | 'completed' | 'cancelled' | 'in_progress'
+      })) as ScheduledCall[];
     },
     enabled: !!user,
   });
