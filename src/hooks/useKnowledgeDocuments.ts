@@ -52,16 +52,14 @@ export const useKnowledgeDocuments = () => {
     try {
       const response = await KnowledgeBaseController.getExistingDocuments();
       
-      // Filtrăm documentele pentru a arăta doar cele create de utilizatorul curent
-      // Căutăm documentele care conțin "(User Document)" în nume - acestea sunt create de utilizatori
+      // Filtrăm strict doar documentele care conțin "(User Document)" în nume
+      // Acestea sunt documentele create de utilizatorul curent
       const userDocuments = response.documents.filter(doc => {
-        return doc.name.includes('(User Document)') || 
-               // Sau poți adăuga alte criterii de filtrare aici
-               doc.type === 'text' || doc.type === 'file';
+        return doc.name.includes('(User Document)');
       });
       
       setExistingDocuments(userDocuments);
-      console.log('Loaded existing documents for user:', userDocuments);
+      console.log('Loaded user documents only:', userDocuments);
     } catch (error) {
       console.error('Error loading existing documents:', error);
       toast({
