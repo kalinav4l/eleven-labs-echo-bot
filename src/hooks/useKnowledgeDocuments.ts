@@ -3,8 +3,10 @@ import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { KnowledgeBaseController } from '../controllers/KnowledgeBaseController';
 import { AgentResponse, KnowledgeBaseDocument, KnowledgeDocumentLocal } from "@/types/dtos.ts";
+import { useAuth } from '@/components/AuthContext';
 
 export const useKnowledgeDocuments = () => {
+  const { user } = useAuth();
   const [documents, setDocuments] = useState<KnowledgeDocumentLocal[]>([]);
   const [existingDocuments, setExistingDocuments] = useState<KnowledgeBaseDocument[]>([]);
   const [selectedExistingDocuments, setSelectedExistingDocuments] = useState<Set<string>>(new Set());
@@ -37,11 +39,29 @@ export const useKnowledgeDocuments = () => {
   }, []);
 
   const loadExistingDocuments = useCallback(async () => {
+    if (!user) {
+      toast({
+        title: "Eroare",
+        description: "Trebuie să fii autentificat pentru a încărca documentele.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoadingExisting(true);
     try {
       const response = await KnowledgeBaseController.getExistingDocuments();
-      setExistingDocuments(response.documents);
-      console.log('Loaded existing documents:', response.documents);
+      
+      // Filtrăm documentele pentru a arăta doar cele create de utilizatorul curent
+      // Căutăm documentele care conțin "(User Document)" în nume - acestea sunt create de utilizatori
+      const userDocuments = response.documents.filter(doc => {
+        return doc.name.includes('(User Document)') || 
+               // Sau poți adăuga alte criterii de filtrare aici
+               doc.type === 'text' || doc.type === 'file';
+      });
+      
+      setExistingDocuments(userDocuments);
+      console.log('Loaded existing documents for user:', userDocuments);
     } catch (error) {
       console.error('Error loading existing documents:', error);
       toast({
@@ -52,7 +72,7 @@ export const useKnowledgeDocuments = () => {
     } finally {
       setIsLoadingExisting(false);
     }
-  }, []);
+  }, [user]);
 
   const addExistingDocument = useCallback((documentId: string) => {
     const existingDoc = existingDocuments.find(doc => doc.id === documentId);

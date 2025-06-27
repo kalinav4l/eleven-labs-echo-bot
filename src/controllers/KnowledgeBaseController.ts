@@ -1,3 +1,4 @@
+
 import { CreateTextDocumentRequest, CreateDocumentResponse, KnowledgeBaseResponse } from '../types/dtos';
 import { API_CONFIG } from '../constants/constants';
 
@@ -8,7 +9,11 @@ export class KnowledgeBaseController {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(request),
+      body: JSON.stringify({
+        ...request,
+        // Adăugăm un identificator pentru utilizator în numele documentului pentru a-l putea filtra mai târziu
+        name: `${request.name} (User Document)`
+      }),
     });
     if (!response.ok) {
       throw new Error('Create text document failed');
@@ -17,11 +22,13 @@ export class KnowledgeBaseController {
   }
 
   static async uploadFileDocument(name: string, file: File): Promise<CreateDocumentResponse> {
-    // The API expects a JSON body with a base64-encoded file string, but the OpenAPI spec says format: binary
-    // Here, we use FormData for file upload, but you may need to adjust if the backend expects base64 in JSON
     const formData = new FormData();
     formData.append('file', file);
-    const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/knowledge-base/documents/file?name=${encodeURIComponent(name)}`, {
+    
+    // Adăugăm un identificator în numele fișierului pentru a-l putea identifica ca aparținând utilizatorului
+    const userFileName = `${name} (User Document)`;
+    
+    const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/knowledge-base/documents/file?name=${encodeURIComponent(userFileName)}`, {
       method: 'POST',
       body: formData,
     });
