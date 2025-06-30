@@ -1,14 +1,11 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import TextPressure from '@/components/TextPressure';
-
 const Landing = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
   const handleDemoCall = async () => {
     if (!phoneNumber.trim()) return;
     setIsLoading(true);
@@ -18,15 +15,13 @@ const Landing = () => {
       alert('Demo call inițiat! Vei fi sunat în curând.');
     }, 2000);
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-red-600 via-red-700 to-red-800">
+  return <div className="min-h-screen bg-gradient-to-br from-red-600 via-red-700 to-red-800">
       {/* Header */}
       <header className="absolute top-0 left-0 right-0 z-50 bg-transparent">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <img src="/lovable-uploads/41063b8f-e57c-4af9-aba7-3710feba1af3.png" alt="Kalina AI Logo" className="h-8 w-auto" />
+              <img alt="Kalina AI Logo" className="h-8 w-auto" src="/lovable-uploads/b4598fa6-e9e2-4058-bb5f-62e79ea68676.png" />
               <span className="text-xl font-bold text-white">KALINA AI</span>
             </div>
             
@@ -46,16 +41,7 @@ const Landing = () => {
       <section className="pt-20 pb-4 px-0">
         <div className="w-full px-6">
           <div className="h-32 w-full">
-            <TextPressure 
-              text="KALINA" 
-              textColor="#FFFFFF" 
-              minFontSize={120} 
-              weight={true} 
-              width={true} 
-              italic={false} 
-              scale={true} 
-              className="w-full" 
-            />
+            <TextPressure text="KALINA" textColor="#FFFFFF" minFontSize={120} weight={true} width={true} italic={false} scale={true} className="w-full" />
           </div>
         </div>
       </section>
@@ -98,8 +84,6 @@ const Landing = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Landing;
