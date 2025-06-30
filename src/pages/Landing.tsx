@@ -26,6 +26,11 @@ const Landing = () => {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
+              <img 
+                src="/lovable-uploads/41063b8f-e57c-4af9-aba7-3710feba1af3.png" 
+                alt="Kalina AI Logo" 
+                className="h-8 w-auto"
+              />
               <span className="text-xl font-bold text-white">KALINA AI</span>
             </div>
             
@@ -44,14 +49,14 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* Hero Section with Animated Text */}
-      <section className="relative h-screen flex items-center justify-center">
-        <div className="w-full max-w-6xl mx-auto px-6">
-          <div className="h-64 flex items-center justify-center">
+      {/* Animated Title Section - Full Width at Top */}
+      <section className="pt-24 pb-8">
+        <div className="w-full px-6">
+          <div className="h-32 w-full">
             <TextPressure
               text="KALINA"
               textColor="#FFFFFF"
-              minFontSize={120}
+              minFontSize={80}
               weight={true}
               width={true}
               italic={false}
@@ -59,16 +64,21 @@ const Landing = () => {
               className="w-full"
             />
           </div>
-          
+        </div>
+      </section>
+
+      {/* Main Content Section */}
+      <section className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-6xl mx-auto">
           {/* Subtitle */}
-          <div className="text-center mt-8">
+          <div className="text-center mb-12">
             <p className="text-white/90 text-xl font-light">
               Generează agenți telefonici AI de înaltă calitate
             </p>
           </div>
 
           {/* Demo Call Section */}
-          <div className="mt-12 max-w-md mx-auto">
+          <div className="max-w-md mx-auto">
             <Card className="bg-white/10 backdrop-blur-sm border-white/20">
               <CardContent className="p-6">
                 <h3 className="text-lg font-semibold text-white mb-4">
