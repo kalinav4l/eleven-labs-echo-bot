@@ -26,13 +26,15 @@ serve(async (req) => {
       throw new Error('ElevenLabs API key nu este configurat în Supabase Secrets')
     }
 
-    console.log(`Inițiere apel pentru ${phone_number} cu agentul ${agent_id}`)
+    console.log(`Inițiere apel pentru ${phone_number} cu agentul ${agent_id} de pe numărul ${agentPhoneId}`)
 
     const requestBody = {
       agent_id: agent_id,
       customer_phone_number: phone_number,
       agent_phone_number_id: agentPhoneId
     }
+
+    console.log('Request body pentru ElevenLabs:', JSON.stringify(requestBody, null, 2))
 
     // Endpoint corect pentru inițierea conversațiilor telefonice
     const response = await fetch('https://api.elevenlabs.io/v1/convai/conversations/phone', {
@@ -44,9 +46,17 @@ serve(async (req) => {
       body: JSON.stringify(requestBody),
     })
 
+    console.log('Response status:', response.status)
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()))
+
     if (!response.ok) {
       const errorData = await response.text()
-      console.error('Eroare ElevenLabs:', errorData)
+      console.error('Eroare ElevenLabs response:', errorData)
+      console.error('Request URL folosit:', 'https://api.elevenlabs.io/v1/convai/conversations/phone')
+      console.error('Request headers:', {
+        'Content-Type': 'application/json',
+        'xi-api-key': '***masked***'
+      })
       throw new Error(`Eroare ElevenLabs: ${response.status} - ${errorData}`)
     }
 
