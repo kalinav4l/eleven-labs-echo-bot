@@ -16,7 +16,6 @@ interface ScrollRevealProps {
   textClassName?: string;
   rotationEnd?: string;
   wordAnimationEnd?: string;
-  delay?: number;
 }
 
 const ScrollReveal: React.FC<ScrollRevealProps> = ({
@@ -30,7 +29,6 @@ const ScrollReveal: React.FC<ScrollRevealProps> = ({
   textClassName = "",
   rotationEnd = "bottom bottom",
   wordAnimationEnd = "bottom bottom",
-  delay = 0,
 }) => {
   const containerRef = useRef<HTMLHeadingElement>(null);
 
@@ -61,7 +59,6 @@ const ScrollReveal: React.FC<ScrollRevealProps> = ({
       {
         ease: "none",
         rotate: 0,
-        delay: delay,
         scrollTrigger: {
           trigger: el,
           scroller,
@@ -81,7 +78,6 @@ const ScrollReveal: React.FC<ScrollRevealProps> = ({
         ease: "none",
         opacity: 1,
         stagger: 0.05,
-        delay: delay,
         scrollTrigger: {
           trigger: el,
           scroller,
@@ -100,7 +96,6 @@ const ScrollReveal: React.FC<ScrollRevealProps> = ({
           ease: "none",
           filter: "blur(0px)",
           stagger: 0.05,
-          delay: delay,
           scrollTrigger: {
             trigger: el,
             scroller,
@@ -123,7 +118,6 @@ const ScrollReveal: React.FC<ScrollRevealProps> = ({
     rotationEnd,
     wordAnimationEnd,
     blurStrength,
-    delay,
   ]);
 
   return (
