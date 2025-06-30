@@ -49,14 +49,14 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* Animated Title Section - Full Width at Top */}
-      <section className="pt-24 pb-8">
+      {/* Animated Title Section - Positioned at very top */}
+      <section className="pt-20 pb-4">
         <div className="w-full px-6">
-          <div className="h-32 w-full">
+          <div className="h-24 w-full">
             <TextPressure
               text="KALINA"
               textColor="#FFFFFF"
-              minFontSize={80}
+              minFontSize={60}
               weight={true}
               width={true}
               italic={false}
@@ -68,7 +68,7 @@ const Landing = () => {
       </section>
 
       {/* Main Content Section */}
-      <section className="flex-1 flex items-center justify-center px-6 py-12">
+      <section className="flex-1 flex items-center justify-center px-6 py-8">
         <div className="w-full max-w-6xl mx-auto">
           {/* Subtitle */}
           <div className="text-center mb-12">
