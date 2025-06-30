@@ -24,7 +24,12 @@ const Landing = () => {
       {/* Header */}
       <header className="absolute top-0 left-0 right-0 z-50 bg-transparent">
         <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <img src="/lovable-uploads/41063b8f-e57c-4af9-aba7-3710feba1af3.png" alt="Kalina AI Logo" className="h-8 w-auto" />
+              <span className="text-xl font-bold text-white">KALINA AI</span>
+            </div>
+            
             <div className="flex items-center space-x-4">
               <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 bg-transparent">
                 Autentificare
