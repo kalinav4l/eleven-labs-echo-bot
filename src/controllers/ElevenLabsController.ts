@@ -1,3 +1,4 @@
+
 import {
     AgentCreateRequest,
     AgentCreateResponse,
@@ -13,41 +14,50 @@ export class ElevenLabsController {
   // to use the API key stored securely in Supabase Secrets
   
   static async createAgent(request: AgentCreateRequest): Promise<AgentCreateResponse> {
+    console.log('Creating agent via Supabase Edge Function:', request);
+    
     const { data, error } = await supabase.functions.invoke('create-elevenlabs-agent', {
       body: request
     });
 
     if (error) {
       console.error('Create agent error:', error);
-      throw new Error('Create agent failed');
+      throw new Error(`Create agent failed: ${error.message}`);
     }
 
+    console.log('Agent created successfully:', data);
     return data;
   }
 
   static async getAgent(agentId: string): Promise<AgentResponse> {
+    console.log('Getting agent via Supabase Edge Function:', agentId);
+    
     const { data, error } = await supabase.functions.invoke('get-elevenlabs-agent', {
       body: { agentId }
     });
 
     if (error) {
       console.error('Get agent error:', error);
-      throw new Error('Get agent failed');
+      throw new Error(`Get agent failed: ${error.message}`);
     }
 
+    console.log('Agent retrieved successfully');
     return data;
   }
 
   static async updateAgent(agentId: string, request: AgentUpdateRequest): Promise<AgentResponse> {
+    console.log('Updating agent via Supabase Edge Function:', agentId, request);
+    
     const { data, error } = await supabase.functions.invoke('update-elevenlabs-agent', {
       body: { agentId, ...request }
     });
 
     if (error) {
       console.error('Update agent error:', error);
-      throw new Error('Update agent failed');
+      throw new Error(`Update agent failed: ${error.message}`);
     }
 
+    console.log('Agent updated successfully');
     return data;
   }
 

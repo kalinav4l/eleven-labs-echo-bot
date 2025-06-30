@@ -14,13 +14,13 @@ interface UseAgentCreationProps {
 }
 
 export const useAgentCreation = ({
-                                   websiteUrl,
-                                   additionalPrompt,
-                                   agentName,
-                                   agentLanguage,
-                                   selectedVoice,
-                                   generatePrompt,
-                                 }: UseAgentCreationProps) => {
+  websiteUrl,
+  additionalPrompt,
+  agentName,
+  agentLanguage,
+  selectedVoice,
+  generatePrompt,
+}: UseAgentCreationProps) => {
   const [isCreating, setIsCreating] = useState(false);
   const [createdAgentId, setCreatedAgentId] = useState('');
 
@@ -81,7 +81,7 @@ export const useAgentCreation = ({
         name: agentName,
       };
 
-      console.warn('Direct API calls should be avoided - consider using Supabase Edge Functions for security');
+      console.log('Creating agent with request:', createAgentRequest);
       const response = await elevenLabsApi.createAgent(createAgentRequest);
       
       setCreatedAgentId(response.agent_id);

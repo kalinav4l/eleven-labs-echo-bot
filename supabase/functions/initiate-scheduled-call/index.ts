@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { agent_id, phone_number, agent_phone_number_id } = await req.json()
+    const { agent_id, phone_number } = await req.json()
 
     if (!agent_id || !phone_number) {
       throw new Error('Agent ID și numărul de telefon sunt obligatorii')
@@ -27,10 +27,20 @@ serve(async (req) => {
     }
 
     if (!defaultAgentPhoneId) {
-      throw new Error('Default Agent Phone ID nu este configurat în Supabase Secrets')
+      console.warn('Default Agent Phone ID nu este configurat - se va încerca fără el')
     }
 
     console.log(`Inițiere apel pentru ${phone_number} cu agentul ${agent_id}`)
+
+    const requestBody = {
+      agent_id: agent_id,
+      to_number: phone_number,
+    }
+
+    // Adaugă agent_phone_number_id doar dacă este disponibil
+    if (defaultAgentPhoneId) {
+      requestBody.agent_phone_number_id = defaultAgentPhoneId
+    }
 
     const response = await fetch('https://api.elevenlabs.io/v1/convai/conversations', {
       method: 'POST',
@@ -38,11 +48,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
         'xi-api-key': elevenLabsApiKey,
       },
-      body: JSON.stringify({
-        agent_id: agent_id,
-        agent_phone_number_id: agent_phone_number_id || defaultAgentPhoneId,
-        to_number: phone_number,
-      }),
+      body: JSON.stringify(requestBody),
     })
 
     if (!response.ok) {

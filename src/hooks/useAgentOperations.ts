@@ -15,31 +15,30 @@ interface UpdateAgentStatusParams {
 export const useAgentOperations = () => {
   const queryClient = useQueryClient();
 
-  // Note: For security, ElevenLabs API calls should be done through Supabase Edge Functions
+  // Delete agent from ElevenLabs using Supabase Edge Function
   const deleteAgentFromElevenLabs = async ({ agentId }: DeleteAgentFromElevenLabsParams) => {
-    console.warn('Direct ElevenLabs API calls should be avoided - consider using Supabase Edge Functions');
+    console.log('Deleting agent from ElevenLabs via Supabase Edge Function:', agentId);
     
-    // This is a placeholder - in production, use a Supabase Edge Function
-    const response = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${agentId}`, {
-      method: 'DELETE',
-      headers: {
-        'Xi-Api-Key': 'PLACEHOLDER_SECURE_IN_SUPABASE_SECRETS',
-      },
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-elevenlabs-agent', {
+        body: { agentId }
+      });
 
-    // If agent is not found (404), we consider it already deleted
-    if (response.status === 404) {
-      console.log(`Agent ${agentId} not found in ElevenLabs, considering it already deleted`);
-      return { success: true, alreadyDeleted: true };
+      if (error) {
+        // If agent is not found (404), we consider it already deleted
+        if (error.message.includes('404') || error.message.includes('not found')) {
+          console.log(`Agent ${agentId} not found in ElevenLabs, considering it already deleted`);
+          return { success: true, alreadyDeleted: true };
+        }
+        throw error;
+      }
+
+      console.log('Agent deleted successfully from ElevenLabs');
+      return data;
+    } catch (error) {
+      console.error('Error deleting agent from ElevenLabs:', error);
+      throw error;
     }
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('ElevenLabs API Error:', errorData);
-      throw new Error(`Failed to delete agent from ElevenLabs: ${response.status}`);
-    }
-
-    return response.json();
   };
 
   const updateAgentStatus = async ({ id, isActive }: UpdateAgentStatusParams) => {
