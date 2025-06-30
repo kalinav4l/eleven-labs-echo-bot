@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { elevenLabsApi, InitiateCallRequest } from '../utils/apiService';
@@ -29,12 +30,14 @@ export const useCallInitiation = ({
     setIsInitiating(true);
 
     try {
+      // Note: In production, this should use Supabase Edge Functions for security
       const request: InitiateCallRequest = {
         agent_id: agentId,
         agent_phone_number_id: API_CONFIG.AGENT_PHONE_NUMBER_ID,
         to_number: phoneNumber,
       };
 
+      console.warn('Direct API calls should be avoided - consider using Supabase Edge Functions for security');
       await elevenLabsApi.initiateCall(request);
 
       toast({

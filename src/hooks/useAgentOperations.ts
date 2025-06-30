@@ -1,7 +1,6 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { API_CONFIG } from '@/constants/constants';
 import { toast } from '@/components/ui/use-toast';
 
 interface DeleteAgentFromElevenLabsParams {
@@ -16,11 +15,15 @@ interface UpdateAgentStatusParams {
 export const useAgentOperations = () => {
   const queryClient = useQueryClient();
 
+  // Note: For security, ElevenLabs API calls should be done through Supabase Edge Functions
   const deleteAgentFromElevenLabs = async ({ agentId }: DeleteAgentFromElevenLabsParams) => {
+    console.warn('Direct ElevenLabs API calls should be avoided - consider using Supabase Edge Functions');
+    
+    // This is a placeholder - in production, use a Supabase Edge Function
     const response = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${agentId}`, {
       method: 'DELETE',
       headers: {
-        'Xi-Api-Key': API_CONFIG.ELEVENLABS_API_KEY,
+        'Xi-Api-Key': 'PLACEHOLDER_SECURE_IN_SUPABASE_SECRETS',
       },
     });
 
