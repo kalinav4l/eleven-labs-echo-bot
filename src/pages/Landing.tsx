@@ -1,140 +1,137 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import TextPressure from '@/components/TextPressure';
-import ScrollReveal from '@/components/ScrollReveal';
-import { ScrollVelocity } from '@/components/ScrollVelocity'; // Importăm noua componentă
-import { Bot, BarChart3, PhoneCall } from 'lucide-react';
+// src/components/ScrollReveal.tsx
 
-const Landing = () => {
-  const navigate = useNavigate();
+import React, { useEffect, useRef, useMemo, ReactNode, RefObject } from "react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import "./ScrollReveal.css"; // Acest import va funcționa acum
 
-  const handleAuthClick = () => { navigate('/auth'); };
-  const handleSignUpClick = () => { navigate('/auth'); };
+gsap.registerPlugin(ScrollTrigger);
 
-  const descriptionText = "Kalina AI este o platformă avansată, concepută pentru a revoluționa modul în care afacerile interacționează cu clienții lor. Noi transformăm comunicarea telefonică prin implementarea unor agenți vocali bazați pe inteligență artificială, capabili să poarte conversații fluide, naturale și extrem de eficiente, disponibile 24/7.";
+interface ScrollRevealProps {
+  children: ReactNode;
+  scrollContainerRef?: RefObject<HTMLElement>;
+  enableBlur?: boolean;
+  baseOpacity?: number;
+  baseRotation?: number;
+  blurStrength?: number;
+  containerClassName?: string;
+  textClassName?: string;
+  rotationEnd?: string;
+  wordAnimationEnd?: string;
+  delay?: number; // Am adăugat `delay` ca să îl putem folosi
+}
 
-  // Textul pentru noul container defilant
-  const marqueeTexts = [
-    "Vânzări Inteligente",
-    "Suport Clienți 24/7",
-    "Analiză Avansată",
-    "Campanii Outbound Eficiente"
-  ];
+const ScrollReveal: React.FC<ScrollRevealProps> = ({
+  children,
+  scrollContainerRef,
+  enableBlur = true,
+  baseOpacity = 0.1,
+  baseRotation = 3,
+  blurStrength = 4,
+  containerClassName = "",
+  textClassName = "",
+  rotationEnd = "bottom bottom",
+  wordAnimationEnd = "bottom bottom",
+  delay = 0,
+}) => {
+  const containerRef = useRef<HTMLHeadingElement>(null);
+
+  const splitText = useMemo(() => {
+    const text = typeof children === "string" ? children : "";
+    return text.split(/(\s+)/).map((word, index) => {
+      if (word.match(/^\s+$/)) return word;
+      return (
+        <span className="word" key={index}>
+          {word}
+        </span>
+      );
+    });
+  }, [children]);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const scroller =
+      scrollContainerRef && scrollContainerRef.current
+        ? scrollContainerRef.current
+        : window;
+
+    gsap.fromTo(
+      el,
+      { transformOrigin: "0% 50%", rotate: baseRotation },
+      {
+        ease: "none",
+        rotate: 0,
+        scrollTrigger: {
+          trigger: el,
+          scroller,
+          start: "top bottom",
+          end: rotationEnd,
+          scrub: 2,
+        },
+      }
+    );
+
+    const wordElements = el.querySelectorAll<HTMLElement>(".word");
+
+    gsap.fromTo(
+      wordElements,
+      { opacity: baseOpacity, willChange: "opacity" },
+      {
+        ease: "none",
+        opacity: 1,
+        stagger: 0.15,
+        delay: delay, // Folosim delay-ul aici
+        scrollTrigger: {
+          trigger: el,
+          scroller,
+          start: "top bottom-=20%",
+          end: wordAnimationEnd,
+          scrub: 2,
+        },
+      }
+    );
+
+    if (enableBlur) {
+      gsap.fromTo(
+        wordElements,
+        { filter: `blur(${blurStrength}px)` },
+        {
+          ease: "none",
+          filter: "blur(0px)",
+          stagger: 0.15,
+          delay: delay, // Folosim delay-ul aici
+          scrollTrigger: {
+            trigger: el,
+            scroller,
+            start: "top bottom-=20%",
+            end: wordAnimationEnd,
+            scrub: 2,
+          },
+        }
+      );
+    }
+
+    return () => {
+      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+    };
+  }, [
+    scrollContainerRef,
+    enableBlur,
+    baseRotation,
+    baseOpacity,
+    rotationEnd,
+    wordAnimationEnd,
+    blurStrength,
+    delay,
+  ]);
 
   return (
-    // Am eliminat 'text-white' de aici pentru a permite fundalul alb să aibă textul său propriu
-    <div className="min-h-screen bg-gradient-to-br from-red-600 via-red-700 to-red-800">
-      {/* Header */}
-      <header className="absolute top-0 left-0 right-0 z-50 bg-transparent text-white">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <img alt="Kalina AI Logo" className="h-8 w-auto" src="/lovable-uploads/b4598fa6-e9e2-4058-bb5f-62e79ea68676.png" />
-              <span className="text-xl font-bold">KALINA AI</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button variant="outline" className="border-white/30 hover:bg-white/10 bg-transparent" onClick={handleAuthClick}>
-                Autentificare
-              </Button>
-              <Button className="bg-white hover:bg-gray-100 text-red-800 rounded-full px-6 font-semibold" onClick={handleSignUpClick}>
-                SIGN UP
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Animated Title Section */}
-      <section className="pt-20 pb-4 px-[35px] py-[199px] text-white">
-        <div className="w-full">
-          <div className="h-32 w-full" style={{ letterSpacing: '3vw' }}>
-            <TextPressure text="KALINA" textColor="#FFFFFF" minFontSize={120} weight={true} width={true} italic={false} scale={true} className="w-full" />
-          </div>
-        </div>
-      </section>
-      
-      {/* Feature Section */}
-      <section className="py-20 px-6 text-white">
-        <div className="container mx-auto">
-          <ScrollReveal>
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold">Construit pentru Performanță</h2>
-              <p className="text-xl text-white/80 mt-4 max-w-3xl mx-auto">
-                Platforma noastră vă oferă uneltele necesare pentru a automatiza, analiza și optimiza comunicarea telefonică.
-              </p>
-            </div>
-          </ScrollReveal>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <ScrollReveal delay={0.1}>
-              <div className="bg-black/20 p-8 rounded-xl border border-white/20 h-full">
-                <div className="flex items-center justify-center h-12 w-12 rounded-full bg-red-500 mb-6"><Bot className="w-6 h-6" /></div>
-                <h3 className="text-2xl font-bold mb-3">Agenți Autonomi</h3>
-                <p className="text-white/70">Creați agenți AI capabili să poarte conversații naturale, să răspundă la întrebări și să îndeplinească sarcini complexe 24/7.</p>
-              </div>
-            </ScrollReveal>
-            <ScrollReveal delay={0.2}>
-              <div className="bg-black/20 p-8 rounded-xl border border-white/20 h-full">
-                <div className="flex items-center justify-center h-12 w-12 rounded-full bg-red-500 mb-6"><PhoneCall className="w-6 h-6" /></div>
-                <h3 className="text-2xl font-bold mb-3">Campanii Scalabile</h3>
-                <p className="text-white/70">Lansați campanii de apeluri outbound către mii de contacte cu un singur click. Ideal pentru vânzări, marketing sau sondaje.</p>
-              </div>
-            </ScrollReveal>
-            <ScrollReveal delay={0.3}>
-              <div className="bg-black/20 p-8 rounded-xl border border-white/20 h-full">
-                <div className="flex items-center justify-center h-12 w-12 rounded-full bg-red-500 mb-6"><BarChart3 className="w-6 h-6" /></div>
-                <h3 className="text-2xl font-bold mb-3">Analiză Detaliată</h3>
-                <p className="text-white/70">Obțineți transcrieri complete și rapoarte de performanță pentru fiecare apel, transformând conversațiile în date acționabile.</p>
-              </div>
-            </ScrollReveal>
-          </div>
-        </div>
-      </section>
-
-      {/* --- CONTAINER NOU CU TEXT DEFILANT (MARQUEE) --- */}
-      <section className="bg-white py-12 md:py-24">
-          <ScrollVelocity texts={marqueeTexts} className="text-red-600" velocity={5} />
-      </section>
-      {/* --- SFÂRȘIT CONTAINER NOU --- */}
-
-      {/* CTA Section */}
-      <section className="py-20 px-6 text-white">
-        <div className="container mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">Ești gata să construiești viitorul comunicării?</h2>
-          <p className="text-xl text-white/90 mb-12 max-w-3xl mx-auto">Creează-ți contul gratuit astăzi și lansează primul tău agent telefonic AI în mai puțin de 5 minute.</p>
-          <Button className="bg-white hover:bg-gray-100 text-red-800 px-12 py-6 text-xl rounded-full font-semibold">Începe să Construiești Gratuit</Button>
-        </div>
-      </section>
-      
-      <section className="py-24 px-6 text-white">
-        <ScrollReveal
-          containerClassName="max-w-4xl mx-auto text-center"
-          textClassName="text-2xl md:text-3xl leading-relaxed font-medium text-white/90"
-        >
-          {descriptionText}
-        </ScrollReveal>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-gray-200 py-12 px-6 bg-white text-gray-900">
-        <div className="container mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-3 mb-4 md:mb-0">
-              <span className="text-lg font-semibold">Kalina AI</span>
-            </div>
-            <div className="flex space-x-6 text-gray-600">
-              <a href="#" className="hover:text-red-600 transition-colors">Termeni</a>
-              <a href="#" className="hover:text-red-600 transition-colors">Confidențialitate</a>
-              <a href="#" className="hover:text-red-600 transition-colors">Contact</a>
-            </div>
-          </div>
-          <div className="text-center text-gray-500 text-sm mt-8">
-            © 2024 Kalina AI. Toate drepturile rezervate.
-          </div>
-        </div>
-      </footer>
-    </div>
+    <h2 ref={containerRef} className={`scroll-reveal ${containerClassName}`}>
+      <p className={`scroll-reveal-text ${textClassName}`}>{children}</p>
+    </h2>
   );
 };
 
-export default Landing;
+export default ScrollReveal;
