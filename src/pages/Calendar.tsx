@@ -40,39 +40,13 @@ interface ScheduledCall {
   auto_generated?: boolean;
 }
 
-interface Campaign {
-  id: string;
-  name: string;
-  description: string;
-  agent_id: string;
-  target_numbers: string[];
-  message_template: string;
-  status: 'draft' | 'active' | 'paused' | 'completed';
-  scheduled_start: string;
-  created_at: string;
-}
-
-interface SmartTask {
-  id: string;
-  title: string;
-  description: string;
-  task_type: 'ai_instruction' | 'campaign' | 'automated_call' | 'intelligent_routing';
-  agent_id?: string;
-  scheduled_datetime: string;
-  conditions: any;
-  status: 'pending' | 'active' | 'completed';
-  created_by_ai: boolean;
-}
-
 const Calendar = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isCampaignDialogOpen, setIsCampaignDialogOpen] = useState(false);
   const [isAITaskDialogOpen, setIsAITaskDialogOpen] = useState(false);
-  const [aiInstructionText, setAIInstructionText] = useState('');
   const [isProcessingAI, setIsProcessingAI] = useState(false);
   const [showIntelligentCreator, setShowIntelligentCreator] = useState(false);
 
@@ -85,15 +59,6 @@ const Calendar = () => {
     notes: '',
     agent_id: '',
     task_type: 'call' as 'call' | 'campaign' | 'follow_up' | 'smart_outreach'
-  });
-
-  const [campaignData, setCampaignData] = useState({
-    name: '',
-    description: '',
-    agent_id: '',
-    target_numbers: '',
-    message_template: '',
-    scheduled_start: ''
   });
 
   if (!user) {
@@ -230,14 +195,8 @@ const Calendar = () => {
     },
   });
 
-  // Magic Button - Intelligent Campaign Creator
-  const createIntelligentCampaigns = async () => {
-    setShowIntelligentCreator(true);
-  };
-
   // Handle campaigns created by intelligent creator
   const handleCampaignsCreated = (campaigns: any[]) => {
-    // Convert campaigns to scheduled calls
     campaigns.forEach(async (campaign) => {
       await createSmartTask({
         type: campaign.type,
@@ -277,7 +236,6 @@ const Calendar = () => {
   const handleCreateAITask = async (instruction: string, agentId?: string) => {
     setIsProcessingAI(true);
     try {
-      // Parse AI instruction and create tasks
       const parsedTasks = await parseAndCreateTasks(instruction, agentId);
       
       for (const task of parsedTasks) {
@@ -303,7 +261,6 @@ const Calendar = () => {
 
   // Parse AI Instructions
   const parseAndCreateTasks = async (instruction: string, agentId?: string) => {
-    // Simulate AI parsing of natural language instructions
     const tasks = [];
     
     if (instruction.toLowerCase().includes('sună') || instruction.toLowerCase().includes('apelează')) {
@@ -316,7 +273,7 @@ const Calendar = () => {
           phone_number: phone,
           instruction: instruction,
           agent_id: agentId,
-          scheduled_time: new Date(Date.now() + Math.random() * 24 * 60 * 60 * 1000) // Random în următoarele 24h
+          scheduled_time: new Date(Date.now() + Math.random() * 24 * 60 * 60 * 1000)
         });
       }
     }
@@ -326,7 +283,7 @@ const Calendar = () => {
         type: 'campaign',
         instruction: instruction,
         agent_id: agentId,
-        scheduled_time: new Date(Date.now() + 60 * 60 * 1000) // În 1 oră
+        scheduled_time: new Date(Date.now() + 60 * 60 * 1000)
       });
     }
 
@@ -421,100 +378,23 @@ const Calendar = () => {
     }
   };
 
-  // Initialize automatic calls for existing scheduled calls
-  React.useEffect(() => {
-    scheduledCalls.forEach(call => {
-      if (call.status === 'scheduled') {
-        scheduleAutomaticCall(call);
-      }
-    });
-  }, [scheduledCalls]);
-
-  // Schedule automatic call
-  const scheduleAutomaticCall = (call: ScheduledCall) => {
-    const now = new Date();
-    const callTime = new Date(call.scheduled_datetime);
-    const timeUntilCall = callTime.getTime() - now.getTime();
-
-    console.log(`Apel programat pentru ${call.client_name} la ${callTime.toLocaleString('ro-RO')}`);
-    console.log(`Timp până la apel: ${Math.round(timeUntilCall / 1000)} secunde`);
-
-    if (timeUntilCall > 0) {
-      setTimeout(async () => {
-        try {
-          console.log(`Inițiere apel pentru ${call.client_name} la ${call.phone_number}`);
-          
-          // Update call status to in_progress
-          await supabase
-            .from('scheduled_calls')
-            .update({ status: 'in_progress' })
-            .eq('id', call.id);
-
-          // Make the actual call using Supabase Edge Function
-          if (call.agent_id) {
-            await initiateScheduledCall(call);
-          }
-          
-          toast({
-            title: "Apel inițiat!",
-            description: `Se apelează ${call.client_name} la ${call.phone_number} de pe ${call.agent_phone_number}`,
-          });
-        } catch (error) {
-          console.error('Error initiating scheduled call:', error);
-          toast({
-            title: "Eroare apel",
-            description: "Nu s-a putut iniția apelul programat.",
-            variant: "destructive",
-          });
-        }
-      }, timeUntilCall);
-    } else {
-      console.log('Apelul este programat în trecut, nu se va executa');
-    }
+  const handleDateClick = (date: Date) => {
+    setSelectedDate(date);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const currentTime = new Date();
+    const hours = String(currentTime.getHours()).padStart(2, '0');
+    const minutes = String(currentTime.getMinutes()).padStart(2, '0');
+    
+    const selectedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+    
+    setFormData(prev => ({ ...prev, scheduled_datetime: selectedDateTime }));
+    setIsDialogOpen(true);
   };
 
-  // Function to initiate the actual call - now uses secure backend
-  const initiateScheduledCall = async (call: ScheduledCall) => {
-    try {
-      console.log('Apelare edge function pentru inițierea apelului...');
-      
-      const { data, error } = await supabase.functions.invoke('initiate-scheduled-call', {
-        body: {
-          agent_id: call.agent_id,
-          phone_number: call.phone_number,
-          agent_phone_number_id: call.agent_phone_number // Doar ID-ul, nu valoarea hardcodată
-        }
-      });
-
-      if (error) {
-        console.error('Eroare edge function:', error);
-        throw error;
-      }
-
-      console.log('Apel inițiat cu succes:', data);
-
-      // Update call status to completed
-      await supabase
-        .from('scheduled_calls')
-        .update({ status: 'completed' })
-        .eq('id', call.id);
-        
-      queryClient.invalidateQueries({ queryKey: ['scheduled-calls', user.id] });
-      
-    } catch (error) {
-      console.error('Error making scheduled call:', error);
-      // Update call status to cancelled if failed
-      await supabase
-        .from('scheduled_calls')
-        .update({ status: 'cancelled' })
-        .eq('id', call.id);
-        
-      toast({
-        title: "Eroare apel",
-        description: "Apelul nu a putut fi inițiat. Verifică configurarea din setări.",
-        variant: "destructive",
-      });
-    }
+  const handleDeleteCall = (callId: string) => {
+    deleteCallMutation.mutate(callId);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -529,28 +409,6 @@ const Calendar = () => {
     }
 
     createCallMutation.mutate(formData as Omit<ScheduledCall, 'id'>);
-  };
-
-  const handleDateClick = (date: Date) => {
-    setSelectedDate(date);
-    // Fix timezone issue - use the exact date clicked without timezone conversion
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const currentTime = new Date();
-    const hours = String(currentTime.getHours()).padStart(2, '0');
-    const minutes = String(currentTime.getMinutes()).padStart(2, '0');
-    
-    const selectedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-    
-    console.log(`Data selectată: ${date.toDateString()}, DateTime format: ${selectedDateTime}`);
-    
-    setFormData(prev => ({ ...prev, scheduled_datetime: selectedDateTime }));
-    setIsDialogOpen(true);
-  };
-
-  const handleDeleteCall = (callId: string) => {
-    deleteCallMutation.mutate(callId);
   };
 
   const calendarDays = getCalendarDays();
@@ -600,11 +458,10 @@ const Calendar = () => {
                 <p className="text-slate-600">Gestionează agenți, campanii și taskuri automatizate</p>
               </div>
               
-              {/* Magic Button - Butonul Fermecat */}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button 
-                    onClick={createIntelligentCampaigns}
+                    onClick={() => setShowIntelligentCreator(true)}
                     disabled={isProcessingAI}
                     className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                   >
@@ -704,180 +561,135 @@ const Calendar = () => {
 
           {/* Advanced Action Buttons */}
           <div className="flex flex-wrap gap-3 mb-6">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Programează Task
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Programează Task
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Programează un Task Nou</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="client_name">Numele Clientului</Label>
+                      <Input
+                        id="client_name"
+                        value={formData.client_name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, client_name: e.target.value }))}
+                        placeholder="Ex: Ion Popescu"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="phone_number">Numărul de Telefon</Label>
+                      <Input
+                        id="phone_number"
+                        value={formData.phone_number}
+                        onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
+                        placeholder="Ex: +373xxxxxxxx"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="scheduled_datetime">Data și Ora</Label>
+                      <Input
+                        id="scheduled_datetime"
+                        type="datetime-local"
+                        value={formData.scheduled_datetime}
+                        onChange={(e) => setFormData(prev => ({ ...prev, scheduled_datetime: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="priority">Prioritate</Label>
+                      <Select value={formData.priority} onValueChange={(value: 'low' | 'medium' | 'high') => setFormData(prev => ({ ...prev, priority: value }))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Scăzută</SelectItem>
+                          <SelectItem value="medium">Medie</SelectItem>
+                          <SelectItem value="high">Ridicată</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="agent_id">Agent AI</Label>
+                      <Select value={formData.agent_id} onValueChange={(value) => setFormData(prev => ({ ...prev, agent_id: value }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selectează un agent" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {userAgents.map((agent) => (
+                            <SelectItem key={agent.id} value={agent.agent_id}>
+                              {agent.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="task_type">Tipul Taskului</Label>
+                      <Select value={formData.task_type} onValueChange={(value: 'call' | 'campaign' | 'follow_up' | 'smart_outreach') => setFormData(prev => ({ ...prev, task_type: value }))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="call">Apel Simplu</SelectItem>
+                          <SelectItem value="follow_up">Follow-up</SelectItem>
+                          <SelectItem value="campaign">Campanie</SelectItem>
+                          <SelectItem value="smart_outreach">Outreach Inteligent</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="description">Descriere</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Descrierea taskului..."
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="notes">Note pentru Agent</Label>
+                    <Textarea
+                      id="notes"
+                      value={formData.notes}
+                      onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                      placeholder="Instrucțiuni speciale pentru agent..."
+                    />
+                  </div>
+
+                  <div className="flex justify-end space-x-2">
+                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      Anulează
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                      <DialogTitle>Programează un Task Nou</DialogTitle>
-                    </DialogHeader>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="client_name">Numele Clientului</Label>
-                          <Input
-                            id="client_name"
-                            value={formData.client_name}
-                            onChange={(e) => setFormData(prev => ({ ...prev, client_name: e.target.value }))}
-                            placeholder="Ex: Ion Popescu"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="phone_number">Numărul de Telefon</Label>
-                          <Input
-                            id="phone_number"
-                            value={formData.phone_number}
-                            onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
-                            placeholder="Ex: +373xxxxxxxx"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="scheduled_datetime">Data și Ora</Label>
-                          <Input
-                            id="scheduled_datetime"
-                            type="datetime-local"
-                            value={formData.scheduled_datetime}
-                            onChange={(e) => setFormData(prev => ({ ...prev, scheduled_datetime: e.target.value }))}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="priority">Prioritate</Label>
-                          <Select value={formData.priority} onValueChange={(value: 'low' | 'medium' | 'high') => setFormData(prev => ({ ...prev, priority: value }))}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="low">Scăzută</SelectItem>
-                              <SelectItem value="medium">Medie</SelectItem>
-                              <SelectItem value="high">Ridicată</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
+                    <Button type="submit" disabled={createCallMutation.isPending}>
+                      {createCallMutation.isPending ? 'Se creează...' : 'Creează Task'}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="agent_id">Agent AI</Label>
-                          <Select value={formData.agent_id} onValueChange={(value) => setFormData(prev => ({ ...prev, agent_id: value }))}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selectează un agent" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {userAgents.map((agent) => (
-                                <SelectItem key={agent.id} value={agent.agent_id}>
-                                  {agent.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label htmlFor="task_type">Tipul Taskului</Label>
-                          <Select value={formData.task_type} onValueChange={(value: 'call' | 'campaign' | 'follow_up' | 'smart_outreach') => setFormData(prev => ({ ...prev, task_type: value }))}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="call">Apel Simplu</SelectItem>
-                              <SelectItem value="follow_up">Follow-up</SelectItem>
-                              <SelectItem value="campaign">Campanie</SelectItem>
-                              <SelectItem value="smart_outreach">Outreach Inteligent</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="description">Descriere</Label>
-                        <Textarea
-                          id="description"
-                          value={formData.description}
-                          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                          placeholder="Descrierea taskului..."
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="notes">Note pentru Agent</Label>
-                        <Textarea
-                          id="notes"
-                          value={formData.notes}
-                          onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                          placeholder="Instrucțiuni speciale pentru agent..."
-                        />
-                      </div>
-
-                      <div className="flex justify-end space-x-2">
-                        <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                          Anulează
-                        </Button>
-                        <Button type="submit" disabled={createCallMutation.isPending}>
-                          {createCallMutation.isPending ? 'Se creează...' : 'Creează Task'}
-                        </Button>
-                      </div>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Creează un task simplu de apel sau follow-up pentru o anumită dată și oră</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <CalendarAITaskDialog
-                  isOpen={isAITaskDialogOpen}
-                  onClose={() => setIsAITaskDialogOpen(false)}
-                  onCreateTask={handleCreateAITask}
-                  userAgents={userAgents}
-                  isProcessing={isProcessingAI}
-                />
-                <Button 
-                  onClick={() => setIsAITaskDialogOpen(true)}
-                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg"
-                >
-                  <Bot className="h-4 w-4 mr-2" />
-                  Instrucțiuni AI
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Scrie instrucțiuni în limbaj natural pentru agentul AI să creeze taskuri complexe automat</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white shadow-lg">
-                  <Target className="h-4 w-4 mr-2" />
-                  Creează Campanie
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Lansează campanii de apeluri automate pentru multiple contacte cu mesaje personalizate</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white shadow-lg">
-                  <Network className="h-4 w-4 mr-2" />
-                  Routing Inteligent
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Configurează rutarea inteligentă a apelurilor către agenți specializați pe baza contextului</p>
-              </TooltipContent>
-            </Tooltip>
+            <Button 
+              onClick={() => setIsAITaskDialogOpen(true)}
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg"
+            >
+              <Bot className="h-4 w-4 mr-2" />
+              Instrucțiuni AI
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1056,6 +868,14 @@ const Calendar = () => {
               </Card>
             </div>
           </div>
+
+          <CalendarAITaskDialog
+            isOpen={isAITaskDialogOpen}
+            onClose={() => setIsAITaskDialogOpen(false)}
+            onCreateTask={handleCreateAITask}
+            userAgents={userAgents}
+            isProcessing={isProcessingAI}
+          />
         </div>
       </DashboardLayout>
     </TooltipProvider>
