@@ -1,9 +1,9 @@
 
-// IMPORTANT: This file uses placeholder values for API keys
-// The actual API keys are stored securely in Supabase Edge Functions
-// These placeholders are only used for TypeScript compatibility
+// IMPORTANT: This file now uses Supabase Edge Functions for secure API calls
+// All ElevenLabs API interactions should go through Supabase Edge Functions
+// where the API key is securely stored in Supabase Secrets
 
-import { API_CONFIG } from '../constants/constants';
+import { supabase } from '@/integrations/supabase/client';
 
 // Types for API requests and responses
 export interface TTSConfig {
@@ -35,60 +35,52 @@ export interface CreateAgentResponse {
 
 export interface InitiateCallRequest {
   agent_id: string;
-  agent_phone_number_id: string;
-  to_number: string;
+  phone_number: string;
+  agent_phone_number_id?: string;
 }
 
 class ElevenLabsApiService {
-  private readonly apiKey: string;
-  private readonly baseUrl: string;
-
-  constructor() {
-    // Note: These are placeholder values - actual secure API calls happen through Supabase Edge Functions
-    this.apiKey = API_CONFIG.ELEVENLABS_API_KEY;
-    this.baseUrl = API_CONFIG.ELEVENLABS_BASE_URL;
-  }
-
-  private getHeaders(): HeadersInit {
-    return {
-      'Xi-Api-Key': this.apiKey,
-      'Content-Type': 'application/json',
-    };
-  }
-
-  private async handleResponse<T>(response: Response): Promise<T> {
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('API Error:', errorData);
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  }
-
-  // Note: For security, actual agent creation should be done through Supabase Edge Functions
+  // All API calls now go through Supabase Edge Functions for security
   async createAgent(request: CreateAgentRequest): Promise<CreateAgentResponse> {
-    console.warn('Direct API calls should be avoided - use Supabase Edge Functions for security');
-    
-    const response = await fetch(`${this.baseUrl}/convai/agents/create`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify(request),
+    const { data, error } = await supabase.functions.invoke('create-elevenlabs-agent', {
+      body: request
     });
 
-    return this.handleResponse<CreateAgentResponse>(response);
+    if (error) {
+      console.error('Create agent error:', error);
+      throw new Error('Failed to create agent');
+    }
+
+    return data;
   }
 
-  // Note: For security, actual call initiation should be done through Supabase Edge Functions
-  async initiateCall(request: InitiateCallRequest): Promise<void> {
-    console.warn('Direct API calls should be avoided - use Supabase Edge Functions for security');
-    
-    const response = await fetch(`${this.baseUrl}/convai/sip-trunk/outbound-call`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify(request),
+  async initiateCall(request: InitiateCallRequest): Promise<{ success: boolean; conversationId?: string }> {
+    const { data, error } = await supabase.functions.invoke('initiate-scheduled-call', {
+      body: request
     });
 
-    await this.handleResponse<void>(response);
+    if (error) {
+      console.error('Initiate call error:', error);
+      throw new Error('Failed to initiate call');
+    }
+
+    return data;
+  }
+
+  async textToSpeech(text: string, voiceId?: string): Promise<{ audioContent: string }> {
+    const { data, error } = await supabase.functions.invoke('text-to-speech', {
+      body: { 
+        text, 
+        voice: voiceId || '21m00Tcm4TlvDq8ikWAM' 
+      }
+    });
+
+    if (error) {
+      console.error('Text to speech error:', error);
+      throw new Error('Failed to generate speech');
+    }
+
+    return data;
   }
 }
 

@@ -6,48 +6,52 @@ import {
     ConversationConfigUpdate,
     LanguagePresetUpdate
 } from '../types/dtos';
-import { API_CONFIG } from '../constants/constants';
+import { supabase } from '@/integrations/supabase/client';
 
 export class ElevenLabsController {
+  // All ElevenLabs API calls now go through Supabase Edge Functions
+  // to use the API key stored securely in Supabase Secrets
+  
   static async createAgent(request: AgentCreateRequest): Promise<AgentCreateResponse> {
-    const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/eleven-labs/agent/create`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
+    const { data, error } = await supabase.functions.invoke('create-elevenlabs-agent', {
+      body: request
     });
-    if (!response.ok) {
+
+    if (error) {
+      console.error('Create agent error:', error);
       throw new Error('Create agent failed');
     }
-    return response.json();
+
+    return data;
   }
 
   static async getAgent(agentId: string): Promise<AgentResponse> {
-    const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/eleven-labs/agent/${encodeURIComponent(agentId)}`, {
-      method: 'GET',
+    const { data, error } = await supabase.functions.invoke('get-elevenlabs-agent', {
+      body: { agentId }
     });
-    if (!response.ok) {
+
+    if (error) {
+      console.error('Get agent error:', error);
       throw new Error('Get agent failed');
     }
-    return response.json();
+
+    return data;
   }
 
   static async updateAgent(agentId: string, request: AgentUpdateRequest): Promise<AgentResponse> {
-    const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/eleven-labs/agent/${encodeURIComponent(agentId)}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
+    const { data, error } = await supabase.functions.invoke('update-elevenlabs-agent', {
+      body: { agentId, ...request }
     });
-    if (!response.ok) {
+
+    if (error) {
+      console.error('Update agent error:', error);
       throw new Error('Update agent failed');
     }
-    return response.json();
+
+    return data;
   }
 
-    static prepareUpdatePayload(
+  static prepareUpdatePayload(
         agentData: AgentResponse,
         multilingualMessages: Record<string, string>
     ): AgentUpdateRequest {

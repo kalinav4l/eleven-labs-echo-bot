@@ -1,15 +1,13 @@
-
 import { ENV } from '@/config/environment';
 
 // Constants for the Agent Consultant application
 
 export const API_CONFIG = {
   BACKEND_URL: ENV.BACKEND_URL,
-  // Note: These are placeholder values - actual API keys are stored securely in Supabase Secrets
-  ELEVENLABS_API_KEY: 'SECURE_IN_SUPABASE_SECRETS', // This is just a placeholder
+  // Note: ElevenLabs API key is now managed through Supabase Secrets
   ELEVENLABS_BASE_URL: 'https://api.elevenlabs.io/v1',
   DEFAULT_MODEL_ID: 'eleven_multilingual_v2',
-  AGENT_PHONE_NUMBER_ID: 'SECURE_IN_SUPABASE_SECRETS', // This is just a placeholder
+  // Agent phone number ID is also managed through Supabase Secrets
 } as const;
 
 export const VOICES = [
