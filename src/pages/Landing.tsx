@@ -3,9 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import TextPressure from '@/components/TextPressure';
+
 const Landing = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
   const handleDemoCall = async () => {
     if (!phoneNumber.trim()) return;
     setIsLoading(true);
@@ -15,7 +17,9 @@ const Landing = () => {
       alert('Demo call inițiat! Vei fi sunat în curând.');
     }, 2000);
   };
-  return <div className="min-h-screen bg-gradient-to-br from-red-600 via-red-700 to-red-800">
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-red-600 via-red-700 to-red-800">
       {/* Header */}
       <header className="absolute top-0 left-0 right-0 z-50 bg-transparent">
         <div className="container mx-auto px-6 py-4">
@@ -37,18 +41,28 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* Animated Title Section - Positioned at very top and 3x longer */}
+      {/* Animated Title Section */}
+      {/* MODIFICARE: Am eliminat 'px-6' de pe div-ul de mai jos pentru a permite lățimea completă */}
       <section className="pt-20 pb-4 px-0">
-        <div className="w-full">
+        <div className="w-full"> {/* <-- Aici a fost modificarea */}
           <div className="h-32 w-full">
-            <TextPressure text="KALINA" textColor="#FFFFFF" minFontSize={120} weight={true} width={true} italic={false} scale={true} className="w-full" />
+            <TextPressure 
+              text="KALINA" 
+              textColor="#FFFFFF" 
+              minFontSize={120} 
+              weight={true} 
+              width={true} 
+              italic={false} 
+              scale={true} 
+              className="w-full" 
+            />
           </div>
         </div>
       </section>
 
       {/* Main Content Section */}
       <section className="flex-1 flex items-center justify-center px-6 py-8">
-        
+        {/* Aici poți adăuga conținut viitor, cum ar fi secțiunea de demo */}
       </section>
 
       {/* CTA Section */}
@@ -84,6 +98,8 @@ const Landing = () => {
           </div>
         </div>
       </footer>
-    </div>;
+    </div>
+  );
 };
+
 export default Landing;
