@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { elevenLabsApi, InitiateCallRequest } from '../utils/apiService';
-import { API_CONFIG, MESSAGES } from '../constants/constants';
+import { MESSAGES } from '../constants/constants';
 
 interface UseCallInitiationProps {
   customAgentId: string;
@@ -11,10 +11,10 @@ interface UseCallInitiationProps {
 }
 
 export const useCallInitiation = ({
-                                    customAgentId,
-                                    createdAgentId,
-                                    phoneNumber,
-                                  }: UseCallInitiationProps) => {
+  customAgentId,
+  createdAgentId,
+  phoneNumber,
+}: UseCallInitiationProps) => {
   const [isInitiating, setIsInitiating] = useState(false);
 
   const initiateCall = useCallback(async (agentId: string, phoneNumber: string): Promise<void> => {
@@ -30,14 +30,12 @@ export const useCallInitiation = ({
     setIsInitiating(true);
 
     try {
-      // Note: In production, this should use Supabase Edge Functions for security
+      // Using Supabase Edge Functions for security - agent phone number ID is managed through Supabase Secrets
       const request: InitiateCallRequest = {
         agent_id: agentId,
-        agent_phone_number_id: API_CONFIG.AGENT_PHONE_NUMBER_ID,
-        to_number: phoneNumber,
+        phone_number: phoneNumber,
       };
 
-      console.warn('Direct API calls should be avoided - consider using Supabase Edge Functions for security');
       await elevenLabsApi.initiateCall(request);
 
       toast({
