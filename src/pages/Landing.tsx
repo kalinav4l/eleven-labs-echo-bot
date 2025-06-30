@@ -38,7 +38,7 @@ const Landing = () => {
       </header>
 
       {/* Animated Title Section - Positioned at very top */}
-      <section className="pt-20 pb-4">
+      <section className="pt-20 pb-4 px-0 py-[240px]">
         <div className="w-full px-6">
           <div className="h-24 w-full">
             <TextPressure text="KALINA" textColor="#FFFFFF" minFontSize={60} weight={true} width={true} italic={false} scale={true} className="w-full" />
