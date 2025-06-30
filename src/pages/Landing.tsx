@@ -63,18 +63,7 @@ const Landing = () => {
           </div>
         </div>
       </section>
-
-      {/* --- NOU CONTAINER CU TEXT ANIMAT --- */}
-      <section className="py-24 px-6">
-        <ScrollReveal
-          containerClassName="max-w-4xl mx-auto text-center"
-          textClassName="text-2xl md:text-3xl leading-relaxed font-medium text-white/90"
-        >
-          {descriptionText}
-        </ScrollReveal>
-      </section>
-      {/* --- SFÂRȘIT CONTAINER NOU --- */}
-
+      
       {/* Feature Section */}
       <section className="py-20 px-6">
         <div className="container mx-auto">
@@ -129,6 +118,17 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      {/* --- TEXTUL ANIMAT A FOST MUTAT AICI, DUPĂ FUNCȚIONALITĂȚI --- */}
+      <section className="py-24 px-6">
+        <ScrollReveal
+          containerClassName="max-w-4xl mx-auto text-center"
+          textClassName="text-2xl md:text-3xl leading-relaxed font-medium text-white/90"
+        >
+          {descriptionText}
+        </ScrollReveal>
+      </section>
+      {/* --- SFÂRȘIT SECȚIUNE MUTATĂ --- */}
 
       {/* CTA Section */}
       <section className="py-20 px-6 bg-gradient-to-br from-red-600 via-red-700 to-red-800">
