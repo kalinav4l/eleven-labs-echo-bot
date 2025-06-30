@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,12 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import TextPressure from '@/components/TextPressure';
 import ScrollReveal from '@/components/ScrollReveal';
-
 const Landing = () => {
   const navigate = useNavigate();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
   const handleDemoCall = async () => {
     if (!phoneNumber.trim()) return;
     setIsLoading(true);
@@ -21,17 +18,13 @@ const Landing = () => {
       alert('Demo call inițiat! Vei fi sunat în curând.');
     }, 2000);
   };
-
   const handleAuthClick = () => {
     navigate('/auth');
   };
-
   const handleSignUpClick = () => {
     navigate('/auth');
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-red-600 via-red-700 to-red-800">
+  return <div className="min-h-screen bg-gradient-to-br from-red-600 via-red-700 to-red-800">
       {/* Header */}
       <header className="absolute top-0 left-0 right-0 z-50 bg-transparent">
         <div className="container mx-auto px-6 py-4">
@@ -42,17 +35,10 @@ const Landing = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              <Button 
-                variant="outline" 
-                className="border-white/30 text-white hover:bg-white/10 bg-transparent"
-                onClick={handleAuthClick}
-              >
+              <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 bg-transparent" onClick={handleAuthClick}>
                 Autentificare
               </Button>
-              <Button 
-                className="bg-white hover:bg-gray-100 text-red-800 rounded-full px-6 font-semibold"
-                onClick={handleSignUpClick}
-              >
+              <Button className="bg-white hover:bg-gray-100 text-red-800 rounded-full px-6 font-semibold" onClick={handleSignUpClick}>
                 SIGN UP
               </Button>
             </div>
@@ -73,17 +59,7 @@ const Landing = () => {
 
       {/* Description Section with ScrollReveal */}
       <section className="py-20 px-6">
-        <div className="container mx-auto max-w-4xl">
-          <ScrollReveal 
-            containerClassName="text-center"
-            textClassName="text-2xl md:text-3xl lg:text-4xl font-light leading-relaxed text-white"
-            baseOpacity={0.2}
-            baseRotation={2}
-            blurStrength={3}
-          >
-            Kalina AI este o platformă avansată, concepută pentru a revoluționa modul în care afacerile interacționează cu clienții lor. Noi transformăm comunicarea telefonică prin implementarea unor agenți vocali bazați pe inteligență artificială, capabili să poarte conversații fluide, naturale și extrem de eficiente, disponibile 24/7.
-          </ScrollReveal>
-        </div>
+        
       </section>
 
       {/* Main Content Section */}
@@ -124,8 +100,6 @@ const Landing = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Landing;
