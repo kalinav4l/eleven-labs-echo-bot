@@ -30,11 +30,12 @@ serve(async (req) => {
 
     const requestBody = {
       agent_id: agent_id,
-      phone_number: phone_number, // Corectez aici - ElevenLabs API folosește 'phone_number' nu 'to_number'
+      customer_phone_number: phone_number,
       agent_phone_number_id: defaultAgentPhoneId
     }
 
-    const response = await fetch('https://api.elevenlabs.io/v1/convai/conversations', {
+    // Endpoint corect pentru inițierea conversațiilor telefonice
+    const response = await fetch('https://api.elevenlabs.io/v1/convai/conversations/phone', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
