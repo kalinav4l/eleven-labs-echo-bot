@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Phone, Code, Shield, Users, Star, Robot } from 'lucide-react';
+import { Phone, Code, Shield, Users, Star, Bot } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Landing = () => {
@@ -18,7 +18,7 @@ const Landing = () => {
 
   const features = [
     {
-      icon: <Robot className="h-8 w-8 text-green-500" />,
+      icon: <Bot className="h-8 w-8 text-green-500" />,
       title: "Voci Hiper-Realiste",
       description: "Alege dintr-o librărie de voci premium sau clonează o voce specifică."
     },
