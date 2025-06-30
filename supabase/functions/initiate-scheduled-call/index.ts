@@ -30,14 +30,14 @@ serve(async (req) => {
 
     const requestBody = {
       agent_id: agent_id,
-      customer_phone_number: phone_number,
-      agent_phone_number_id: agentPhoneId
+      agent_phone_number_id: agentPhoneId,
+      to_number: phone_number
     }
 
     console.log('Request body pentru ElevenLabs:', JSON.stringify(requestBody, null, 2))
 
-    // Endpoint corect pentru inițierea conversațiilor telefonice
-    const response = await fetch('https://api.elevenlabs.io/v1/convai/conversations/phone', {
+    // Endpoint corect pentru SIP trunk outbound call
+    const response = await fetch('https://api.elevenlabs.io/v1/convai/sip-trunk/outbound-call', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ serve(async (req) => {
     if (!response.ok) {
       const errorData = await response.text()
       console.error('Eroare ElevenLabs response:', errorData)
-      console.error('Request URL folosit:', 'https://api.elevenlabs.io/v1/convai/conversations/phone')
+      console.error('Request URL folosit:', 'https://api.elevenlabs.io/v1/convai/sip-trunk/outbound-call')
       console.error('Request headers:', {
         'Content-Type': 'application/json',
         'xi-api-key': '***masked***'
