@@ -30,7 +30,7 @@ serve(async (req) => {
 
     const requestBody = {
       agent_id: agent_id,
-      to_number: phone_number,
+      phone_number: phone_number, // Corectez aici - ElevenLabs API folosește 'phone_number' nu 'to_number'
       agent_phone_number_id: defaultAgentPhoneId
     }
 

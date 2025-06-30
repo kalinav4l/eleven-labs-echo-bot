@@ -1,6 +1,8 @@
 
 import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/components/AuthContext';
 import { elevenLabsApi, CreateAgentRequest, ConversationConfig } from '../utils/apiService';
 import { API_CONFIG, MESSAGES } from '../constants/constants';
 
@@ -23,6 +25,7 @@ export const useAgentCreation = ({
 }: UseAgentCreationProps) => {
   const [isCreating, setIsCreating] = useState(false);
   const [createdAgentId, setCreatedAgentId] = useState('');
+  const { user } = useAuth();
 
   // Handler for copying agent ID to clipboard
   const handleCopyAgentId = useCallback(async () => {
@@ -50,6 +53,15 @@ export const useAgentCreation = ({
       toast({
         title: "Eroare",
         description: MESSAGES.ERRORS.MISSING_AGENT_NAME,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user) {
+      toast({
+        title: "Eroare",
+        description: "Trebuie să fii autentificat pentru a crea un agent",
         variant: "destructive",
       });
       return;
@@ -84,6 +96,26 @@ export const useAgentCreation = ({
       console.log('Creating agent with request:', createAgentRequest);
       const response = await elevenLabsApi.createAgent(createAgentRequest);
       
+      // Salvez agentul în baza de date
+      const { error: dbError } = await supabase
+        .from('kalina_agents')
+        .insert({
+          agent_id: response.agent_id,
+          user_id: user.id,
+          name: agentName,
+          description: `Agent consultant generat automat pentru ${websiteUrl}`,
+          system_prompt: promptText,
+          voice_id: selectedVoice,
+          provider: 'elevenlabs',
+          elevenlabs_agent_id: response.agent_id,
+          is_active: true
+        });
+
+      if (dbError) {
+        console.error('Error saving agent to database:', dbError);
+        // Nu blochează procesul, dar loghez eroarea
+      }
+
       setCreatedAgentId(response.agent_id);
 
       // Copy to clipboard automatically
@@ -103,7 +135,7 @@ export const useAgentCreation = ({
     } finally {
       setIsCreating(false);
     }
-  }, [agentName, agentLanguage, selectedVoice, generatePrompt]);
+  }, [agentName, agentLanguage, selectedVoice, generatePrompt, user, websiteUrl]);
 
   return {
     isCreating,
