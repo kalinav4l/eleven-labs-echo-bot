@@ -60,7 +60,7 @@ const Landing = () => {
               <Button variant="ghost" className="text-gray-700 hover:text-gray-900" onClick={handleAuthClick}>
                 Autentificare
               </Button>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 font-semibold" onClick={handleSignUpClick}>
+              <Button className="bg-[#840000] hover:bg-[#6b0000] text-white rounded-full px-6 font-semibold" onClick={handleSignUpClick}>
                 Explorează Soluțiile
               </Button>
             </div>
@@ -69,8 +69,8 @@ const Landing = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white flex items-center justify-center relative overflow-hidden pt-20">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent"></div>
+      <section className="min-h-screen bg-gradient-to-br from-gray-900 via-[#840000] to-gray-900 text-white flex items-center justify-center relative overflow-hidden pt-20">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#840000]/20 via-transparent to-transparent"></div>
         
         <motion.div 
           className="container mx-auto px-6 text-center relative z-10"
@@ -102,7 +102,7 @@ const Landing = () => {
             variants={fadeInUp}
           >
             Tehnologia care<br />
-            <span className="text-cyan-400">Conectează Viitorul</span>
+            <span className="text-red-400">Conectează Viitorul</span>
           </motion.h1>
 
           <motion.p 
@@ -115,7 +115,7 @@ const Landing = () => {
           <motion.div variants={fadeInUp}>
             <Button 
               size="lg"
-              className="bg-cyan-500 hover:bg-cyan-400 text-gray-900 px-12 py-6 text-xl rounded-full font-bold shadow-2xl hover:shadow-cyan-500/25 transition-all duration-300"
+              className="bg-red-500 hover:bg-red-400 text-gray-900 px-12 py-6 text-xl rounded-full font-bold shadow-2xl hover:shadow-red-500/25 transition-all duration-300"
             >
               Explorează Soluțiile
               <ArrowRight className="ml-2 h-6 w-6" />
@@ -150,8 +150,8 @@ const Landing = () => {
             <motion.div variants={fadeInUp}>
               <Card className="group p-8 h-full border-0 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-gradient-to-br from-white to-gray-50">
                 <CardContent className="p-0 text-center">
-                  <div className="w-16 h-16 mx-auto mb-6 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors duration-300">
-                    <Cloud className="w-8 h-8 text-blue-600" />
+                  <div className="w-16 h-16 mx-auto mb-6 bg-[#840000]/10 rounded-full flex items-center justify-center group-hover:bg-[#840000]/20 transition-colors duration-300">
+                    <Cloud className="w-8 h-8 text-[#840000]" />
                   </div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-4">Conectivitate Avansată</h3>
                   <p className="text-gray-600 leading-relaxed">
@@ -293,7 +293,7 @@ const Landing = () => {
       </section>
 
       {/* Testimonial Section */}
-      <section className="py-24 bg-gradient-to-r from-blue-50 to-purple-50">
+      <section className="py-24 bg-gradient-to-r from-[#840000]/5 to-purple-50">
         <div className="container mx-auto px-6">
           <motion.div 
             className="max-w-4xl mx-auto text-center"
@@ -307,7 +307,7 @@ const Landing = () => {
               Nivelul de suport și fiabilitatea serviciilor sunt excepționale."
             </blockquote>
             <div className="flex items-center justify-center space-x-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#840000] to-purple-600 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-xl">AP</span>
               </div>
               <div className="text-left">
@@ -337,7 +337,7 @@ const Landing = () => {
             </p>
             <Button 
               size="lg"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-12 py-6 text-xl rounded-full font-bold shadow-2xl hover:shadow-blue-500/25 transition-all duration-300"
+              className="bg-[#840000] hover:bg-[#6b0000] text-white px-12 py-6 text-xl rounded-full font-bold shadow-2xl hover:shadow-[#840000]/25 transition-all duration-300"
             >
               Contactează-ne Acum
               <ArrowRight className="ml-2 h-6 w-6" />
