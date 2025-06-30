@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import TextPressure from '@/components/TextPressure';
+import ScrollReveal from '@/components/ScrollReveal';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -62,15 +63,26 @@ const Landing = () => {
       {/* Animated Title Section */}
       <section className="pt-20 pb-4 px-[35px] py-[199px]">
         <div className="w-full">
-          {/* MODIFICARE CHEIE: Am adăugat stilul 'letterSpacing' pentru a forța spațierea dintre litere.
-            Valoarea '3vw' înseamnă că spațiul va fi 3% din lățimea totală a ecranului.
-            Poți modifica această valoare pentru a controla lungimea.
-           */}
           <div className="h-32 w-full" style={{
           letterSpacing: '3vw'
         }}>
             <TextPressure text="KALINA" textColor="#FFFFFF" minFontSize={120} weight={true} width={true} italic={false} scale={true} className="w-full" />
           </div>
+        </div>
+      </section>
+
+      {/* Description Section with ScrollReveal */}
+      <section className="py-20 px-6">
+        <div className="container mx-auto max-w-4xl">
+          <ScrollReveal 
+            containerClassName="text-center"
+            textClassName="text-2xl md:text-3xl lg:text-4xl font-light leading-relaxed text-white"
+            baseOpacity={0.2}
+            baseRotation={2}
+            blurStrength={3}
+          >
+            Kalina AI este o platformă avansată, concepută pentru a revoluționa modul în care afacerile interacționează cu clienții lor. Noi transformăm comunicarea telefonică prin implementarea unor agenți vocali bazați pe inteligență artificială, capabili să poarte conversații fluide, naturale și extrem de eficiente, disponibile 24/7.
+          </ScrollReveal>
         </div>
       </section>
 
