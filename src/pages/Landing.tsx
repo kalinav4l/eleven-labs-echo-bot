@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import TextPressure from '@/components/TextPressure';
 import ScrollReveal from '@/components/ScrollReveal';
-import Aurora from '@/components/Aurora';
 import { Bot, BarChart3, PhoneCall, Play, CheckCircle, Star, ArrowRight, Users, Zap, Shield } from 'lucide-react';
 
 const Landing = () => {
@@ -34,17 +34,7 @@ const Landing = () => {
   const descriptionText = "Kalina AI este o platformă avansată, concepută pentru a revoluționa modul în care afacerile interacționează cu clienții lor. Noi transformăm comunicarea telefonică prin implementarea unor agenți vocali bazați pe inteligență artificială, capabili să poarte conversații fluide, naturale și extrem de eficiente, disponibile 24/7.";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-600 via-red-700 to-red-800 text-white relative">
-      {/* Aurora Background Effect */}
-      <div className="absolute inset-0 overflow-hidden">
-        <Aurora 
-          colorStops={["#dc2626", "#ef4444", "#f87171"]} 
-          amplitude={0.8}
-          blend={0.3}
-          speed={0.5}
-        />
-      </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-red-600 via-red-700 to-red-800 text-white">
       {/* Header */}
       <header className="absolute top-0 left-0 right-0 z-50 bg-transparent">
         <div className="container mx-auto px-6 py-4">
@@ -67,7 +57,7 @@ const Landing = () => {
       </header>
 
       {/* Animated Title Section */}
-      <section className="pt-20 pb-4 px-[35px] py-[199px] relative z-10">
+      <section className="pt-20 pb-4 px-[35px] py-[199px]">
         <div className="w-full">
           <div className="h-32 w-full" style={{ letterSpacing: '3vw' }}>
             <TextPressure text="KALINA" textColor="#FFFFFF" minFontSize={120} weight={true} width={true} italic={false} scale={true} className="w-full" />
@@ -76,7 +66,7 @@ const Landing = () => {
       </section>
 
       {/* Hero Stats Section */}
-      <section className="py-16 px-6 relative z-10">
+      <section className="py-16 px-6">
         <div className="container mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
@@ -100,7 +90,7 @@ const Landing = () => {
       </section>
 
       {/* Demo Call Section */}
-      <section className="py-20 px-6 relative z-10">
+      <section className="py-20 px-6">
         <div className="container mx-auto max-w-2xl text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">Testează Kalina AI acum</h2>
           <p className="text-xl text-white/90 mb-8">
@@ -136,7 +126,7 @@ const Landing = () => {
       </section>
       
       {/* Feature Section */}
-      <section className="py-20 px-6 relative z-10">
+      <section className="py-20 px-6">
         <div className="container mx-auto">
           <ScrollReveal>
             <div className="text-center mb-16">
@@ -191,7 +181,7 @@ const Landing = () => {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 px-6 bg-white/5 backdrop-blur-sm relative z-10">
+      <section className="py-20 px-6 bg-white/5 backdrop-blur-sm">
         <div className="container mx-auto">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">De ce să alegi Kalina AI?</h2>
@@ -238,7 +228,7 @@ const Landing = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 px-6 relative z-10">
+      <section className="py-20 px-6">
         <div className="container mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Ce spun clienții noștri</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -295,7 +285,7 @@ const Landing = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-6 bg-gradient-to-br from-red-600 via-red-700 to-red-800 relative z-10">
+      <section className="py-20 px-6 bg-gradient-to-br from-red-600 via-red-700 to-red-800">
         <div className="container mx-auto text-center">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             Ești gata să construiești viitorul comunicării?
@@ -310,8 +300,8 @@ const Landing = () => {
         </div>
       </section>
       
-      {/* Animated Description Section */}
-      <section className="py-24 px-6 relative z-10">
+      {/* --- TEXTUL ANIMAT A FOST MUTAT AICI, JOS DE TOT (ÎNAINTE DE FOOTER) --- */}
+      <section className="py-24 px-6">
         <ScrollReveal
           containerClassName="max-w-4xl mx-auto text-center"
           textClassName="text-2xl md:text-3xl leading-relaxed font-medium text-white/90"
@@ -319,9 +309,11 @@ const Landing = () => {
           {descriptionText}
         </ScrollReveal>
       </section>
+      {/* --- SFÂRȘIT SECȚIUNE MUTATĂ --- */}
+
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 py-12 px-6 bg-white relative z-10">
+      <footer className="border-t border-gray-200 py-12 px-6 bg-white">
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-3 mb-4 md:mb-0">
