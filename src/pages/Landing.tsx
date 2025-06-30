@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Bot, Phone, Code, Zap, Shield, BarChart3, Globe, Users, Play, ArrowRight } from 'lucide-react';
+import TextPressure from '@/components/TextPressure';
 
 const Landing = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -20,32 +20,23 @@ const Landing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-red-600 via-red-700 to-red-800">
       {/* Header */}
-      <header className="border-b border-gray-200 sticky top-0 z-50 bg-white/80 backdrop-blur-sm">
+      <header className="absolute top-0 left-0 right-0 z-50 bg-transparent">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <img 
-                src="/lovable-uploads/41063b8f-e57c-4af9-aba7-3710feba1af3.png" 
-                alt="Kalina AI" 
-                className="w-8 h-8"
-              />
-              <span className="text-xl font-bold text-gray-900">Kalina AI</span>
+              <span className="text-xl font-bold text-white">KALINA AI</span>
             </div>
             
-            <nav className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-gray-700 hover:text-[#0A5B4C] transition-colors">Funcționalități</a>
-              <a href="#pricing" className="text-gray-700 hover:text-[#0A5B4C] transition-colors">Prețuri</a>
-              <a href="#docs" className="text-gray-700 hover:text-[#0A5B4C] transition-colors">Documentație</a>
-              <a href="#contact" className="text-gray-700 hover:text-[#0A5B4C] transition-colors">Contact</a>
-            </nav>
-
             <div className="flex items-center space-x-4">
-              <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50">
+              <Button 
+                variant="outline" 
+                className="border-white/30 text-white hover:bg-white/10 bg-transparent"
+              >
                 Autentificare
               </Button>
-              <Button className="bg-black hover:bg-gray-800 text-white rounded-full px-6">
+              <Button className="bg-white hover:bg-gray-100 text-red-800 rounded-full px-6 font-semibold">
                 SIGN UP
               </Button>
             </div>
@@ -53,251 +44,114 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="py-20 px-6">
-        <div className="container mx-auto">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-              <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-                Generează agenți telefonici AI de <br />
-                înaltă calitate pentru afacerea ta
-              </h1>
-            </div>
+      {/* Hero Section with Animated Text */}
+      <section className="relative h-screen flex items-center justify-center">
+        <div className="w-full max-w-6xl mx-auto px-6">
+          <div className="h-64 flex items-center justify-center">
+            <TextPressure
+              text="KALINA"
+              textColor="#FFFFFF"
+              minFontSize={120}
+              weight={true}
+              width={true}
+              italic={false}
+              scale={true}
+              className="w-full"
+            />
+          </div>
+          
+          {/* Subtitle */}
+          <div className="text-center mt-8">
+            <p className="text-white/90 text-xl font-light">
+              Generează agenți telefonici AI de înaltă calitate
+            </p>
+          </div>
 
-            <div className="grid lg:grid-cols-2 gap-12 items-start">
-              {/* Left Side - Features */}
-              <div className="space-y-8">
-                <div className="space-y-6">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-6 h-6 rounded-full border-2 border-gray-300 mt-1"></div>
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">AGENȚI TELEFONICI</h3>
-                      <p className="text-gray-600">
-                        Creează agenți telefonici AI de înaltă calitate multi-caracter. Încarcă 
-                        site-ul tău web, selectează vocea, direcționează livrarea și apoi publică.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-4">
-                    <div className="w-6 h-6 rounded-full border-2 border-gray-300 mt-1"></div>
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-600 mb-2">APELURI OUTBOUND</h3>
-                      <p className="text-gray-600">
-                        Alege vocea perfectă pentru campaniile tale sau clonează propria voce. 
-                        Apoi generează apeluri de înaltă calitate pentru ads, campanii scurte 
-                        sau filme de lungă durată.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-4">
-                    <div className="w-6 h-6 rounded-full border-2 border-gray-300 mt-1"></div>
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-600 mb-2">ANALIZĂ CONVERSAȚII</h3>
-                      <p className="text-gray-600">
-                        Traduce conținutul tău în 30+ limbi menținând 
-                        vocea vorbitorului. Dublează în 1-click sau ai control complet 
-                        asupra tranziției și livrării cu Dubbing Studio.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-4">
-                    <div className="w-6 h-6 rounded-full border-2 border-gray-300 mt-1"></div>
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-600 mb-2">TRANSCRIERI</h3>
-                      <p className="text-gray-600">
-                        Voice Isolator transformă orice înregistrare în calitate de studio. Sau folosește 
-                        Text to Speech pentru a genera secțiuni scurte cu propria ta voce 
-                        sau podcasturi întregi cu vorbitori multipli.
-                      </p>
-                    </div>
-                  </div>
+          {/* Demo Call Section */}
+          <div className="mt-12 max-w-md mx-auto">
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">
+                  Testează un agent Kalina AI
+                </h3>
+                <p className="text-white/80 mb-4">
+                  Primește un apel demonstrativ de la un agent AI. Acum.
+                </p>
+                <div className="space-y-3">
+                  <Input
+                    type="tel"
+                    placeholder="+40712345678"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="bg-white/20 border-white/30 text-white placeholder:text-white/60"
+                  />
+                  <Button 
+                    onClick={handleDemoCall}
+                    disabled={!phoneNumber.trim() || isLoading}
+                    className="w-full bg-white hover:bg-gray-100 text-red-800 font-semibold"
+                  >
+                    {isLoading ? 'Se inițiază...' : 'Sună-mă'}
+                  </Button>
                 </div>
-              </div>
-
-              {/* Right Side - Demo */}
-              <div className="flex flex-col justify-center">
-                <div className="bg-gray-50 rounded-lg p-8 border">
-                  <div className="flex items-center justify-between mb-6">
-                    <Play className="w-8 h-8 text-gray-400" />
-                    <div className="text-sm text-gray-500">
-                      <span className="bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold mr-2">TIME</span>
-                      folosește Studio pentru Text to Speech de înaltă calitate, lungă durată
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div className="bg-white p-4 rounded border">
-                      <h4 className="font-semibold text-gray-900 mb-2">The Adventures of...</h4>
-                      <p className="text-sm text-gray-600 mb-3">Chapter Three - A</p>
-                      <p className="text-xs text-gray-500 leading-relaxed">
-                        "My dear fellow," said Sherlock Holmes as we sat on either side of 
-                        the fire in his Baker Street, "life is infinitely stranger than anything 
-                        which the mind of man could invent..."
-                      </p>
-                    </div>
-                    
-                    <Button className="w-full bg-black hover:bg-gray-800 text-white rounded-full">
-                      GET STARTED FREE
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Demo Call Section */}
-                <div className="mt-8 p-6 bg-gray-50 rounded-lg border">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Testează un agent Kalina AI
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    Primește un apel demonstrativ de la un agent AI. Acum.
-                  </p>
-                  <div className="space-y-3">
-                    <Input
-                      type="tel"
-                      placeholder="+40712345678"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      className="border-gray-300"
-                    />
-                    <Button 
-                      onClick={handleDemoCall}
-                      disabled={!phoneNumber.trim() || isLoading}
-                      className="w-full bg-[#0A5B4C] hover:bg-[#084136] text-white"
-                    >
-                      {isLoading ? 'Se inițiază...' : 'Sună-mă'}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
 
-      {/* Social Proof Section */}
-      <section className="py-16 px-6 bg-gray-50">
-        <div className="container mx-auto text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-12">
-            Folosit de milioane dintre cei mai buni creatori
+      {/* Features Section */}
+      <section className="py-20 px-6 bg-white">
+        <div className="container mx-auto">
+          <h2 className="text-4xl font-bold text-center text-gray-900 mb-16">
+            Funcționalități Avansate
           </h2>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-            <div className="text-center">
-              <p className="text-sm text-gray-600 mb-4">Creează conținut mai rapid cu<br /><strong>Clonare Voce</strong></p>
-              <div className="bg-white rounded-lg p-4 shadow-sm border">
-                <div className="w-full h-32 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg mb-3 flex items-center justify-center">
-                  <div className="text-white font-bold text-lg">HUBERMAN LAB<br />ESSENTIALS</div>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
-                  <span>Andrew Huberman</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <p className="text-sm text-gray-600 mb-4">Voice over your videos with<br /><strong>Text to Speech</strong></p>
-              <div className="bg-white rounded-lg p-4 shadow-sm border">
-                <div className="w-full h-32 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg mb-3"></div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
-                  <span>The Colin & Samir Show</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <p className="text-sm text-gray-600 mb-4">Create AI audiobooks with <strong>Studio</strong></p>
-              <div className="bg-white rounded-lg p-4 shadow-sm border">
-                <div className="w-full h-32 bg-gradient-to-br from-yellow-200 to-yellow-400 rounded-lg mb-3"></div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
-                  <span>Arianna Huffington</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <p className="text-sm text-gray-600 mb-4">Translate your content with <strong>Dubbing</strong></p>
-              <div className="bg-white rounded-lg p-4 shadow-sm border">
-                <div className="w-full h-32 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-lg mb-3"></div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
-                  <span>Drew Binsky</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-12">
-            <Button className="bg-black hover:bg-gray-800 text-white rounded-full px-8">
-              GET STARTED
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section id="features" className="py-20 px-6">
-        <div className="container mx-auto">
-          <h2 className="text-4xl font-bold text-center text-gray-900 mb-16">Funcționalități Avansate</h2>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <Card className="hover:shadow-lg transition-shadow duration-300">
-              <CardContent className="p-6">
-                <Bot className="w-12 h-12 text-[#0A5B4C] mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Voci Hiper-Realiste</h3>
-                <p className="text-gray-600">Alege dintr-o librărie de voci premium sau clonează o voce specifică.</p>
+              <CardContent className="p-6 text-center">
+                <div className="w-12 h-12 bg-red-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                  <span className="text-white font-bold">AI</span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Agenți Telefonici</h3>
+                <p className="text-gray-600">Creează agenți AI care pot purta conversații naturale cu clienții tăi.</p>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-lg transition-shadow duration-300">
-              <CardContent className="p-6">
-                <Zap className="w-12 h-12 text-[#0A5B4C] mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Scripting Dinamic</h3>
-                <p className="text-gray-600">Agenții pot devia de la script și pot purta conversații naturale.</p>
+              <CardContent className="p-6 text-center">
+                <div className="w-12 h-12 bg-red-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                  <span className="text-white font-bold">📞</span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Apeluri Outbound</h3>
+                <p className="text-gray-600">Inițiază campanii de apeluri automate pentru vânzări și marketing.</p>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-lg transition-shadow duration-300">
-              <CardContent className="p-6">
-                <Globe className="w-12 h-12 text-[#0A5B4C] mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Scalabilitate Enterprise</h3>
-                <p className="text-gray-600">De la 10 la 100.000 de apeluri pe zi, fără a compromite calitatea.</p>
+              <CardContent className="p-6 text-center">
+                <div className="w-12 h-12 bg-red-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                  <span className="text-white font-bold">📊</span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Analiză Conversații</h3>
+                <p className="text-gray-600">Analizează și optimizează performanța conversațiilor AI.</p>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-lg transition-shadow duration-300">
-              <CardContent className="p-6">
-                <BarChart3 className="w-12 h-12 text-[#0A5B4C] mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Analiză în Timp Real</h3>
-                <p className="text-gray-600">Dashboard-uri live cu transcrieri și metrici de performanță.</p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow duration-300">
-              <CardContent className="p-6">
-                <Code className="w-12 h-12 text-[#0A5B4C] mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Integrare Simplă</h3>
-                <p className="text-gray-600">Documentație API clară și SDK-uri pentru integrare rapidă.</p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow duration-300">
-              <CardContent className="p-6">
-                <Shield className="w-12 h-12 text-[#0A5B4C] mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Securitate Maximă</h3>
-                <p className="text-gray-600">Conformitate GDPR și criptare end-to-end.</p>
+              <CardContent className="p-6 text-center">
+                <div className="w-12 h-12 bg-red-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                  <span className="text-white font-bold">📝</span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Transcrieri</h3>
+                <p className="text-gray-600">Transcrieri automate și în timp real ale tuturor conversațiilor.</p>
               </CardContent>
             </Card>
           </div>
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="py-20 px-6 bg-gray-50">
+      {/* Pricing Section */}
+      <section className="py-20 px-6 bg-gray-50">
         <div className="container mx-auto text-center">
           <h2 className="text-4xl font-bold text-gray-900 mb-8">Prețuri Fără Surprize</h2>
           <p className="text-xl text-gray-600 mb-12">Pay-as-you-go. Plătești exact cât folosești.</p>
@@ -312,24 +166,24 @@ const Landing = () => {
                 
                 <ul className="space-y-3 text-left">
                   <li className="flex items-center text-gray-700">
-                    <div className="w-2 h-2 bg-[#0A5B4C] rounded-full mr-3"></div>
+                    <div className="w-2 h-2 bg-red-600 rounded-full mr-3"></div>
                     Acces API complet
                   </li>
                   <li className="flex items-center text-gray-700">
-                    <div className="w-2 h-2 bg-[#0A5B4C] rounded-full mr-3"></div>
+                    <div className="w-2 h-2 bg-red-600 rounded-full mr-3"></div>
                     Suport tehnic
                   </li>
                   <li className="flex items-center text-gray-700">
-                    <div className="w-2 h-2 bg-[#0A5B4C] rounded-full mr-3"></div>
+                    <div className="w-2 h-2 bg-red-600 rounded-full mr-3"></div>
                     Transcrieri incluse
                   </li>
                   <li className="flex items-center text-gray-700">
-                    <div className="w-2 h-2 bg-[#0A5B4C] rounded-full mr-3"></div>
+                    <div className="w-2 h-2 bg-red-600 rounded-full mr-3"></div>
                     Fără taxe lunare
                   </li>
                 </ul>
                 
-                <Button className="w-full bg-black hover:bg-gray-800 text-white rounded-full">
+                <Button className="w-full bg-red-600 hover:bg-red-700 text-white rounded-full">
                   Vezi Toate Detaliile
                 </Button>
               </CardContent>
@@ -339,36 +193,31 @@ const Landing = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-6">
+      <section className="py-20 px-6 bg-gradient-to-br from-red-600 via-red-700 to-red-800">
         <div className="container mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
             Ești gata să construiești viitorul comunicării?
           </h2>
-          <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto">
+          <p className="text-xl text-white/90 mb-12 max-w-3xl mx-auto">
             Creează-ți contul gratuit astăzi și lansează primul tău agent telefonic AI în mai puțin de 5 minute.
           </p>
-          <Button className="bg-black hover:bg-gray-800 text-white px-12 py-6 text-xl rounded-full">
+          <Button className="bg-white hover:bg-gray-100 text-red-800 px-12 py-6 text-xl rounded-full font-semibold">
             Începe să Construiești Gratuit
           </Button>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 py-12 px-6">
+      <footer className="border-t border-gray-200 py-12 px-6 bg-white">
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-3 mb-4 md:mb-0">
-              <img 
-                src="/lovable-uploads/41063b8f-e57c-4af9-aba7-3710feba1af3.png" 
-                alt="Kalina AI" 
-                className="w-6 h-6"
-              />
               <span className="text-lg font-semibold text-gray-900">Kalina AI</span>
             </div>
             <div className="flex space-x-6 text-gray-600">
-              <a href="#" className="hover:text-[#0A5B4C] transition-colors">Termeni</a>
-              <a href="#" className="hover:text-[#0A5B4C] transition-colors">Confidențialitate</a>
-              <a href="#" className="hover:text-[#0A5B4C] transition-colors">Contact</a>
+              <a href="#" className="hover:text-red-600 transition-colors">Termeni</a>
+              <a href="#" className="hover:text-red-600 transition-colors">Confidențialitate</a>
+              <a href="#" className="hover:text-red-600 transition-colors">Contact</a>
             </div>
           </div>
           <div className="text-center text-gray-500 text-sm mt-8">
