@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -119,6 +120,16 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Container cu text animat pe fundal alb cu text roșu */}
+      <section className="py-24 px-6 bg-white">
+        <ScrollReveal
+          containerClassName="max-w-4xl mx-auto text-center"
+          textClassName="text-2xl md:text-3xl leading-relaxed font-medium text-red-600"
+        >
+          {descriptionText}
+        </ScrollReveal>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 px-6 bg-gradient-to-br from-red-600 via-red-700 to-red-800">
         <div className="container mx-auto text-center">
@@ -133,18 +144,6 @@ const Landing = () => {
           </Button>
         </div>
       </section>
-      
-      {/* --- TEXTUL ANIMAT A FOST MUTAT AICI, JOS DE TOT (ÎNAINTE DE FOOTER) --- */}
-      <section className="py-24 px-6">
-        <ScrollReveal
-          containerClassName="max-w-4xl mx-auto text-center"
-          textClassName="text-2xl md:text-3xl leading-relaxed font-medium text-white/90"
-        >
-          {descriptionText}
-        </ScrollReveal>
-      </section>
-      {/* --- SFÂRȘIT SECȚIUNE MUTATĂ --- */}
-
 
       {/* Footer */}
       <footer className="border-t border-gray-200 py-12 px-6 bg-white">
