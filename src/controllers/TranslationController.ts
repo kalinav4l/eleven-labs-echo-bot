@@ -10,6 +10,7 @@ export class TranslationController {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-API-KEY': API_CONFIG.BACKEND_API_KEY
       },
       body: JSON.stringify(request),
     });
@@ -26,6 +27,7 @@ export class TranslationController {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
+              'X-API-KEY': API_CONFIG.BACKEND_API_KEY
           },
           body: JSON.stringify(request),
       });

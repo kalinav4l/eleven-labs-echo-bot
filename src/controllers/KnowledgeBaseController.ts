@@ -8,6 +8,7 @@ export class KnowledgeBaseController {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-API-KEY': API_CONFIG.BACKEND_API_KEY,
       },
       body: JSON.stringify({
         ...request,
@@ -30,6 +31,9 @@ export class KnowledgeBaseController {
     
     const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/knowledge-base/documents/file?name=${encodeURIComponent(userFileName)}`, {
       method: 'POST',
+       headers: {
+          'X-API-KEY': API_CONFIG.BACKEND_API_KEY,
+      },
       body: formData,
     });
     if (!response.ok) {
@@ -41,6 +45,9 @@ export class KnowledgeBaseController {
   static async getExistingDocuments(): Promise<KnowledgeBaseResponse> {
     const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/knowledge-base/documents`, {
       method: 'GET',
+      headers: {
+          'X-API-KEY': API_CONFIG.BACKEND_API_KEY,
+      },
     });
     if (!response.ok) {
       throw new Error('Get existing documents failed');

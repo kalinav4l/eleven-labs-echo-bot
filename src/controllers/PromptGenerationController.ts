@@ -7,6 +7,7 @@ export class PromptGenerationController {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-API-KEY': API_CONFIG.BACKEND_API_KEY
       },
       body: JSON.stringify(request),
     });
