@@ -1,7 +1,9 @@
+// src/components/ScrollReveal.tsx
+
 import React, { useEffect, useRef, useMemo, ReactNode, RefObject } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import "./ScrollReveal.css";
+import "./ScrollReveal.css"; // Acest import va funcționa acum
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -16,6 +18,7 @@ interface ScrollRevealProps {
   textClassName?: string;
   rotationEnd?: string;
   wordAnimationEnd?: string;
+  delay?: number; // Am adăugat `delay` ca să îl putem folosi
 }
 
 const ScrollReveal: React.FC<ScrollRevealProps> = ({
@@ -29,6 +32,7 @@ const ScrollReveal: React.FC<ScrollRevealProps> = ({
   textClassName = "",
   rotationEnd = "bottom bottom",
   wordAnimationEnd = "bottom bottom",
+  delay = 0,
 }) => {
   const containerRef = useRef<HTMLHeadingElement>(null);
 
@@ -53,7 +57,6 @@ const ScrollReveal: React.FC<ScrollRevealProps> = ({
         ? scrollContainerRef.current
         : window;
 
-    // Animația de rotație a containerului
     gsap.fromTo(
       el,
       { transformOrigin: "0% 50%", rotate: baseRotation },
@@ -65,7 +68,6 @@ const ScrollReveal: React.FC<ScrollRevealProps> = ({
           scroller,
           start: "top bottom",
           end: rotationEnd,
-          // MODIFICARE: Am adăugat inerție pentru o mișcare mai lentă
           scrub: 2,
         },
       }
@@ -73,27 +75,24 @@ const ScrollReveal: React.FC<ScrollRevealProps> = ({
 
     const wordElements = el.querySelectorAll<HTMLElement>(".word");
 
-    // Animația de opacitate a cuvintelor
     gsap.fromTo(
       wordElements,
       { opacity: baseOpacity, willChange: "opacity" },
       {
         ease: "none",
         opacity: 1,
-        // MODIFICARE: Am mărit decalajul pentru o apariție mai lentă a cuvintelor
         stagger: 0.15,
+        delay: delay, // Folosim delay-ul aici
         scrollTrigger: {
           trigger: el,
           scroller,
           start: "top bottom-=20%",
           end: wordAnimationEnd,
-          // MODIFICARE: Am adăugat inerție
           scrub: 2,
         },
       }
     );
 
-    // Animația de blur a cuvintelor
     if (enableBlur) {
       gsap.fromTo(
         wordElements,
@@ -101,14 +100,13 @@ const ScrollReveal: React.FC<ScrollRevealProps> = ({
         {
           ease: "none",
           filter: "blur(0px)",
-          // MODIFICARE: Am mărit decalajul pentru a se potrivi cu opacitatea
           stagger: 0.15,
+          delay: delay, // Folosim delay-ul aici
           scrollTrigger: {
             trigger: el,
             scroller,
             start: "top bottom-=20%",
             end: wordAnimationEnd,
-            // MODIFICARE: Am adăugat inerție
             scrub: 2,
           },
         }
@@ -126,11 +124,12 @@ const ScrollReveal: React.FC<ScrollRevealProps> = ({
     rotationEnd,
     wordAnimationEnd,
     blurStrength,
+    delay,
   ]);
 
   return (
     <h2 ref={containerRef} className={`scroll-reveal ${containerClassName}`}>
-      <p className={`scroll-reveal-text ${textClassName}`}>{splitText}</p>
+      <p className={`scroll-reveal-text ${textClassName}`}>{children}</p>
     </h2>
   );
 };
