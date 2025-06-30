@@ -3,11 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import TextPressure from '@/components/TextPressure';
-
 const Landing = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
   const handleDemoCall = async () => {
     if (!phoneNumber.trim()) return;
     setIsLoading(true);
@@ -17,9 +15,7 @@ const Landing = () => {
       alert('Demo call inițiat! Vei fi sunat în curând.');
     }, 2000);
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-red-600 via-red-700 to-red-800">
+  return <div className="min-h-screen bg-gradient-to-br from-red-600 via-red-700 to-red-800">
       {/* Header */}
       <header className="absolute top-0 left-0 right-0 z-50 bg-transparent">
         <div className="container mx-auto px-6 py-4">
@@ -42,26 +38,16 @@ const Landing = () => {
       </header>
 
       {/* Animated Title Section */}
-      <section className="pt-20 pb-4 px-0">
+      <section className="pt-20 pb-4 px-[35px] py-[199px]">
         <div className="w-full">
           {/* MODIFICARE CHEIE: Am adăugat stilul 'letterSpacing' pentru a forța spațierea dintre litere.
             Valoarea '3vw' înseamnă că spațiul va fi 3% din lățimea totală a ecranului.
             Poți modifica această valoare pentru a controla lungimea.
-          */}
-          <div 
-            className="h-32 w-full" 
-            style={{ letterSpacing: '3vw' }}
-          >
-            <TextPressure 
-              text="KALINA" 
-              textColor="#FFFFFF" 
-              minFontSize={120} 
-              weight={true} 
-              width={true} 
-              italic={false} 
-              scale={true} 
-              className="w-full" 
-            />
+           */}
+          <div className="h-32 w-full" style={{
+          letterSpacing: '3vw'
+        }}>
+            <TextPressure text="KALINA" textColor="#FFFFFF" minFontSize={120} weight={true} width={true} italic={false} scale={true} className="w-full" />
           </div>
         </div>
       </section>
@@ -104,8 +90,6 @@ const Landing = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Landing;

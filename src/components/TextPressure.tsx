@@ -203,7 +203,7 @@ const TextPressure: React.FC<TextPressureProps> = ({
                 {chars.map((char, i) => <span key={i} ref={el => spansRef.current[i] = el} data-char={char} style={{
         display: 'inline-block',
         color: stroke ? undefined : textColor
-      }} className="my-[240px] mx-[44px] py-[240px] px-0">
+      }} className="py-[240px] mx-0 my-[240px] px-0">
                         {char}
                     </span>)}
             </h1>
