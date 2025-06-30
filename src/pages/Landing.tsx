@@ -39,7 +39,7 @@ const Landing = () => {
 
       {/* Animated Title Section - Positioned at very top and 3x longer */}
       <section className="pt-20 pb-4 px-0">
-        <div className="w-full px-6">
+        <div className="w-full">
           <div className="h-32 w-full">
             <TextPressure text="KALINA" textColor="#FFFFFF" minFontSize={120} weight={true} width={true} italic={false} scale={true} className="w-full" />
           </div>
