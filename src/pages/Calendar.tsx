@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -14,12 +15,14 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { 
   CalendarIcon, Clock, Phone, Plus, ChevronLeft, ChevronRight, Users, 
   CheckCircle, AlertCircle, Trash2, Bot, Zap, Sparkles, Target, 
-  PhoneCall, MessageSquare, Settings, Magic2, Wand2, Lightbulb,
+  PhoneCall, MessageSquare, Settings, Wand2, Lightbulb,
   BrainCircuit, Network, Globe, TrendingUp, Calendar as CalendarDays
 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import CalendarAITaskDialog from '@/components/CalendarAITaskDialog';
+import IntelligentCampaignCreator from '@/components/IntelligentCampaignCreator';
 
 interface ScheduledCall {
   id: string;
@@ -71,6 +74,7 @@ const Calendar = () => {
   const [isAITaskDialogOpen, setIsAITaskDialogOpen] = useState(false);
   const [aiInstructionText, setAIInstructionText] = useState('');
   const [isProcessingAI, setIsProcessingAI] = useState(false);
+  const [showIntelligentCreator, setShowIntelligentCreator] = useState(false);
 
   const [formData, setFormData] = useState({
     client_name: '',
@@ -133,89 +137,131 @@ const Calendar = () => {
     enabled: !!user,
   });
 
-  // Magic Button - Intelligent Campaign Creator
-  const createIntelligentCampaigns = async () => {
-    setIsProcessingAI(true);
-    try {
-      // Simulate AI analysis of contacts and conversations
-      const contacts = await analyzeContactsAndHistory();
-      const suggestions = await generateSmartCampaigns(contacts);
-      
-      // Create automated tasks based on AI analysis
-      for (const suggestion of suggestions) {
-        await createSmartTask(suggestion);
-      }
-      
+  // Fetch call history for intelligent analysis
+  const { data: callHistory = [] } = useQuery({
+    queryKey: ['call-history', user.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('call_history')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('call_date', { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  // Create call mutation
+  const createCallMutation = useMutation({
+    mutationFn: async (callData: Omit<ScheduledCall, 'id'>) => {
+      const { data, error } = await supabase
+        .from('scheduled_calls')
+        .insert({
+          user_id: user.id,
+          client_name: callData.client_name,
+          phone_number: callData.phone_number,
+          scheduled_datetime: callData.scheduled_datetime,
+          description: callData.description,
+          priority: callData.priority,
+          status: 'scheduled',
+          notes: callData.notes,
+          agent_id: callData.agent_id,
+          task_type: callData.task_type
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scheduled-calls', user.id] });
       toast({
-        title: "🎯 Campanii Inteligente Create!",
-        description: `Am generat ${suggestions.length} campanii personalizate bazate pe analiza contactelor și conversațiilor tale.`,
+        title: "Task creat cu succes!",
+        description: "Taskul a fost programat în calendar.",
       });
-    } catch (error) {
+      setFormData({
+        client_name: '',
+        phone_number: '',
+        scheduled_datetime: '',
+        description: '',
+        priority: 'medium',
+        notes: '',
+        agent_id: '',
+        task_type: 'call'
+      });
+      setIsDialogOpen(false);
+    },
+    onError: (error) => {
       toast({
         title: "Eroare",
-        description: "Nu am putut genera campaniile inteligente.",
+        description: "Nu s-a putut crea taskul.",
         variant: "destructive",
       });
-    } finally {
-      setIsProcessingAI(false);
-    }
+    },
+  });
+
+  // Delete call mutation
+  const deleteCallMutation = useMutation({
+    mutationFn: async (callId: string) => {
+      const { error } = await supabase
+        .from('scheduled_calls')
+        .delete()
+        .eq('id', callId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scheduled-calls', user.id] });
+      toast({
+        title: "Task șters",
+        description: "Taskul a fost șters din calendar.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Eroare",
+        description: "Nu s-a putut șterge taskul.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Magic Button - Intelligent Campaign Creator
+  const createIntelligentCampaigns = async () => {
+    setShowIntelligentCreator(true);
   };
 
-  // AI Contact Analysis
-  const analyzeContactsAndHistory = async () => {
-    // Analyze call history and contacts for intelligent insights
-    const { data: callHistory } = await supabase
-      .from('call_history')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('call_date', { ascending: false })
-      .limit(100);
-
-    return callHistory || [];
-  };
-
-  // Generate Smart Campaign Suggestions
-  const generateSmartCampaigns = async (contacts: any[]) => {
-    // AI logic for generating personalized campaigns
-    const suggestions = [
-      {
-        type: 'follow_up',
-        title: 'Follow-up Inteligent',
-        description: 'Contactează clienții cu care nu ai vorbit de >30 zile',
-        priority: 'medium',
-        agent_instruction: 'Sună clienții și întreabă despre satisfacție, oferă suport'
-      },
-      {
-        type: 'promotion',
-        title: 'Campanie Promoțională',
-        description: 'Oferă reduceri personalizate bazate pe istoricul conversațiilor',
-        priority: 'high',
-        agent_instruction: 'Prezintă oferta specială personalizată pentru fiecare client'
-      },
-      {
-        type: 'reactivation',
-        title: 'Reactivare Clienți',
-        description: 'Contactează clienții inactivi cu oferte speciale',
-        priority: 'medium',
-        agent_instruction: 'Reactivează clienții cu oferte atractive și personalizate'
-      }
-    ];
-
-    return suggestions;
+  // Handle campaigns created by intelligent creator
+  const handleCampaignsCreated = (campaigns: any[]) => {
+    // Convert campaigns to scheduled calls
+    campaigns.forEach(async (campaign) => {
+      await createSmartTask({
+        type: campaign.type,
+        title: campaign.title,
+        description: campaign.description,
+        priority: campaign.priority,
+        agent_instruction: campaign.messageTemplate,
+        scheduled_time: campaign.scheduledTime
+      });
+    });
+    
+    setShowIntelligentCreator(false);
+    queryClient.invalidateQueries({ queryKey: ['scheduled-calls', user.id] });
   };
 
   // Create Smart Task
   const createSmartTask = async (suggestion: any) => {
-    const taskDate = new Date();
-    taskDate.setHours(taskDate.getHours() + Math.floor(Math.random() * 48)); // Random în următoarele 48h
-
     const { error } = await supabase
       .from('scheduled_calls')
       .insert({
         user_id: user.id,
         client_name: `AI Task: ${suggestion.title}`,
         phone_number: 'Multiple',
-        scheduled_datetime: taskDate.toISOString(),
+        scheduled_datetime: suggestion.scheduled_time.toISOString(),
         description: suggestion.description,
         priority: suggestion.priority,
         status: 'scheduled',
@@ -228,13 +274,11 @@ const Calendar = () => {
   };
 
   // Process AI Instructions
-  const processAIInstruction = async () => {
-    if (!aiInstructionText.trim()) return;
-
+  const handleCreateAITask = async (instruction: string, agentId?: string) => {
     setIsProcessingAI(true);
     try {
       // Parse AI instruction and create tasks
-      const parsedTasks = await parseAndCreateTasks(aiInstructionText);
+      const parsedTasks = await parseAndCreateTasks(instruction, agentId);
       
       for (const task of parsedTasks) {
         await createTaskFromInstruction(task);
@@ -246,9 +290,6 @@ const Calendar = () => {
         title: "🤖 Instrucțiuni Procesate!",
         description: `Am creat ${parsedTasks.length} taskuri bazate pe instrucțiunile tale.`,
       });
-
-      setAIInstructionText('');
-      setIsAITaskDialogOpen(false);
     } catch (error) {
       toast({
         title: "Eroare",
@@ -261,7 +302,7 @@ const Calendar = () => {
   };
 
   // Parse AI Instructions
-  const parseAndCreateTasks = async (instruction: string) => {
+  const parseAndCreateTasks = async (instruction: string, agentId?: string) => {
     // Simulate AI parsing of natural language instructions
     const tasks = [];
     
@@ -274,6 +315,7 @@ const Calendar = () => {
           type: 'call',
           phone_number: phone,
           instruction: instruction,
+          agent_id: agentId,
           scheduled_time: new Date(Date.now() + Math.random() * 24 * 60 * 60 * 1000) // Random în următoarele 24h
         });
       }
@@ -283,6 +325,7 @@ const Calendar = () => {
       tasks.push({
         type: 'campaign',
         instruction: instruction,
+        agent_id: agentId,
         scheduled_time: new Date(Date.now() + 60 * 60 * 1000) // În 1 oră
       });
     }
@@ -304,6 +347,7 @@ const Calendar = () => {
         status: 'scheduled',
         notes: task.instruction,
         task_type: task.type,
+        agent_id: task.agent_id,
         auto_generated: true
       });
 
@@ -473,82 +517,6 @@ const Calendar = () => {
     }
   };
 
-  // Calendar navigation functions
-  const goToPreviousMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
-  };
-
-  const goToNextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
-  };
-
-  // Get calendar days
-  const getCalendarDays = () => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const startDate = new Date(firstDay);
-    startDate.setDate(firstDay.getDate() - firstDay.getDay());
-
-    const days = [];
-    const currentDay = new Date(startDate);
-
-    for (let i = 0; i < 42; i++) {
-      days.push(new Date(currentDay));
-      currentDay.setDate(currentDay.getDate() + 1);
-    }
-
-    return days;
-  };
-
-  // Get calls for a specific date
-  const getCallsForDate = (date: Date) => {
-    return scheduledCalls.filter(call => {
-      const callDate = new Date(call.scheduled_datetime);
-      return callDate.toDateString() === date.toDateString();
-    });
-  };
-
-  // Get priority color
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800 border-red-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  // Get status color
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-      case 'in_progress': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-slate-100 text-slate-800 border-slate-200';
-    }
-  };
-
-  // Get task type icon
-  const getTaskTypeIcon = (taskType: string) => {
-    switch (taskType) {
-      case 'campaign': return <Target className="h-3 w-3" />;
-      case 'smart_outreach': return <BrainCircuit className="h-3 w-3" />;
-      case 'follow_up': return <MessageSquare className="h-3 w-3" />;
-      default: return <Phone className="h-3 w-3" />;
-    }
-  };
-
-  // Format datetime for Moldova timezone
-  const getMoldovaDateTime = () => {
-    const now = new Date();
-    // Moldova is UTC+2 (UTC+3 during daylight saving)
-    const moldovaOffset = 2; // hours
-    const moldovaTime = new Date(now.getTime() + (moldovaOffset * 60 * 60 * 1000));
-    return moldovaTime.toISOString().slice(0, 16);
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.client_name || !formData.phone_number || !formData.scheduled_datetime) {
@@ -594,6 +562,31 @@ const Calendar = () => {
     return callDate >= today && callDate <= weekFromNow;
   });
 
+  if (showIntelligentCreator) {
+    return (
+      <TooltipProvider>
+        <DashboardLayout>
+          <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+            <div className="mb-6">
+              <Button
+                onClick={() => setShowIntelligentCreator(false)}
+                variant="outline"
+                className="mb-4"
+              >
+                ← Înapoi la Calendar
+              </Button>
+            </div>
+            <IntelligentCampaignCreator
+              onCampaignCreated={handleCampaignsCreated}
+              userAgents={userAgents}
+              callHistory={callHistory}
+            />
+          </div>
+        </DashboardLayout>
+      </TooltipProvider>
+    );
+  }
+
   return (
     <TooltipProvider>
       <DashboardLayout>
@@ -622,7 +615,7 @@ const Calendar = () => {
                       </>
                     ) : (
                       <>
-                        <Magic2 className="h-4 w-4 mr-2" />
+                        <Sparkles className="h-4 w-4 mr-2" />
                         ✨ Buton Fermecat
                       </>
                     )}
@@ -720,6 +713,119 @@ const Calendar = () => {
                       Programează Task
                     </Button>
                   </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Programează un Task Nou</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="client_name">Numele Clientului</Label>
+                          <Input
+                            id="client_name"
+                            value={formData.client_name}
+                            onChange={(e) => setFormData(prev => ({ ...prev, client_name: e.target.value }))}
+                            placeholder="Ex: Ion Popescu"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="phone_number">Numărul de Telefon</Label>
+                          <Input
+                            id="phone_number"
+                            value={formData.phone_number}
+                            onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
+                            placeholder="Ex: +373xxxxxxxx"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="scheduled_datetime">Data și Ora</Label>
+                          <Input
+                            id="scheduled_datetime"
+                            type="datetime-local"
+                            value={formData.scheduled_datetime}
+                            onChange={(e) => setFormData(prev => ({ ...prev, scheduled_datetime: e.target.value }))}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="priority">Prioritate</Label>
+                          <Select value={formData.priority} onValueChange={(value: 'low' | 'medium' | 'high') => setFormData(prev => ({ ...prev, priority: value }))}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="low">Scăzută</SelectItem>
+                              <SelectItem value="medium">Medie</SelectItem>
+                              <SelectItem value="high">Ridicată</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="agent_id">Agent AI</Label>
+                          <Select value={formData.agent_id} onValueChange={(value) => setFormData(prev => ({ ...prev, agent_id: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selectează un agent" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {userAgents.map((agent) => (
+                                <SelectItem key={agent.id} value={agent.agent_id}>
+                                  {agent.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="task_type">Tipul Taskului</Label>
+                          <Select value={formData.task_type} onValueChange={(value: 'call' | 'campaign' | 'follow_up' | 'smart_outreach') => setFormData(prev => ({ ...prev, task_type: value }))}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="call">Apel Simplu</SelectItem>
+                              <SelectItem value="follow_up">Follow-up</SelectItem>
+                              <SelectItem value="campaign">Campanie</SelectItem>
+                              <SelectItem value="smart_outreach">Outreach Inteligent</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="description">Descriere</Label>
+                        <Textarea
+                          id="description"
+                          value={formData.description}
+                          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                          placeholder="Descrierea taskului..."
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="notes">Note pentru Agent</Label>
+                        <Textarea
+                          id="notes"
+                          value={formData.notes}
+                          onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                          placeholder="Instrucțiuni speciale pentru agent..."
+                        />
+                      </div>
+
+                      <div className="flex justify-end space-x-2">
+                        <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                          Anulează
+                        </Button>
+                        <Button type="submit" disabled={createCallMutation.isPending}>
+                          {createCallMutation.isPending ? 'Se creează...' : 'Creează Task'}
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
                 </Dialog>
               </TooltipTrigger>
               <TooltipContent>
@@ -729,59 +835,20 @@ const Calendar = () => {
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Dialog open={isAITaskDialogOpen} onOpenChange={setIsAITaskDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg">
-                      <Bot className="h-4 w-4 mr-2" />
-                      Instrucțiuni AI
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                      <DialogTitle className="flex items-center">
-                        <BrainCircuit className="h-5 w-5 mr-2 text-indigo-600" />
-                        Instrucțiuni pentru Agentul AI
-                      </DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Instrucțiuni Naturale pentru AI</Label>
-                        <Textarea
-                          value={aiInstructionText}
-                          onChange={(e) => setAIInstructionText(e.target.value)}
-                          placeholder="Exemplu: 'Sună te rog aceste 10 numere +373xxxxxxxx, +373yyyyyyyy și spune-le că avem reducere de 20% la produsele noastre. Programează apelurile pentru mâine între 10-18.'"
-                          className="h-32 resize-none"
-                        />
-                      </div>
-                      <div className="bg-blue-50 p-4 rounded-lg">
-                        <h4 className="font-medium text-blue-900 mb-2">Exemple de instrucțiuni:</h4>
-                        <ul className="text-sm text-blue-800 space-y-1">
-                          <li>• "Sună toți clienții din lista X și oferă-le promoția Y"</li>
-                          <li>• "Programează follow-up pentru clienții care nu au răspuns săptămâna trecută"</li>
-                          <li>• "Creează o campanie de reactivare pentru clienții inactivi"</li>
-                          <li>• "Apelează numerele: +373... și întreabă despre satisfacție"</li>
-                        </ul>
-                      </div>
-                      <Button 
-                        onClick={processAIInstruction}
-                        disabled={isProcessingAI || !aiInstructionText.trim()}
-                        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600"
-                      >
-                        {isProcessingAI ? (
-                          <>
-                            <Lightbulb className="h-4 w-4 mr-2 animate-pulse" />
-                            Procesez instrucțiunile...
-                          </>
-                        ) : (
-                          <>
-                            <Wand2 className="h-4 w-4 mr-2" />
-                            Creează Taskuri AI
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <CalendarAITaskDialog
+                  isOpen={isAITaskDialogOpen}
+                  onClose={() => setIsAITaskDialogOpen(false)}
+                  onCreateTask={handleCreateAITask}
+                  userAgents={userAgents}
+                  isProcessing={isProcessingAI}
+                />
+                <Button 
+                  onClick={() => setIsAITaskDialogOpen(true)}
+                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg"
+                >
+                  <Bot className="h-4 w-4 mr-2" />
+                  Instrucțiuni AI
+                </Button>
               </TooltipTrigger>
               <TooltipContent>
                 <p>Scrie instrucțiuni în limbaj natural pentru agentul AI să creeze taskuri complexe automat</p>
@@ -860,6 +927,7 @@ const Calendar = () => {
                       return (
                         <div
                           key={index}
+                          onClick={() => handleDateClick(day)}
                           className={`
                             p-2 min-h-[80px] border rounded-lg cursor-pointer transition-all duration-200
                             ${isCurrentMonth ? 'bg-white hover:bg-slate-50 hover:shadow-md' : 'bg-slate-50 text-slate-400'}
@@ -932,6 +1000,14 @@ const Calendar = () => {
                               {call.priority === 'high' ? 'Ridicată' : 
                                call.priority === 'medium' ? 'Medie' : 'Scăzută'}
                             </Badge>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteCall(call.id)}
+                              className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
                           </div>
                         </div>
                         

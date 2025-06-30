@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
-  Magic2, BrainCircuit, Target, Users, TrendingUp, 
-  Zap, Sparkles, Network, Globe, MessageSquare,
+  Sparkles, BrainCircuit, Target, Users, TrendingUp, 
+  Zap, Network, Globe, MessageSquare,
   Phone, Calendar, Clock, CheckCircle
 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
@@ -261,7 +261,7 @@ const IntelligentCampaignCreator = ({
     <Card className="border-0 shadow-xl bg-gradient-to-br from-purple-50 to-pink-50">
       <CardHeader className="text-center">
         <CardTitle className="flex items-center justify-center text-2xl">
-          <Magic2 className="h-8 w-8 mr-3 text-purple-600" />
+          <Sparkles className="h-8 w-8 mr-3 text-purple-600" />
           <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
             Creator Inteligent de Campanii
           </span>
