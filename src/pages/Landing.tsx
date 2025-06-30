@@ -42,10 +42,16 @@ const Landing = () => {
       </header>
 
       {/* Animated Title Section */}
-      {/* MODIFICARE: Am eliminat 'px-6' de pe div-ul de mai jos pentru a permite lățimea completă */}
       <section className="pt-20 pb-4 px-0">
-        <div className="w-full"> {/* <-- Aici a fost modificarea */}
-          <div className="h-32 w-full">
+        <div className="w-full">
+          {/* MODIFICARE CHEIE: Am adăugat stilul 'letterSpacing' pentru a forța spațierea dintre litere.
+            Valoarea '3vw' înseamnă că spațiul va fi 3% din lățimea totală a ecranului.
+            Poți modifica această valoare pentru a controla lungimea.
+          */}
+          <div 
+            className="h-32 w-full" 
+            style={{ letterSpacing: '3vw' }}
+          >
             <TextPressure 
               text="KALINA" 
               textColor="#FFFFFF" 
@@ -62,7 +68,7 @@ const Landing = () => {
 
       {/* Main Content Section */}
       <section className="flex-1 flex items-center justify-center px-6 py-8">
-        {/* Aici poți adăuga conținut viitor, cum ar fi secțiunea de demo */}
+        {/* Aici poți adăuga conținut viitor */}
       </section>
 
       {/* CTA Section */}
