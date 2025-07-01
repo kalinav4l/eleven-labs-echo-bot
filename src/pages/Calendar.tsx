@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -161,6 +160,7 @@ const Calendar = () => {
       setIsDialogOpen(false);
     },
     onError: (error) => {
+      console.error('Error creating task:', error);
       toast({
         title: "Eroare",
         description: "Nu s-a putut crea taskul.",
@@ -187,9 +187,51 @@ const Calendar = () => {
       });
     },
     onError: (error) => {
+      console.error('Error deleting task:', error);
       toast({
         title: "Eroare",
         description: "Nu s-a putut șterge taskul.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Execute scheduled call using the corrected edge function
+  const executeCallMutation = useMutation({
+    mutationFn: async ({ agentId, phoneNumber }: { agentId: string; phoneNumber: string }) => {
+      console.log('Executing call with:', { agentId, phoneNumber });
+      
+      const { data, error } = await supabase.functions.invoke('initiate-scheduled-call', {
+        body: {
+          agent_id: agentId,
+          phone_number: phoneNumber
+        }
+      });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Call initiation failed');
+      }
+
+      if (!data?.success) {
+        console.error('Call initiation failed:', data);
+        throw new Error(data?.error || 'Call initiation failed');
+      }
+
+      return data;
+    },
+    onSuccess: (data) => {
+      console.log('Call initiated successfully:', data);
+      toast({
+        title: "Apel inițiat cu succes!",
+        description: `Conversația ${data.conversationId} a fost inițiată.`,
+      });
+    },
+    onError: (error) => {
+      console.error('Call execution error:', error);
+      toast({
+        title: "Eroare la inițierea apelului",
+        description: error.message || "Nu s-a putut iniția apelul.",
         variant: "destructive",
       });
     },
@@ -249,6 +291,7 @@ const Calendar = () => {
         description: `Am creat ${parsedTasks.length} taskuri bazate pe instrucțiunile tale.`,
       });
     } catch (error) {
+      console.error('AI task creation error:', error);
       toast({
         title: "Eroare",
         description: "Nu am putut procesa instrucțiunile AI.",
@@ -397,6 +440,22 @@ const Calendar = () => {
     deleteCallMutation.mutate(callId);
   };
 
+  const handleExecuteCall = (call: ScheduledCall) => {
+    if (!call.agent_id || !call.phone_number) {
+      toast({
+        title: "Eroare",
+        description: "Agent ID sau numărul de telefon lipsesc.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    executeCallMutation.mutate({
+      agentId: call.agent_id,
+      phoneNumber: call.phone_number
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.client_name || !formData.phone_number || !formData.scheduled_datetime) {
@@ -490,7 +549,7 @@ const Calendar = () => {
             </div>
           </div>
 
-          {/* Enhanced Statistics Cards */}
+          {/* Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
             <Card className="border-0 shadow-md bg-white/80 backdrop-blur-sm">
               <CardContent className="p-4">
@@ -559,7 +618,7 @@ const Calendar = () => {
             </Card>
           </div>
 
-          {/* Advanced Action Buttons */}
+          {/* Action Buttons */}
           <div className="flex flex-wrap gap-3 mb-6">
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
@@ -693,7 +752,7 @@ const Calendar = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Enhanced Calendar */}
+            {/* Calendar */}
             <div className="lg:col-span-2">
               <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
@@ -778,7 +837,7 @@ const Calendar = () => {
               </Card>
             </div>
 
-            {/* Enhanced Sidebar */}
+            {/* Sidebar */}
             <div>
               <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-sm">
                 <CardHeader>
@@ -830,6 +889,18 @@ const Calendar = () => {
                              call.status === 'in_progress' ? 'În progres' :
                              'Anulat'}
                           </Badge>
+                          
+                          {call.status === 'scheduled' && call.agent_id && call.phone_number && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleExecuteCall(call)}
+                              disabled={executeCallMutation.isPending}
+                              className="bg-green-600 hover:bg-green-700 text-white h-6 px-2 text-xs"
+                            >
+                              <PhoneCall className="h-3 w-3 mr-1" />
+                              {executeCallMutation.isPending ? 'Sună...' : 'Sună Acum'}
+                            </Button>
+                          )}
                         </div>
                         
                         <div className="text-xs text-slate-600 space-y-1">
