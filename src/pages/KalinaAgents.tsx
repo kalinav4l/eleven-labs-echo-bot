@@ -1,10 +1,11 @@
+
 import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Bot, Plus, Settings, Phone, Trash2, Power, PowerOff, Search, Copy, Files } from 'lucide-react';
+import { Bot, Plus, Settings, Phone, Trash2, Power, PowerOff, Search, Copy } from 'lucide-react';
 import { useUserAgents } from '@/hooks/useUserAgents';
 import { useAgentOperations } from '@/hooks/useAgentOperations';
 import { useClipboard } from '@/hooks/useClipboard';
@@ -21,9 +22,7 @@ const KalinaAgents = () => {
     deactivateAgent,
     activateAgent,
     deleteAgent,
-    duplicateAgent,
-    isDeleting,
-    isDuplicating
+    isDeleting
   } = useAgentOperations();
   const {
     copyToClipboard
@@ -64,10 +63,6 @@ const KalinaAgents = () => {
       agent_id: agent.agent_id
     });
     setSelectedAgentForDeletion(null);
-  };
-
-  const handleDuplicateAgent = (agent: any) => {
-    duplicateAgent(agent);
   };
 
   const handleEditAgent = (agentId: string) => {
@@ -142,11 +137,6 @@ const KalinaAgents = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="w-56">
-                        <DropdownMenuItem onClick={() => handleDuplicateAgent(agent)} disabled={isDuplicating}>
-                          <Files className="w-4 h-4 mr-2" />
-                          {isDuplicating ? 'Se duplică...' : 'Duplică'}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleToggleAgentStatus(agent)}>
                           {agent.is_active ? (
                               <>
