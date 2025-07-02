@@ -11,6 +11,8 @@ import { useUserStats } from '@/hooks/useUserStats';
 import { useUserConversations } from '@/hooks/useUserConversations';
 import { useCallHistory } from '@/hooks/useCallHistory';
 import { useTranscripts } from '@/hooks/useTranscripts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { 
   Bot, 
   Phone, 
@@ -62,6 +64,25 @@ const Account = () => {
     { label: 'Transcripturi', value: totalTranscripts.toString(), icon: FileText, color: 'text-gray-600' },
     { label: 'Minute Vorbite', value: totalMinutes.toString(), icon: Clock, color: 'text-gray-600' },
   ];
+
+  // Chart data using real statistics
+  const barChartData = [
+    { name: 'Agenți', value: totalAgents, color: '#374151' },
+    { name: 'Apeluri', value: totalCalls, color: '#6B7280' },
+    { name: 'Conversații', value: totalConversations, color: '#9CA3AF' },
+    { name: 'Transcripturi', value: totalTranscripts, color: '#D1D5DB' },
+  ];
+
+  const pieChartData = [
+    { name: 'Apeluri Reușite', value: successfulCalls, color: '#10B981' },
+    { name: 'Apeluri Eșuate', value: totalCalls - successfulCalls, color: '#EF4444' },
+  ];
+
+  const chartConfig = {
+    value: {
+      label: "Valoare",
+    },
+  };
 
   // Recent activity from actual user data
   const recentActivity = [
@@ -139,7 +160,7 @@ const Account = () => {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             {/* Quick Actions */}
             <div className="border border-gray-200 rounded-lg bg-white">
               <div className="p-4 border-b border-gray-200">
@@ -160,6 +181,67 @@ const Account = () => {
                 </Button>
               </div>
             </div>
+
+            {/* Activity Chart */}
+            <div className="border border-gray-200 rounded-lg bg-white">
+              <div className="p-4 border-b border-gray-200">
+                <h2 className="font-medium text-gray-900">Grafic Activitate</h2>
+              </div>
+              <div className="p-4">
+                <ChartContainer config={chartConfig} className="h-[200px]">
+                  <BarChart data={barChartData}>
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar 
+                      dataKey="value" 
+                      fill="#374151"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ChartContainer>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Call Success Rate Chart */}
+            {totalCalls > 0 && (
+              <div className="border border-gray-200 rounded-lg bg-white">
+                <div className="p-4 border-b border-gray-200">
+                  <h2 className="font-medium text-gray-900">Rata de Succes Apeluri</h2>
+                </div>
+                <div className="p-4">
+                  <ChartContainer config={chartConfig} className="h-[200px]">
+                    <PieChart>
+                      <Pie
+                        data={pieChartData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={40}
+                        outerRadius={80}
+                      >
+                        {pieChartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                    </PieChart>
+                  </ChartContainer>
+                </div>
+              </div>
+            )}
 
             {/* Recent Activity */}
             <div className="border border-gray-200 rounded-lg bg-white">
