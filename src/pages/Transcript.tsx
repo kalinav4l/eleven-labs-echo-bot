@@ -4,10 +4,7 @@ import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, FileText, Play, Pause, Download, Search, Clock, Eye } from 'lucide-react';
+import { Upload, FileText, Search, Clock, Eye } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useTranscripts } from '@/hooks/useTranscripts';
 import { toast } from '@/components/ui/use-toast';
@@ -24,10 +21,6 @@ const Transcript = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTranscript, setSelectedTranscript] = useState<any>(null);
-  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
 
   const { savedTranscripts, isLoading, saveTranscript, deleteTranscript } = useTranscripts();
 
@@ -48,8 +41,7 @@ const Transcript = () => {
       return;
     }
 
-    // Show loading toast
-    const loadingToast = toast({
+    toast({
       title: "Processing",
       description: "Transcribing your audio file...",
     });
@@ -69,7 +61,6 @@ const Transcript = () => {
 
       const result = await response.json();
       
-      // Mock transcript entries for demo
       const mockEntries: TranscriptEntry[] = [
         { speaker: "Speaker 1", text: "Hello, welcome to our meeting today.", timestamp: "0:00", time: 0 },
         { speaker: "Speaker 2", text: "Thank you for having me. I'm excited to discuss the project.", timestamp: "0:05", time: 5 },
@@ -78,10 +69,10 @@ const Transcript = () => {
 
       await saveTranscript({
         title: file.name.replace(/\.[^/.]+$/, ""),
-        transcript_entries: mockEntries,
-        duration_seconds: 180,
-        file_size_mb: file.size / (1024 * 1024),
-        original_filename: file.name
+        transcriptEntries: mockEntries,
+        durationSeconds: 180,
+        fileSizeMb: file.size / (1024 * 1024),
+        originalFilename: file.name
       });
 
       toast({
@@ -98,7 +89,6 @@ const Transcript = () => {
       });
     }
 
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -131,7 +121,6 @@ const Transcript = () => {
         <div className="max-w-7xl mx-auto px-6 py-8">
           {!selectedTranscript ? (
             <>
-              {/* Header */}
               <div className="flex justify-between items-center mb-8">
                 <div>
                   <h1 className="text-2xl font-semibold text-gray-900 mb-1">Transcripts</h1>
@@ -146,7 +135,6 @@ const Transcript = () => {
                 </Button>
               </div>
 
-              {/* Search */}
               <div className="relative mb-8 max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input 
@@ -157,7 +145,6 @@ const Transcript = () => {
                 />
               </div>
 
-              {/* Transcripts List */}
               <div className="space-y-3">
                 {filteredTranscripts.map((transcript) => (
                   <div 
