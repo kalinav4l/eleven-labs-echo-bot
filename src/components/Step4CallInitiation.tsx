@@ -88,6 +88,8 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
         return <Clock className="w-4 h-4 text-gray-500" />;
       case 'calling':
         return <PhoneCall className="w-4 h-4 text-blue-500 animate-pulse" />;
+      case 'ringing':
+        return <PhoneCall className="w-4 h-4 text-yellow-500 animate-pulse" />;
       case 'talking':
         return <Mic className="w-4 h-4 text-green-500 animate-pulse" />;
       case 'completed':
@@ -95,6 +97,8 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
       case 'failed':
       case 'no-answer':
       case 'busy':
+      case 'rejected':
+      case 'cancelled':
         return <AlertCircle className="w-4 h-4 text-red-500" />;
       default:
         return <Clock className="w-4 h-4 text-gray-500" />;
@@ -107,6 +111,8 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
         return 'În așteptare';
       case 'calling':
         return 'Se apelează...';
+      case 'ringing':
+        return 'Sună...';
       case 'talking':
         return 'În conversație';
       case 'completed':
@@ -117,6 +123,10 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
         return 'Nu răspunde';
       case 'busy':
         return 'Ocupat';
+      case 'rejected':
+        return 'Respins';
+      case 'cancelled':
+        return 'Anulat';
       default:
         return 'Necunoscut';
     }
@@ -221,8 +231,8 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
                           callStatus.status === 'completed' ? 'bg-green-100 text-green-800' :
                           callStatus.status === 'talking' ? 'bg-blue-100 text-blue-800' :
-                          callStatus.status === 'calling' ? 'bg-yellow-100 text-yellow-800' :
-                          callStatus.status === 'failed' ? 'bg-red-100 text-red-800' :
+                          ['calling', 'ringing'].includes(callStatus.status) ? 'bg-yellow-100 text-yellow-800' :
+                          ['failed', 'no-answer', 'busy', 'rejected', 'cancelled'].includes(callStatus.status) ? 'bg-red-100 text-red-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>
                           {getStatusText(callStatus.status)}
