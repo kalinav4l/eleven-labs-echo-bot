@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, Phone, Mic, Users, Play, Clock } from 'lucide-react';
+import { Loader2, Phone, Mic, Users, Play, Clock, CheckCircle, AlertCircle, PhoneCall } from 'lucide-react';
 import { useCallInitiation } from '@/hooks/useCallInitiation';
 
 interface Contact {
@@ -46,7 +45,9 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
     isProcessingBatch, 
     currentProgress, 
     totalCalls,
-    currentContact
+    currentContact,
+    callStatuses,
+    currentCallStatus
   } = useCallInitiation({
     agentId: finalAgentId,
     phoneNumber
@@ -79,6 +80,46 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
     
     const contactsToProcess = contacts.filter(c => selectedContacts.has(c.id));
     await processBatchCalls(contactsToProcess, finalAgentId);
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'waiting':
+        return <Clock className="w-4 h-4 text-gray-500" />;
+      case 'calling':
+        return <PhoneCall className="w-4 h-4 text-blue-500 animate-pulse" />;
+      case 'talking':
+        return <Mic className="w-4 h-4 text-green-500 animate-pulse" />;
+      case 'completed':
+        return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case 'failed':
+      case 'no-answer':
+      case 'busy':
+        return <AlertCircle className="w-4 h-4 text-red-500" />;
+      default:
+        return <Clock className="w-4 h-4 text-gray-500" />;
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'waiting':
+        return 'În așteptare';
+      case 'calling':
+        return 'Se apelează...';
+      case 'talking':
+        return 'În conversație';
+      case 'completed':
+        return 'Finalizat';
+      case 'failed':
+        return 'Eșuat';
+      case 'no-answer':
+        return 'Nu răspunde';
+      case 'busy':
+        return 'Ocupat';
+      default:
+        return 'Necunoscut';
+    }
   };
 
   const progressPercentage = totalCalls > 0 ? (currentProgress / totalCalls) * 100 : 0;
@@ -121,6 +162,7 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
                 size="sm"
                 onClick={handleSelectAll}
                 className="text-sm"
+                disabled={isProcessingBatch}
               >
                 {selectedContacts.size === contacts.length ? 'Deselectează Tot' : 'Selectează Tot'}
               </Button>
@@ -134,6 +176,7 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
                     checked={selectedContacts.has(contact.id)}
                     onChange={(e) => handleContactSelect(contact.id, e.target.checked)}
                     className="rounded"
+                    disabled={isProcessingBatch}
                   />
                   <div className="flex-1">
                     <span className="font-medium">{contact.name}</span>
@@ -146,23 +189,65 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
               ))}
             </div>
 
-            {isProcessingBatch && (
+            {/* Real-time Call Status Display */}
+            {isProcessingBatch && callStatuses.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span>Progres: {currentProgress} / {totalCalls}</span>
                   <span>{Math.round(progressPercentage)}%</span>
                 </div>
                 <Progress value={progressPercentage} className="h-2" />
-                {currentContact && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="w-4 h-4" />
-                    <span>Se procesează: {currentContact}</span>
+                
+                {/* Current Call Status */}
+                {currentCallStatus && (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                      <span className="text-sm font-medium text-blue-800">{currentCallStatus}</span>
+                    </div>
                   </div>
                 )}
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    📞 Apelurile se procesează secvențial. După finalizarea fiecărui apel, 
-                    informațiile complete vor fi recuperate automat din ElevenLabs și salvate în istoric.
+
+                {/* Call Statuses List */}
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  <h4 className="text-sm font-medium text-foreground">Status Apeluri:</h4>
+                  {callStatuses.map(callStatus => (
+                    <div key={callStatus.contactId} className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(callStatus.status)}
+                        <span className="font-medium">{callStatus.contactName}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          callStatus.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          callStatus.status === 'talking' ? 'bg-blue-100 text-blue-800' :
+                          callStatus.status === 'calling' ? 'bg-yellow-100 text-yellow-800' :
+                          callStatus.status === 'failed' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {getStatusText(callStatus.status)}
+                        </span>
+                        {callStatus.duration && (
+                          <span className="text-xs text-gray-600">{callStatus.duration}s</span>
+                        )}
+                        {callStatus.cost && (
+                          <span className="text-xs text-gray-600">${callStatus.cost}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <p className="text-sm text-green-800 font-medium">
+                      Monitorizare în Timp Real Activă
+                    </p>
+                  </div>
+                  <p className="text-sm text-green-700 mt-1">
+                    Fiecare apel este monitorizat prin API-ul ElevenLabs până la finalizare. 
+                    Statusul se actualizează automat la fiecare 5 secunde.
                   </p>
                 </div>
               </div>
@@ -182,7 +267,7 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
               ) : (
                 <>
                   <Play className="w-4 h-4 mr-2" />
-                  Procesează Batch ({selectedContacts.size} contacte)
+                  Procesează Secvențial ({selectedContacts.size} contacte)
                 </>
               )}
             </Button>
@@ -277,10 +362,10 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
 
         {/* Status Info */}
         <div className="text-xs text-muted-foreground space-y-1">
-          <p>• Apelurile batch se procesează secvențial (unul după altul)</p>
-          <p>• După finalizarea fiecărui apel, informațiile complete sunt recuperate automat</p>
-          <p>• Toate rezultatele sunt salvate în Analytics Hub cu transcript complet</p>
-          <p>• Fiecare utilizator primește doar informațiile de la propriul agent</p>
+          <p>• Apelurile batch se procesează secvențial cu monitorizare în timp real</p>
+          <p>• Statusul fiecărui apel se verifică la 5 secunde prin API-ul ElevenLabs</p>
+          <p>• Următorul apel începe doar după finalizarea celui anterior</p>
+          <p>• Toate informațiile complete (transcript, cost, durată) sunt salvate automat</p>
         </div>
       </CardContent>
     </Card>

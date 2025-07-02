@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -8,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { Upload, Phone, Users, FileText, Loader2, Download, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Upload, Phone, Users, FileText, Loader2, Download, Clock, CheckCircle, AlertCircle, PhoneCall, Mic } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useCallInitiation } from '@/hooks/useCallInitiation';
 import { useCallHistory } from '@/hooks/useCallHistory';
@@ -38,7 +37,9 @@ const Outbound = () => {
     isProcessingBatch, 
     currentProgress, 
     totalCalls,
-    currentContact
+    currentContact,
+    callStatuses,
+    currentCallStatus
   } = useCallInitiation({
     agentId,
     phoneNumber
@@ -123,7 +124,7 @@ const Outbound = () => {
     if (conversationId) {
       toast({
         title: "Procesare",
-        description: "Apelul a fost inițiat. Informațiile complete se vor actualiza automat.",
+        description: "Apelul a fost inițiat. Se monitorizează statusul în timp real...",
       });
       
       // Refresh history after a delay to show the new call
@@ -183,6 +184,25 @@ const Outbound = () => {
     document.body.removeChild(link);
   };
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'waiting':
+        return <Clock className="w-4 h-4 text-gray-500" />;
+      case 'calling':
+        return <PhoneCall className="w-4 h-4 text-blue-500 animate-pulse" />;
+      case 'talking':
+        return <Mic className="w-4 h-4 text-green-500 animate-pulse" />;
+      case 'completed':
+        return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case 'failed':
+      case 'no-answer':
+      case 'busy':
+        return <AlertCircle className="w-4 h-4 text-red-500" />;
+      default:
+        return <Clock className="w-4 h-4 text-gray-500" />;
+    }
+  };
+
   const progressPercentage = totalCalls > 0 ? (currentProgress / totalCalls) * 100 : 0;
 
   return (
@@ -191,7 +211,7 @@ const Outbound = () => {
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="mb-8">
             <h1 className="text-2xl font-semibold text-gray-900 mb-1">Apeluri Outbound</h1>
-            <p className="text-gray-600 text-sm">Gestionați apelurile automate cu agenții AI - procesare secvențială</p>
+            <p className="text-gray-600 text-sm">Gestionați apelurile automate cu monitorizare în timp real prin ElevenLabs API</p>
           </div>
 
           <div className="mb-6">
@@ -319,6 +339,7 @@ const Outbound = () => {
                           variant="outline"
                           size="sm"
                           onClick={handleSelectAll}
+                          disabled={isProcessingBatch}
                         >
                           {selectedContacts.size === contacts.length ? 'Deselectează Tot' : 'Selectează Tot'}
                         </Button>
@@ -333,6 +354,7 @@ const Outbound = () => {
                               checked={selectedContacts.has(contact.id)}
                               onChange={(e) => handleContactSelect(contact.id, e.target.checked)}
                               className="rounded"
+                              disabled={isProcessingBatch}
                             />
                             <div className="flex-1">
                               <span className="font-medium">{contact.name}</span>
@@ -345,29 +367,72 @@ const Outbound = () => {
                         ))}
                       </div>
 
+                      {/* Enhanced Real-time Status Display */}
                       {isProcessingBatch && (
-                        <div className="space-y-3 mb-4">
+                        <div className="space-y-4 mb-4">
                           <div className="flex items-center justify-between text-sm">
                             <span>Progres: {currentProgress} / {totalCalls}</span>
                             <span>{Math.round(progressPercentage)}%</span>
                           </div>
                           <Progress value={progressPercentage} className="h-2" />
-                          {currentContact && (
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <Clock className="w-4 h-4" />
-                              <span>Se procesează: {currentContact}</span>
+                          
+                          {/* Current Status */}
+                          {currentCallStatus && (
+                            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                                <span className="text-sm font-medium text-blue-800">{currentCallStatus}</span>
+                              </div>
                             </div>
                           )}
-                          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+
+                          {/* Detailed Call Statuses */}
+                          {callStatuses.length > 0 && (
+                            <div className="space-y-2">
+                              <h4 className="text-sm font-medium text-gray-900">Status Detaliat Apeluri:</h4>
+                              <div className="max-h-40 overflow-y-auto space-y-1">
+                                {callStatuses.map(callStatus => (
+                                  <div key={callStatus.contactId} className="flex items-center justify-between p-2 bg-white border rounded text-sm">
+                                    <div className="flex items-center gap-2">
+                                      {getStatusIcon(callStatus.status)}
+                                      <span className="font-medium">{callStatus.contactName}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                        callStatus.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                        callStatus.status === 'talking' ? 'bg-blue-100 text-blue-800' :
+                                        callStatus.status === 'calling' ? 'bg-yellow-100 text-yellow-800' :
+                                        callStatus.status === 'failed' ? 'bg-red-100 text-red-800' :
+                                        callStatus.status === 'no-answer' ? 'bg-gray-100 text-gray-800' :
+                                        callStatus.status === 'busy' ? 'bg-gray-100 text-gray-800' : 'bg-gray-100 text-gray-800'
+                                      }`}>
+                                        {callStatus.status === 'waiting' ? 'În așteptare' :
+                                         callStatus.status === 'calling' ? 'Se apelează...' :
+                                         callStatus.status === 'talking' ? 'În conversație' :
+                                         callStatus.status === 'completed' ? 'Finalizat' :
+                                         callStatus.status === 'failed' ? 'Eșuat' :
+                                         callStatus.status === 'no-answer' ? 'Nu răspunde' :
+                                         callStatus.status === 'busy' ? 'Ocupat' : 'Necunoscut'}
+                                      </span>
+                                      {callStatus.duration && (
+                                        <span className="text-xs text-gray-600">{callStatus.duration}s</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                             <div className="flex items-center gap-2">
-                              <AlertCircle className="w-4 h-4 text-blue-600" />
-                              <p className="text-sm text-blue-800 font-medium">
-                                Procesare Secvențială Activă
+                              <CheckCircle className="w-4 h-4 text-green-600" />
+                              <p className="text-sm text-green-800 font-medium">
+                                Monitorizare API ElevenLabs Activă
                               </p>
                             </div>
-                            <p className="text-sm text-blue-700 mt-1">
-                              Apelurile se procesează unul după altul. După finalizarea fiecărui apel, 
-                              informațiile complete se recuperează automat din ElevenLabs.
+                            <p className="text-sm text-green-700 mt-1">
+                              Verificare status la 5 secunde. Următorul apel începe doar după confirmarea finalizării celui curent.
                             </p>
                           </div>
                         </div>
@@ -381,12 +446,12 @@ const Outbound = () => {
                         {isProcessingBatch ? (
                           <>
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Procesează... ({currentProgress}/{totalCalls})
+                            Monitorizează... ({currentProgress}/{totalCalls})
                           </>
                         ) : (
                           <>
                             <Phone className="w-4 h-4 mr-2" />
-                            Procesează Secvențial ({selectedContacts.size} contacte)
+                            Procesează cu Monitorizare ({selectedContacts.size} contacte)
                           </>
                         )}
                       </Button>
