@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -146,18 +147,36 @@ const Account = () => {
                 <h2 className="font-medium text-gray-900">Acțiuni Rapide</h2>
               </div>
               <div className="p-4 space-y-3">
-                <Button className="w-full justify-start bg-gray-900 hover:bg-gray-800 text-white">
-                  <Bot className="w-4 h-4 mr-2" />
-                  Creează Agent Nou
-                </Button>
-                <Button variant="outline" className="w-full justify-start border-gray-300 hover:bg-gray-50">
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  Vezi Analytics
-                </Button>
-                <Button variant="outline" className="w-full justify-start border-gray-300 hover:bg-gray-50">
-                  <Phone className="w-4 h-4 mr-2" />
-                  Inițiază Apel Test
-                </Button>
+                <Link to="/account/kalina-agents">
+                  <Button className="w-full justify-start bg-gray-900 hover:bg-gray-800 text-white">
+                    <Bot className="w-4 h-4 mr-2" />
+                    Creează Agent Nou
+                  </Button>
+                </Link>
+                <Link to="/account/conversation-analytics">
+                  <Button variant="outline" className="w-full justify-start border-gray-300 hover:bg-gray-50">
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    Vezi Analytics
+                  </Button>
+                </Link>
+                <Link to="/account/outbound">
+                  <Button variant="outline" className="w-full justify-start border-gray-300 hover:bg-gray-50">
+                    <Phone className="w-4 h-4 mr-2" />
+                    Inițiază Apel Test
+                  </Button>
+                </Link>
+                <Link to="/account/calendar">
+                  <Button variant="outline" className="w-full justify-start border-gray-300 hover:bg-gray-50">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Calendar
+                  </Button>
+                </Link>
+                <Link to="/account/transcript">
+                  <Button variant="outline" className="w-full justify-start border-gray-300 hover:bg-gray-50">
+                    <FileText className="w-4 h-4 mr-2" />
+                    Transcripturi
+                  </Button>
+                </Link>
               </div>
             </div>
 
@@ -216,10 +235,12 @@ const Account = () => {
                 <div className="text-center py-8">
                   <Bot className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                   <p className="text-gray-500 mb-4">Nu ai încă agenți creați</p>
-                  <Button className="bg-gray-900 hover:bg-gray-800 text-white">
-                    <Bot className="w-4 h-4 mr-2" />
-                    Creează primul tău agent
-                  </Button>
+                  <Link to="/account/kalina-agents">
+                    <Button className="bg-gray-900 hover:bg-gray-800 text-white">
+                      <Bot className="w-4 h-4 mr-2" />
+                      Creează primul tău agent
+                    </Button>
+                  </Link>
                 </div>
               )}
             </div>
