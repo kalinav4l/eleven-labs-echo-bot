@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,7 +20,7 @@ interface UseCallInitiationProps {
 interface CallStatus {
   contactId: string;
   contactName: string;
-  status: 'waiting' | 'calling' | 'in-progress' | 'processing' | 'completed' | 'failed' | 'no-answer' | 'busy' | 'rejected' | 'cancelled';
+  status: 'waiting' | 'calling' | 'in-progress' | 'processing' | 'completed' | 'failed';
   conversationId?: string;
   startTime?: Date;
   endTime?: Date;
@@ -93,8 +94,6 @@ export const useCallInitiation = ({
               break;
               
             case 'in-progress':
-            case 'ongoing':
-            case 'active':
               setCurrentCallStatus(`În conversație cu ${contactName}`);
               setCallStatuses(prev => prev.map(cs => 
                 cs.conversationId === conversationId 
@@ -112,9 +111,6 @@ export const useCallInitiation = ({
               ));
               break;
               
-            case 'ended':
-            case 'completed':
-            case 'finished':
             case 'done':
               console.log(`✅ Call COMPLETED for ${contactName}. Extracting final data...`);
               setCurrentCallStatus(`Apel finalizat cu ${contactName} - extragere date finale...`);
@@ -126,44 +122,11 @@ export const useCallInitiation = ({
               return conversationData;
               
             case 'failed':
-            case 'error':
               console.log(`❌ Call FAILED for ${contactName}`);
               setCurrentCallStatus(`Apel eșuat către ${contactName}`);
               setCallStatuses(prev => prev.map(cs => 
                 cs.conversationId === conversationId 
                   ? { ...cs, status: 'failed', endTime: new Date() }
-                  : cs
-              ));
-              return conversationData;
-              
-            case 'no_answer':
-            case 'unanswered':
-              console.log(`📵 No answer from ${contactName}`);
-              setCurrentCallStatus(`${contactName} nu a răspuns`);
-              setCallStatuses(prev => prev.map(cs => 
-                cs.conversationId === conversationId 
-                  ? { ...cs, status: 'no-answer', endTime: new Date() }
-                  : cs
-              ));
-              return conversationData;
-              
-            case 'busy':
-              console.log(`📞 ${contactName} is busy`);
-              setCurrentCallStatus(`${contactName} este ocupat`);
-              setCallStatuses(prev => prev.map(cs => 
-                cs.conversationId === conversationId 
-                  ? { ...cs, status: 'busy', endTime: new Date() }
-                  : cs
-              ));
-              return conversationData;
-              
-            case 'rejected':
-            case 'cancelled':
-              console.log(`🚫 Call rejected/cancelled for ${contactName}`);
-              setCurrentCallStatus(`Apel respins/anulat pentru ${contactName}`);
-              setCallStatuses(prev => prev.map(cs => 
-                cs.conversationId === conversationId 
-                  ? { ...cs, status: 'rejected', endTime: new Date() }
                   : cs
               ));
               return conversationData;
@@ -225,14 +188,8 @@ export const useCallInitiation = ({
       let finalStatus = 'failed';
       if (conversationData.status) {
         const status = conversationData.status.toLowerCase();
-        if (['ended', 'completed', 'finished', 'done'].includes(status)) {
+        if (status === 'done') {
           finalStatus = 'success';
-        } else if (['no_answer', 'unanswered'].includes(status)) {
-          finalStatus = 'no-answer';
-        } else if (status === 'busy') {
-          finalStatus = 'busy';
-        } else if (['rejected', 'cancelled'].includes(status)) {
-          finalStatus = 'rejected';
         }
       }
       
@@ -380,7 +337,7 @@ export const useCallInitiation = ({
 
           // STEP 4: STRICT MONITORING until 'done' or 'failed' status
           console.log(`👁️ Step 4: Starting monitoring for ${contact.name} until 'done' or 'failed'`);
-          setCurrentCallStatus(`Monitorizează apelul către ${contactName}...`);
+          setCurrentCallStatus(`Monitorizează apelul către ${contact.name}...`);
           
           const finalConversationData = await waitForCallCompletion(conversationId, contact.name);
           
@@ -394,14 +351,8 @@ export const useCallInitiation = ({
           const finalStatus = finalConversationData?.status?.toLowerCase();
           let displayStatus: CallStatus['status'] = 'completed';
           
-          if (['failed', 'error'].includes(finalStatus)) {
+          if (finalStatus === 'failed') {
             displayStatus = 'failed';
-          } else if (['no_answer', 'unanswered'].includes(finalStatus)) {
-            displayStatus = 'no-answer';
-          } else if (finalStatus === 'busy') {
-            displayStatus = 'busy';
-          } else if (['rejected', 'cancelled'].includes(finalStatus)) {
-            displayStatus = 'rejected';
           }
           
           setCallStatuses(prev => prev.map(status => 

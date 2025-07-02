@@ -15,6 +15,17 @@ interface Contact {
   location: string;
 }
 
+interface CallStatus {
+  contactId: string;
+  contactName: string;
+  status: 'waiting' | 'calling' | 'in-progress' | 'processing' | 'completed' | 'failed';
+  conversationId?: string;
+  startTime?: Date;
+  endTime?: Date;
+  duration?: number;
+  cost?: number;
+}
+
 interface Step4Props {
   phoneNumber: string;
   setPhoneNumber: (phone: string) => void;
