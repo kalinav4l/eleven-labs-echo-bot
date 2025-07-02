@@ -13,9 +13,8 @@ interface TranscriptEntry {
   speaker: string;
   text: string;
   timestamp: string;
-  startTime?: number;
-  endTime?: number;
-  time?: number;
+  startTime: number;
+  endTime: number;
 }
 
 const Transcript = () => {
@@ -64,9 +63,9 @@ const Transcript = () => {
       const result = await response.json();
       
       const mockEntries: TranscriptEntry[] = [
-        { speaker: "Speaker 1", text: "Hello, welcome to our meeting today.", timestamp: "0:00", time: 0, startTime: 0, endTime: 5 },
-        { speaker: "Speaker 2", text: "Thank you for having me. I'm excited to discuss the project.", timestamp: "0:05", time: 5, startTime: 5, endTime: 12 },
-        { speaker: "Speaker 1", text: "Let's start with the main objectives.", timestamp: "0:12", time: 12, startTime: 12, endTime: 20 },
+        { speaker: "Speaker 1", text: "Hello, welcome to our meeting today.", timestamp: "0:00", startTime: 0, endTime: 5 },
+        { speaker: "Speaker 2", text: "Thank you for having me. I'm excited to discuss the project.", timestamp: "0:05", startTime: 5, endTime: 12 },
+        { speaker: "Speaker 1", text: "Let's start with the main objectives.", timestamp: "0:12", startTime: 12, endTime: 20 },
       ];
 
       await saveTranscript({
@@ -220,7 +219,7 @@ const Transcript = () => {
 
               <div className="space-y-4">
                 {Array.isArray(selectedTranscript.transcript_entries) && 
-                  selectedTranscript.transcript_entries.map((entry: TranscriptEntry, index: number) => (
+                  selectedTranscript.transcript_entries.map((entry: any, index: number) => (
                     <div key={index} className="flex space-x-3">
                       <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0 mt-1">
                         {entry.speaker?.charAt(entry.speaker.length - 1) || 'S'}
