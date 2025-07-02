@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -86,21 +87,21 @@ const KalinaAgents = () => {
     return <DashboardLayout>
       <div className="p-6 space-y-6">
         <div className="flex justify-center items-center min-h-[400px]">
-          <div className="text-muted-foreground">Se încarcă agenții...</div>
+          <div className="text-gray-500">Se încarcă agenții...</div>
         </div>
       </div>
     </DashboardLayout>;
   }
 
   return <DashboardLayout>
-    <div className="p-6 space-y-6 my-[60px]">
+    <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Agenții Kalina</h1>
-          <p className="text-muted-foreground">Gestionează agenții tăi AI pentru diverse scenarii</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Agenții Kalina</h1>
+          <p className="text-gray-600 text-sm mt-1">Gestionează agenții tăi AI pentru diverse scenarii</p>
         </div>
         <Link to="/account/agent-consultant">
-          <Button className="glass-button">
+          <Button className="bg-black hover:bg-gray-800 text-white">
             <Plus className="w-4 h-4 mr-2" />
             Agent Nou
           </Button>
@@ -109,155 +110,153 @@ const KalinaAgents = () => {
 
       {/* Search Input */}
       <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
         <Input
             placeholder="Caută agenți..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="pl-10 glass-input"
+            className="pl-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400"
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Agents List - Vertical Layout like ElevenLabs */}
+      <div className="space-y-3">
         {filteredAgents && filteredAgents.length > 0 ? filteredAgents.map(agent =>
-            <Card key={agent.id} className="liquid-glass animate-fade-in hover:shadow-lg transition-all">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
-                      <Bot className="w-5 h-5 text-accent" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-foreground">{agent.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground">
+            <div key={agent.id} className="bg-white rounded-lg p-4 transition-all duration-200 hover:bg-gray-50/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4 flex-1">
+                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Bot className="w-5 h-5 text-gray-600" />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-sm font-medium text-gray-900 truncate">
+                        {agent.name}
+                      </h3>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        agent.is_active 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
                         {agent.is_active ? 'Activ' : 'Inactiv'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-4 mt-1">
+                      <p className="text-xs text-gray-500">
+                        {agent.description || 'Agent personalizat pentru asistența clienților'}
                       </p>
                     </div>
-                  </div>
-                  <div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" className="glass-button border-border">
-                          <Settings className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-56">
-                        <DropdownMenuItem onClick={() => handleDuplicateAgent(agent)} disabled={isDuplicating}>
-                          <Files className="w-4 h-4 mr-2" />
-                          {isDuplicating ? 'Se duplică...' : 'Duplică'}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handleToggleAgentStatus(agent)}>
-                          {agent.is_active ? (
-                              <>
-                                <PowerOff className="w-4 h-4 mr-2" />
-                                Dezactivează
-                              </>
-                          ) : (
-                              <>
-                                <Power className="w-4 h-4 mr-2" />
-                                Activează
-                              </>
-                          )}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                            className="text-destructive focus:text-destructive"
-                            onClick={() => setSelectedAgentForDeletion(agent)}
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Șterge
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="text-sm text-muted-foreground">
-                    {agent.description || 'Agent personalizat pentru asistența clienților'}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Provider:</span>
-                      <p className="font-semibold text-foreground">{agent.provider}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Agent ID:</span>
+                    
+                    <div className="flex items-center gap-6 mt-2">
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-400">Provider:</span>
+                        <span className="text-xs font-medium text-gray-600">{agent.provider}</span>
+                      </div>
+                      
                       <div className="flex items-center gap-2">
-                        <p className="font-semibold text-accent text-xs truncate max-w-[120px]" title={agent.agent_id}>
+                        <span className="text-xs text-gray-400">Agent ID:</span>
+                        <span className="text-xs font-mono text-gray-600 max-w-[120px] truncate" title={agent.agent_id}>
                           {agent.agent_id}
-                        </p>
+                        </span>
                         <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleCopyAgentId(agent.agent_id)}
-                            className="h-6 w-6 p-0 hover:bg-accent/20"
+                            className="h-5 w-5 p-0 hover:bg-gray-100"
                         >
-                          <Copy className="w-3 h-3" />
+                          <Copy className="w-3 h-3 text-gray-400" />
                         </Button>
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  <div className="flex space-x-2">
-                    <Button 
-                      size="sm" 
-                      className="flex-1 glass-button" 
-                      disabled={!agent.is_active}
-                      onClick={() => handleTestCall(agent)}
-                    >
-                      <Phone className="w-4 h-4 mr-2" />
-                      Test Apel
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="glass-button border-border"
-                        onClick={() => handleEditAgent(agent.agent_id)}
-                    >
-                      Editează
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-        ) : searchQuery.trim() ? (
-            <Card className="liquid-glass animate-fade-in hover:shadow-lg transition-all border-dashed border-2 border-border col-span-full">
-              <CardContent className="flex flex-col items-center justify-center h-full py-12 text-center space-y-4">
-                <div className="w-12 h-12 bg-muted/50 rounded-lg flex items-center justify-center">
-                  <Search className="w-6 h-6 text-muted-foreground" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">Nu s-au găsit agenți</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Nu există agenți care să corespundă căutării "{searchQuery}"
-                  </p>
-                </div>
-                <Button variant="outline" onClick={() => setSearchQuery('')} className="glass-button border-border">
-                  Șterge căutarea
-                </Button>
-              </CardContent>
-            </Card>
-        ) : (
-            <Card className="liquid-glass animate-fade-in hover:shadow-lg transition-all border-dashed border-2 border-border col-span-full">
-              <CardContent className="flex flex-col items-center justify-center h-full py-12 text-center space-y-4">
-                <div className="w-12 h-12 bg-muted/50 rounded-lg flex items-center justify-center">
-                  <Plus className="w-6 h-6 text-muted-foreground" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">Nu ai încă agenți creați</h3>
-                  <p className="text-sm text-muted-foreground">Creează primul tău agent AI pentru echipa ta</p>
-                </div>
-                <Link to="/account/agent-consultant">
-                  <Button className="glass-button">
-                    Creează Agent Nou
+                <div className="flex items-center gap-2">
+                  <Button 
+                    size="sm" 
+                    className="bg-black hover:bg-gray-800 text-white text-xs h-8 px-3" 
+                    disabled={!agent.is_active}
+                    onClick={() => handleTestCall(agent)}
+                  >
+                    <Phone className="w-3 h-3 mr-1" />
+                    Test Apel
                   </Button>
-                </Link>
-              </CardContent>
-            </Card>
+                  
+                  <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-white border-gray-200 hover:bg-gray-50 text-gray-700 text-xs h-8 px-3"
+                      onClick={() => handleEditAgent(agent.agent_id)}
+                  >
+                    Editează
+                  </Button>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-100">
+                        <Settings className="w-4 h-4 text-gray-500" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-48 bg-white border-gray-200">
+                      <DropdownMenuItem onClick={() => handleDuplicateAgent(agent)} disabled={isDuplicating}>
+                        <Files className="w-4 h-4 mr-2" />
+                        {isDuplicating ? 'Se duplică...' : 'Duplică'}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => handleToggleAgentStatus(agent)}>
+                        {agent.is_active ? (
+                            <>
+                              <PowerOff className="w-4 h-4 mr-2" />
+                              Dezactivează
+                            </>
+                        ) : (
+                            <>
+                              <Power className="w-4 h-4 mr-2" />
+                              Activează
+                            </>
+                        )}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                          className="text-red-600 focus:text-red-600"
+                          onClick={() => setSelectedAgentForDeletion(agent)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Șterge
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            </div>
+        ) : searchQuery.trim() ? (
+            <div className="bg-white rounded-lg p-12 text-center">
+              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Search className="w-6 h-6 text-gray-400" />
+              </div>
+              <h3 className="text-sm font-medium text-gray-900 mb-2">Nu s-au găsit agenți</h3>
+              <p className="text-xs text-gray-500 mb-4">
+                Nu există agenți care să corespundă căutării "{searchQuery}"
+              </p>
+              <Button variant="outline" onClick={() => setSearchQuery('')} className="bg-white border-gray-200 hover:bg-gray-50 text-gray-700">
+                Șterge căutarea
+              </Button>
+            </div>
+        ) : (
+            <div className="bg-white rounded-lg p-12 text-center">
+              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Plus className="w-6 h-6 text-gray-400" />
+              </div>
+              <h3 className="text-sm font-medium text-gray-900 mb-2">Nu ai încă agenți creați</h3>
+              <p className="text-xs text-gray-500 mb-4">Creează primul tău agent AI pentru echipa ta</p>
+              <Link to="/account/agent-consultant">
+                <Button className="bg-black hover:bg-gray-800 text-white">
+                  Creează Agent Nou
+                </Button>
+              </Link>
+            </div>
         )}
       </div>
 
@@ -271,19 +270,19 @@ const KalinaAgents = () => {
       <AlertDialog open={!!selectedAgentForDeletion} onOpenChange={(open) => {
         if (!open) setSelectedAgentForDeletion(null);
       }}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-white border-gray-200">
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmare ștergere</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-gray-900">Confirmare ștergere</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-600">
               Ești sigur că vrei să ștergi agentul "{selectedAgentForDeletion?.name}"?
               Această acțiune nu poate fi anulată și va șterge agentul și din ElevenLabs.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Anulează</AlertDialogCancel>
+            <AlertDialogCancel className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50">Anulează</AlertDialogCancel>
             <AlertDialogAction
                 onClick={() => selectedAgentForDeletion && handleDeleteAgent(selectedAgentForDeletion)}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                className="bg-red-600 text-white hover:bg-red-700"
             >
               {isDeleting ? 'Se șterge...' : 'Șterge'}
             </AlertDialogAction>
