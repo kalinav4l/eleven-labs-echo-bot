@@ -10,6 +10,7 @@ import { useUserAgents } from '@/hooks/useUserAgents';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useUserConversations } from '@/hooks/useUserConversations';
 import { useCallHistory } from '@/hooks/useCallHistory';
+import { useTranscripts } from '@/hooks/useTranscripts';
 import { 
   Bot, 
   Phone, 
@@ -19,7 +20,11 @@ import {
   Calendar,
   Clock,
   Star,
-  Activity
+  Activity,
+  FileText,
+  MessageSquare,
+  Zap,
+  Target
 } from 'lucide-react';
 
 const Account = () => {
@@ -29,6 +34,7 @@ const Account = () => {
   const { data: userStats, isLoading: statsLoading } = useUserStats();
   const { data: recentConversations, isLoading: conversationsLoading } = useUserConversations();
   const { callHistory, isLoading: callHistoryLoading } = useCallHistory();
+  const { savedTranscripts } = useTranscripts();
 
   const handleSignOut = async () => {
     try {
@@ -44,28 +50,33 @@ const Account = () => {
   const successfulCalls = callHistory?.filter(call => call.call_status === 'success')?.length || 0;
   const successRate = totalCalls > 0 ? Math.round((successfulCalls / totalCalls) * 100) : 0;
   const totalConversations = userStats?.total_conversations || 0;
+  const totalTranscripts = savedTranscripts?.length || 0;
+  const totalMinutes = userStats?.total_minutes_talked || 0;
+  const averageCallDuration = totalCalls > 0 ? Math.round(totalMinutes / totalCalls) : 0;
 
   const quickStats = [
-    { label: 'Total Agents', value: totalAgents.toString(), icon: Bot, color: 'text-blue-600' },
-    { label: 'Calls This Month', value: totalCalls.toString(), icon: Phone, color: 'text-green-600' },
-    { label: 'Success Rate', value: `${successRate}%`, icon: TrendingUp, color: 'text-purple-600' },
-    { label: 'Conversations', value: totalConversations.toString(), icon: Star, color: 'text-yellow-600' },
+    { label: 'Agenți Activi', value: totalAgents.toString(), icon: Bot, color: 'text-gray-600' },
+    { label: 'Apeluri Luna Aceasta', value: totalCalls.toString(), icon: Phone, color: 'text-gray-600' },
+    { label: 'Rată Succes', value: `${successRate}%`, icon: TrendingUp, color: 'text-gray-600' },
+    { label: 'Conversații', value: totalConversations.toString(), icon: MessageSquare, color: 'text-gray-600' },
+    { label: 'Transcripturi', value: totalTranscripts.toString(), icon: FileText, color: 'text-gray-600' },
+    { label: 'Minute Vorbite', value: totalMinutes.toString(), icon: Clock, color: 'text-gray-600' },
   ];
 
   // Recent activity from actual user data
   const recentActivity = [
     ...(userAgents?.slice(0, 2).map(agent => ({
-      action: `Created agent "${agent.name}"`,
+      action: `Creat agentul "${agent.name}"`,
       time: new Date(agent.created_at).toLocaleDateString('ro-RO'),
       icon: Bot
     })) || []),
     ...(callHistory?.slice(0, 2).map(call => ({
-      action: `Call to ${call.contact_name} - ${call.call_status}`,
+      action: `Apel către ${call.contact_name} - ${call.call_status}`,
       time: call.call_date,
       icon: Phone
     })) || []),
     ...(recentConversations?.slice(0, 2).map(conv => ({
-      action: `Conversation with ${conv.agent_name}`,
+      action: `Conversație cu ${conv.agent_name}`,
       time: new Date(conv.created_at).toLocaleDateString('ro-RO'),
       icon: Activity
     })) || [])
@@ -76,7 +87,7 @@ const Account = () => {
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0A5B4C] mx-auto"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
             <p className="mt-2 text-gray-600">Loading...</p>
           </div>
         </div>
@@ -86,23 +97,23 @@ const Account = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      <div className="min-h-screen bg-white">
         {/* Header */}
-        <div className="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-10">
+        <div className="bg-white border-b border-gray-200">
           <div className="px-6 py-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-2xl font-semibold text-gray-900">
                   Bun venit, {displayName}!
                 </h1>
-                <p className="text-gray-600 mt-1">
+                <p className="text-gray-600 mt-1 text-sm">
                   Gestionează agenții tăi AI și urmărește performanțele
                 </p>
               </div>
               <Button
                 onClick={handleSignOut}
                 variant="outline"
-                className="border-gray-300 hover:border-red-300 hover:text-red-600"
+                className="border-gray-300 hover:border-gray-400 text-gray-700"
               >
                 Ieșire
               </Button>
@@ -110,34 +121,32 @@ const Account = () => {
           </div>
         </div>
 
-        <div className="px-6 py-6">
+        <div className="px-6 py-8">
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             {quickStats.map((stat, index) => (
-              <Card key={index} className="border-0 bg-white/70 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
-                      <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                    </div>
-                    <div className={`w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center`}>
-                      <stat.icon className={`w-6 h-6 ${stat.color}`} />
-                    </div>
+              <div key={index} className="p-4 border border-gray-200 rounded-lg bg-white hover:border-gray-300 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">{stat.label}</p>
+                    <p className="text-xl font-semibold text-gray-900">{stat.value}</p>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
+                    <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Quick Actions */}
-            <Card className="border-0 bg-white/70 backdrop-blur-sm shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-gray-900">Acțiuni Rapide</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Button className="w-full justify-start bg-[#0A5B4C] hover:bg-[#0A5B4C]/90 text-white">
+            <div className="border border-gray-200 rounded-lg bg-white">
+              <div className="p-4 border-b border-gray-200">
+                <h2 className="font-medium text-gray-900">Acțiuni Rapide</h2>
+              </div>
+              <div className="p-4 space-y-3">
+                <Button className="w-full justify-start bg-gray-900 hover:bg-gray-800 text-white">
                   <Bot className="w-4 h-4 mr-2" />
                   Creează Agent Nou
                 </Button>
@@ -149,20 +158,20 @@ const Account = () => {
                   <Phone className="w-4 h-4 mr-2" />
                   Inițiază Apel Test
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Recent Activity */}
-            <Card className="border-0 bg-white/70 backdrop-blur-sm shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-gray-900">Activitate Recentă</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+            <div className="border border-gray-200 rounded-lg bg-white">
+              <div className="p-4 border-b border-gray-200">
+                <h2 className="font-medium text-gray-900">Activitate Recentă</h2>
+              </div>
+              <div className="p-4">
+                <div className="space-y-3">
                   {recentActivity.length > 0 ? recentActivity.map((activity, index) => (
-                    <div key={index} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50/50 transition-colors">
-                      <div className="w-8 h-8 rounded-full bg-[#0A5B4C]/10 flex items-center justify-center flex-shrink-0">
-                        <activity.icon className="w-4 h-4 text-[#0A5B4C]" />
+                    <div key={index} className="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                        <activity.icon className="w-3 h-3 text-gray-600" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-gray-900 font-medium">
@@ -175,46 +184,103 @@ const Account = () => {
                       </div>
                     </div>
                   )) : (
-                    <p className="text-gray-500 text-center py-4">Nu există activitate recentă</p>
+                    <p className="text-gray-500 text-center py-4 text-sm">Nu există activitate recentă</p>
                   )}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
           {/* Agent Overview */}
-          <Card className="border-0 bg-white/70 backdrop-blur-sm shadow-sm mt-8">
-            <CardHeader>
-              <CardTitle className="text-gray-900">Agenții Tăi</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className="border border-gray-200 rounded-lg bg-white mt-8">
+            <div className="p-4 border-b border-gray-200">
+              <h2 className="font-medium text-gray-900">Agenții Tăi</h2>
+            </div>
+            <div className="p-4">
               {userAgents && userAgents.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {userAgents.slice(0, 3).map((agent, index) => (
-                    <div key={index} className="p-4 border border-gray-200 rounded-xl hover:shadow-sm transition-all duration-200">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-semibold text-gray-900">{agent.name}</h3>
-                        <Badge variant={agent.is_active ? 'default' : 'secondary'}>
-                          {agent.is_active ? 'active' : 'paused'}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {userAgents.slice(0, 6).map((agent, index) => (
+                    <div key={index} className="p-3 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-medium text-gray-900 text-sm">{agent.name}</h3>
+                        <Badge variant={agent.is_active ? 'default' : 'secondary'} className="text-xs">
+                          {agent.is_active ? 'activ' : 'paused'}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">{agent.description || 'Agent AI'}</p>
+                      <p className="text-xs text-gray-600 mb-2">{agent.description || 'Agent AI'}</p>
                       <p className="text-xs text-gray-500">Creat: {new Date(agent.created_at).toLocaleDateString('ro-RO')}</p>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <Bot className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">Nu ai încă agenți creați</p>
-                  <Button className="mt-4 bg-[#0A5B4C] hover:bg-[#0A5B4C]/90 text-white">
+                  <Bot className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 mb-4">Nu ai încă agenți creați</p>
+                  <Button className="bg-gray-900 hover:bg-gray-800 text-white">
                     <Bot className="w-4 h-4 mr-2" />
                     Creează primul tău agent
                   </Button>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+
+          {/* Performance Insights */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+            {/* Call Performance */}
+            <div className="border border-gray-200 rounded-lg bg-white">
+              <div className="p-4 border-b border-gray-200">
+                <h2 className="font-medium text-gray-900">Performanța Apelurilor</h2>
+              </div>
+              <div className="p-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Total Apeluri</span>
+                    <span className="font-medium text-gray-900">{totalCalls}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Apeluri Reușite</span>
+                    <span className="font-medium text-gray-900">{successfulCalls}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Durată Medie</span>
+                    <span className="font-medium text-gray-900">{averageCallDuration}min</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Total Minute</span>
+                    <span className="font-medium text-gray-900">{totalMinutes}min</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Content Stats */}
+            <div className="border border-gray-200 rounded-lg bg-white">
+              <div className="p-4 border-b border-gray-200">
+                <h2 className="font-medium text-gray-900">Statistici Conținut</h2>
+              </div>
+              <div className="p-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Conversații Totale</span>
+                    <span className="font-medium text-gray-900">{totalConversations}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Mesaje Totale</span>
+                    <span className="font-medium text-gray-900">{userStats?.total_messages || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Transcripturi</span>
+                    <span className="font-medium text-gray-900">{totalTranscripts}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Agenți Utilizați</span>
+                    <span className="font-medium text-gray-900">{userStats?.agents_used || 0}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </DashboardLayout>

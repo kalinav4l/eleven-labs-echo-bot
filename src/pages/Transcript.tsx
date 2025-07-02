@@ -13,7 +13,9 @@ interface TranscriptEntry {
   speaker: string;
   text: string;
   timestamp: string;
-  time: number;
+  startTime?: number;
+  endTime?: number;
+  time?: number;
 }
 
 const Transcript = () => {
@@ -62,9 +64,9 @@ const Transcript = () => {
       const result = await response.json();
       
       const mockEntries: TranscriptEntry[] = [
-        { speaker: "Speaker 1", text: "Hello, welcome to our meeting today.", timestamp: "0:00", time: 0 },
-        { speaker: "Speaker 2", text: "Thank you for having me. I'm excited to discuss the project.", timestamp: "0:05", time: 5 },
-        { speaker: "Speaker 1", text: "Let's start with the main objectives.", timestamp: "0:12", time: 12 },
+        { speaker: "Speaker 1", text: "Hello, welcome to our meeting today.", timestamp: "0:00", time: 0, startTime: 0, endTime: 5 },
+        { speaker: "Speaker 2", text: "Thank you for having me. I'm excited to discuss the project.", timestamp: "0:05", time: 5, startTime: 5, endTime: 12 },
+        { speaker: "Speaker 1", text: "Let's start with the main objectives.", timestamp: "0:12", time: 12, startTime: 12, endTime: 20 },
       ];
 
       await saveTranscript({
