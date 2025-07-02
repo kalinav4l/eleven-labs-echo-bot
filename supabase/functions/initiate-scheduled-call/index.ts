@@ -15,8 +15,20 @@ serve(async (req) => {
   try {
     const { agent_id, phone_number, contact_name, user_id, batch_processing } = await req.json()
 
+    console.log('Received request:', { agent_id, phone_number, contact_name, user_id, batch_processing })
+
     if (!agent_id || !phone_number || !user_id) {
-      throw new Error('Agent ID, numărul de telefon și user ID sunt obligatorii')
+      console.error('Missing required fields:', { agent_id: !!agent_id, phone_number: !!phone_number, user_id: !!user_id })
+      return new Response(
+        JSON.stringify({ 
+          error: 'Agent ID, numărul de telefon și user ID sunt obligatorii',
+          success: false
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
     }
 
     // Initialize Supabase client
@@ -30,7 +42,17 @@ serve(async (req) => {
     const agentPhoneId = Deno.env.get('PHONE_NUMBER_ID') || 'phnum_01jz06e77dfce9034d7jnpj5v7'
     
     if (!elevenLabsApiKey) {
-      throw new Error('ElevenLabs API key nu este configurat în Supabase Secrets')
+      console.error('ElevenLabs API key not configured')
+      return new Response(
+        JSON.stringify({ 
+          error: 'ElevenLabs API key nu este configurat în Supabase Secrets',
+          success: false
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
     }
 
     console.log(`Inițiere apel pentru ${phone_number} cu agentul ${agent_id} pentru utilizatorul ${user_id}`)
@@ -56,13 +78,35 @@ serve(async (req) => {
     console.log('ElevenLabs response status:', response.status)
     console.log('ElevenLabs response headers:', Object.fromEntries(response.headers.entries()))
 
-    if (!response.ok) {
-      const errorData = await response.text()
-      console.error('Eroare ElevenLabs response:', errorData)
-      throw new Error(`Eroare ElevenLabs: ${response.status} - ${errorData}`)
+    let elevenLabsData
+    let responseText = ''
+    
+    try {
+      responseText = await response.text()
+      console.log('ElevenLabs raw response:', responseText)
+      
+      if (responseText) {
+        elevenLabsData = JSON.parse(responseText)
+      }
+    } catch (parseError) {
+      console.error('Error parsing ElevenLabs response:', parseError)
+      console.error('Raw response was:', responseText)
     }
 
-    const elevenLabsData = await response.json()
+    if (!response.ok) {
+      console.error('ElevenLabs API error:', response.status, responseText)
+      return new Response(
+        JSON.stringify({ 
+          error: `Eroare ElevenLabs: ${response.status} - ${responseText}`,
+          success: false
+        }),
+        {
+          status: response.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
     console.log('Apel inițiat cu succes:', elevenLabsData)
 
     // Store call initiation in database
@@ -73,8 +117,8 @@ serve(async (req) => {
       call_status: 'initiated',
       summary: `Apel inițiat către ${contact_name || phone_number}`,
       agent_id: agent_id,
-      conversation_id: elevenLabsData.conversation_id,
-      elevenlabs_history_id: elevenLabsData.conversation_id,
+      conversation_id: elevenLabsData?.conversation_id || null,
+      elevenlabs_history_id: elevenLabsData?.conversation_id || null,
       dialog_json: JSON.stringify({
         request: requestBody,
         response: elevenLabsData,
@@ -99,16 +143,10 @@ serve(async (req) => {
       console.log('Call history inserted:', insertData)
     }
 
-    // Set up webhook to listen for call completion (if not batch processing)
-    if (!batch_processing) {
-      // You can add webhook logic here if needed
-      console.log('Single call - webhook setup can be added here')
-    }
-
     return new Response(
       JSON.stringify({
         success: true,
-        conversationId: elevenLabsData.conversation_id,
+        conversationId: elevenLabsData?.conversation_id,
         callHistoryId: insertData?.[0]?.id,
         agent_id: agent_id,
         user_id: user_id,
@@ -123,7 +161,7 @@ serve(async (req) => {
     console.error('Eroare în inițierea apelului:', error)
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: error.message || 'Eroare necunoscută',
         success: false
       }),
       {

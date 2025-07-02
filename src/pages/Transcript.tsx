@@ -14,6 +14,7 @@ const Transcript = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTranscript, setSelectedTranscript] = useState<any>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const { 
     savedTranscripts, 
@@ -42,6 +43,8 @@ const Transcript = () => {
       return;
     }
 
+    setIsProcessing(true);
+    
     toast({
       title: "Procesare",
       description: "Se transcrie fișierul audio...",
@@ -52,17 +55,24 @@ const Transcript = () => {
       const arrayBuffer = await file.arrayBuffer();
       const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
+      console.log('Calling speech-to-text function...');
+      
       // Call Supabase edge function for transcription
       const { data, error } = await supabase.functions.invoke('speech-to-text', {
         body: { audio: base64Audio }
       });
 
       if (error) {
-        throw new Error('Transcrierea a eșuat');
+        console.error('Speech-to-text error:', error);
+        throw new Error('Transcrierea a eșuat: ' + error.message);
       }
+
+      console.log('Transcription result:', data);
 
       // Process the transcription result
       const transcriptText = data.text || '';
+      
+      console.log('Calling process-transcript function...');
       
       // Call process-transcript function to structure the dialogue
       const { data: processedData, error: processError } = await supabase.functions.invoke('process-transcript', {
@@ -74,9 +84,11 @@ const Transcript = () => {
         // Continue with basic transcript if processing fails
       }
 
+      console.log('Processed data:', processedData);
+
       // Create transcript entries from processed data or fallback
       let transcriptEntries = [];
-      if (processedData?.dialogue) {
+      if (processedData?.dialogue && Array.isArray(processedData.dialogue)) {
         transcriptEntries = processedData.dialogue.map((entry: any, index: number) => ({
           speaker: entry.speaker || `Speaker ${index + 1}`,
           text: entry.text || '',
@@ -116,10 +128,12 @@ const Transcript = () => {
         description: "Nu s-a putut transcrie audio-ul. Încercați din nou.",
         variant: "destructive"
       });
-    }
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+    } finally {
+      setIsProcessing(false);
+      
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -177,10 +191,11 @@ const Transcript = () => {
                 </div>
                 <Button 
                   onClick={() => fileInputRef.current?.click()}
+                  disabled={isProcessing}
                   className="bg-gray-900 hover:bg-gray-800 text-white"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  Încarcă Audio
+                  {isProcessing ? 'Se procesează...' : 'Încarcă Audio'}
                 </Button>
               </div>
 
