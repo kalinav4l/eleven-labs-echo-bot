@@ -1,12 +1,12 @@
 
 import React from 'react';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, CheckCircle, Clock, PhoneCall, Mic, AlertCircle } from 'lucide-react';
+import { Loader2, CheckCircle, Clock, PhoneCall, Mic, AlertCircle, Phone } from 'lucide-react';
 
 interface CallStatus {
   contactId: string;
   contactName: string;
-  status: 'waiting' | 'calling' | 'talking' | 'completed' | 'failed' | 'no-answer' | 'busy';
+  status: 'waiting' | 'calling' | 'ringing' | 'talking' | 'completed' | 'failed' | 'no-answer' | 'busy' | 'rejected' | 'cancelled';
   conversationId?: string;
   startTime?: Date;
   endTime?: Date;
@@ -34,15 +34,22 @@ export const BatchCallProgress: React.FC<BatchCallProgressProps> = ({
       case 'waiting':
         return <Clock className="w-4 h-4 text-gray-500" />;
       case 'calling':
-        return <PhoneCall className="w-4 h-4 text-blue-500 animate-pulse" />;
+        return <Phone className="w-4 h-4 text-blue-500 animate-pulse" />;
+      case 'ringing':
+        return <PhoneCall className="w-4 h-4 text-yellow-500 animate-pulse" />;
       case 'talking':
         return <Mic className="w-4 h-4 text-green-500 animate-pulse" />;
       case 'completed':
         return <CheckCircle className="w-4 h-4 text-green-600" />;
       case 'failed':
-      case 'no-answer':
-      case 'busy':
         return <AlertCircle className="w-4 h-4 text-red-500" />;
+      case 'no-answer':
+        return <AlertCircle className="w-4 h-4 text-orange-500" />;
+      case 'busy':
+        return <AlertCircle className="w-4 h-4 text-yellow-500" />;
+      case 'rejected':
+      case 'cancelled':
+        return <AlertCircle className="w-4 h-4 text-gray-500" />;
       default:
         return <Clock className="w-4 h-4 text-gray-500" />;
     }
@@ -53,7 +60,9 @@ export const BatchCallProgress: React.FC<BatchCallProgressProps> = ({
       case 'waiting':
         return 'În așteptare';
       case 'calling':
-        return 'Se apelează...';
+        return 'Se inițiază...';
+      case 'ringing':
+        return 'Sună...';
       case 'talking':
         return 'În conversație';
       case 'completed':
@@ -64,54 +73,107 @@ export const BatchCallProgress: React.FC<BatchCallProgressProps> = ({
         return 'Nu răspunde';
       case 'busy':
         return 'Ocupat';
+      case 'rejected':
+        return 'Respins';
+      case 'cancelled':
+        return 'Anulat';
       default:
         return 'Necunoscut';
     }
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'talking':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'ringing':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'calling':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'failed':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'no-answer':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'busy':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'rejected':
+      case 'cancelled':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+      default:
+        return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
+  };
+
   return (
-    <div className="space-y-4 mb-4">
-      <div className="flex items-center justify-between text-sm">
-        <span>Progres: {currentProgress} / {totalCalls}</span>
-        <span>{Math.round(progressPercentage)}%</span>
-      </div>
-      <Progress value={progressPercentage} className="h-2" />
-      
-      {/* Current Status */}
-      {currentCallStatus && (
-        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="flex items-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+    <div className="space-y-6 mb-6">
+      {/* Overall Progress */}
+      <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="flex items-center justify-between text-sm mb-2">
+          <span className="font-medium">Progres General:</span>
+          <span className="font-mono">{currentProgress} / {totalCalls} ({Math.round(progressPercentage)}%)</span>
+        </div>
+        <Progress value={progressPercentage} className="h-3 mb-3" />
+        
+        {/* Current Status */}
+        {currentCallStatus && (
+          <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <Loader2 className="w-4 h-4 animate-spin text-blue-600 flex-shrink-0" />
             <span className="text-sm font-medium text-blue-800">{currentCallStatus}</span>
           </div>
+        )}
+      </div>
+
+      {/* Sequential Processing Info */}
+      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <CheckCircle className="w-5 h-5 text-green-600" />
+          <h4 className="font-medium text-green-800">Procesare Secvențială Activă</h4>
         </div>
-      )}
+        <div className="text-sm text-green-700 space-y-1">
+          <p>• Un apel la un moment dat - fără suprapuneri</p>
+          <p>• Monitorizare în timp real prin API ElevenLabs</p>
+          <p>• Salvare completă a datelor înainte de următorul apel</p>
+          <p>• Toate informațiile (transcript, cost, durată) în istoric</p>
+        </div>
+      </div>
 
       {/* Detailed Call Statuses */}
       {callStatuses.length > 0 && (
-        <div className="space-y-2">
-          <h4 className="text-sm font-medium text-gray-900">Status Detaliat Apeluri:</h4>
-          <div className="max-h-40 overflow-y-auto space-y-1">
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <h4 className="font-medium text-gray-900 mb-3">Status Detaliat per Contact:</h4>
+          <div className="space-y-2 max-h-60 overflow-y-auto">
             {callStatuses.map(callStatus => (
-              <div key={callStatus.contactId} className="flex items-center justify-between p-2 bg-white border rounded text-sm">
-                <div className="flex items-center gap-2">
+              <div 
+                key={callStatus.contactId} 
+                className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg"
+              >
+                <div className="flex items-center gap-3">
                   {getStatusIcon(callStatus.status)}
-                  <span className="font-medium">{callStatus.contactName}</span>
+                  <div>
+                    <span className="font-medium text-gray-900">{callStatus.contactName}</span>
+                    {callStatus.conversationId && (
+                      <div className="text-xs text-gray-500 font-mono">
+                        ID: {callStatus.conversationId.substring(0, 12)}...
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    callStatus.status === 'completed' ? 'bg-green-100 text-green-800' :
-                    callStatus.status === 'talking' ? 'bg-blue-100 text-blue-800' :
-                    callStatus.status === 'calling' ? 'bg-yellow-100 text-yellow-800' :
-                    callStatus.status === 'failed' ? 'bg-red-100 text-red-800' :
-                    callStatus.status === 'no-answer' ? 'bg-gray-100 text-gray-800' :
-                    callStatus.status === 'busy' ? 'bg-gray-100 text-gray-800' : 'bg-gray-100 text-gray-800'
-                  }`}>
+                
+                <div className="flex items-center gap-3">
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(callStatus.status)}`}>
                     {getStatusText(callStatus.status)}
                   </span>
-                  {callStatus.duration && (
-                    <span className="text-xs text-gray-600">{callStatus.duration}s</span>
-                  )}
+                  
+                  <div className="text-right">
+                    {callStatus.duration && (
+                      <div className="text-xs text-gray-600">{callStatus.duration}s</div>
+                    )}
+                    {callStatus.cost && (
+                      <div className="text-xs text-gray-600">${callStatus.cost.toFixed(4)}</div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -119,16 +181,17 @@ export const BatchCallProgress: React.FC<BatchCallProgressProps> = ({
         </div>
       )}
 
-      <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-        <div className="flex items-center gap-2">
-          <CheckCircle className="w-4 h-4 text-green-600" />
-          <p className="text-sm text-green-800 font-medium">
-            Monitorizare API ElevenLabs Activă
-          </p>
+      {/* Processing Guarantee */}
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <AlertCircle className="w-5 h-5 text-amber-600" />
+          <h4 className="font-medium text-amber-800">Garanție de Procesare</h4>
         </div>
-        <p className="text-sm text-green-700 mt-1">
-          Verificare status la 5 secunde. Următorul apel începe doar după confirmarea finalizării celui curent.
-        </p>
+        <div className="text-sm text-amber-700 space-y-1">
+          <p>• Fiecare apel finalizat va fi GARANTAT salvat în "Istoric Apeluri"</p>
+          <p>• Procesarea se oprește DOAR după salvarea completă a datelor</p>
+          <p>• Statusurile se actualizează în timp real din API ElevenLabs</p>
+        </div>
       </div>
     </div>
   );
