@@ -394,20 +394,20 @@ const Calendar = () => {
   // Get priority color
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800 border-red-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'high': return 'bg-red-50 text-red-700 border-red-200';
+      case 'medium': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      case 'low': return 'bg-green-50 text-green-700 border-green-200';
+      default: return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
 
   // Get status color
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-      case 'in_progress': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-slate-100 text-slate-800 border-slate-200';
+      case 'completed': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'in_progress': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'cancelled': return 'bg-red-50 text-red-700 border-red-200';
+      default: return 'bg-slate-50 text-slate-700 border-slate-200';
     }
   };
 
@@ -483,7 +483,7 @@ const Calendar = () => {
     return (
       <TooltipProvider>
         <DashboardLayout>
-          <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+          <div className="p-6 bg-white min-h-screen">
             <div className="mb-6">
               <Button
                 onClick={() => setShowIntelligentCreator(false)}
@@ -507,14 +507,14 @@ const Calendar = () => {
   return (
     <TooltipProvider>
       <DashboardLayout>
-        <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+        <div className="p-6 bg-white min-h-screen">
           <div className="mb-8">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-blue-700 bg-clip-text text-transparent mb-2">
+                <h1 className="text-2xl font-semibold text-gray-900 mb-2">
                   Calendar Inteligent AI
                 </h1>
-                <p className="text-slate-600">Gestionează agenți, campanii și taskuri automatizate</p>
+                <p className="text-gray-600">Gestionează agenți, campanii și taskuri automatizate</p>
               </div>
               
               <Tooltip>
@@ -522,7 +522,7 @@ const Calendar = () => {
                   <Button 
                     onClick={() => setShowIntelligentCreator(true)}
                     disabled={isProcessingAI}
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                    className="bg-purple-600 hover:bg-purple-700 text-white"
                   >
                     {isProcessingAI ? (
                       <>
@@ -551,68 +551,68 @@ const Calendar = () => {
 
           {/* Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-            <Card className="border-0 shadow-md bg-white/80 backdrop-blur-sm">
+            <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-600">Total Programate</p>
-                    <p className="text-2xl font-bold text-slate-900">{scheduledCalls.length}</p>
+                    <p className="text-sm text-gray-600">Total Programate</p>
+                    <p className="text-2xl font-semibold text-gray-900">{scheduledCalls.length}</p>
                   </div>
-                  <CalendarDays className="h-8 w-8 text-blue-600" />
+                  <CalendarDays className="h-8 w-8 text-gray-400" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-md bg-white/80 backdrop-blur-sm">
+            <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-600">Azi</p>
-                    <p className="text-2xl font-bold text-slate-900">{todayCalls.length}</p>
+                    <p className="text-sm text-gray-600">Azi</p>
+                    <p className="text-2xl font-semibold text-gray-900">{todayCalls.length}</p>
                   </div>
-                  <Clock className="h-8 w-8 text-green-600" />
+                  <Clock className="h-8 w-8 text-gray-400" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-md bg-white/80 backdrop-blur-sm">
+            <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-600">Campanii Active</p>
-                    <p className="text-2xl font-bold text-slate-900">
+                    <p className="text-sm text-gray-600">Campanii Active</p>
+                    <p className="text-2xl font-semibold text-gray-900">
                       {scheduledCalls.filter(call => call.task_type === 'campaign').length}
                     </p>
                   </div>
-                  <Target className="h-8 w-8 text-purple-600" />
+                  <Target className="h-8 w-8 text-gray-400" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-md bg-white/80 backdrop-blur-sm">
+            <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-600">AI Tasks</p>
-                    <p className="text-2xl font-bold text-slate-900">
+                    <p className="text-sm text-gray-600">AI Tasks</p>
+                    <p className="text-2xl font-semibold text-gray-900">
                       {scheduledCalls.filter(call => call.auto_generated).length}
                     </p>
                   </div>
-                  <BrainCircuit className="h-8 w-8 text-indigo-600" />
+                  <BrainCircuit className="h-8 w-8 text-gray-400" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-md bg-white/80 backdrop-blur-sm">
+            <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-600">Finalizate</p>
-                    <p className="text-2xl font-bold text-slate-900">
+                    <p className="text-sm text-gray-600">Finalizate</p>
+                    <p className="text-2xl font-semibold text-gray-900">
                       {scheduledCalls.filter(call => call.status === 'completed').length}
                     </p>
                   </div>
-                  <CheckCircle className="h-8 w-8 text-emerald-600" />
+                  <CheckCircle className="h-8 w-8 text-gray-400" />
                 </div>
               </CardContent>
             </Card>
@@ -622,7 +622,7 @@ const Calendar = () => {
           <div className="flex flex-wrap gap-3 mb-6">
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg">
+                <Button>
                   <Plus className="h-4 w-4 mr-2" />
                   Programează Task
                 </Button>
@@ -744,7 +744,7 @@ const Calendar = () => {
 
             <Button 
               onClick={() => setIsAITaskDialogOpen(true)}
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg"
+              variant="outline"
             >
               <Bot className="h-4 w-4 mr-2" />
               Instrucțiuni AI
@@ -754,9 +754,9 @@ const Calendar = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Calendar */}
             <div className="lg:col-span-2">
-              <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-sm">
+              <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                  <CardTitle className="text-xl text-slate-900">
+                  <CardTitle className="text-xl text-gray-900">
                     {currentDate.toLocaleDateString('ro-RO', { 
                       month: 'long', 
                       year: 'numeric' 
@@ -767,7 +767,6 @@ const Calendar = () => {
                       variant="outline"
                       size="sm"
                       onClick={goToPreviousMonth}
-                      className="hover:bg-slate-100"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
@@ -775,7 +774,6 @@ const Calendar = () => {
                       variant="outline"
                       size="sm"
                       onClick={goToNextMonth}
-                      className="hover:bg-slate-100"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -784,7 +782,7 @@ const Calendar = () => {
                 <CardContent>
                   <div className="grid grid-cols-7 gap-1 mb-4">
                     {['Dum', 'Lun', 'Mar', 'Mie', 'Joi', 'Vin', 'Sâm'].map(day => (
-                      <div key={day} className="p-2 text-center text-sm font-medium text-slate-600">
+                      <div key={day} className="p-2 text-center text-sm font-medium text-gray-600">
                         {day}
                       </div>
                     ))}
@@ -801,8 +799,8 @@ const Calendar = () => {
                           onClick={() => handleDateClick(day)}
                           className={`
                             p-2 min-h-[80px] border rounded-lg cursor-pointer transition-all duration-200
-                            ${isCurrentMonth ? 'bg-white hover:bg-slate-50 hover:shadow-md' : 'bg-slate-50 text-slate-400'}
-                            ${isToday ? 'bg-blue-50 border-blue-200 shadow-md' : 'border-slate-200'}
+                            ${isCurrentMonth ? 'bg-white hover:bg-gray-50' : 'bg-gray-50 text-gray-400'}
+                            ${isToday ? 'bg-blue-50 border-blue-200' : 'border-gray-200'}
                           `}
                         >
                           <div className="text-sm font-medium mb-1">{day.getDate()}</div>
@@ -812,10 +810,10 @@ const Calendar = () => {
                                 key={callIndex}
                                 className={`text-xs p-1 rounded-md flex items-center gap-1 ${
                                   call.auto_generated 
-                                    ? 'bg-purple-100 text-purple-800 border border-purple-200' 
+                                    ? 'bg-purple-50 text-purple-700 border border-purple-200' 
                                     : call.task_type === 'campaign'
-                                    ? 'bg-green-100 text-green-800 border border-green-200'
-                                    : 'bg-blue-100 text-blue-800 border border-blue-200'
+                                    ? 'bg-green-50 text-green-700 border border-green-200'
+                                    : 'bg-blue-50 text-blue-700 border border-blue-200'
                                 }`}
                               >
                                 {getTaskTypeIcon(call.task_type || 'call')}
@@ -824,7 +822,7 @@ const Calendar = () => {
                               </div>
                             ))}
                             {callsForDay.length > 2 && (
-                              <div className="text-xs text-slate-500 font-medium">
+                              <div className="text-xs text-gray-500 font-medium">
                                 +{callsForDay.length - 2} mai mult
                               </div>
                             )}
@@ -839,10 +837,10 @@ const Calendar = () => {
 
             {/* Sidebar */}
             <div>
-              <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-sm">
+              <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center">
-                    <TrendingUp className="h-5 w-5 mr-2 text-indigo-600" />
+                    <TrendingUp className="h-5 w-5 mr-2 text-gray-600" />
                     Timeline Inteligent
                   </CardTitle>
                 </CardHeader>
@@ -851,8 +849,8 @@ const Calendar = () => {
                     {weekCalls.slice(0, 10).map((call) => (
                       <div
                         key={call.id}
-                        className={`p-3 border rounded-xl space-y-2 transition-all duration-200 hover:shadow-md ${
-                          call.auto_generated ? 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200' : 'bg-white border-slate-200'
+                        className={`p-3 border rounded-lg space-y-2 transition-all duration-200 hover:bg-gray-50 ${
+                          call.auto_generated ? 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200' : 'bg-white border-gray-200'
                         }`}
                       >
                         <div className="flex items-center justify-between">
@@ -860,7 +858,7 @@ const Calendar = () => {
                             {getTaskTypeIcon(call.task_type || 'call')}
                             <h4 className="font-medium text-sm">{call.client_name}</h4>
                             {call.auto_generated && (
-                              <Badge className="bg-purple-100 text-purple-700 border-purple-200">
+                              <Badge className="bg-purple-50 text-purple-700 border-purple-200">
                                 <Sparkles className="h-2 w-2 mr-1" />
                                 AI
                               </Badge>
@@ -903,7 +901,7 @@ const Calendar = () => {
                           )}
                         </div>
                         
-                        <div className="text-xs text-slate-600 space-y-1">
+                        <div className="text-xs text-gray-600 space-y-1">
                           <div className="flex items-center">
                             <Phone className="h-3 w-3 mr-1" />
                             {call.phone_number}
@@ -920,7 +918,7 @@ const Calendar = () => {
                         </div>
                         
                         {call.description && (
-                          <p className="text-xs text-slate-600 line-clamp-2 bg-slate-50 p-2 rounded-md">
+                          <p className="text-xs text-gray-600 line-clamp-2 bg-gray-50 p-2 rounded-md">
                             {call.description}
                           </p>
                         )}
@@ -928,7 +926,7 @@ const Calendar = () => {
                     ))}
                     
                     {weekCalls.length === 0 && (
-                      <div className="text-center py-8 text-slate-500">
+                      <div className="text-center py-8 text-gray-500">
                         <CalendarIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
                         <p>Nu ai taskuri programate</p>
                         <p className="text-xs mt-1">Folosește butonul fermecat pentru a genera automat!</p>
