@@ -141,42 +141,76 @@ const Account = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Quick Actions */}
+            {/* Performance Overview */}
             <div className="border border-gray-200 rounded-lg bg-white">
               <div className="p-4 border-b border-gray-200">
-                <h2 className="font-medium text-gray-900">Acțiuni Rapide</h2>
+                <h2 className="font-medium text-gray-900">Performanță Generală</h2>
               </div>
-              <div className="p-4 space-y-3">
-                <Link to="/account/kalina-agents">
-                  <Button className="w-full justify-start bg-gray-900 hover:bg-gray-800 text-white">
-                    <Bot className="w-4 h-4 mr-2" />
-                    Creează Agent Nou
-                  </Button>
-                </Link>
-                <Link to="/account/conversation-analytics">
-                  <Button variant="outline" className="w-full justify-start border-gray-300 hover:bg-gray-50">
-                    <BarChart3 className="w-4 h-4 mr-2" />
-                    Vezi Analytics
-                  </Button>
-                </Link>
-                <Link to="/account/outbound">
-                  <Button variant="outline" className="w-full justify-start border-gray-300 hover:bg-gray-50">
-                    <Phone className="w-4 h-4 mr-2" />
-                    Inițiază Apel Test
-                  </Button>
-                </Link>
-                <Link to="/account/calendar">
-                  <Button variant="outline" className="w-full justify-start border-gray-300 hover:bg-gray-50">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Calendar
-                  </Button>
-                </Link>
-                <Link to="/account/transcript">
-                  <Button variant="outline" className="w-full justify-start border-gray-300 hover:bg-gray-50">
-                    <FileText className="w-4 h-4 mr-2" />
-                    Transcripturi
-                  </Button>
-                </Link>
+              <div className="p-4 space-y-4">
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <TrendingUp className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Rată de Succes</p>
+                      <p className="text-xs text-gray-500">Apeluri reușite</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-semibold text-gray-900">{successRate}%</p>
+                    <p className="text-xs text-gray-500">{successfulCalls}/{totalCalls} apeluri</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                      <Clock className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Durată Medie</p>
+                      <p className="text-xs text-gray-500">Pe apel</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-semibold text-gray-900">{averageCallDuration}min</p>
+                    <p className="text-xs text-gray-500">Total: {totalMinutes}min</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <Bot className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Agenți Activi</p>
+                      <p className="text-xs text-gray-500">În utilizare</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-semibold text-gray-900">{totalAgents}</p>
+                    <p className="text-xs text-gray-500">agenți creați</p>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-gray-200">
+                  <div className="flex space-x-2">
+                    <Link to="/account/kalina-agents" className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Bot className="w-4 h-4 mr-2" />
+                        Agenți
+                      </Button>
+                    </Link>
+                    <Link to="/account/conversation-analytics" className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full">
+                        <BarChart3 className="w-4 h-4 mr-2" />
+                        Analytics
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
 
