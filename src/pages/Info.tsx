@@ -1,114 +1,157 @@
 
 import React from 'react';
-import { Bot, Phone, Zap, Shield } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import HamburgerMenu from '@/components/HamburgerMenu';
+import { Button } from '@/components/ui/button';
+import { ArrowRight, Zap, Users, Globe, Shield, Clock, BarChart } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Info = () => {
   const features = [
     {
-      icon: <Bot className="w-8 h-8 text-accent" />,
-      title: "AI Avansat",
-      description: "Agenți AI cu tehnologie de ultimă generație pentru conversații naturale și eficiente."
+      icon: <Zap className="w-8 h-8 text-yellow-500" />,
+      title: "AI Agenți Vocali",
+      description: "Creează agenți AI care pot vorbi și înțelege limba română perfect"
     },
     {
-      icon: <Phone className="w-8 h-8 text-accent" />,
-      title: "Telefonie Inteligentă",
-      description: "Sistemul nostru automatizează apelurile de vânzări și suport cu rata de succes de 90%."
+      icon: <Users className="w-8 h-8 text-blue-500" />,
+      title: "Outbound Calls", 
+      description: "Sistem complet de apeluri automate cu baze de date CSV și tracking"
     },
     {
-      icon: <Zap className="w-8 h-8 text-accent" />,
-      title: "Răspuns Instant",
-      description: "Timp de răspuns sub 200ms pentru experiențe fluide și profesionale."
+      icon: <Globe className="w-8 h-8 text-green-500" />,
+      title: "Multilingv",
+      description: "Suport pentru română, engleză și alte limbi principale"
     },
     {
-      icon: <Shield className="w-8 h-8 text-accent" />,
-      title: "Securitate Maximă",
-      description: "Toate datele sunt criptate și stocate în conformitate cu standardele GDPR."
+      icon: <Shield className="w-8 h-8 text-purple-500" />,
+      title: "Securitate",
+      description: "Date protejate cu criptare și autentificare securizată"
+    },
+    {
+      icon: <Clock className="w-8 h-8 text-orange-500" />,
+      title: "Real-time",
+      description: "Conversații în timp real cu latență minimă"
+    },
+    {
+      icon: <BarChart className="w-8 h-8 text-indigo-500" />,
+      title: "Analytics",
+      description: "Dashboard complet cu statistici și rapoarte detaliate"
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 relative overflow-hidden">
-      <HamburgerMenu />
-      
-      {/* Background Glass Effects */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/6 w-96 h-96 bg-gradient-to-r from-green-200/20 to-emerald-200/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/6 w-96 h-96 bg-gradient-to-r from-blue-200/20 to-cyan-200/20 rounded-full blur-3xl"></div>
-        <div className="absolute top-3/4 left-1/2 w-72 h-72 bg-gradient-to-r from-purple-200/20 to-pink-200/20 rounded-full blur-3xl"></div>
-      </div>
-      
-      <div className="container mx-auto px-4 py-20 relative z-10">
-        <div className="text-center mb-16 animate-fade-in">
-          <h1 className="text-4xl font-bold text-foreground mb-6">
-            Despre Compania Noastră
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Suntem o companie de tehnologie specializată în soluții AI pentru automatizarea 
-            apelurilor telefonice. Misiunea noastră este să transformăm modul în care companiile 
-            interactionează cu clienții prin tehnologie inteligentă.
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 left-1/6 w-96 h-96 bg-gradient-to-r from-blue-200/20 to-purple-200/20 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-1/4 right-1/6 w-96 h-96 bg-gradient-to-r from-green-200/20 to-blue-200/20 rounded-full blur-3xl"></div>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto mb-16">
-          {features.map((feature, index) => (
-            <Card 
-              key={index} 
-              className="liquid-glass hover:shadow-xl transition-all duration-300 hover:scale-105 animate-fade-in"
-              style={{ animationDelay: `${index * 0.2}s` }}
-            >
-              <CardHeader>
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-accent/10 border border-accent/20 rounded-xl">
-                    {feature.icon}
-                  </div>
-                  <CardTitle className="text-foreground text-xl">{feature.title}</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <div className="text-center mb-16 animate-fade-in">
-          <h2 className="text-3xl font-bold text-foreground mb-8">
-            De Ce Ne Aleg Clienții
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="text-center liquid-glass p-6 rounded-xl">
-              <div className="text-4xl font-bold text-foreground mb-2">95%</div>
-              <div className="text-muted-foreground">Rata de satisfacție a clienților</div>
-            </div>
-            <div className="text-center liquid-glass p-6 rounded-xl">
-              <div className="text-4xl font-bold text-foreground mb-2">50+</div>
-              <div className="text-muted-foreground">Companii partenere</div>
-            </div>
-            <div className="text-center liquid-glass p-6 rounded-xl">
-              <div className="text-4xl font-bold text-foreground mb-2">1M+</div>
-              <div className="text-muted-foreground">Apeluri procesate lunar</div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+          <div className="text-center">
+            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6">
+              Kalina <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">AI</span>
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
+              Platforma completă pentru agenți AI vocali în limba română. 
+              Creează, testează și implementează agenți inteligenți pentru business-ul tău.
+            </p>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Link to="/kalina-agents">
+                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg">
+                  Începe Gratuit
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+              <Link to="/outbound">
+                <Button variant="outline" size="lg" className="px-8 py-4 text-lg border-2">
+                  Vezi Outbound Calls
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
+      </div>
 
-        <Card className="liquid-glass max-w-4xl mx-auto animate-fade-in">
-          <CardHeader>
-            <CardTitle className="text-foreground text-2xl text-center">
-              Viziunea Noastră
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-muted-foreground text-lg leading-relaxed">
-              Credem că viitorul comunicării business se bazează pe inteligența artificială. 
-              Scopul nostru este să oferim soluții care nu doar automatizează procesele, 
-              ci îmbunătățesc calitatea interacțiunii cu clienții. Fiecare agent AI pe care îl 
-              dezvoltăm este proiectat să înțeleagă, să se adapteze și să ofere rezultate excepționale.
+      {/* Features Section */}
+      <div className="py-24 bg-white/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              De ce să alegi Kalina AI?
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Cele mai avansate funcționalități pentru agenți AI vocali, 
+              optimizate special pentru piața românească.
             </p>
-          </CardContent>
-        </Card>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <div key={index} className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
+                <div className="mb-4">
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Section */}
+      <div className="py-16 bg-gradient-to-r from-blue-600 to-purple-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div>
+              <div className="text-3xl md:text-4xl font-bold text-white mb-2">10K+</div>
+              <div className="text-blue-100">Conversații Procesate</div>
+            </div>
+            <div>
+              <div className="text-3xl md:text-4xl font-bold text-white mb-2">99.9%</div>
+              <div className="text-blue-100">Uptime Garantat</div>
+            </div>
+            <div>
+              <div className="text-3xl md:text-4xl font-bold text-white mb-2">24/7</div>
+              <div className="text-blue-100">Suport Tehnic</div>
+            </div>
+            <div>
+              <div className="text-3xl md:text-4xl font-bold text-white mb-2">5 Min</div>
+              <div className="text-blue-100">Setup Rapid</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="py-24">
+        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+            Gata să începi cu Kalina AI?
+          </h2>
+          <p className="text-xl text-gray-600 mb-8">
+            Alătură-te comunității de business-uri care automatizează 
+            comunicarea cu clienții folosind agenți AI inteligenți.
+          </p>
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Link to="/auth">
+              <Button size="lg" className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-8 py-4 text-lg">
+                Creează Cont Gratuit
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+            <Link to="/pricing">
+              <Button variant="outline" size="lg" className="px-8 py-4 text-lg border-2">
+                Vezi Prețurile
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,13 +13,19 @@ serve(async (req) => {
   }
 
   try {
-    const { agent_id, phone_number } = await req.json()
+    const { agent_id, phone_number, contact_name, user_id, batch_processing } = await req.json()
 
-    if (!agent_id || !phone_number) {
-      throw new Error('Agent ID și numărul de telefon sunt obligatorii')
+    if (!agent_id || !phone_number || !user_id) {
+      throw new Error('Agent ID, numărul de telefon și user ID sunt obligatorii')
     }
 
-    // Obține toate secretele din Supabase Secrets
+    // Initialize Supabase client
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    // Get ElevenLabs API credentials
     const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY')
     const agentPhoneId = Deno.env.get('PHONE_NUMBER_ID') || 'phnum_01jz06e77dfce9034d7jnpj5v7'
     
@@ -26,7 +33,7 @@ serve(async (req) => {
       throw new Error('ElevenLabs API key nu este configurat în Supabase Secrets')
     }
 
-    console.log(`Inițiere apel pentru ${phone_number} cu agentul ${agent_id} de pe numărul ${agentPhoneId}`)
+    console.log(`Inițiere apel pentru ${phone_number} cu agentul ${agent_id} pentru utilizatorul ${user_id}`)
 
     const requestBody = {
       agent_id: agent_id,
@@ -36,7 +43,7 @@ serve(async (req) => {
 
     console.log('Request body pentru ElevenLabs:', JSON.stringify(requestBody, null, 2))
 
-    // Endpoint corect pentru SIP trunk outbound call
+    // Make the call to ElevenLabs
     const response = await fetch('https://api.elevenlabs.io/v1/convai/sip-trunk/outbound-call', {
       method: 'POST',
       headers: {
@@ -46,25 +53,68 @@ serve(async (req) => {
       body: JSON.stringify(requestBody),
     })
 
-    console.log('Response status:', response.status)
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()))
+    console.log('ElevenLabs response status:', response.status)
+    console.log('ElevenLabs response headers:', Object.fromEntries(response.headers.entries()))
 
     if (!response.ok) {
       const errorData = await response.text()
       console.error('Eroare ElevenLabs response:', errorData)
-      console.error('Request URL folosit:', 'https://api.elevenlabs.io/v1/convai/sip-trunk/outbound-call')
-      console.error('Request headers:', {
-        'Content-Type': 'application/json',
-        'xi-api-key': '***masked***'
-      })
       throw new Error(`Eroare ElevenLabs: ${response.status} - ${errorData}`)
     }
 
-    const data = await response.json()
-    console.log('Apel inițiat cu succes:', data)
+    const elevenLabsData = await response.json()
+    console.log('Apel inițiat cu succes:', elevenLabsData)
+
+    // Store call initiation in database
+    const callHistoryData = {
+      user_id: user_id,
+      phone_number: phone_number,
+      contact_name: contact_name || phone_number,
+      call_status: 'initiated',
+      summary: `Apel inițiat către ${contact_name || phone_number}`,
+      agent_id: agent_id,
+      conversation_id: elevenLabsData.conversation_id,
+      elevenlabs_history_id: elevenLabsData.conversation_id,
+      dialog_json: JSON.stringify({
+        request: requestBody,
+        response: elevenLabsData,
+        initiated_at: new Date().toISOString(),
+        batch_processing: batch_processing || false
+      }),
+      call_date: new Date().toISOString(),
+      cost_usd: 0, // Will be updated when call completes
+      duration_seconds: 0, // Will be updated when call completes
+      language: 'ro'
+    }
+
+    const { data: insertData, error: insertError } = await supabase
+      .from('call_history')
+      .insert(callHistoryData)
+      .select()
+
+    if (insertError) {
+      console.error('Error inserting call history:', insertError)
+      // Continue even if database insert fails
+    } else {
+      console.log('Call history inserted:', insertData)
+    }
+
+    // Set up webhook to listen for call completion (if not batch processing)
+    if (!batch_processing) {
+      // You can add webhook logic here if needed
+      console.log('Single call - webhook setup can be added here')
+    }
 
     return new Response(
-      JSON.stringify({ success: true, conversationId: data.conversation_id }),
+      JSON.stringify({
+        success: true,
+        conversationId: elevenLabsData.conversation_id,
+        callHistoryId: insertData?.[0]?.id,
+        agent_id: agent_id,
+        user_id: user_id,
+        phone_number: phone_number,
+        elevenlabs_data: elevenLabsData
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       },
@@ -72,7 +122,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Eroare în inițierea apelului:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        success: false
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
