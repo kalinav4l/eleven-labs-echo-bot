@@ -4,15 +4,18 @@ import { useAuth } from '@/components/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bot, Settings, Play, Copy, ExternalLink, Plus } from 'lucide-react';
+import { Bot, Settings, Play, Copy, ExternalLink, Plus, Files } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import AgentTestModal from '@/components/AgentTestModal';
 import { useUserAgents } from '@/hooks/useUserAgents';
+import { useAgentOperations } from '@/hooks/useAgentOperations';
 import { toast } from '@/components/ui/use-toast';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const AccountAgents = () => {
   const { user } = useAuth();
   const { data: userAgents, isLoading } = useUserAgents();
+  const { duplicateAgent, isDuplicating } = useAgentOperations();
   const [selectedAgent, setSelectedAgent] = useState<any>(null);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
 
@@ -23,6 +26,10 @@ const AccountAgents = () => {
   const handleTestAgent = (agent: any) => {
     setSelectedAgent(agent);
     setIsTestModalOpen(true);
+  };
+
+  const handleDuplicateAgent = (agent: any) => {
+    duplicateAgent({ agent });
   };
 
   const copyWidgetCode = (agentId: string, agentName: string) => {
@@ -53,7 +60,7 @@ const AccountAgents = () => {
       <div className="p-6">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-black mb-2">Agenți</h1>
+            <h1 className="text-3xl font-bold text-black mb-2">Agenții Tăi</h1>
             <p className="text-gray-600">Gestionează și testează agenții tăi AI</p>
           </div>
           <Link to="/account/agent-consultant">
@@ -81,9 +88,19 @@ const AccountAgents = () => {
                           </div>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm" className="text-gray-600 hover:text-black">
-                        <Settings className="w-4 h-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-gray-600 hover:text-black">
+                            <Settings className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onClick={() => handleDuplicateAgent(agent)} disabled={isDuplicating}>
+                            <Files className="w-4 h-4 mr-2" />
+                            {isDuplicating ? 'Se duplică...' : 'Duplică'}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </CardHeader>
                   <CardContent>

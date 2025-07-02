@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Bot, Plus, Settings, Phone, Trash2, Power, PowerOff, Search, Copy } from 'lucide-react';
+import { Bot, Plus, Settings, Phone, Trash2, Power, PowerOff, Search, Copy, Files } from 'lucide-react';
 import { useUserAgents } from '@/hooks/useUserAgents';
 import { useAgentOperations } from '@/hooks/useAgentOperations';
 import { useClipboard } from '@/hooks/useClipboard';
@@ -22,7 +22,9 @@ const KalinaAgents = () => {
     deactivateAgent,
     activateAgent,
     deleteAgent,
-    isDeleting
+    duplicateAgent,
+    isDeleting,
+    isDuplicating
   } = useAgentOperations();
   const {
     copyToClipboard
@@ -32,7 +34,7 @@ const KalinaAgents = () => {
   const [testCallAgent, setTestCallAgent] = useState<any>(null);
   const navigate = useNavigate();
 
-  // Filter agents based on search query
+  // Filter agents based on search query - only user's agents
   const filteredAgents = useMemo(() => {
     if (!userAgents) return [];
     if (!searchQuery.trim()) return userAgents;
@@ -65,6 +67,10 @@ const KalinaAgents = () => {
     setSelectedAgentForDeletion(null);
   };
 
+  const handleDuplicateAgent = (agent: any) => {
+    duplicateAgent({ agent });
+  };
+
   const handleEditAgent = (agentId: string) => {
     navigate(`/account/agent-edit/${agentId}`);
   };
@@ -91,7 +97,7 @@ const KalinaAgents = () => {
     <div className="p-6 space-y-6 my-[60px]">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Agenții Kalina</h1>
+          <h1 className="text-3xl font-bold text-foreground">Agenții Tăi</h1>
           <p className="text-muted-foreground">Gestionează agenții tăi AI pentru diverse scenarii</p>
         </div>
         <Link to="/account/agent-consultant">
@@ -149,6 +155,10 @@ const KalinaAgents = () => {
                                 Activează
                               </>
                           )}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDuplicateAgent(agent)} disabled={isDuplicating}>
+                          <Files className="w-4 h-4 mr-2" />
+                          {isDuplicating ? 'Se duplică...' : 'Duplică'}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem

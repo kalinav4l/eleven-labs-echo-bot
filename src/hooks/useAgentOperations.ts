@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
@@ -10,6 +9,17 @@ interface DeleteAgentFromElevenLabsParams {
 interface UpdateAgentStatusParams {
   id: string;
   isActive: boolean;
+}
+
+interface DuplicateAgentParams {
+  agent: {
+    id: string;
+    agent_id: string;
+    name: string;
+    description?: string;
+    system_prompt?: string;
+    voice_id?: string;
+  };
 }
 
 export const useAgentOperations = () => {
@@ -63,6 +73,59 @@ export const useAgentOperations = () => {
       .eq('id', id);
 
     if (error) {
+      throw error;
+    }
+  };
+
+  const duplicateAgentInElevenLabs = async ({ agent }: DuplicateAgentParams) => {
+    console.log('Duplicating agent in ElevenLabs via Supabase Edge Function:', agent.agent_id);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('get-elevenlabs-agent', {
+        body: { agentId: agent.agent_id }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Create new agent with original agent data
+      const newAgentData = {
+        ...data,
+        name: `${agent.name} - Copie`,
+      };
+
+      const { data: createdAgent, error: createError } = await supabase.functions.invoke('create-elevenlabs-agent', {
+        body: newAgentData
+      });
+
+      if (createError) {
+        throw createError;
+      }
+
+      // Save to database
+      const { data: dbAgent, error: dbError } = await supabase
+        .from('kalina_agents')
+        .insert({
+          agent_id: createdAgent.agent_id,
+          elevenlabs_agent_id: createdAgent.agent_id,
+          name: `${agent.name} - Copie`,
+          description: agent.description || null,
+          system_prompt: agent.system_prompt || null,
+          voice_id: agent.voice_id || null,
+          provider: 'elevenlabs',
+          is_active: true
+        })
+        .select()
+        .single();
+
+      if (dbError) {
+        throw dbError;
+      }
+
+      return dbAgent;
+    } catch (error) {
+      console.error('Error duplicating agent:', error);
       throw error;
     }
   };
@@ -135,12 +198,33 @@ export const useAgentOperations = () => {
     },
   });
 
+  const duplicateAgentMutation = useMutation({
+    mutationFn: duplicateAgentInElevenLabs,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-agents'] });
+      toast({
+        title: "Agent duplicat",
+        description: "Agentul a fost duplicat cu succes",
+      });
+    },
+    onError: (error) => {
+      console.error('Error duplicating agent:', error);
+      toast({
+        title: "Eroare",
+        description: "Nu s-a putut duplica agentul",
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     deactivateAgent: deactivateAgentMutation.mutate,
     activateAgent: activateAgentMutation.mutate,
     deleteAgent: deleteAgentMutation.mutate,
+    duplicateAgent: duplicateAgentMutation.mutate,
     isDeactivating: deactivateAgentMutation.isPending,
     isActivating: activateAgentMutation.isPending,
     isDeleting: deleteAgentMutation.isPending,
+    isDuplicating: duplicateAgentMutation.isPending,
   };
 };
