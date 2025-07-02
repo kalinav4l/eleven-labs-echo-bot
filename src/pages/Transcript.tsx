@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -8,6 +7,7 @@ import { Upload, FileText, Search, Clock, Eye, Download, Trash2 } from 'lucide-r
 import DashboardLayout from '@/components/DashboardLayout';
 import { useTranscripts } from '@/hooks/useTranscripts';
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Transcript = () => {
   const { user } = useAuth();

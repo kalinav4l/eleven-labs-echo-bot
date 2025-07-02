@@ -61,8 +61,7 @@ const AgentConsultant: React.FC = () => {
     isInitiating: isInitiatingCall,
     handleInitiateCall
   } = useCallInitiation({
-    customAgentId: finalAgentId,
-    createdAgentId: '',
+    agentId: finalAgentId,
     phoneNumber
   });
 
