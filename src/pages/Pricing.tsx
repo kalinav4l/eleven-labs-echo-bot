@@ -7,7 +7,6 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
 import { toast } from '@/components/ui/use-toast';
-import HamburgerMenu from '@/components/HamburgerMenu';
 
 const Pricing = () => {
   const { user } = useAuth();
@@ -64,8 +63,6 @@ const Pricing = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 relative overflow-hidden">
-      <HamburgerMenu />
-      
       {/* Background Glass Effects */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/6 w-96 h-96 bg-gradient-to-r from-green-200/20 to-emerald-200/20 rounded-full blur-3xl"></div>
