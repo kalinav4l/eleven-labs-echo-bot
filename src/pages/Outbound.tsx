@@ -1,20 +1,18 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useRef } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Upload, Phone, FileText, Play, Users, Globe, MapPin, User, Search, Clock, DollarSign, MessageSquare, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Pause, Trash2, Trash, Eye } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import { Upload, Phone, Users, FileText, Loader2, Download } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useCallInitiation } from '@/hooks/useCallInitiation';
 import { useCallHistory } from '@/hooks/useCallHistory';
+import { toast } from '@/components/ui/use-toast';
 
 interface Contact {
   id: string;
@@ -23,1026 +21,405 @@ interface Contact {
   country: string;
   location: string;
 }
-interface CallHistory {
-  id: string;
-  phone_number: string;
-  contact_name: string;
-  call_status: 'success' | 'failed' | 'busy' | 'no-answer' | 'unknown';
-  summary: string;
-  dialog_json: string;
-  call_date: string;
-  cost_usd: number;
-  agent_id?: string;
-  language?: string;
-}
+
 const Outbound = () => {
   const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [agentId, setAgentId] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [contactName, setContactName] = useState('');
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [isUploadingCsv, setIsUploadingCsv] = useState(false);
-  const [customAgentId, setCustomAgentId] = useState('');
-  const [selectedContactIds, setSelectedContactIds] = useState<Set<string>>(new Set());
-  const [selectedCallIds, setSelectedCallIds] = useState<Set<string>>(new Set());
-  const [isCallingAll, setIsCallingAll] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [expandedSummary, setExpandedSummary] = useState<Set<string>>(new Set());
-  const [currentCallIndex, setCurrentCallIndex] = useState(0);
-  const [processedContacts, setProcessedContacts] = useState<Set<string>>(new Set());
-  const [isPaused, setIsPaused] = useState(false);
-  const [selectedCallForDialog, setSelectedCallForDialog] = useState<CallHistory | null>(null);
-  const [isDialogSectionOpen, setIsDialogSectionOpen] = useState(false);
+  const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
 
-  const { callHistory, isLoading, saveCallResults, deleteCallHistory, deleteAllCallHistory, refetch } = useCallHistory();
+  const { 
+    initiateCall, 
+    processBatchCalls, 
+    isInitiating, 
+    isProcessingBatch, 
+    currentProgress, 
+    totalCalls 
+  } = useCallInitiation({
+    agentId,
+    phoneNumber
+  });
 
-  const WEBHOOK_URL = 'https://zuckerberg.aichat.md/webhook/telefonie-sunat';
-
-  const formatObjectAsJson = (obj: any): string => {
-    try {
-      return JSON.stringify(obj, null, 2);
-    } catch (error) {
-      console.error('Error formatting object as JSON:', error);
-      return String(obj);
-    }
-  };
-  const handleCsvSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (!file.type.includes('csv') && !file.name.endsWith('.csv')) {
-        toast({
-          title: "Eroare",
-          description: "Te rog selectează un fișier CSV valid.",
-          variant: "destructive"
-        });
-        return;
-      }
-      setCsvFile(file);
-      toast({
-        title: "Fișier selectat",
-        description: `${file.name} (${(file.size / 1024).toFixed(2)} KB)`
-      });
-    }
-  };
-  const parseCsvData = (csvText: string): Contact[] => {
-    const lines = csvText.split('\n').filter(line => line.trim());
-    const contacts: Contact[] = [];
-
-    // Skip header line
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (line) {
-        const columns = line.split(',').map(col => col.trim().replace(/"/g, ''));
-        if (columns.length >= 4) {
-          contacts.push({
-            id: Date.now().toString() + i,
-            name: columns[0] || 'Necunoscut',
-            phone: columns[1] || '',
-            country: columns[2] || '',
-            location: columns[3] || ''
-          });
-        }
-      }
-    }
-    return contacts;
-  };
-  const handleUploadCsv = async () => {
-    if (!csvFile) {
-      toast({
-        title: "Eroare",
-        description: "Te rog selectează un fișier CSV.",
-        variant: "destructive"
-      });
-      return;
-    }
-    setIsUploadingCsv(true);
-    try {
-      const csvText = await csvFile.text();
-      const parsedContacts = parseCsvData(csvText);
-      if (parsedContacts.length === 0) {
-        throw new Error('Nu s-au găsit contacte valide în fișierul CSV');
-      }
-      setContacts(parsedContacts);
-      // Reset progress when new contacts are loaded
-      setCurrentCallIndex(0);
-      setProcessedContacts(new Set());
-      setIsPaused(false);
-      toast({
-        title: "Succes",
-        description: `${parsedContacts.length} contacte au fost încărcate cu succes!`
-      });
-    } catch (error) {
-      console.error('Error parsing CSV:', error);
-      toast({
-        title: "Eroare",
-        description: "Nu s-a putut procesa fișierul CSV.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsUploadingCsv(false);
-    }
-  };
-  const extractDialogFromJson = (dialogJson: string): string => {
-    try {
-      const parsed = JSON.parse(dialogJson);
-      const cleanConversations = parsed?.clean_conversations;
-      const dialog = cleanConversations?.dialog || [];
-      if (Array.isArray(dialog) && dialog.length > 0) {
-        return dialog.map((item: any, index: number) => `${index + 1}. ${item.speaker || 'Unknown'}: ${item.message || 'No message'}`).join('\n');
-      }
-      return 'Nu există dialog disponibil';
-    } catch (error) {
-      console.error('Error parsing dialog JSON:', error);
-      return 'Eroare la parsarea dialogului';
-    }
-  };
-  const sendSingleContactToWebhook = async (contact: Contact) => {
-    try {
-      console.log('Sending single contact to webhook:', contact);
-      const response = await fetch(WEBHOOK_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          agent_id: customAgentId,
-          contacts: [contact],
-          timestamp: new Date().toISOString(),
-          user_id: user?.id
-        })
-      });
-      console.log('Webhook response status:', response.status);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const responseText = await response.text();
-      console.log('Response body (raw):', responseText);
-      try {
-        const result = JSON.parse(responseText);
-        console.log('Processing JSON response:', result);
-        await processWebhookResponse(result);
-        return result;
-      } catch (jsonError) {
-        console.error('Error parsing JSON:', jsonError);
-        console.log('Raw response that failed JSON parsing:', responseText);
-        throw new Error('Răspunsul nu este JSON valid');
-      }
-    } catch (error) {
-      console.error('Error sending to webhook:', error);
-      throw error;
-    }
-  };
-  const processWebhookResponse = async (result: any) => {
-    try {
-      console.log('Processing webhook response:', result);
-      let callResults: any[] = [];
-      
-      // Handle different response structures more robustly
-      if (Array.isArray(result)) {
-        callResults = result;
-        console.log('Result is array, using directly');
-      } else if (result?.response?.body && Array.isArray(result.response.body)) {
-        callResults = result.response.body;
-        console.log('Found call results in response.body');
-      } else if (result?.calls && Array.isArray(result.calls)) {
-        callResults = result.calls;
-        console.log('Found calls array in result');
-      } else if (result?.data && Array.isArray(result.data)) {
-        callResults = result.data;
-        console.log('Found call results in data array');
-      } else if (result && typeof result === 'object') {
-        // If it's a single call result object, wrap it in an array
-        callResults = [result];
-        console.log('Single call result, wrapping in array');
-      }
-      
-      console.log('Extracted call results:', callResults.length, 'items');
-      
-      if (callResults.length > 0) {
-        // Filter out any invalid results
-        const validResults = callResults.filter(result => {
-          const hasValidData = result && (
-            result.clean_conversations || 
-            result.phone_number || 
-            result.call_info ||
-            result.status
-          );
-          if (!hasValidData) {
-            console.warn('Filtering out invalid result:', result);
-          }
-          return hasValidData;
-        });
-        
-        console.log('Valid results to save:', validResults.length);
-        
-        if (validResults.length > 0) {
-          try {
-            await saveCallResults.mutateAsync(validResults);
-            toast({
-              title: "Apel finalizat",
-              description: `${validResults.length} rezultat(e) salvat(e) cu succes.`
-            });
-            
-            // Force refresh the call history
-            setTimeout(() => {
-              refetch();
-            }, 100000);
-          } catch (saveError) {
-            console.error('Error saving call results:', saveError);
-            toast({
-              title: "Eroare la salvare",
-              description: "Nu s-au putut salva rezultatele apelului.",
-              variant: "destructive"
-            });
-          }
-        } else {
-          console.log('No valid results found after filtering');
-          toast({
-            title: "Rezultat primit",
-            description: "Răspunsul a fost primit dar nu conține rezultate valide de apel.",
-            variant: "destructive"
-          });
-        }
-      } else {
-        console.log('No call results found in response');
-        toast({
-          title: "Rezultat primit",
-          description: "Răspunsul a fost primit dar nu conține rezultate de apel.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Error processing webhook response:', error);
-      toast({
-        title: "Eroare de procesare",
-        description: "Nu s-a putut procesa răspunsul de la webhook.",
-        variant: "destructive"
-      });
-    }
-  };
-  const processContactsSequentially = async () => {
-    if (!customAgentId.trim()) {
-      toast({
-        title: "Eroare",
-        description: "Te rog introdu ID-ul agentului.",
-        variant: "destructive"
-      });
-      return;
-    }
-    if (selectedContactIds.size === 0) {
-      toast({
-        title: "Eroare",
-        description: "Te rog selectează cel puțin un contact.",
-        variant: "destructive"
-      });
-      return;
-    }
-    setIsCallingAll(true);
-    setIsPaused(false);
-    const selectedContacts = contacts.filter(c => selectedContactIds.has(c.id));
-    const startIndex = currentCallIndex;
-    toast({
-      title: "Procesare secvențială inițiată",
-      description: `Se vor procesa ${selectedContacts.length - startIndex} contacte unul câte unul.`
-    });
-    for (let i = startIndex; i < selectedContacts.length; i++) {
-      // Check if paused
-      if (isPaused) {
-        console.log('Processing paused by user');
-        break;
-      }
-      const contact = selectedContacts[i];
-      setCurrentCallIndex(i);
-      toast({
-        title: "Procesez contact",
-        description: `Apelând ${contact.name} (${i + 1}/${selectedContacts.length})`
-      });
-      try {
-        await sendSingleContactToWebhook(contact);
-
-        // Mark contact as processed
-        setProcessedContacts(prev => new Set([...prev, contact.id]));
-
-        // Wait 2 seconds before next call (to prevent overwhelming the webhook)
-        if (i < selectedContacts.length - 1 && !isPaused) {
-          await new Promise(resolve => setTimeout(resolve, 200000));
-        }
-      } catch (error) {
-        console.error(`Error processing contact ${contact.name}:`, error);
-        toast({
-          title: "Eroare la contact",
-          description: `Nu s-a putut procesa ${contact.name}. Se continuă cu următorul.`,
-          variant: "destructive"
-        });
-      }
-    }
-    if (!isPaused) {
-      setCurrentCallIndex(0);
-      setProcessedContacts(new Set());
-      toast({
-        title: "Procesare completă",
-        description: "Toate contactele selectate au fost procesate."
-      });
-    }
-    setIsCallingAll(false);
-  };
-  const handlePauseResume = () => {
-    if (isCallingAll) {
-      setIsPaused(!isPaused);
-      toast({
-        title: isPaused ? "Procesare reluată" : "Procesare întreruptă",
-        description: isPaused ? "Continuă cu următorul contact." : "Procesarea a fost întreruptă."
-      });
-    }
-  };
-  const handleStopProcessing = () => {
-    setIsCallingAll(false);
-    setIsPaused(false);
-    setCurrentCallIndex(0);
-    setProcessedContacts(new Set());
-    toast({
-      title: "Procesare oprită",
-      description: "Procesarea contactelor a fost oprită."
-    });
-  };
-  const handleContactSelect = (contactId: string) => {
-    const newSelected = new Set(selectedContactIds);
-    if (newSelected.has(contactId)) {
-      newSelected.delete(contactId);
-    } else {
-      newSelected.add(contactId);
-    }
-    setSelectedContactIds(newSelected);
-  };
-  const handleSelectAll = () => {
-    if (selectedContactIds.size === contacts.length) {
-      setSelectedContactIds(new Set());
-    } else {
-      setSelectedContactIds(new Set(contacts.map(c => c.id)));
-    }
-  };
-
-  const handleSelectAllCalls = () => {
-    if (selectedCallIds.size === filteredCallHistory.length) {
-      setSelectedCallIds(new Set());
-    } else {
-      setSelectedCallIds(new Set(filteredCallHistory.map(call => call.id)));
-    }
-  };
-
-  const handleDeleteSelected = async () => {
-    if (selectedCallIds.size === 0) {
-      toast({
-        title: "Eroare",
-        description: "Te rog selectează cel puțin un apel pentru ștergere.",
-        variant: "destructive"
-      });
-      return;
-    }
-    try {
-      await deleteCallHistory.mutateAsync(Array.from(selectedCallIds));
-      setSelectedCallIds(new Set());
-      toast({
-        title: "Succes",
-        description: `${selectedCallIds.size} apeluri au fost șterse cu succes.`
-      });
-    } catch (error) {
-      console.error('Error deleting calls:', error);
-      toast({
-        title: "Eroare",
-        description: "Nu s-au putut șterge apelurile selectate.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleDeleteSingleCall = async (callId: string) => {
-    try {
-      await deleteCallHistory.mutateAsync([callId]);
-      toast({
-        title: "Succes",
-        description: "Apelul a fost șters cu succes."
-      });
-    } catch (error) {
-      console.error('Error deleting call:', error);
-      toast({
-        title: "Eroare",
-        description: "Nu s-a putut șterge apelul.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleDeleteAll = async () => {
-    if (callHistory.length === 0) {
-      toast({
-        title: "Eroare",
-        description: "Nu există apeluri pentru ștergere.",
-        variant: "destructive"
-      });
-      return;
-    }
-    try {
-      await deleteAllCallHistory.mutateAsync();
-      setSelectedCallIds(new Set());
-      toast({
-        title: "Succes",
-        description: "Toate apelurile au fost șterse cu succes."
-      });
-    } catch (error) {
-      console.error('Error deleting all calls:', error);
-      toast({
-        title: "Eroare",
-        description: "Nu s-au putut șterge toate apelurile.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleInitiateCall = async (contact: Contact) => {
-    if (!customAgentId.trim()) {
-      toast({
-        title: "Eroare",
-        description: "Te rog introdu ID-ul agentului.",
-        variant: "destructive"
-      });
-      return;
-    }
-    try {
-      const result = await sendSingleContactToWebhook(contact);
-      toast({
-        title: "Apel inițiat",
-        description: `Apelul către ${contact.name} a fost trimis pentru procesare.`
-      });
-      console.log('Single call result:', result);
-    } catch (error) {
-      console.error('Error initiating call:', error);
-      toast({
-        title: "Eroare",
-        description: "Nu s-a putut iniția apelul.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'success':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'failed':
-        return <XCircle className="w-4 h-4 text-red-500" />;
-      case 'busy':
-        return <AlertCircle className="w-4 h-4 text-yellow-500" />;
-      case 'no-answer':
-        return <AlertCircle className="w-4 h-4 text-gray-500" />;
-      default:
-        return <AlertCircle className="w-4 h-4 text-gray-500" />;
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'success':
-        return 'Succes';
-      case 'failed':
-        return 'Eșuat';
-      case 'busy':
-        return 'Ocupat';
-      case 'no-answer':
-        return 'Nu răspunde';
-      default:
-        return 'Necunoscut';
-    }
-  };
-
-  const toggleExpandedSummary = (callId: string) => {
-    const newExpanded = new Set(expandedSummary);
-    if (newExpanded.has(callId)) {
-      newExpanded.delete(callId);
-    } else {
-      newExpanded.add(callId);
-    }
-    setExpandedSummary(newExpanded);
-  };
-
-  const filteredCallHistory = callHistory.filter(call => 
-    call.phone_number.includes(searchTerm) || 
-    call.contact_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleCallSelect = (callId: string) => {
-    const newSelected = new Set(selectedCallIds);
-    if (newSelected.has(callId)) {
-      newSelected.delete(callId);
-    } else {
-      newSelected.add(callId);
-    }
-    setSelectedCallIds(newSelected);
-  };
-
-  const handleViewDialog = (call: CallHistory) => {
-    setSelectedCallForDialog(call);
-    setIsDialogSectionOpen(true);
-  };
+  const { callHistory, isLoading: historyLoading } = useCallHistory();
 
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
+  const handleCSVUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.csv')) {
+      toast({
+        title: "Eroare",
+        description: "Vă rugăm să selectați un fișier CSV.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const lines = text.split('\n').filter(line => line.trim());
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      
+      const nameIndex = headers.findIndex(h => h.includes('name') || h.includes('nume'));
+      const phoneIndex = headers.findIndex(h => h.includes('phone') || h.includes('telefon'));
+      const countryIndex = headers.findIndex(h => h.includes('country') || h.includes('tara'));
+      const locationIndex = headers.findIndex(h => h.includes('location') || h.includes('locatie'));
+
+      if (phoneIndex === -1) {
+        toast({
+          title: "Eroare",
+          description: "CSV-ul trebuie să conțină o coloană pentru telefon (phone/telefon).",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const parsedContacts: Contact[] = lines.slice(1).map((line, index) => {
+        const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+        return {
+          id: `contact-${index}`,
+          name: nameIndex >= 0 ? values[nameIndex] || `Contact ${index + 1}` : `Contact ${index + 1}`,
+          phone: values[phoneIndex] || '',
+          country: countryIndex >= 0 ? values[countryIndex] || 'Necunoscut' : 'Necunoscut',
+          location: locationIndex >= 0 ? values[locationIndex] || 'Necunoscut' : 'Necunoscut'
+        };
+      }).filter(contact => contact.phone);
+
+      setContacts(parsedContacts);
+      toast({
+        title: "Succes",
+        description: `S-au încărcat ${parsedContacts.length} contacte din CSV.`,
+      });
+    };
+    
+    reader.readAsText(file);
+    
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleSingleCall = async () => {
+    if (!agentId.trim() || !phoneNumber.trim()) {
+      toast({
+        title: "Eroare",
+        description: "Agent ID și numărul de telefon sunt obligatorii",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    await initiateCall(agentId, phoneNumber, contactName || phoneNumber);
+  };
+
+  const handleContactSelect = (contactId: string, checked: boolean) => {
+    const newSelected = new Set(selectedContacts);
+    if (checked) {
+      newSelected.add(contactId);
+    } else {
+      newSelected.delete(contactId);
+    }
+    setSelectedContacts(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedContacts.size === contacts.length) {
+      setSelectedContacts(new Set());
+    } else {
+      setSelectedContacts(new Set(contacts.map(c => c.id)));
+    }
+  };
+
+  const handleBatchProcess = async () => {
+    if (!agentId.trim() || selectedContacts.size === 0) {
+      toast({
+        title: "Eroare",
+        description: "Agent ID și contactele selectate sunt obligatorii",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const contactsToProcess = contacts.filter(c => selectedContacts.has(c.id));
+    await processBatchCalls(contactsToProcess, agentId);
+  };
+
+  const downloadTemplate = () => {
+    const csvContent = "nume,telefon,tara,locatie\nJohn Doe,+40712345678,Romania,Bucuresti\nJane Smith,+40798765432,Romania,Cluj";
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'template_contacte.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const progressPercentage = totalCalls > 0 ? (currentProgress / totalCalls) * 100 : 0;
+
   return (
     <DashboardLayout>
-      <div className="p-6 my-[60px]">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Outbound</h1>
-            <p className="text-muted-foreground">Gestionează apelurile outbound și bazele de date de contacte</p>
+      <div className="min-h-screen bg-white">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="mb-8">
+            <h1 className="text-2xl font-semibold text-gray-900 mb-1">Apeluri Outbound</h1>
+            <p className="text-gray-600 text-sm">Gestionați apelurile automate cu agenții AI</p>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* CSV Upload Section */}
-          <Card className="liquid-glass">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <Upload className="w-6 h-6 text-accent" />
-                Upload Bază de Date CSV
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-accent/50 transition-colors">
-                  <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">
-                      Drag & drop sau selectează un fișier CSV
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Format: Nume, Telefon, Țara, Locație
-                    </p>
-                    <input type="file" accept=".csv" onChange={handleCsvSelect} className="hidden" id="csv-upload" />
-                    <Button variant="outline" onClick={() => document.getElementById('csv-upload')?.click()} className="mt-2">
-                      Selectează CSV
-                    </Button>
-                  </div>
-                </div>
+          <div className="mb-6">
+            <Label htmlFor="agent-id" className="text-gray-900 font-medium">
+              Agent ID ElevenLabs *
+            </Label>
+            <Input
+              id="agent-id"
+              value={agentId}
+              onChange={(e) => setAgentId(e.target.value)}
+              placeholder="agent_xxxxxxxxx"
+              className="bg-white border-gray-300 text-gray-900 font-mono mt-1"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              ID-ul agentului vostru din ElevenLabs care va efectua apelurile
+            </p>
+          </div>
 
-                {csvFile && <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-5 h-5 text-accent" />
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{csvFile.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {(csvFile.size / 1024).toFixed(2)} KB
-                        </p>
-                      </div>
-                    </div>
-                  </div>}
-              </div>
+          <Tabs defaultValue="single" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="single">Apel Individual</TabsTrigger>
+              <TabsTrigger value="batch">Apeluri Batch</TabsTrigger>
+              <TabsTrigger value="history">Istoric</TabsTrigger>
+            </TabsList>
 
-              <Button onClick={handleUploadCsv} disabled={!csvFile || isUploadingCsv} className="w-full bg-accent hover:bg-accent/90 text-white">
-                {isUploadingCsv ? <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Procesează CSV...
-                  </div> : <div className="flex items-center gap-2">
-                    <Upload className="w-4 h-4" />
-                    Încarcă Contacte
-                  </div>}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Call Configuration Section */}
-          <Card className="liquid-glass">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <Phone className="w-6 h-6 text-accent" />
-                Configurare Apeluri
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label htmlFor="agent-id" className="text-foreground">
-                  ID Agent pentru Apeluri
-                </Label>
-                <Input id="agent-id" value={customAgentId} onChange={e => setCustomAgentId(e.target.value)} placeholder="agent_id_pentru_apeluri" className="glass-input" />
-              </div>
-
-              {contacts.length > 0 && <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">
-                      {contacts.length} contacte încărcate, {selectedContactIds.size} selectate
-                    </p>
-                    <Button variant="outline" size="sm" onClick={handleSelectAll}>
-                      {selectedContactIds.size === contacts.length ? 'Deselectează Tot' : 'Selectează Tot'}
-                    </Button>
+            <TabsContent value="single">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Phone className="w-5 h-5" />
+                    Apel Individual
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="contact-name" className="text-gray-900">
+                      Nume Contact (opțional)
+                    </Label>
+                    <Input
+                      id="contact-name"
+                      value={contactName}
+                      onChange={(e) => setContactName(e.target.value)}
+                      placeholder="Numele persoanei"
+                      className="bg-white border-gray-300 text-gray-900"
+                    />
                   </div>
 
-                  {/* Progress indicator */}
-                  {isCallingAll && <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-blue-900">
-                          Progres: {currentCallIndex + 1} / {contacts.filter(c => selectedContactIds.has(c.id)).length}
-                        </span>
-                        <span className="text-sm text-blue-700">
-                          {isPaused ? 'Întrerupt' : 'În procesare...'}
-                        </span>
-                      </div>
-                      <div className="w-full bg-blue-200 rounded-full h-2">
-                        <div className="bg-blue-600 h-2 rounded-full transition-all duration-300" style={{
-                    width: `${(currentCallIndex + 1) / contacts.filter(c => selectedContactIds.has(c.id)).length * 100}%`
-                  }} />
-                      </div>
-                    </div>}
-
-                  <div className="flex gap-2">
-                    <Button onClick={processContactsSequentially} disabled={!customAgentId.trim() || selectedContactIds.size === 0 || isCallingAll} className="flex-1 bg-green-600 hover:bg-green-700 text-white">
-                      {isCallingAll ? <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          Procesează Secvențial...
-                        </div> : <div className="flex items-center gap-2">
-                          <Play className="w-4 h-4" />
-                          Procesează Secvențial ({selectedContactIds.size})
-                        </div>}
-                    </Button>
-
-                    {isCallingAll && <>
-                        <Button onClick={handlePauseResume} variant="outline" className="px-3">
-                          {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-                        </Button>
-                        <Button onClick={handleStopProcessing} variant="destructive" className="px-3">
-                          <XCircle className="w-4 h-4" />
-                        </Button>
-                      </>}
+                  <div>
+                    <Label htmlFor="phone-number" className="text-gray-900">
+                      Număr de Telefon *
+                    </Label>
+                    <Input
+                      id="phone-number"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="+40712345678"
+                      className="bg-white border-gray-300 text-gray-900 font-mono"
+                    />
                   </div>
-                </div>}
-            </CardContent>
-          </Card>
-        </div>
 
-        {/* Contacts Table */}
-        {contacts.length > 0 && <Card className="liquid-glass mt-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <Users className="w-6 h-6 text-accent" />
-                Contacte Încărcate ({contacts.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="max-h-96 overflow-y-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">
-                        <input type="checkbox" checked={selectedContactIds.size === contacts.length && contacts.length > 0} onChange={handleSelectAll} className="rounded" />
-                      </TableHead>
-                      <TableHead>
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4" />
-                          Nume
-                        </div>
-                      </TableHead>
-                      <TableHead>
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-4 h-4" />
-                          Telefon
-                        </div>
-                      </TableHead>
-                      <TableHead>
-                        <div className="flex items-center gap-2">
-                          <Globe className="w-4 h-4" />
-                          Țara
-                        </div>
-                      </TableHead>
-                      <TableHead>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4" />
-                          Locație
-                        </div>
-                      </TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Acțiuni</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {contacts.map(contact => <TableRow key={contact.id}>
-                        <TableCell>
-                          <input type="checkbox" checked={selectedContactIds.has(contact.id)} onChange={() => handleContactSelect(contact.id)} className="rounded" />
-                        </TableCell>
-                        <TableCell className="font-medium">{contact.name}</TableCell>
-                        <TableCell className="font-mono text-sm">{contact.phone}</TableCell>
-                        <TableCell>{contact.country}</TableCell>
-                        <TableCell>{contact.location}</TableCell>
-                        <TableCell>
-                          {processedContacts.has(contact.id) ? <span className="flex items-center gap-1 text-green-600 text-sm">
-                              <CheckCircle className="w-4 h-4" />
-                              Procesat
-                            </span> : selectedContactIds.has(contact.id) && isCallingAll && contacts.indexOf(contact) === currentCallIndex ? <span className="flex items-center gap-1 text-blue-600 text-sm">
-                              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                              În procesare
-                            </span> : <span className="text-gray-500 text-sm">În așteptare</span>}
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="outline" size="sm" onClick={() => handleInitiateCall(contact)} disabled={!customAgentId.trim() || isCallingAll} className="border-accent text-accent hover:bg-accent/10">
-                            <Phone className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>)}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>}
-
-        {/* Call History Section */}
-        <Card className="liquid-glass mt-8">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-3">
-                <Clock className="w-6 h-6 text-accent" />
-                Istoric Apeluri ({callHistory.length})
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                {selectedCallIds.size > 0 && (
-                  <Button 
-                    onClick={handleDeleteSelected} 
-                    variant="destructive" 
-                    size="sm" 
-                    disabled={deleteCallHistory.isPending}
-                    className="flex items-center gap-2"
+                  <Button
+                    onClick={handleSingleCall}
+                    disabled={!agentId.trim() || !phoneNumber.trim() || isInitiating}
+                    className="w-full bg-gray-900 hover:bg-gray-800 text-white"
                   >
-                    <Trash2 className="w-4 h-4" />
-                    Șterge Selectate ({selectedCallIds.size})
+                    {isInitiating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Se Inițiază Apel...
+                      </>
+                    ) : (
+                      <>
+                        <Phone className="w-4 h-4 mr-2" />
+                        Inițiază Apel
+                      </>
+                    )}
                   </Button>
-                )}
-                {callHistory.length > 0 && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button 
-                        variant="destructive" 
-                        size="sm" 
-                        disabled={deleteAllCallHistory.isPending}
-                        className="flex items-center gap-2"
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="batch">
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Upload className="w-5 h-5" />
+                      Încărcare Contacte CSV
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Button
+                        onClick={() => fileInputRef.current?.click()}
+                        variant="outline"
+                        className="bg-white text-gray-900 border-gray-300"
                       >
-                        <Trash className="w-4 h-4" />
-                        Șterge Tot
+                        <Upload className="w-4 h-4 mr-2" />
+                        Selectează CSV
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Confirmare ștergere</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Ești sigur că vrei să ștergi toate apelurile din istoric? Această acțiune nu poate fi anulată.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Anulează</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteAll} className="bg-red-600 hover:bg-red-700">
-                          Da, șterge tot
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                      <Button
+                        onClick={downloadTemplate}
+                        variant="ghost"
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Descarcă Template
+                      </Button>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      CSV-ul trebuie să conțină coloanele: nume, telefon, tara, locatie
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {contacts.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <Users className="w-5 h-5" />
+                          Contacte Încărcate ({contacts.length})
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleSelectAll}
+                        >
+                          {selectedContacts.size === contacts.length ? 'Deselectează Tot' : 'Selectează Tot'}
+                        </Button>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="max-h-60 overflow-y-auto space-y-2 mb-4">
+                        {contacts.map(contact => (
+                          <div key={contact.id} className="flex items-center space-x-3 p-2 bg-gray-50 rounded">
+                            <input
+                              type="checkbox"
+                              checked={selectedContacts.has(contact.id)}
+                              onChange={(e) => handleContactSelect(contact.id, e.target.checked)}
+                              className="rounded"
+                            />
+                            <div className="flex-1">
+                              <span className="font-medium">{contact.name}</span>
+                              <span className="text-sm text-gray-600 ml-2">{contact.phone}</span>
+                            </div>
+                            <span className="text-xs text-gray-500">
+                              {contact.country}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {isProcessingBatch && (
+                        <div className="space-y-2 mb-4">
+                          <div className="flex items-center justify-between text-sm">
+                            <span>Progres: {currentProgress} / {totalCalls}</span>
+                            <span>{Math.round(progressPercentage)}%</span>
+                          </div>
+                          <Progress value={progressPercentage} className="h-2" />
+                        </div>
+                      )}
+
+                      <Button
+                        onClick={handleBatchProcess}
+                        disabled={!agentId.trim() || selectedContacts.size === 0 || isProcessingBatch}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        {isProcessingBatch ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Procesează... ({currentProgress}/{totalCalls})
+                          </>
+                        ) : (
+                          <>
+                            <Phone className="w-4 h-4 mr-2" />
+                            Procesează Apeluri ({selectedContacts.size} contacte)
+                          </>
+                        )}
+                      </Button>
+                    </CardContent>
+                  </Card>
                 )}
               </div>
-            </div>
-            <div className="flex items-center gap-4 mt-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input 
-                  placeholder="Caută după numărul de telefon sau nume..." 
-                  value={searchTerm} 
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10" 
-                />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {filteredCallHistory.length > 0 ? (
-              <div className="max-h-96 overflow-y-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">
-                        <Checkbox 
-                          checked={selectedCallIds.size === filteredCallHistory.length && filteredCallHistory.length > 0}
-                          onCheckedChange={handleSelectAllCalls}
-                        />
-                      </TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4" />
-                          Contact
-                        </div>
-                      </TableHead>
-                      <TableHead>
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-4 h-4" />
-                          Telefon
-                        </div>
-                      </TableHead>
-                      <TableHead>
-                        <div className="flex items-center gap-2">
-                          <MessageSquare className="w-4 h-4" />
-                          Rezumat
-                        </div>
-                      </TableHead>
-                      <TableHead>
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
-                          Data
-                        </div>
-                      </TableHead>
-                      <TableHead>
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="w-4 h-4" />
-                          Cost
-                        </div>
-                      </TableHead>
-                      <TableHead>Acțiuni</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredCallHistory.map((call) => (
-                      <TableRow key={call.id}>
-                        <TableCell>
-                          <Checkbox 
-                            checked={selectedCallIds.has(call.id)}
-                            onCheckedChange={() => handleCallSelect(call.id)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {getStatusIcon(call.call_status)}
-                            <span className="text-sm">{getStatusText(call.call_status)}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-medium">{call.contact_name}</TableCell>
-                        <TableCell className="font-mono text-sm">{call.phone_number}</TableCell>
-                        <TableCell className="text-sm">
-                          <Collapsible>
-                            <CollapsibleTrigger 
-                              className="flex items-center gap-2 hover:text-accent cursor-pointer"
-                              onClick={() => toggleExpandedSummary(call.id)}
-                            >
-                              <span className="truncate max-w-[150px]">
-                                {call.summary || 'Nu există rezumat'}
+            </TabsContent>
+
+            <TabsContent value="history">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    Istoric Apeluri
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {historyLoading ? (
+                    <div className="text-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                      <p className="text-gray-600">Se încarcă istoricul...</p>
+                    </div>
+                  ) : callHistory.length > 0 ? (
+                    <div className="space-y-3">
+                      {callHistory.map((call) => (
+                        <div key={call.id} className="p-4 border border-gray-200 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="font-medium text-gray-900">{call.contact_name}</h3>
+                              <p className="text-sm text-gray-600">{call.phone_number}</p>
+                            </div>
+                            <div className="text-right">
+                              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                                call.call_status === 'success' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {call.call_status === 'success' ? 'Succes' : 'Eșuat'}
                               </span>
-                              {expandedSummary.has(call.id) ? (
-                                <ChevronUp className="w-4 h-4" />
-                              ) : (
-                                <ChevronDown className="w-4 h-4" />
-                              )}
-                            </CollapsibleTrigger>
-                            <CollapsibleContent className="mt-2">
-                              <div className="bg-gray-50 p-3 rounded max-w-xs whitespace-pre-wrap text-sm">
-                                {call.summary || 'Nu există rezumat disponibil'}
-                              </div>
-                            </CollapsibleContent>
-                          </Collapsible>
-                        </TableCell>
-                        <TableCell className="text-sm">{call.call_date}</TableCell>
-                        <TableCell className="text-sm font-mono">{call.cost_usd}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => handleViewDialog(call)}
-                              className="p-2"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="sm" className="p-2">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Confirmare ștergere</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Ești sigur că vrei să ștergi acest apel din istoric? Această acțiune nu poate fi anulată.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Anulează</AlertDialogCancel>
-                                  <AlertDialogAction 
-                                    onClick={() => handleDeleteSingleCall(call.id)}
-                                    className="bg-red-600 hover:bg-red-700"
-                                  >
-                                    Da, șterge
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                              <p className="text-xs text-gray-500 mt-1">{call.call_date}</p>
+                            </div>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  {searchTerm ? 'Nu s-au găsit apeluri care să se potrivească cu termenul de căutare.' : 'Nu există încă apeluri în istoric.'}
-                </p>
-                {searchTerm && (
-                  <Button variant="outline" onClick={() => setSearchTerm('')} className="mt-2">
-                    Șterge filtrul
-                  </Button>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                          {call.summary && (
+                            <p className="text-sm text-gray-700 mt-2">{call.summary}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Niciun apel încă</h3>
+                      <p className="text-gray-600">Apelurile vor apărea aici după ce sunt efectuate.</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
 
-        {/* Dialog Viewer Section */}
-        {isDialogSectionOpen && selectedCallForDialog && (
-          <Card className="liquid-glass mt-8">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-3">
-                  <MessageSquare className="w-6 h-6 text-accent" />
-                  Dialog Complet - {selectedCallForDialog.contact_name}
-                </CardTitle>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsDialogSectionOpen(false)}
-                  className="flex items-center gap-2"
-                >
-                  <XCircle className="w-4 h-4" />
-                  Închide
-                </Button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Telefon</p>
-                  <p className="font-mono">{selectedCallForDialog.phone_number}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Status</p>
-                  <div className="flex items-center gap-2">
-                    {getStatusIcon(selectedCallForDialog.call_status)}
-                    <span>{getStatusText(selectedCallForDialog.call_status)}</span>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Cost</p>
-                  <p className="font-mono">${selectedCallForDialog.cost_usd}</p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {selectedCallForDialog.summary && (
-                <div className="mb-6">
-                  <h3 className="font-semibold mb-2 flex items-center gap-2">
-                    <FileText className="w-4 h-4" />
-                    Rezumat
-                  </h3>
-                  <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
-                    <p className="whitespace-pre-wrap">{selectedCallForDialog.summary}</p>
-                  </div>
-                </div>
-              )}
-              
-              <div>
-                <h3 className="font-semibold mb-4 flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4" />
-                  Dialog Complet
-                </h3>
-                <div className="bg-gray-50 p-6 rounded-lg max-h-none overflow-auto border">
-                  <pre className="whitespace-pre-wrap text-sm font-mono leading-relaxed">
-                    {extractDialogFromJson(selectedCallForDialog.dialog_json)}
-                  </pre>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Info Section */}
-        <Card className="liquid-glass mt-8">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-              <div>
-                <h3 className="font-semibold text-foreground mb-2">Format CSV</h3>
-                <p className="text-sm text-muted-foreground">Nume, Telefon, Țara, Locație</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground mb-2">Procesare Secvențială</h3>
-                <p className="text-sm text-muted-foreground">Un contact la un timp</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground mb-2">Rezultate</h3>
-                <p className="text-sm text-muted-foreground">Real-time Updates</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv"
+            onChange={handleCSVUpload}
+            className="hidden"
+          />
+        </div>
       </div>
     </DashboardLayout>
   );

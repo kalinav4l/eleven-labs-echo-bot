@@ -24,17 +24,16 @@ export const AgentTestCallModal: React.FC<AgentTestCallModalProps> = ({
 }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   
-  const { handleInitiateCall, isInitiating } = useCallInitiation({
-    customAgentId: agent.agent_id,
-    createdAgentId: agent.agent_id,
+  const { initiateCall, isInitiating } = useCallInitiation({
+    agentId: agent.agent_id,
     phoneNumber: phoneNumber
   });
 
   const handleTestCall = async () => {
     if (!phoneNumber.trim()) return;
     
-    await handleInitiateCall();
-    // Close modal after successful call initiation
+    await initiateCall(agent.agent_id, phoneNumber, `Test pentru ${agent.name}`);
+    
     if (!isInitiating) {
       setPhoneNumber('');
       onClose();

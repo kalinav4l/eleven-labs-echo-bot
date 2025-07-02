@@ -4,18 +4,10 @@ import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Upload, FileText, Search, Clock, Eye } from 'lucide-react';
+import { Upload, FileText, Search, Clock, Eye, Download, Trash2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useTranscripts } from '@/hooks/useTranscripts';
 import { toast } from '@/components/ui/use-toast';
-
-interface TranscriptEntry {
-  speaker: string;
-  text: string;
-  timestamp: string;
-  startTime: number;
-  endTime: number;
-}
 
 const Transcript = () => {
   const { user } = useAuth();
@@ -23,7 +15,15 @@ const Transcript = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTranscript, setSelectedTranscript] = useState<any>(null);
 
-  const { savedTranscripts, isLoading, saveTranscript, deleteTranscript } = useTranscripts();
+  const { 
+    savedTranscripts, 
+    isLoading, 
+    saveTranscript, 
+    deleteTranscript,
+    exportToSRT,
+    exportToTXT,
+    exportToJSON
+  } = useTranscripts();
 
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -35,57 +35,85 @@ const Transcript = () => {
 
     if (!file.type.startsWith('audio/')) {
       toast({
-        title: "Error",
-        description: "Please select an audio file.",
+        title: "Eroare",
+        description: "Vă rugăm să selectați un fișier audio.",
         variant: "destructive"
       });
       return;
     }
 
     toast({
-      title: "Processing",
-      description: "Transcribing your audio file...",
+      title: "Procesare",
+      description: "Se transcrie fișierul audio...",
     });
 
     try {
-      const formData = new FormData();
-      formData.append('audio', file);
+      // Convert audio file to base64
+      const arrayBuffer = await file.arrayBuffer();
+      const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
-      const response = await fetch('/api/speech-to-text', {
-        method: 'POST',
-        body: formData,
+      // Call Supabase edge function for transcription
+      const { data, error } = await supabase.functions.invoke('speech-to-text', {
+        body: { audio: base64Audio }
       });
 
-      if (!response.ok) {
-        throw new Error('Transcription failed');
+      if (error) {
+        throw new Error('Transcrierea a eșuat');
       }
 
-      const result = await response.json();
+      // Process the transcription result
+      const transcriptText = data.text || '';
       
-      const mockEntries: TranscriptEntry[] = [
-        { speaker: "Speaker 1", text: "Hello, welcome to our meeting today.", timestamp: "0:00", startTime: 0, endTime: 5 },
-        { speaker: "Speaker 2", text: "Thank you for having me. I'm excited to discuss the project.", timestamp: "0:05", startTime: 5, endTime: 12 },
-        { speaker: "Speaker 1", text: "Let's start with the main objectives.", timestamp: "0:12", startTime: 12, endTime: 20 },
-      ];
+      // Call process-transcript function to structure the dialogue
+      const { data: processedData, error: processError } = await supabase.functions.invoke('process-transcript', {
+        body: { transcriptText }
+      });
+
+      if (processError) {
+        console.warn('Could not process transcript structure:', processError);
+        // Continue with basic transcript if processing fails
+      }
+
+      // Create transcript entries from processed data or fallback
+      let transcriptEntries = [];
+      if (processedData?.dialogue) {
+        transcriptEntries = processedData.dialogue.map((entry: any, index: number) => ({
+          speaker: entry.speaker || `Speaker ${index + 1}`,
+          text: entry.text || '',
+          timestamp: `${Math.floor(index * 10 / 60)}:${(index * 10 % 60).toString().padStart(2, '0')}`,
+          startTime: index * 10,
+          endTime: (index + 1) * 10
+        }));
+      } else {
+        // Fallback to simple transcript
+        transcriptEntries = [{
+          speaker: "Speaker 1",
+          text: transcriptText,
+          timestamp: "0:00",
+          startTime: 0,
+          endTime: 60
+        }];
+      }
 
       await saveTranscript({
         title: file.name.replace(/\.[^/.]+$/, ""),
-        transcriptEntries: mockEntries,
-        durationSeconds: 180,
+        transcriptEntries: transcriptEntries,
+        durationSeconds: Math.ceil(file.size / 16000), // Rough estimate
         fileSizeMb: file.size / (1024 * 1024),
-        originalFilename: file.name
+        originalFilename: file.name,
+        rawText: transcriptText
       });
 
       toast({
-        title: "Success",
-        description: "Audio transcribed successfully!",
+        title: "Succes",
+        description: "Audio transcris cu succes!",
       });
 
     } catch (error) {
       console.error('Transcription error:', error);
       toast({
-        title: "Error",
-        description: "Failed to transcribe audio. Please try again.",
+        title: "Eroare",
+        description: "Nu s-a putut transcrie audio-ul. Încercați din nou.",
         variant: "destructive"
       });
     }
@@ -103,13 +131,33 @@ const Transcript = () => {
     setSelectedTranscript(transcript);
   };
 
+  const handleDeleteTranscript = async (transcriptId: string) => {
+    if (confirm('Sunteți sigur că doriți să ștergeți acest transcript?')) {
+      await deleteTranscript(transcriptId);
+    }
+  };
+
+  const handleExport = (transcript: any, format: 'srt' | 'txt' | 'json') => {
+    switch (format) {
+      case 'srt':
+        exportToSRT(transcript.transcript_entries, transcript.title);
+        break;
+      case 'txt':
+        exportToTXT(transcript.transcript_entries, transcript.title);
+        break;
+      case 'json':
+        exportToJSON(transcript.transcript_entries, transcript.title);
+        break;
+    }
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-screen bg-white">
           <div className="text-center">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto"></div>
-            <p className="mt-3 text-gray-600 text-sm">Loading transcripts...</p>
+            <p className="mt-3 text-gray-600 text-sm">Se încarcă transcripturile...</p>
           </div>
         </div>
       </DashboardLayout>
@@ -124,22 +172,22 @@ const Transcript = () => {
             <>
               <div className="flex justify-between items-center mb-8">
                 <div>
-                  <h1 className="text-2xl font-semibold text-gray-900 mb-1">Transcripts</h1>
-                  <p className="text-gray-600 text-sm">Upload and manage your audio transcriptions</p>
+                  <h1 className="text-2xl font-semibold text-gray-900 mb-1">Transcripturi</h1>
+                  <p className="text-gray-600 text-sm">Încărcați și gestionați transcripțiile audio</p>
                 </div>
                 <Button 
                   onClick={() => fileInputRef.current?.click()}
                   className="bg-gray-900 hover:bg-gray-800 text-white"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  Upload Audio
+                  Încarcă Audio
                 </Button>
               </div>
 
               <div className="relative mb-8 max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input 
-                  placeholder="Search transcripts..." 
+                  placeholder="Caută transcripturi..." 
                   value={searchTerm} 
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 bg-white border-gray-200" 
@@ -164,19 +212,61 @@ const Transcript = () => {
                               <Clock className="w-3 h-3 mr-1" />
                               {Math.floor(transcript.duration_seconds / 60)}m {transcript.duration_seconds % 60}s
                             </span>
-                            <span>{new Date(transcript.created_at).toLocaleDateString()}</span>
+                            <span>{new Date(transcript.created_at).toLocaleDateString('ro-RO')}</span>
                           </div>
                         </div>
                       </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleViewTranscript(transcript)}
-                        className="text-gray-600 hover:text-gray-900"
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        View
-                      </Button>
+                      <div className="flex space-x-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleViewTranscript(transcript)}
+                          className="text-gray-600 hover:text-gray-900"
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          Vezi
+                        </Button>
+                        <div className="relative group">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            <Download className="w-4 h-4 mr-1" />
+                            Export
+                          </Button>
+                          <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                            <div className="p-1">
+                              <button
+                                onClick={() => handleExport(transcript, 'txt')}
+                                className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
+                              >
+                                TXT
+                              </button>
+                              <button
+                                onClick={() => handleExport(transcript, 'srt')}
+                                className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
+                              >
+                                SRT
+                              </button>
+                              <button
+                                onClick={() => handleExport(transcript, 'json')}
+                                className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
+                              >
+                                JSON
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleDeleteTranscript(transcript.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -186,9 +276,9 @@ const Transcript = () => {
                     <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3">
                       <FileText className="w-6 h-6 text-gray-400" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No transcripts yet</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Niciun transcript încă</h3>
                     <p className="text-gray-600 mb-6 text-center max-w-md mx-auto">
-                      Upload your first audio file to get started with automatic transcription.
+                      Încărcați primul fișier audio pentru a începe transcrierea automată.
                     </p>
                   </div>
                 )}
@@ -211,9 +301,27 @@ const Transcript = () => {
                     onClick={() => setSelectedTranscript(null)}
                     className="text-gray-600 hover:text-gray-900 mb-2"
                   >
-                    ← Back to transcripts
+                    ← Înapoi la transcripturi
                   </Button>
                   <h1 className="text-2xl font-semibold text-gray-900">{selectedTranscript.title}</h1>
+                </div>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => handleExport(selectedTranscript, 'txt')}
+                    className="text-sm"
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    Exportă TXT
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleExport(selectedTranscript, 'srt')}
+                    className="text-sm"
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    Exportă SRT
+                  </Button>
                 </div>
               </div>
 

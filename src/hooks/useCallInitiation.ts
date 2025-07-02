@@ -27,7 +27,7 @@ export const useCallInitiation = ({
   const [currentProgress, setCurrentProgress] = useState(0);
   const [totalCalls, setTotalCalls] = useState(0);
 
-  const initiateCall = useCallback(async (targetAgentId: string, targetPhone: string): Promise<void> => {
+  const initiateCall = useCallback(async (targetAgentId: string, targetPhone: string, contactName?: string): Promise<void> => {
     if (!targetAgentId || !targetPhone.trim()) {
       toast({
         title: "Eroare",
@@ -44,6 +44,7 @@ export const useCallInitiation = ({
         body: {
           agent_id: targetAgentId,
           phone_number: targetPhone,
+          contact_name: contactName || targetPhone,
           user_id: user?.id
         }
       });
@@ -54,7 +55,7 @@ export const useCallInitiation = ({
 
       toast({
         title: "Succes!",
-        description: "Apelul a fost inițiat cu succes",
+        description: `Apelul către ${contactName || targetPhone} a fost inițiat cu succes`,
       });
 
       console.log('Call initiated:', data);
@@ -150,7 +151,7 @@ export const useCallInitiation = ({
   }, [user?.id]);
 
   const handleInitiateCall = useCallback(async () => {
-    if (phoneNumber) {
+    if (phoneNumber && agentId) {
       await initiateCall(agentId, phoneNumber);
     }
   }, [initiateCall, agentId, phoneNumber]);
