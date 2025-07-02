@@ -19,6 +19,7 @@ interface DuplicateAgentParams {
     description?: string;
     system_prompt?: string;
     voice_id?: string;
+    user_id: string;
   };
 }
 
@@ -103,7 +104,7 @@ export const useAgentOperations = () => {
         throw createError;
       }
 
-      // Save to database
+      // Save to database with user_id
       const { data: dbAgent, error: dbError } = await supabase
         .from('kalina_agents')
         .insert({
@@ -114,7 +115,8 @@ export const useAgentOperations = () => {
           system_prompt: agent.system_prompt || null,
           voice_id: agent.voice_id || null,
           provider: 'elevenlabs',
-          is_active: true
+          is_active: true,
+          user_id: agent.user_id
         })
         .select()
         .single();
