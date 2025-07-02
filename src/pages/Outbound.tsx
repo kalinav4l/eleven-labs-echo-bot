@@ -7,7 +7,7 @@ import { useCallInitiation } from '@/hooks/useCallInitiation';
 import { useCallHistory } from '@/hooks/useCallHistory';
 import { toast } from '@/components/ui/use-toast';
 
-// Import componente refactorizate
+// Import refactored components
 import { OutboundHeader } from '@/components/outbound/OutboundHeader';
 import { AgentIdInput } from '@/components/outbound/AgentIdInput';
 import { SingleCallTab } from '@/components/outbound/SingleCallTab';
@@ -26,21 +26,26 @@ const Outbound = () => {
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [agentId, setAgentId] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState(''); // Pentru apel individual
-  const [contactName, setContactName] = useState(''); // Pentru apel individual
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [contactName, setContactName] = useState('');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
 
-  // Noul hook conține toată logica complexă
-  const {
-    isProcessingBatch,
-    currentProgress,
+  const { 
+    initiateCall, 
+    processBatchCalls, 
+    isInitiating, 
+    isProcessingBatch, 
+    currentProgress, 
     totalCalls,
+    currentContact,
     callStatuses,
-    processBatchCalls
-  } = useCallInitiation();
+    currentCallStatus
+  } = useCallInitiation({
+    agentId,
+    phoneNumber
+  });
 
-  // Hook-ul pentru istoric rămâne la fel, dar va fi chemat mai inteligent
   const { callHistory, isLoading: historyLoading, refetch: refetchHistory } = useCallHistory();
 
   if (!user) {
@@ -52,7 +57,11 @@ const Outbound = () => {
     if (!file) return;
 
     if (!file.name.endsWith('.csv')) {
-      toast({ title: "Eroare", description: "Vă rugăm să selectați un fișier CSV.", variant: "destructive" });
+      toast({
+        title: "Eroare",
+        description: "Vă rugăm să selectați un fișier CSV.",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -68,14 +77,18 @@ const Outbound = () => {
       const locationIndex = headers.findIndex(h => h.includes('location') || h.includes('locatie'));
 
       if (phoneIndex === -1) {
-        toast({ title: "Eroare", description: "CSV-ul trebuie să conțină o coloană pentru telefon (phone/telefon).", variant: "destructive" });
+        toast({
+          title: "Eroare",
+          description: "CSV-ul trebuie să conțină o coloană pentru telefon (phone/telefon).",
+          variant: "destructive"
+        });
         return;
       }
 
       const parsedContacts: Contact[] = lines.slice(1).map((line, index) => {
         const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
         return {
-          id: `contact-${Date.now()}-${index}`, // ID unic
+          id: `contact-${index}`,
           name: nameIndex >= 0 ? values[nameIndex] || `Contact ${index + 1}` : `Contact ${index + 1}`,
           phone: values[phoneIndex] || '',
           country: countryIndex >= 0 ? values[countryIndex] || 'Necunoscut' : 'Necunoscut',
@@ -84,8 +97,10 @@ const Outbound = () => {
       }).filter(contact => contact.phone);
 
       setContacts(parsedContacts);
-      setSelectedContacts(new Set(parsedContacts.map(c => c.id))); // Selectează tot implicit
-      toast({ title: "Succes", description: `S-au încărcat ${parsedContacts.length} contacte.` });
+      toast({
+        title: "Succes",
+        description: `S-au încărcat ${parsedContacts.length} contacte din CSV.`,
+      });
     };
     
     reader.readAsText(file);
@@ -95,32 +110,68 @@ const Outbound = () => {
     }
   };
 
+  const handleSingleCall = async () => {
+    if (!agentId.trim() || !phoneNumber.trim()) {
+      toast({
+        title: "Eroare",
+        description: "Agent ID și numărul de telefon sunt obligatorii",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const conversationId = await initiateCall(agentId, phoneNumber, contactName || phoneNumber);
+    
+    if (conversationId) {
+      toast({
+        title: "Procesare",
+        description: "Apelul a fost inițiat. Se monitorizează statusul în timp real...",
+      });
+      
+      // The call will be automatically saved to history in useCallInitiation hook
+      // Just refresh after a short delay
+      setTimeout(() => {
+        refetchHistory();
+      }, 2000);
+    }
+  };
+
   const handleContactSelect = (contactId: string, checked: boolean) => {
     const newSelected = new Set(selectedContacts);
-    if (checked) newSelected.add(contactId);
-    else newSelected.delete(contactId);
+    if (checked) {
+      newSelected.add(contactId);
+    } else {
+      newSelected.delete(contactId);
+    }
     setSelectedContacts(newSelected);
   };
 
   const handleSelectAll = () => {
-    if (selectedContacts.size === contacts.length) setSelectedContacts(new Set());
-    else setSelectedContacts(new Set(contacts.map(c => c.id)));
+    if (selectedContacts.size === contacts.length) {
+      setSelectedContacts(new Set());
+    } else {
+      setSelectedContacts(new Set(contacts.map(c => c.id)));
+    }
   };
-  
+
   const handleBatchProcess = async () => {
     if (!agentId.trim() || selectedContacts.size === 0) {
-      toast({ title: "Eroare", description: "Agent ID și cel puțin un contact selectat sunt obligatorii", variant: "destructive" });
+      toast({
+        title: "Eroare",
+        description: "Agent ID și contactele selectate sunt obligatorii",
+        variant: "destructive",
+      });
       return;
     }
     
     const contactsToProcess = contacts.filter(c => selectedContacts.has(c.id));
-    
-    // 1. Pornește procesul. `await` asigură că așteptăm finalizarea întregului batch.
     await processBatchCalls(contactsToProcess, agentId);
     
-    // 2. DOAR DUPĂ ce toate apelurile s-au terminat, reîmprospătăm istoricul.
-    // Acum este 100% sigur că vom avea date noi.
-    refetchHistory();
+    // Calls will be automatically saved to history in useCallInitiation hook
+    // Refresh history after processing completes
+    setTimeout(() => {
+      refetchHistory();
+    }, 2000);
   };
 
   const downloadTemplate = () => {
@@ -130,16 +181,11 @@ const Outbound = () => {
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
     link.setAttribute('download', 'template_contacte.csv');
+    link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
-
-  // Logica pentru apelul individual poate fi adăugată similar, dacă este necesar
-  const handleSingleCall = async () => {
-      toast({ title: "Info", description: "Logica pentru apelul individual trebuie implementată separat în hook.", variant: "default" });
-      // Aici ai adăuga logica similară cu `initiateAndMonitorSingleCall` pentru un singur număr
-  }
 
   return (
     <DashboardLayout>
@@ -147,9 +193,12 @@ const Outbound = () => {
         <div className="max-w-7xl mx-auto px-6 py-8">
           <OutboundHeader />
 
-          <AgentIdInput agentId={agentId} setAgentId={setAgentId} />
+          <AgentIdInput 
+            agentId={agentId}
+            setAgentId={setAgentId}
+          />
 
-          <Tabs defaultValue="batch" className="space-y-6">
+          <Tabs defaultValue="single" className="space-y-6">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="single">Apel Individual</TabsTrigger>
               <TabsTrigger value="batch">Apeluri Batch</TabsTrigger>
@@ -164,7 +213,7 @@ const Outbound = () => {
                 setPhoneNumber={setPhoneNumber}
                 handleSingleCall={handleSingleCall}
                 agentId={agentId}
-                isInitiating={false} // Trebuie legat la starea de apel individual
+                isInitiating={isInitiating}
               />
             </TabsContent>
 
@@ -181,12 +230,16 @@ const Outbound = () => {
                 isProcessingBatch={isProcessingBatch}
                 currentProgress={currentProgress}
                 totalCalls={totalCalls}
-                callStatuses={callStatuses} // Pasează statusurile pentru a fi afișate
+                currentCallStatus={currentCallStatus}
+                callStatuses={callStatuses}
               />
             </TabsContent>
 
             <TabsContent value="history">
-              <CallHistoryTab callHistory={callHistory} isLoading={historyLoading} />
+              <CallHistoryTab
+                callHistory={callHistory}
+                isLoading={historyLoading}
+              />
             </TabsContent>
           </Tabs>
 
