@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -264,10 +265,10 @@ Agent AI: Un minut de convorbire cu un agent AI consumă 1.000 de credite. Deci 
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-8">
+      <div className="p-6 space-y-8 bg-white min-h-screen">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Transcript Audio</h1>
+            <h1 className="text-2xl font-semibold text-gray-900 mb-2">Transcript Audio</h1>
             <p className="text-gray-600">Generează și structurează dialoguri din fișiere audio</p>
           </div>
           <Button onClick={testDemo} variant="outline" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
@@ -276,26 +277,26 @@ Agent AI: Un minut de convorbire cu un agent AI consumă 1.000 de credite. Deci 
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card className="bg-white border-gray-200 shadow-sm">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="bg-white border border-gray-200">
             <CardHeader>
-              <CardTitle className="flex items-center gap-3 text-gray-900">
-                <Upload className="w-6 h-6 text-[#0A5B4C]" />
+              <CardTitle className="flex items-center gap-3 text-gray-900 text-lg">
+                <Upload className="w-5 h-5 text-gray-600" />
                 Upload Audio
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-[#0A5B4C]/50 transition-colors bg-gray-50/50">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors bg-gray-50/30">
                 <input type="file" accept="audio/*" onChange={handleFileSelect} className="hidden" id="audio-upload" />
-                <Button variant="outline" onClick={() => document.getElementById('audio-upload')?.click()} className="mt-4 bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
+                <Button variant="outline" onClick={() => document.getElementById('audio-upload')?.click()} className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
                   Selectează Fișier
                 </Button>
               </div>
 
               {audioFile && (
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
                   <div className="flex items-center gap-3">
-                    <FileAudio className="w-5 h-5 text-[#0A5B4C]" />
+                    <FileAudio className="w-5 h-5 text-gray-600" />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm text-gray-900 truncate" title={audioFile.name}>
                         {audioFile.name}
@@ -315,7 +316,7 @@ Agent AI: Un minut de convorbire cu un agent AI consumă 1.000 de credite. Deci 
                 </div>
               )}
               
-              <Button onClick={handleGenerateTranscript} disabled={!audioFile || isProcessing} className="w-full bg-gray-900 hover:bg-gray-800 text-white">
+              <Button onClick={handleGenerateTranscript} disabled={!audioFile || isProcessing} className="w-full bg-black hover:bg-gray-800 text-white">
                 {isProcessing ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -331,11 +332,11 @@ Agent AI: Un minut de convorbire cu un agent AI consumă 1.000 de credite. Deci 
             </CardContent>
           </Card>
 
-          <Card className="bg-white border-gray-200 shadow-sm">
+          <Card className="bg-white border border-gray-200">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-3 text-gray-900">
-                  <MessageSquare className="w-6 h-6 text-[#0A5B4C]" />
+                <CardTitle className="flex items-center gap-3 text-gray-900 text-lg">
+                  <MessageSquare className="w-5 h-5 text-gray-600" />
                   Dialog ({transcriptEntries.length} replici)
                 </CardTitle>
                 {transcriptEntries.length > 0 && (
@@ -353,10 +354,10 @@ Agent AI: Un minut de convorbire cu un agent AI consumă 1.000 de credite. Deci 
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4 max-h-96 overflow-y-auto pr-4">
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                 {transcriptEntries.length > 0 ? (
                   transcriptEntries.map((entry, index) => (
-                    <div key={index} className="flex gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100">
+                    <div key={index} className="flex gap-3 p-4 rounded-lg bg-white border border-gray-200 hover:bg-gray-50/50 transition-colors">
                       <div className="flex-shrink-0">
                         <div className={`w-8 h-8 rounded-full ${getSpeakerColor(entry.speaker)} flex items-center justify-center`}>
                           {getSpeakerIcon(entry.speaker)}

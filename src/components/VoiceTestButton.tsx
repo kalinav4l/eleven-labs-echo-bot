@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff } from 'lucide-react';
@@ -170,7 +171,7 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
       <div className="absolute inset-0 flex items-center justify-center">
         {/* Outer circle */}
         <div 
-          className={`absolute w-40 h-40 rounded-full bg-gradient-to-br from-cyan-400/20 via-blue-500/20 to-teal-400/20 transition-all duration-500 ${
+          className={`absolute w-20 h-20 rounded-full bg-gradient-to-br from-gray-400/20 via-gray-500/20 to-gray-400/20 transition-all duration-500 ${
             conversation.isSpeaking 
               ? 'animate-spin opacity-80 scale-110' 
               : isActive 
@@ -181,7 +182,7 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
         
         {/* Middle circle */}
         <div 
-          className={`absolute w-28 h-28 rounded-full bg-gradient-to-br from-blue-400/30 via-cyan-500/30 to-blue-600/30 transition-all duration-400 ${
+          className={`absolute w-14 h-14 rounded-full bg-gradient-to-br from-gray-400/30 via-gray-500/30 to-gray-600/30 transition-all duration-400 ${
             conversation.isSpeaking 
               ? 'animate-pulse opacity-70 scale-105' 
               : isActive 
@@ -192,7 +193,7 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
         
         {/* Inner circle */}
         <div 
-          className={`absolute w-20 h-20 rounded-full bg-gradient-to-br from-teal-400/40 via-cyan-400/40 to-blue-500/40 transition-all duration-300 ${
+          className={`absolute w-10 h-10 rounded-full bg-gradient-to-br from-gray-400/40 via-gray-400/40 to-gray-500/40 transition-all duration-300 ${
             conversation.isSpeaking 
               ? 'animate-bounce opacity-90' 
               : isActive 
@@ -206,25 +207,29 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
       <Button
         onClick={handleToggleConversation}
         disabled={isConnecting}
-        className={`relative z-10 w-24 h-24 rounded-full transition-all duration-300 border-2 ${
+        size="sm"
+        className={`relative z-10 h-8 px-3 rounded-md transition-all duration-300 border ${
           isActive
-            ? 'bg-red-500 hover:bg-red-600 border-red-400 text-white shadow-xl scale-105'
-            : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700 shadow-lg hover:shadow-xl'
+            ? 'bg-red-500 hover:bg-red-600 border-red-400 text-white shadow-md'
+            : 'bg-black hover:bg-gray-800 border-gray-600 text-white shadow-sm'
         }`}
       >
         {isConnecting ? (
-          <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin mr-1" />
         ) : isActive ? (
-          <MicOff className="w-8 h-8" />
+          <MicOff className="w-3 h-3 mr-1" />
         ) : (
-          <Mic className="w-8 h-8" />
+          <Mic className="w-3 h-3 mr-1" />
         )}
+        <span className="text-xs font-medium">
+          {isConnecting ? 'Conectare...' : isActive ? 'Oprește' : 'Test Agent'}
+        </span>
       </Button>
 
       {/* Status indicator */}
       {isActive && (
-        <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2">
-          <div className="px-4 py-2 bg-black/90 text-white text-xs rounded-full backdrop-blur-sm">
+        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2">
+          <div className="px-2 py-1 bg-black/90 text-white text-xs rounded backdrop-blur-sm">
             {conversation.isSpeaking ? 'Agentul vorbește...' : 'Ascultă...'}
           </div>
         </div>
@@ -232,8 +237,8 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
 
       {/* Conversation counter */}
       {isActive && messages.length > 0 && (
-        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2">
-          <div className="px-3 py-1 bg-blue-500 text-white text-xs rounded-full">
+        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
+          <div className="px-2 py-1 bg-gray-700 text-white text-xs rounded">
             {messages.length} mesaje
           </div>
         </div>
