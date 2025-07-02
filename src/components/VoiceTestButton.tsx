@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff } from 'lucide-react';
+import { Mic, MicOff, Phone, PhoneOff } from 'lucide-react';
 import { useConversation } from '@11labs/react';
 import { toast } from '@/components/ui/use-toast';
 import { useConversationTracking } from '@/hooks/useConversationTracking';
@@ -31,11 +31,12 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationStart, setConversationStart] = useState<Date | null>(null);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
-  const { saveConversation, updateConversation } = useConversationTracking();
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const { saveConversation } = useConversationTracking();
 
   const conversation = useConversation({
     onConnect: () => {
-      console.log('Connected to ElevenLabs agent');
+      console.log('✅ Conectat la ElevenLabs agent');
       setIsConnecting(false);
       setIsActive(true);
       setConversationStart(new Date());
@@ -45,17 +46,13 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
       });
     },
     onDisconnect: () => {
-      console.log('Disconnected from ElevenLabs agent');
+      console.log('❌ Deconectat de la ElevenLabs agent');
       handleConversationEnd();
       setIsActive(false);
       setIsConnecting(false);
-      toast({
-        title: "Deconectat",
-        description: "Conversația s-a încheiat",
-      });
     },
     onMessage: (message) => {
-      console.log('Message received:', message);
+      console.log('💬 Mesaj primit:', message);
       
       if (message.message && typeof message.message === 'string') {
         const transcriptionMessage: Message = {
@@ -65,61 +62,77 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
           timestamp: new Date()
         };
         
-        console.log('Adding transcription:', transcriptionMessage);
+        console.log('📝 Adaug transcripție:', transcriptionMessage);
         setMessages(prev => [...prev, transcriptionMessage]);
         onTranscription?.(transcriptionMessage);
       }
     },
     onError: (error) => {
-      console.error('Conversation error:', error);
+      console.error('❌ Eroare conversație:', error);
       setIsActive(false);
       setIsConnecting(false);
       toast({
         title: "Eroare",
-        description: "A apărut o eroare la conectarea cu agentul",
+        description: "A apărut o eroare la conectarea cu agentul. Verifică permisiunile microfonului.",
         variant: "destructive",
       });
     }
   });
+
+  // Check microphone permission on mount
+  useEffect(() => {
+    const checkPermission = async () => {
+      try {
+        const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+        setHasPermission(result.state === 'granted');
+        
+        result.onchange = () => {
+          setHasPermission(result.state === 'granted');
+        };
+      } catch (error) {
+        console.log('Permission API not supported');
+        setHasPermission(null);
+      }
+    };
+    
+    checkPermission();
+  }, []);
 
   const handleConversationEnd = async () => {
     if (conversationStart && messages.length > 0) {
       const duration = Math.floor((Date.now() - conversationStart.getTime()) / 1000);
       
       try {
-        // Save the conversation to Analytics Hub
         const conversationData = {
           agent_id: agentId,
           agent_name: agentName,
           phone_number: 'Voice Chat',
-          contact_name: `Conversație cu ${agentName}`,
-          summary: `Conversație vocală cu ${agentName} - ${messages.length} mesaje`,
+          contact_name: `Test vocal cu ${agentName}`,
+          summary: `Test vocal cu ${agentName} - ${messages.length} mesaje în ${duration}s`,
           duration_seconds: duration,
-          cost_usd: 0.05 * (duration / 60), // Estimate cost
+          cost_usd: 0.05 * (duration / 60),
           transcript: messages,
           status: 'success' as const,
           conversation_id: currentConversationId,
-          elevenlabs_history_id: currentConversationId // This would come from ElevenLabs response
+          elevenlabs_history_id: currentConversationId
         };
 
         await saveConversation.mutateAsync(conversationData);
         
         toast({
           title: "Conversație salvată",
-          description: "Conversația a fost salvată în Analytics Hub",
+          description: "Testul vocal a fost salvat în Analytics Hub",
         });
       } catch (error) {
         console.error('Error saving conversation:', error);
       }
     }
     
-    // Reset state
     setMessages([]);
     setConversationStart(null);
     setCurrentConversationId(null);
   };
 
-  // Monitor speaking state
   useEffect(() => {
     if (onSpeakingChange) {
       onSpeakingChange(conversation.isSpeaking || false);
@@ -137,110 +150,140 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
     }
 
     if (isActive) {
-      // Stop conversation
       try {
+        console.log('🔴 Opresc conversația...');
         await conversation.endSession();
       } catch (error) {
         console.error('Error ending conversation:', error);
       }
     } else {
-      // Start conversation
       setIsConnecting(true);
       try {
-        // Request microphone permission
-        await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log('🎤 Cer permisiuni microfon...');
+        await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            sampleRate: 24000,
+            channelCount: 1,
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          } 
+        });
         
-        // Start session with agent ID
+        setHasPermission(true);
+        console.log('🟢 Încep conversația cu agentul:', agentId);
         const sessionId = await conversation.startSession({ agentId });
         setCurrentConversationId(sessionId);
+        console.log('📞 Conversație inițiată cu ID:', sessionId);
       } catch (error) {
-        console.error('Error starting conversation:', error);
+        console.error('❌ Eroare la pornirea conversației:', error);
         setIsConnecting(false);
+        setHasPermission(false);
         toast({
-          title: "Eroare",
-          description: "Nu s-a putut iniția conversația. Verifică permisiunile microfonului.",
+          title: "Eroare acces microfon",
+          description: "Pentru a testa agentul vocal, trebuie să permiți accesul la microfon.",
           variant: "destructive",
         });
       }
     }
   };
 
+  const getButtonText = () => {
+    if (isConnecting) return 'Conectare...';
+    if (isActive) return 'Oprește';
+    if (hasPermission === false) return 'Permite Microfon';
+    return 'Test Vocal';
+  };
+
+  const getButtonIcon = () => {
+    if (isConnecting) {
+      return <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />;
+    }
+    if (isActive) {
+      return <PhoneOff className="w-4 h-4" />;
+    }
+    if (hasPermission === false) {
+      return <MicOff className="w-4 h-4" />;
+    }
+    return <Phone className="w-4 h-4" />;
+  };
+
   return (
-    <div className="relative flex items-center justify-center">
-      {/* Animated background circles */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        {/* Outer circle */}
-        <div 
-          className={`absolute w-20 h-20 rounded-full bg-gradient-to-br from-gray-400/20 via-gray-500/20 to-gray-400/20 transition-all duration-500 ${
-            conversation.isSpeaking 
-              ? 'animate-spin opacity-80 scale-110' 
-              : isActive 
-                ? 'animate-pulse opacity-60' 
-                : 'opacity-30'
-          }`}
-        />
-        
-        {/* Middle circle */}
-        <div 
-          className={`absolute w-14 h-14 rounded-full bg-gradient-to-br from-gray-400/30 via-gray-500/30 to-gray-600/30 transition-all duration-400 ${
-            conversation.isSpeaking 
-              ? 'animate-pulse opacity-70 scale-105' 
-              : isActive 
-                ? 'opacity-50' 
-                : 'opacity-25'
-          }`}
-        />
-        
-        {/* Inner circle */}
-        <div 
-          className={`absolute w-10 h-10 rounded-full bg-gradient-to-br from-gray-400/40 via-gray-400/40 to-gray-500/40 transition-all duration-300 ${
-            conversation.isSpeaking 
-              ? 'animate-bounce opacity-90' 
-              : isActive 
-                ? 'opacity-70' 
-                : 'opacity-40'
-          }`}
-        />
-      </div>
+    <div className="relative flex flex-col items-center justify-center space-y-4">
+      {/* Voice visualization circles */}
+      {isActive && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div 
+            className={`absolute w-32 h-32 rounded-full border-2 border-accent/30 transition-all duration-1000 ${
+              conversation.isSpeaking 
+                ? 'animate-ping scale-110 opacity-75' 
+                : 'scale-100 opacity-40'
+            }`}
+          />
+          <div 
+            className={`absolute w-24 h-24 rounded-full border-2 border-accent/50 transition-all duration-700 ${
+              conversation.isSpeaking 
+                ? 'animate-pulse scale-105 opacity-60' 
+                : 'scale-100 opacity-30'
+            }`}
+          />
+          <div 
+            className={`absolute w-16 h-16 rounded-full bg-accent/20 transition-all duration-500 ${
+              conversation.isSpeaking 
+                ? 'animate-bounce scale-110 opacity-80' 
+                : 'scale-100 opacity-20'
+            }`}
+          />
+        </div>
+      )}
 
       {/* Main button */}
       <Button
         onClick={handleToggleConversation}
         disabled={isConnecting}
-        size="sm"
-        className={`relative z-10 h-8 px-3 rounded-md transition-all duration-300 border ${
+        size="lg"
+        className={`relative z-10 h-16 w-16 rounded-full transition-all duration-300 shadow-lg ${
           isActive
-            ? 'bg-red-500 hover:bg-red-600 border-red-400 text-white shadow-md'
-            : 'bg-black hover:bg-gray-800 border-gray-600 text-white shadow-sm'
+            ? 'bg-red-500 hover:bg-red-600 border-2 border-red-400 text-white'
+            : hasPermission === false
+              ? 'bg-orange-500 hover:bg-orange-600 border-2 border-orange-400 text-white'
+              : 'bg-accent hover:bg-accent/90 border-2 border-accent/20 text-white'
         }`}
       >
-        {isConnecting ? (
-          <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin mr-1" />
-        ) : isActive ? (
-          <MicOff className="w-3 h-3 mr-1" />
-        ) : (
-          <Mic className="w-3 h-3 mr-1" />
-        )}
-        <span className="text-xs font-medium">
-          {isConnecting ? 'Conectare...' : isActive ? 'Oprește' : 'Test Agent'}
-        </span>
+        {getButtonIcon()}
       </Button>
 
-      {/* Status indicator */}
-      {isActive && (
-        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2">
-          <div className="px-2 py-1 bg-black/90 text-white text-xs rounded backdrop-blur-sm">
-            {conversation.isSpeaking ? 'Agentul vorbește...' : 'Ascultă...'}
-          </div>
+      {/* Status text */}
+      <div className="text-center space-y-1">
+        <div className={`text-sm font-medium transition-colors ${
+          isActive ? 'text-accent' : 'text-muted-foreground'
+        }`}>
+          {getButtonText()}
         </div>
-      )}
-
-      {/* Conversation counter */}
-      {isActive && messages.length > 0 && (
-        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
-          <div className="px-2 py-1 bg-gray-700 text-white text-xs rounded">
-            {messages.length} mesaje
+        
+        {isActive && (
+          <div className="text-xs text-muted-foreground">
+            {conversation.isSpeaking ? '🔊 Agentul vorbește...' : '🎤 Ascultă...'}
           </div>
+        )}
+        
+        {messages.length > 0 && (
+          <div className="text-xs text-muted-foreground">
+            {messages.length} mesaje schimbate
+          </div>
+        )}
+        
+        {agentId && (
+          <div className="text-xs text-muted-foreground/70 font-mono bg-muted/30 px-2 py-1 rounded">
+            {agentId}
+          </div>
+        )}
+      </div>
+
+      {/* Permission helper */}
+      {hasPermission === false && !isActive && (
+        <div className="text-xs text-orange-600 text-center max-w-48">
+          Trebuie să permiți accesul la microfon pentru testul vocal
         </div>
       )}
     </div>

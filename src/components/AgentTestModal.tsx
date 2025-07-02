@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Save, X } from 'lucide-react';
+import { Send, Save, X, MessageSquare, Mic } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
 import VoiceTestButton from './VoiceTestButton';
@@ -27,6 +27,7 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose 
   const [inputText, setInputText] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isTextMode, setIsTextMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -38,7 +39,7 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose 
   }, [messages]);
 
   const handleVoiceTranscription = (message: Message) => {
-    console.log('Adding voice transcription:', message);
+    console.log('📝 Transcripție nouă:', message);
     setMessages(prev => [...prev, message]);
   };
 
@@ -55,7 +56,6 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose 
     setMessages(prev => [...prev, userMessage]);
     setInputText('');
 
-    // Simulate AI response using GPT
     try {
       const { data, error } = await supabase.functions.invoke('chat-with-gpt', {
         body: { message: inputText, agentName: agent?.name }
@@ -96,7 +96,8 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose 
       });
 
       if (!error) {
-        console.log('Conversation saved successfully');
+        console.log('Conversația a fost salvată cu succes');
+        handleClose();
       }
     } catch (error) {
       console.error('Error saving conversation:', error);
@@ -107,6 +108,7 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose 
 
   const handleClose = () => {
     setMessages([]);
+    setIsTextMode(false);
     onClose();
   };
 
@@ -114,11 +116,19 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose 
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-5xl h-[80vh] flex flex-col bg-white/95 backdrop-blur-xl border-0 shadow-2xl">
+      <DialogContent className="max-w-6xl h-[85vh] flex flex-col bg-white/95 backdrop-blur-xl border-0 shadow-2xl">
         <DialogHeader className="flex flex-row items-center justify-between border-b border-gray-100 pb-4">
-          <DialogTitle className="text-2xl font-light text-gray-800">
-            Test Agent: <span className="font-medium">{agent.name}</span>
-          </DialogTitle>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
+              <Mic className="w-5 h-5 text-accent" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl font-medium text-gray-800">
+                Test Agent: {agent.name}
+              </DialogTitle>
+              <p className="text-sm text-gray-500">Testează funcționalitatea agentului tău</p>
+            </div>
+          </div>
           <Button
             variant="ghost"
             size="sm"
@@ -129,115 +139,135 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose 
           </Button>
         </DialogHeader>
 
-        <div className="flex flex-1 gap-8 mt-6">
+        <div className="flex flex-1">
           {/* Left side - Voice Interface */}
-          <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-white rounded-2xl p-8 border border-gray-100">
-            <div className="text-center mb-12">
-              <h3 className="text-2xl font-light text-gray-800 mb-3">Conversație Vocală</h3>
-              <p className="text-gray-500 text-sm">Vorbește direct cu agentul</p>
+          <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-white rounded-2xl p-8 border border-gray-100 mr-6">
+            <div className="text-center mb-8">
+              <h3 className="text-xl font-medium text-gray-800 mb-2">Conversație Vocală</h3>
+              <p className="text-gray-500 text-sm">Vorbește direct cu agentul folosind vocea</p>
             </div>
             
-            <div className="mb-12">
+            <div className="mb-8">
               <VoiceTestButton 
                 agentId={agent.agent_id || agent.id}
+                agentName={agent.name}
                 onSpeakingChange={setIsSpeaking}
                 onTranscription={handleVoiceTranscription}
               />
             </div>
 
-            <div className="text-center space-y-3">
+            <div className="text-center space-y-2">
               <p className="text-sm text-gray-600 font-medium">
-                {isSpeaking ? 'Agentul vorbește...' : 'Apasă pentru a începe'}
+                {isSpeaking ? '🔊 Agentul vorbește...' : '🎤 Apasă pentru a începe'}
               </p>
-              <div className="text-xs text-gray-400 bg-gray-50 px-3 py-2 rounded-lg">
-                Agent ID: {agent.agent_id || agent.id}
-              </div>
+            </div>
+            
+            {/* Mode toggle */}
+            <div className="mt-6">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsTextMode(!isTextMode)}
+                className="flex items-center gap-2"
+              >
+                <MessageSquare className="w-4 h-4" />
+                {isTextMode ? 'Ascunde Chat Text' : 'Afișează Chat Text'}
+              </Button>
             </div>
           </div>
 
-          {/* Right side - Text Chat */}
-          <div className="flex-1 flex flex-col">
-            <div className="bg-gradient-to-r from-gray-50 to-white rounded-xl p-5 mb-6 border border-gray-100">
-              <h3 className="text-xl font-light text-gray-800 mb-2">Chat Text</h3>
-              <p className="text-sm text-gray-500">Transcripția conversației vocale și chat text</p>
-            </div>
+          {/* Right side - Text Chat (conditional) */}
+          {isTextMode && (
+            <div className="flex-1 flex flex-col">
+              <div className="bg-gradient-to-r from-gray-50 to-white rounded-xl p-4 mb-4 border border-gray-100">
+                <h3 className="text-lg font-medium text-gray-800 mb-1">Chat Text</h3>
+                <p className="text-sm text-gray-500">Conversație suplimentară prin text</p>
+              </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto border border-gray-100 rounded-xl p-5 mb-6 bg-white/50">
-              {messages.length === 0 ? (
-                <div className="text-center text-gray-400 h-full flex items-center justify-center">
-                  <div>
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Send className="w-6 h-6 text-gray-400" />
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto border border-gray-100 rounded-xl p-4 mb-4 bg-white/50">
+                {messages.length === 0 ? (
+                  <div className="text-center text-gray-400 h-full flex items-center justify-center">
+                    <div>
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <MessageSquare className="w-5 h-5 text-gray-400" />
+                      </div>
+                      <p className="text-sm font-medium">Nicio conversație încă</p>
+                      <p className="text-xs mt-1">Mesajele vocale și text vor apărea aici</p>
                     </div>
-                    <p className="text-lg font-light">Începe o conversație</p>
-                    <p className="text-sm mt-2">Vorbește vocal sau scrie un mesaj</p>
                   </div>
-                </div>
-              ) : (
-                messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`mb-6 ${message.isUser ? 'text-right' : 'text-left'}`}
-                  >
+                ) : (
+                  messages.map((message) => (
                     <div
-                      className={`inline-block max-w-xs p-4 rounded-2xl ${
-                        message.isUser
-                          ? 'bg-black text-white shadow-lg'
-                          : 'bg-gray-100 text-gray-800 shadow-sm'
-                      }`}
+                      key={message.id}
+                      className={`mb-4 ${message.isUser ? 'text-right' : 'text-left'}`}
                     >
-                      <p className="text-sm leading-relaxed">{message.text}</p>
-                      <p className="text-xs opacity-60 mt-2">
-                        {message.timestamp.toLocaleTimeString('ro-RO', { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })}
-                      </p>
+                      <div
+                        className={`inline-block max-w-xs p-3 rounded-2xl ${
+                          message.isUser
+                            ? 'bg-accent text-white shadow-md'
+                            : 'bg-gray-100 text-gray-800 shadow-sm'
+                        }`}
+                      >
+                        <p className="text-sm leading-relaxed">{message.text}</p>
+                        <p className="text-xs opacity-60 mt-1">
+                          {message.timestamp.toLocaleTimeString('ro-RO', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))
-              )}
-              <div ref={messagesEndRef} />
-            </div>
+                  ))
+                )}
+                <div ref={messagesEndRef} />
+              </div>
 
-            {/* Text Input */}
-            <div className="flex space-x-3 mb-6">
-              <Input
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                placeholder="Scrie un mesaj..."
-                className="flex-1 border-gray-200 rounded-xl bg-white/80 focus:bg-white transition-colors"
-                onKeyPress={(e) => e.key === 'Enter' && handleSendText()}
-              />
-              <Button
-                onClick={handleSendText}
-                disabled={!inputText.trim()}
-                className="bg-black hover:bg-gray-800 text-white rounded-xl px-6"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
+              {/* Text Input */}
+              <div className="flex space-x-3 mb-4">
+                <Input
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  placeholder="Scrie un mesaj..."
+                  className="flex-1 border-gray-200 rounded-xl bg-white/80 focus:bg-white transition-colors"
+                  onKeyPress={(e) => e.key === 'Enter' && handleSendText()}
+                />
+                <Button
+                  onClick={handleSendText}
+                  disabled={!inputText.trim()}
+                  className="bg-accent hover:bg-accent/90 text-white rounded-xl px-6"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
+          )}
+        </div>
 
-            {/* Actions */}
-            <div className="flex justify-between">
+        {/* Bottom Actions */}
+        <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+          <div className="text-xs text-gray-400">
+            Agent ID: {agent.agent_id || agent.id}
+          </div>
+          <div className="flex gap-3">
+            {messages.length > 0 && (
               <Button
                 onClick={handleSaveConversation}
-                disabled={messages.length === 0 || isSaving}
+                disabled={isSaving}
                 variant="outline"
                 className="border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl"
               >
                 <Save className="w-4 h-4 mr-2" />
-                {isSaving ? 'Salvează...' : 'Salvează'}
+                {isSaving ? 'Salvează...' : 'Salvează Test'}
               </Button>
-              <Button 
-                onClick={handleClose} 
-                variant="outline"
-                className="border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl"
-              >
-                Închide
-              </Button>
-            </div>
+            )}
+            <Button 
+              onClick={handleClose} 
+              variant="outline"
+              className="border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl"
+            >
+              Închide
+            </Button>
           </div>
         </div>
       </DialogContent>
