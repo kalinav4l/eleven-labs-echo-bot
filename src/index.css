@@ -17,11 +17,11 @@
     --primary: 0 0% 9%;
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 0 0% 96%;
+    --secondary: 0 0% 97%;
     --secondary-foreground: 0 0% 9%;
 
     --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted-foreground: 0 0% 60%;
 
     --accent: 0 0% 96%;
     --accent-foreground: 0 0% 9%;
@@ -29,19 +29,19 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
+    --border: 0 0% 92%;
+    --input: 0 0% 92%;
     --ring: 0 0% 9%;
 
-    --radius: 0.5rem;
+    --radius: 8px;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 9%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 15%;
     --sidebar-primary: 0 0% 9%;
     --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 0 0% 96%;
     --sidebar-accent-foreground: 0 0% 9%;
-    --sidebar-border: 0 0% 90%;
+    --sidebar-border: 0 0% 92%;
     --sidebar-ring: 0 0% 9%;
   }
 
@@ -92,98 +92,105 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-size: 14px;
   }
   
   h1, h2, h3, h4, h5, h6 {
     @apply font-medium text-foreground;
     line-height: 1.2;
+    font-weight: 500;
   }
 
   h1 {
     @apply text-2xl;
+    font-weight: 600;
   }
 
   h2 {
     @apply text-xl;
+    font-weight: 600;
   }
 
   h3 {
     @apply text-lg;
+    font-weight: 500;
   }
 
   p {
     @apply text-muted-foreground;
+    font-size: 14px;
   }
 
-  /* Minimal card styling */
-  .minimal-card {
-    @apply bg-card border border-border rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow duration-200;
+  /* Clean card styling inspired by ElevenLabs */
+  .elevenlabs-card {
+    @apply bg-white border border-gray-100 rounded-lg p-6 hover:border-gray-200 transition-all duration-200;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02);
   }
 
-  /* Minimal button styling */
-  .minimal-button {
-    @apply bg-primary text-primary-foreground border border-transparent rounded-md px-4 py-2 text-sm font-medium transition-colors duration-200 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  /* Clean button styling */
+  .elevenlabs-button {
+    @apply bg-black text-white border-0 rounded-md px-4 py-2 text-sm font-medium transition-all duration-200 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-200;
   }
 
-  .minimal-button-secondary {
-    @apply bg-secondary text-secondary-foreground border border-border rounded-md px-4 py-2 text-sm font-medium transition-colors duration-200 hover:bg-secondary/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  .elevenlabs-button-secondary {
+    @apply bg-white text-gray-700 border border-gray-200 rounded-md px-4 py-2 text-sm font-medium transition-all duration-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200;
   }
 
-  .minimal-button-outline {
-    @apply bg-transparent text-foreground border border-border rounded-md px-4 py-2 text-sm font-medium transition-colors duration-200 hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
-  }
-
-  /* Minimal input styling */
-  .minimal-input {
-    @apply bg-background text-foreground border border-input rounded-md px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50;
+  /* Clean input styling */
+  .elevenlabs-input {
+    @apply bg-white text-gray-900 border border-gray-200 rounded-md px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300 disabled:opacity-50;
   }
 
   /* Clean spacing utilities */
-  .minimal-section {
-    @apply py-12;
+  .elevenlabs-section {
+    @apply py-8;
   }
 
-  .minimal-container {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  .elevenlabs-container {
+    @apply max-w-7xl mx-auto px-6;
   }
 
-  /* Remove excessive styling */
-  .glass-card,
-  .glass-button,
-  .glass-input,
-  .futuristic-card,
-  .neon-accent,
-  .liquid-glass {
-    @apply bg-card border border-border rounded-lg shadow-sm;
+  /* Clean sidebar styling */
+  .elevenlabs-sidebar {
+    @apply bg-white border-r border-gray-100;
   }
 
-  /* Minimal sidebar styling */
-  .minimal-sidebar {
-    @apply bg-sidebar-background border-r border-sidebar-border;
+  .elevenlabs-sidebar-item {
+    @apply text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200;
   }
 
-  .minimal-sidebar-item {
-    @apply text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200;
+  .elevenlabs-sidebar-item-active {
+    @apply bg-gray-100 text-gray-900 rounded-md px-3 py-2 text-sm font-medium;
   }
 
-  .minimal-sidebar-item-active {
-    @apply bg-sidebar-primary text-sidebar-primary-foreground rounded-md px-3 py-2 text-sm font-medium;
+  /* Stats cards like in ElevenLabs */
+  .stats-card {
+    @apply bg-white border border-gray-100 rounded-lg p-6;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02);
+  }
+
+  .stats-number {
+    @apply text-2xl font-semibold text-gray-900;
+  }
+
+  .stats-label {
+    @apply text-sm text-gray-500 mt-1;
   }
 
   @media (max-width: 768px) {
     body {
-      font-size: 16px;
+      font-size: 14px;
     }
     
-    .minimal-container {
+    .elevenlabs-container {
       @apply px-4;
     }
 
-    .minimal-card {
+    .elevenlabs-card, .stats-card {
       @apply p-4;
     }
   }
@@ -194,7 +201,7 @@
   @keyframes fade-in {
     0% {
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(4px);
     }
     100% {
       opacity: 1;
@@ -202,35 +209,29 @@
     }
   }
 
-  @keyframes scale-in {
-    0% {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-    100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
   .animate-fade-in {
-    animation: fade-in 0.3s ease-out forwards;
-  }
-
-  .animate-scale-in {
-    animation: scale-in 0.2s ease-out forwards;
+    animation: fade-in 0.2s ease-out forwards;
   }
 
   /* Utility classes for consistent spacing */
-  .minimal-spacing {
-    @apply space-y-6;
+  .clean-spacing {
+    @apply space-y-4;
   }
 
-  .minimal-grid {
-    @apply grid gap-6;
+  .clean-grid {
+    @apply grid gap-4;
   }
 
-  .minimal-flex {
+  .clean-flex {
     @apply flex items-center gap-3;
+  }
+
+  /* Text utilities */
+  .text-subtle {
+    @apply text-gray-500 text-sm;
+  }
+
+  .text-emphasis {
+    @apply text-gray-900 font-medium;
   }
 }
