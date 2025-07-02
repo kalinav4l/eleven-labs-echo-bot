@@ -58,12 +58,9 @@ const AgentConsultant: React.FC = () => {
     generatePrompt: () => Promise.resolve(generatedPrompt)
   });
   const {
-    isInitiating: isInitiatingCall,
-    handleInitiateCall
-  } = useCallInitiation({
-    agentId: finalAgentId,
-    phoneNumber
-  });
+    initiateCall,
+    isInitiating: isInitiatingCall
+  } = useCallInitiation();
 
   // Authentication guard
   if (!user) {
@@ -98,6 +95,10 @@ const AgentConsultant: React.FC = () => {
   const handleInitiateOnlineCall = () => {
     setIsOnlineCallActive(!isOnlineCallActive);
     // Here you would implement the actual online call functionality
+  };
+  const handleInitiateCall = async () => {
+    if (!finalAgentId.trim() || !phoneNumber.trim()) return;
+    await initiateCall(finalAgentId, phoneNumber, 'Test Agent Consultant');
   };
   const renderCurrentStep = () => {
     switch (currentStep) {

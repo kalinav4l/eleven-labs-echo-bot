@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase'; // Asigură-te că ai configurat clientul Supabase
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 
 // Definim tipurile pentru o mai bună organizare
@@ -22,6 +22,7 @@ export const useCallInitiation = () => {
   const [currentProgress, setCurrentProgress] = useState(0);
   const [totalCalls, setTotalCalls] = useState(0);
   const [callStatuses, setCallStatuses] = useState<Record<string, CallStatus>>({});
+  const [currentCallStatus, setCurrentCallStatus] = useState('');
 
   /**
    * Actualizează statusul pentru un contact specific.
@@ -104,6 +105,7 @@ export const useCallInitiation = () => {
     setIsProcessingBatch(true);
     setTotalCalls(contacts.length);
     setCurrentProgress(0);
+    setCurrentCallStatus('');
 
     // Inițializează statusurile pentru toate contactele ca 'în așteptare'
     const initialStatuses: Record<string, CallStatus> = {};
@@ -121,10 +123,26 @@ export const useCallInitiation = () => {
     }
     
     setIsProcessingBatch(false);
+    setCurrentCallStatus('');
     toast({
       title: "Procesare Finalizată",
       description: "Toate apelurile din listă au fost procesate.",
     });
+  };
+
+  /**
+   * Funcție pentru apeluri individuale
+   */
+  const initiateCall = async (agentId: string, phoneNumber: string, contactName: string = '') => {
+    const contact: Contact = {
+      id: `single-${Date.now()}`,
+      name: contactName || 'Contact Individual',
+      phone: phoneNumber,
+      country: 'Necunoscut',
+      location: 'Necunoscut'
+    };
+
+    await initiateAndMonitorSingleCall(contact, agentId);
   };
 
   return {
@@ -132,7 +150,9 @@ export const useCallInitiation = () => {
     currentProgress,
     totalCalls,
     callStatuses,
+    currentCallStatus,
     processBatchCalls,
-    // Poți adăuga aici și logica pentru apelul individual dacă e necesar
+    initiateCall,
+    isInitiating: isProcessingBatch, // pentru compatibilitate
   };
 };

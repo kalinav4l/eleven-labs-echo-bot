@@ -56,13 +56,10 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
     isProcessingBatch, 
     currentProgress, 
     totalCalls,
-    currentContact,
     callStatuses,
-    currentCallStatus
-  } = useCallInitiation({
-    agentId: finalAgentId,
-    phoneNumber
-  });
+    currentCallStatus,
+    initiateCall
+  } = useCallInitiation();
 
   const canInitiateCall = finalAgentId.trim() !== '' && phoneNumber.trim() !== '';
   const canInitiateOnlineCall = finalAgentId.trim() !== '';
@@ -91,6 +88,11 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
     
     const contactsToProcess = contacts.filter(c => selectedContacts.has(c.id));
     await processBatchCalls(contactsToProcess, finalAgentId);
+  };
+
+  const handleSingleCall = async () => {
+    if (!phoneNumber.trim() || !finalAgentId.trim()) return;
+    await initiateCall(finalAgentId, phoneNumber, 'Apel Individual');
   };
 
   const getStatusIcon = (status: string) => {
@@ -130,6 +132,18 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
         return 'Necunoscut';
     }
   };
+
+  // Convert callStatuses Record to array for display
+  const callStatusesArray = Object.entries(callStatuses).map(([contactId, status]) => ({
+    contactId,
+    contactName: status.message || 'Contact',
+    status: status.status as any,
+    conversationId: undefined,
+    startTime: undefined,
+    endTime: undefined,
+    duration: undefined,
+    cost: undefined
+  }));
 
   const progressPercentage = totalCalls > 0 ? (currentProgress / totalCalls) * 100 : 0;
 
@@ -199,7 +213,7 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
             </div>
 
             {/* Real-time Call Status Display */}
-            {isProcessingBatch && callStatuses.length > 0 && (
+            {isProcessingBatch && callStatusesArray.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span>Progres: {currentProgress} / {totalCalls}</span>
@@ -220,7 +234,7 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
                 {/* Call Statuses List */}
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   <h4 className="text-sm font-medium text-foreground">Status Apeluri:</h4>
-                  {callStatuses.map(callStatus => (
+                  {callStatusesArray.map(callStatus => (
                     <div key={callStatus.contactId} className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
                       <div className="flex items-center gap-2">
                         {getStatusIcon(callStatus.status)}
@@ -305,7 +319,7 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
             </div>
 
             <Button 
-              onClick={onInitiateCall} 
+              onClick={handleSingleCall} 
               disabled={!canInitiateCall || isInitiatingCall || isProcessingBatch} 
               className="bg-foreground text-background hover:bg-foreground/90 w-full"
             >
