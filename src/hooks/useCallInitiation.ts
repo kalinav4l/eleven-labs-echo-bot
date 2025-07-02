@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,7 +19,7 @@ interface UseCallInitiationProps {
 interface CallStatus {
   contactId: string;
   contactName: string;
-  status: 'waiting' | 'calling' | 'ringing' | 'talking' | 'completed' | 'failed' | 'no-answer' | 'busy' | 'rejected' | 'cancelled';
+  status: 'waiting' | 'calling' | 'in-progress' | 'processing' | 'completed' | 'failed' | 'no-answer' | 'busy' | 'rejected' | 'cancelled';
   conversationId?: string;
   startTime?: Date;
   endTime?: Date;
@@ -63,12 +62,12 @@ export const useCallInitiation = ({
     }
   };
 
-  // Wait for call completion with strict monitoring
+  // Wait for call completion with strict monitoring using ElevenLabs statuses
   const waitForCallCompletion = async (conversationId: string, contactName: string): Promise<any> => {
     const maxAttempts = 120; // 10 minutes max (120 * 5 seconds)
     let attempts = 0;
     
-    console.log(`Starting strict monitoring for ${contactName} with conversation ID: ${conversationId}`);
+    console.log(`Starting monitoring for ${contactName} with conversation ID: ${conversationId}`);
     
     while (attempts < maxAttempts) {
       try {
@@ -80,12 +79,12 @@ export const useCallInitiation = ({
         
         if (conversationData && conversationData.status) {
           const status = conversationData.status.toLowerCase();
-          console.log(`Status for ${contactName}: ${status}`);
+          console.log(`ElevenLabs status for ${contactName}: ${status}`);
           
-          // Update real-time status display
+          // Update real-time status display based on ElevenLabs statuses
           switch (status) {
-            case 'queued':
-              setCurrentCallStatus(`Apel în coadă pentru ${contactName}`);
+            case 'initiated':
+              setCurrentCallStatus(`Apel inițiat pentru ${contactName}`);
               setCallStatuses(prev => prev.map(cs => 
                 cs.conversationId === conversationId 
                   ? { ...cs, status: 'calling' }
@@ -93,22 +92,22 @@ export const useCallInitiation = ({
               ));
               break;
               
-            case 'ringing':
-              setCurrentCallStatus(`Sună la ${contactName}...`);
-              setCallStatuses(prev => prev.map(cs => 
-                cs.conversationId === conversationId 
-                  ? { ...cs, status: 'ringing' }
-                  : cs
-              ));
-              break;
-              
-            case 'in_progress':
+            case 'in-progress':
             case 'ongoing':
             case 'active':
               setCurrentCallStatus(`În conversație cu ${contactName}`);
               setCallStatuses(prev => prev.map(cs => 
                 cs.conversationId === conversationId 
-                  ? { ...cs, status: 'talking' }
+                  ? { ...cs, status: 'in-progress' }
+                  : cs
+              ));
+              break;
+              
+            case 'processing':
+              setCurrentCallStatus(`Se procesează apelul cu ${contactName}`);
+              setCallStatuses(prev => prev.map(cs => 
+                cs.conversationId === conversationId 
+                  ? { ...cs, status: 'processing' }
                   : cs
               ));
               break;
@@ -170,6 +169,7 @@ export const useCallInitiation = ({
               return conversationData;
               
             default:
+              console.log(`Unknown status (${status}) for ${contactName}`);
               setCurrentCallStatus(`Status necunoscut (${status}) pentru ${contactName}`);
           }
         } else {
@@ -231,6 +231,8 @@ export const useCallInitiation = ({
           finalStatus = 'no-answer';
         } else if (status === 'busy') {
           finalStatus = 'busy';
+        } else if (['rejected', 'cancelled'].includes(status)) {
+          finalStatus = 'rejected';
         }
       }
       
@@ -286,7 +288,7 @@ export const useCallInitiation = ({
     }
   };
 
-  // Process batch calls with strict sequential logic
+  // Process batch calls with strict sequential logic using ElevenLabs statuses
   const processBatchCalls = useCallback(async (contacts: Contact[], targetAgentId: string) => {
     if (!targetAgentId || contacts.length === 0) {
       toast({
@@ -376,14 +378,14 @@ export const useCallInitiation = ({
             description: `Se monitorizează apelul către ${contact.name}...`,
           });
 
-          // STEP 4: STRICT MONITORING until completion
-          console.log(`👁️ Step 4: Starting strict monitoring for ${contact.name}`);
-          setCurrentCallStatus(`Monitorizează apelul către ${contact.name}...`);
+          // STEP 4: STRICT MONITORING until 'done' or 'failed' status
+          console.log(`👁️ Step 4: Starting monitoring for ${contact.name} until 'done' or 'failed'`);
+          setCurrentCallStatus(`Monitorizează apelul către ${contactName}...`);
           
           const finalConversationData = await waitForCallCompletion(conversationId, contact.name);
           
-          // STEP 5: MANDATORY - Extract and save ALL data
-          console.log(`💾 Step 5: MANDATORY data extraction and saving for ${contact.name}`);
+          // STEP 5: MANDATORY - Extract and save ALL data only after 'done' or 'failed'
+          console.log(`💾 Step 5: MANDATORY data extraction for ${contact.name} - Status: ${finalConversationData?.status}`);
           setCurrentCallStatus(`Salvează datele pentru ${contact.name}...`);
           
           await saveCompleteCallData(finalConversationData, contact, conversationId);
@@ -414,7 +416,7 @@ export const useCallInitiation = ({
               : status
           ));
 
-          console.log(`✅ === COMPLETED PROCESSING FOR ${contact.name} ===\n`);
+          console.log(`✅ === COMPLETED PROCESSING FOR ${contact.name} - Status: ${finalStatus} ===\n`);
           
           toast({
             title: "Apel finalizat",

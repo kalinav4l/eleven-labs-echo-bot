@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Loader2, CheckCircle, Clock, PhoneCall, Mic, AlertCircle, Phone } from 'lucide-react';
@@ -6,7 +5,7 @@ import { Loader2, CheckCircle, Clock, PhoneCall, Mic, AlertCircle, Phone } from 
 interface CallStatus {
   contactId: string;
   contactName: string;
-  status: 'waiting' | 'calling' | 'ringing' | 'talking' | 'completed' | 'failed' | 'no-answer' | 'busy' | 'rejected' | 'cancelled';
+  status: 'waiting' | 'calling' | 'in-progress' | 'processing' | 'completed' | 'failed';
   conversationId?: string;
   startTime?: Date;
   endTime?: Date;
@@ -35,21 +34,14 @@ export const BatchCallProgress: React.FC<BatchCallProgressProps> = ({
         return <Clock className="w-4 h-4 text-gray-500" />;
       case 'calling':
         return <Phone className="w-4 h-4 text-blue-500 animate-pulse" />;
-      case 'ringing':
-        return <PhoneCall className="w-4 h-4 text-yellow-500 animate-pulse" />;
-      case 'talking':
+      case 'in-progress':
         return <Mic className="w-4 h-4 text-green-500 animate-pulse" />;
+      case 'processing':
+        return <Loader2 className="w-4 h-4 text-yellow-500 animate-spin" />;
       case 'completed':
         return <CheckCircle className="w-4 h-4 text-green-600" />;
       case 'failed':
         return <AlertCircle className="w-4 h-4 text-red-500" />;
-      case 'no-answer':
-        return <AlertCircle className="w-4 h-4 text-orange-500" />;
-      case 'busy':
-        return <AlertCircle className="w-4 h-4 text-yellow-500" />;
-      case 'rejected':
-      case 'cancelled':
-        return <AlertCircle className="w-4 h-4 text-gray-500" />;
       default:
         return <Clock className="w-4 h-4 text-gray-500" />;
     }
@@ -61,22 +53,14 @@ export const BatchCallProgress: React.FC<BatchCallProgressProps> = ({
         return 'În așteptare';
       case 'calling':
         return 'Se inițiază...';
-      case 'ringing':
-        return 'Sună...';
-      case 'talking':
+      case 'in-progress':
         return 'În conversație';
+      case 'processing':
+        return 'Se procesează';
       case 'completed':
         return 'Finalizat';
       case 'failed':
         return 'Eșuat';
-      case 'no-answer':
-        return 'Nu răspunde';
-      case 'busy':
-        return 'Ocupat';
-      case 'rejected':
-        return 'Respins';
-      case 'cancelled':
-        return 'Anulat';
       default:
         return 'Necunoscut';
     }
@@ -86,21 +70,14 @@ export const BatchCallProgress: React.FC<BatchCallProgressProps> = ({
     switch (status) {
       case 'completed':
         return 'bg-green-100 text-green-800 border-green-200';
-      case 'talking':
+      case 'in-progress':
         return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'ringing':
+      case 'processing':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'calling':
         return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'failed':
         return 'bg-red-100 text-red-800 border-red-200';
-      case 'no-answer':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'busy':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'rejected':
-      case 'cancelled':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
       default:
         return 'bg-gray-50 text-gray-700 border-gray-200';
     }

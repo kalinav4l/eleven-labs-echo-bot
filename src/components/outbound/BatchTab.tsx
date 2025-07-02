@@ -17,7 +17,7 @@ interface Contact {
 interface CallStatus {
   contactId: string;
   contactName: string;
-  status: 'waiting' | 'calling' | 'ringing' | 'talking' | 'completed' | 'failed' | 'no-answer' | 'busy' | 'rejected' | 'cancelled';
+  status: 'waiting' | 'calling' | 'in-progress' | 'processing' | 'completed' | 'failed';
   conversationId?: string;
   startTime?: Date;
   endTime?: Date;
