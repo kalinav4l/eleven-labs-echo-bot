@@ -49,7 +49,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               onClick={isMobile ? onClose : undefined}
             >
               <User className="mr-3 h-4 w-4" />
-              <span>Acasă</span>
+              <span>Home</span>
             </Link>
             
             <Link 
@@ -58,7 +58,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               onClick={isMobile ? onClose : undefined}
             >
               <Bot className="mr-3 h-4 w-4" />
-              <span>Agenți</span>
+              <span>Agents</span>
             </Link>
 
             <Link 
@@ -67,7 +67,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               onClick={isMobile ? onClose : undefined}
             >
               <BarChart3 className="mr-3 h-4 w-4" />
-              <span>Analiză</span>
+              <span>Analytics</span>
             </Link>
 
             <Link 
@@ -76,7 +76,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               onClick={isMobile ? onClose : undefined}
             >
               <FileText className="mr-3 h-4 w-4" />
-              <span>Transcrieri</span>
+              <span>Transcripts</span>
             </Link>
 
             <Link 
@@ -85,7 +85,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               onClick={isMobile ? onClose : undefined}
             >
               <PhoneCall className="mr-3 h-4 w-4" />
-              <span>Apeluri</span>
+              <span>Calls</span>
             </Link>
 
             <Link 
@@ -103,7 +103,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               onClick={isMobile ? onClose : undefined}
             >
               <Settings className="mr-3 h-4 w-4" />
-              <span>Setări</span>
+              <span>Settings</span>
             </Link>
           </div>
         </nav>
