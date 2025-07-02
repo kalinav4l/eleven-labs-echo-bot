@@ -196,7 +196,6 @@ const AccountSettings = () => {
   };
 
   const handleSaveTelegramSettings = () => {
-    // This would normally save to database or user preferences
     toast({
       title: "Setări Telegram salvate",
       description: "Configurațiile Telegram au fost salvate cu succes."
@@ -205,32 +204,32 @@ const AccountSettings = () => {
 
   return (
     <DashboardLayout>
-      <div className={`p-4 sm:p-6 ${isMobile ? 'pb-24' : 'my-[60px]'}`}>
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Setări</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">Configurează preferințele tale</p>
+      <div className={`${isMobile ? 'pb-24' : ''}`}>
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Setări</h1>
+          <p className="text-gray-600">Configurează preferințele tale</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Language Settings */}
-          <Card className="liquid-glass">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-foreground flex items-center text-lg sm:text-xl">
-                <Globe className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="truncate">Setări Limbă</span>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <Globe className="w-5 h-5 mr-3 flex-shrink-0" />
+                <span>Setări Limbă</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 sm:space-y-6">
+            <CardContent className="space-y-4">
               <div>
-                <label className="block text-muted-foreground text-sm mb-2">Limbă Implicită</label>
+                <Label className="text-sm text-gray-600 mb-2 block">Limbă Implicită</Label>
                 <Select 
                   value={settings.defaultLanguage} 
                   onValueChange={(value) => setSettings({...settings, defaultLanguage: value})}
                 >
-                  <SelectTrigger className="liquid-glass border-gray-200/50 text-foreground">
+                  <SelectTrigger className="bg-white border-gray-300">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="liquid-glass border-gray-200/50">
+                  <SelectContent className="bg-white border-gray-300">
                     <SelectItem value="ro">Română</SelectItem>
                     <SelectItem value="en">English</SelectItem>
                     <SelectItem value="es">Español</SelectItem>
@@ -244,26 +243,26 @@ const AccountSettings = () => {
           </Card>
 
           {/* Account Info */}
-          <Card className="liquid-glass">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-foreground flex items-center text-lg sm:text-xl">
-                <User className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="truncate">Informații Cont</span>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <User className="w-5 h-5 mr-3 flex-shrink-0" />
+                <span>Informații Cont</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-muted-foreground text-sm mb-2">Email Curent</label>
-                <div className="p-3 liquid-glass rounded border border-gray-200/50 text-foreground bg-gray-50/50 text-sm sm:text-base break-all">
+                <Label className="text-sm text-gray-600 mb-2 block">Email Curent</Label>
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-300 text-gray-900 text-sm break-all">
                   {user?.email || ''}
                 </div>
               </div>
 
               <div>
-                <label className="block text-muted-foreground text-sm mb-2">Plan Curent</label>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 liquid-glass rounded border border-gray-200/50">
-                  <span className="text-foreground text-sm sm:text-base">Plan Starter</span>
-                  <Button size="sm" className="glass-button bg-accent/90 hover:bg-accent text-white w-full sm:w-auto">
+                <Label className="text-sm text-gray-600 mb-2 block">Plan Curent</Label>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                  <span className="text-gray-900 text-sm">Plan Starter</span>
+                  <Button size="sm" className="bg-black hover:bg-gray-800 text-white w-full sm:w-auto">
                     Upgrade
                   </Button>
                 </div>
@@ -272,11 +271,11 @@ const AccountSettings = () => {
           </Card>
 
           {/* Email & Password Settings */}
-          <Card className="liquid-glass">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-foreground flex items-center text-lg sm:text-xl">
-                <Mail className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="truncate">Email & Parolă</span>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <Mail className="w-5 h-5 mr-3 flex-shrink-0" />
+                <span>Email & Parolă</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -289,7 +288,7 @@ const AccountSettings = () => {
                     value={emailSettings.newEmail}
                     onChange={(e) => setEmailSettings(prev => ({ ...prev, newEmail: e.target.value }))}
                     placeholder="nou@email.com"
-                    className="flex-1"
+                    className="flex-1 bg-white border-gray-300"
                   />
                   <Button onClick={handleUpdateEmail} size="sm">
                     Actualizează
@@ -305,12 +304,14 @@ const AccountSettings = () => {
                   value={emailSettings.newPassword}
                   onChange={(e) => setEmailSettings(prev => ({ ...prev, newPassword: e.target.value }))}
                   placeholder="Parolă nouă"
+                  className="bg-white border-gray-300"
                 />
                 <Input
                   type="password"
                   value={emailSettings.confirmPassword}
                   onChange={(e) => setEmailSettings(prev => ({ ...prev, confirmPassword: e.target.value }))}
                   placeholder="Confirmă parola"
+                  className="bg-white border-gray-300"
                 />
                 <Button onClick={handleUpdatePassword} size="sm" className="w-full">
                   Actualizează Parola
@@ -320,11 +321,11 @@ const AccountSettings = () => {
           </Card>
 
           {/* Telegram Bot Settings */}
-          <Card className="liquid-glass">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-foreground flex items-center text-lg sm:text-xl">
-                <MessageSquare className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="truncate">Setări Telegram</span>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <MessageSquare className="w-5 h-5 mr-3 flex-shrink-0" />
+                <span>Setări Telegram</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -336,6 +337,7 @@ const AccountSettings = () => {
                   value={telegramSettings.botToken}
                   onChange={(e) => setTelegramSettings(prev => ({ ...prev, botToken: e.target.value }))}
                   placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
+                  className="bg-white border-gray-300"
                 />
               </div>
 
@@ -346,6 +348,7 @@ const AccountSettings = () => {
                   value={telegramSettings.chatId}
                   onChange={(e) => setTelegramSettings(prev => ({ ...prev, chatId: e.target.value }))}
                   placeholder="123456789"
+                  className="bg-white border-gray-300"
                 />
               </div>
 
@@ -357,17 +360,17 @@ const AccountSettings = () => {
           </Card>
 
           {/* Gmail Integration - Coming Soon */}
-          <Card className="liquid-glass opacity-75">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-foreground flex items-center text-lg sm:text-xl">
-                <Mail className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="truncate">Integrare Gmail</span>
+          <Card className="opacity-75">
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <Mail className="w-5 h-5 mr-3 flex-shrink-0" />
+                <span>Integrare Gmail</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               <div className="text-center py-8">
                 <Mail className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <p className="text-muted-foreground mb-2">Integrarea Gmail</p>
+                <p className="text-gray-600 mb-2">Integrarea Gmail</p>
                 <p className="text-sm text-gray-500">Va fi disponibilă în curând</p>
               </div>
             </CardContent>
@@ -375,13 +378,13 @@ const AccountSettings = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className={`mt-6 sm:mt-8 grid grid-cols-1 ${isMobile ? 'gap-3' : 'md:grid-cols-3 gap-4'}`}>
+        <div className={`mt-8 grid grid-cols-1 ${isMobile ? 'gap-3' : 'md:grid-cols-3 gap-4'}`}>
           <Button 
             onClick={handleSaveSettings}
-            className="glass-button bg-accent/90 hover:bg-accent text-white w-full"
+            className="bg-black hover:bg-gray-800 text-white w-full"
           >
             <Settings className="w-4 h-4 mr-2 flex-shrink-0" />
-            <span className="truncate">Salvează Setările</span>
+            <span>Salvează Setările</span>
           </Button>
 
           <Button 
@@ -390,7 +393,7 @@ const AccountSettings = () => {
             className="border-orange-500 text-orange-500 hover:bg-orange-50 w-full"
           >
             <LogOut className="w-4 h-4 mr-2 flex-shrink-0" />
-            <span className="truncate">Ieșire din Cont</span>
+            <span>Ieșire din Cont</span>
           </Button>
 
           <AlertDialog>
@@ -400,7 +403,7 @@ const AccountSettings = () => {
                 className="border-red-500 text-red-500 hover:bg-red-50 w-full"
               >
                 <Trash2 className="w-4 h-4 mr-2 flex-shrink-0" />
-                <span className="truncate">Șterge Contul</span>
+                <span>Șterge Contul</span>
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent className={`${isMobile ? 'mx-4 max-w-[calc(100vw-2rem)]' : ''}`}>
