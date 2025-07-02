@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, Phone, Mic, Users, Play, Pause, Square } from 'lucide-react';
+import { Loader2, Phone, Mic, Users, Play, Clock } from 'lucide-react';
 import { useCallInitiation } from '@/hooks/useCallInitiation';
 
 interface Contact {
@@ -40,13 +40,13 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
   contacts = []
 }) => {
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
-  const [isPaused, setIsPaused] = useState(false);
 
   const { 
     processBatchCalls, 
     isProcessingBatch, 
     currentProgress, 
-    totalCalls 
+    totalCalls,
+    currentContact
   } = useCallInitiation({
     agentId: finalAgentId,
     phoneNumber
@@ -147,12 +147,24 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
             </div>
 
             {isProcessingBatch && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span>Progres: {currentProgress} / {totalCalls}</span>
                   <span>{Math.round(progressPercentage)}%</span>
                 </div>
                 <Progress value={progressPercentage} className="h-2" />
+                {currentContact && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Clock className="w-4 h-4" />
+                    <span>Se procesează: {currentContact}</span>
+                  </div>
+                )}
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    📞 Apelurile se procesează secvențial. După finalizarea fiecărui apel, 
+                    informațiile complete vor fi recuperate automat din ElevenLabs și salvate în istoric.
+                  </p>
+                </div>
               </div>
             )}
 
@@ -265,9 +277,10 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
 
         {/* Status Info */}
         <div className="text-xs text-muted-foreground space-y-1">
-          <p>• Apelurile sunt procesate prin ElevenLabs API</p>
+          <p>• Apelurile batch se procesează secvențial (unul după altul)</p>
+          <p>• După finalizarea fiecărui apel, informațiile complete sunt recuperate automat</p>
+          <p>• Toate rezultatele sunt salvate în Analytics Hub cu transcript complet</p>
           <p>• Fiecare utilizator primește doar informațiile de la propriul agent</p>
-          <p>• Toate rezultatele sunt salvate automat în Analytics Hub</p>
         </div>
       </CardContent>
     </Card>

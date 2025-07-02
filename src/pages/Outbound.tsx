@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { Upload, Phone, Users, FileText, Loader2, Download } from 'lucide-react';
+import { Upload, Phone, Users, FileText, Loader2, Download, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useCallInitiation } from '@/hooks/useCallInitiation';
 import { useCallHistory } from '@/hooks/useCallHistory';
@@ -37,13 +37,14 @@ const Outbound = () => {
     isInitiating, 
     isProcessingBatch, 
     currentProgress, 
-    totalCalls 
+    totalCalls,
+    currentContact
   } = useCallInitiation({
     agentId,
     phoneNumber
   });
 
-  const { callHistory, isLoading: historyLoading } = useCallHistory();
+  const { callHistory, isLoading: historyLoading, refetch: refetchHistory } = useCallHistory();
 
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -117,7 +118,19 @@ const Outbound = () => {
       return;
     }
 
-    await initiateCall(agentId, phoneNumber, contactName || phoneNumber);
+    const conversationId = await initiateCall(agentId, phoneNumber, contactName || phoneNumber);
+    
+    if (conversationId) {
+      toast({
+        title: "Procesare",
+        description: "Apelul a fost inițiat. Informațiile complete se vor actualiza automat.",
+      });
+      
+      // Refresh history after a delay to show the new call
+      setTimeout(() => {
+        refetchHistory();
+      }, 2000);
+    }
   };
 
   const handleContactSelect = (contactId: string, checked: boolean) => {
@@ -150,6 +163,11 @@ const Outbound = () => {
     
     const contactsToProcess = contacts.filter(c => selectedContacts.has(c.id));
     await processBatchCalls(contactsToProcess, agentId);
+    
+    // Refresh history after batch processing
+    setTimeout(() => {
+      refetchHistory();
+    }, 5000);
   };
 
   const downloadTemplate = () => {
@@ -173,7 +191,7 @@ const Outbound = () => {
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="mb-8">
             <h1 className="text-2xl font-semibold text-gray-900 mb-1">Apeluri Outbound</h1>
-            <p className="text-gray-600 text-sm">Gestionați apelurile automate cu agenții AI</p>
+            <p className="text-gray-600 text-sm">Gestionați apelurile automate cu agenții AI - procesare secvențială</p>
           </div>
 
           <div className="mb-6">
@@ -328,12 +346,30 @@ const Outbound = () => {
                       </div>
 
                       {isProcessingBatch && (
-                        <div className="space-y-2 mb-4">
+                        <div className="space-y-3 mb-4">
                           <div className="flex items-center justify-between text-sm">
                             <span>Progres: {currentProgress} / {totalCalls}</span>
                             <span>{Math.round(progressPercentage)}%</span>
                           </div>
                           <Progress value={progressPercentage} className="h-2" />
+                          {currentContact && (
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Clock className="w-4 h-4" />
+                              <span>Se procesează: {currentContact}</span>
+                            </div>
+                          )}
+                          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <AlertCircle className="w-4 h-4 text-blue-600" />
+                              <p className="text-sm text-blue-800 font-medium">
+                                Procesare Secvențială Activă
+                              </p>
+                            </div>
+                            <p className="text-sm text-blue-700 mt-1">
+                              Apelurile se procesează unul după altul. După finalizarea fiecărui apel, 
+                              informațiile complete se recuperează automat din ElevenLabs.
+                            </p>
+                          </div>
                         </div>
                       )}
 
@@ -350,7 +386,7 @@ const Outbound = () => {
                         ) : (
                           <>
                             <Phone className="w-4 h-4 mr-2" />
-                            Procesează Apeluri ({selectedContacts.size} contacte)
+                            Procesează Secvențial ({selectedContacts.size} contacte)
                           </>
                         )}
                       </Button>
@@ -384,14 +420,27 @@ const Outbound = () => {
                               <p className="text-sm text-gray-600">{call.phone_number}</p>
                             </div>
                             <div className="text-right">
-                              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                                call.call_status === 'success' 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
-                                {call.call_status === 'success' ? 'Succes' : 'Eșuat'}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                {call.call_status === 'success' ? (
+                                  <CheckCircle className="w-4 h-4 text-green-600" />
+                                ) : (
+                                  <AlertCircle className="w-4 h-4 text-red-600" />
+                                )}
+                                <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                                  call.call_status === 'success' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : call.call_status === 'initiated'
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {call.call_status === 'success' ? 'Finalizat' : 
+                                   call.call_status === 'initiated' ? 'Inițiat' : 'Eșuat'}
+                                </span>
+                              </div>
                               <p className="text-xs text-gray-500 mt-1">{call.call_date}</p>
+                              {call.cost_usd > 0 && (
+                                <p className="text-xs text-gray-500">{call.cost_usd} credite</p>
+                              )}
                             </div>
                           </div>
                           {call.summary && (
