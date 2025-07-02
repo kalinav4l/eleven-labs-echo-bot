@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -52,20 +51,26 @@ export const useCallInitiation = ({
 
       if (error) {
         console.error('Error getting conversation details:', error);
-        return null;
+        return { error: error.message, status: 'api_error' };
+      }
+
+      // Check if the response contains an error from the edge function
+      if (data?.error) {
+        console.error('ElevenLabs API error:', data.error);
+        return { error: data.error, status: data.status || 'api_error' };
       }
 
       console.log('Retrieved conversation details:', data);
       return data;
     } catch (error) {
       console.error('Error in getConversationDetails:', error);
-      return null;
+      return { error: error.message, status: 'function_error' };
     }
   };
 
-  // Wait for call completion with strict monitoring using ElevenLabs statuses
+  // Wait for call completion with better error handling
   const waitForCallCompletion = async (conversationId: string, contactName: string): Promise<any> => {
-    const maxAttempts = 120; // 10 minutes max (120 * 5 seconds)
+    const maxAttempts = 60; // 5 minutes max (60 * 5 seconds)
     let attempts = 0;
     
     console.log(`Starting monitoring for ${contactName} with conversation ID: ${conversationId}`);
@@ -77,6 +82,20 @@ export const useCallInitiation = ({
         setCurrentCallStatus(`Verifică statusul apelului către ${contactName} (${attempts}/${maxAttempts})`);
         
         const conversationData = await getConversationDetails(conversationId);
+        
+        // Handle API errors gracefully
+        if (conversationData?.error) {
+          if (conversationData.status === 'not_found') {
+            console.log(`Conversation not found yet for ${contactName}, continuing...`);
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            continue;
+          } else {
+            console.error(`API error for ${contactName}:`, conversationData.error);
+            // Continue trying for API errors, but with longer delay
+            await new Promise(resolve => setTimeout(resolve, 10000));
+            continue;
+          }
+        }
         
         if (conversationData && conversationData.status) {
           const status = conversationData.status.toLowerCase();
@@ -145,18 +164,19 @@ export const useCallInitiation = ({
         
       } catch (error) {
         console.error(`Error monitoring ${contactName} on attempt ${attempts}:`, error);
-        attempts++;
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        
+        // Don't fail immediately on errors, continue trying
+        setCurrentCallStatus(`Eroare temporară pentru ${contactName}, se reîncearcă...`);
+        await new Promise(resolve => setTimeout(resolve, 10000));
       }
     }
 
     // Timeout reached
     console.log(`⏰ Monitoring timeout for ${contactName} after ${maxAttempts} attempts`);
-    setCurrentCallStatus(`Timeout pentru ${contactName} - salvare ultimele date disponibile...`);
+    setCurrentCallStatus(`Timeout pentru ${contactName} - se consideră finalizat`);
     
-    // Try to get final data one more time
-    const finalData = await getConversationDetails(conversationId);
-    return finalData || { status: 'timeout', error: 'monitoring_timeout' };
+    // Return timeout status
+    return { status: 'timeout', error: 'monitoring_timeout' };
   };
 
   // Save complete call data to history and analytics
@@ -164,29 +184,29 @@ export const useCallInitiation = ({
     try {
       console.log(`💾 Saving complete call data for ${contact.name}:`, conversationData);
       
-      // Extract all relevant information
-      const transcript = conversationData.transcript || 
-                        conversationData.conversation_transcript || 
-                        conversationData.messages?.map((m: any) => `${m.role}: ${m.content}`).join('\n') ||
+      // Extract all relevant information with better error handling
+      const transcript = conversationData?.transcript || 
+                        conversationData?.conversation_transcript || 
+                        conversationData?.messages?.map((m: any) => `${m.role}: ${m.content}`).join('\n') ||
                         '';
                         
-      const summary = conversationData.summary || 
-                     transcript.substring(0, 200) + (transcript.length > 200 ? '...' : '') ||
+      const summary = conversationData?.summary || 
+                     (transcript ? transcript.substring(0, 200) + (transcript.length > 200 ? '...' : '') : '') ||
                      `Apel către ${contact.name}`;
       
-      const cost = conversationData.cost_breakdown?.total_cost || 
-                  conversationData.cost || 
-                  conversationData.usage?.total_cost ||
+      const cost = conversationData?.cost_breakdown?.total_cost || 
+                  conversationData?.cost || 
+                  conversationData?.usage?.total_cost ||
                   0;
       
-      const duration = conversationData.duration_seconds || 
-                      conversationData.call_duration_seconds ||
-                      conversationData.duration ||
+      const duration = conversationData?.duration_seconds || 
+                      conversationData?.call_duration_seconds ||
+                      conversationData?.duration ||
                       0;
       
       // Determine final status
       let finalStatus = 'failed';
-      if (conversationData.status) {
+      if (conversationData?.status) {
         const status = conversationData.status.toLowerCase();
         if (status === 'done') {
           finalStatus = 'success';
@@ -224,7 +244,11 @@ export const useCallInitiation = ({
 
       if (insertError) {
         console.error(`❌ Error saving call data for ${contact.name}:`, insertError);
-        throw insertError;
+        toast({
+          title: "Eroare salvare",
+          description: `Nu s-au putut salva datele pentru ${contact.name}: ${insertError.message}`,
+          variant: "destructive",
+        });
       } else {
         console.log(`✅ Successfully saved call data for ${contact.name}:`, insertData);
         toast({
@@ -245,7 +269,7 @@ export const useCallInitiation = ({
     }
   };
 
-  // Process batch calls with strict sequential logic using ElevenLabs statuses
+  // Process batch calls with better error handling
   const processBatchCalls = useCallback(async (contacts: Contact[], targetAgentId: string) => {
     if (!targetAgentId || contacts.length === 0) {
       toast({
@@ -351,7 +375,7 @@ export const useCallInitiation = ({
           const finalStatus = finalConversationData?.status?.toLowerCase();
           let displayStatus: CallStatus['status'] = 'completed';
           
-          if (finalStatus === 'failed') {
+          if (finalStatus === 'failed' || finalStatus === 'timeout') {
             displayStatus = 'failed';
           }
           
@@ -381,11 +405,11 @@ export const useCallInitiation = ({
             status.contactId === contact.id 
               ? { ...status, status: 'failed', endTime: new Date() }
               : status
-        ));
+          ));
           
           toast({
             title: "Eroare critică",
-            description: `Eroare la procesarea lui ${contact.name}`,
+            description: `Eroare la procesarea apelului către ${contact.name}`,
             variant: "destructive",
           });
         }
