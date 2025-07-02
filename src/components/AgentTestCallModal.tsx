@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -23,7 +24,10 @@ export const AgentTestCallModal: React.FC<AgentTestCallModalProps> = ({
 }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   
-  const { initiateCall, isInitiating } = useCallInitiation();
+  const { initiateCall, isInitiating } = useCallInitiation({
+    agentId: agent.agent_id,
+    phoneNumber: phoneNumber
+  });
 
   const handleTestCall = async () => {
     if (!phoneNumber.trim()) return;

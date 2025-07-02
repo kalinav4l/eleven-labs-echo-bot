@@ -141,21 +141,6 @@ const Outbound = () => {
       // Aici ai adăuga logica similară cu `initiateAndMonitorSingleCall` pentru un singur număr
   }
 
-  // Convert callStatuses Record to array for BatchTab
-  const callStatusesArray = Object.entries(callStatuses).map(([contactId, status]) => {
-    const contact = contacts.find(c => c.id === contactId);
-    return {
-      contactId,
-      contactName: contact?.name || 'Contact',
-      status: status.status as 'waiting' | 'calling' | 'in-progress' | 'processing' | 'completed' | 'failed',
-      conversationId: undefined,
-      startTime: undefined,
-      endTime: undefined,
-      duration: undefined,
-      cost: undefined
-    };
-  });
-
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-white">
@@ -179,7 +164,7 @@ const Outbound = () => {
                 setPhoneNumber={setPhoneNumber}
                 handleSingleCall={handleSingleCall}
                 agentId={agentId}
-                isInitiating={false}
+                isInitiating={false} // Trebuie legat la starea de apel individual
               />
             </TabsContent>
 
@@ -196,8 +181,7 @@ const Outbound = () => {
                 isProcessingBatch={isProcessingBatch}
                 currentProgress={currentProgress}
                 totalCalls={totalCalls}
-                currentCallStatus={callStatuses[Object.keys(callStatuses)[0]]?.message || ''}
-                callStatuses={callStatusesArray}
+                callStatuses={callStatuses} // Pasează statusurile pentru a fi afișate
               />
             </TabsContent>
 
