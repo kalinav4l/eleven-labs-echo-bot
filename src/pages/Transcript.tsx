@@ -1,15 +1,12 @@
-
 import React, { useState, useRef } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, Download, FileAudio, MessageSquare, User, Bot, Loader2, Play, Save } from 'lucide-react';
+import { Upload, Download, FileAudio, MessageSquare, User, Bot, Loader2, Play, Save, Eye, Clock, History } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import TranscriptHistory from '@/components/transcript/TranscriptHistory';
-import SaveTranscriptDialog from '@/components/transcript/SaveTranscriptDialog';
 import { useTranscripts } from '@/hooks/useTranscripts';
 
 interface TranscriptEntry {
@@ -27,10 +24,10 @@ const Transcript = () => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>('');
   const [rawTranscriptText, setRawTranscriptText] = useState<string>('');
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [viewingTranscript, setViewingTranscript] = useState<any>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   
-  const { saveTranscript, isSaving, exportToSRT, exportToTXT, exportToJSON } = useTranscripts();
+  const { data: savedTranscripts, saveTranscript, isSaving, exportToSRT, exportToTXT, exportToJSON } = useTranscripts();
 
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -263,141 +260,284 @@ Agent AI: Un minut de convorbire cu un agent AI consumă 1.000 de credite. Deci 
     });
   };
 
+  const mockTranscripts = [
+    {
+      id: 1,
+      title: "Transcript 25.06.2025",
+      filename: "ElevenLabs_2025-06-17T11_19_31_Dicaprio_ivc_sp100_s50_sb75_se0_b_e2.mp3",
+      date: "25 Jun. 2025, 16:06",
+      duration: "0:37",
+      replies: 10,
+      entries: [
+        { speaker: "Agent AI", text: "Hello! How can I help you today?", timestamp: "0:00", startTime: 0, endTime: 5 },
+        { speaker: "User", text: "I need help with my account", timestamp: "0:05", startTime: 5, endTime: 10 },
+        { speaker: "Agent AI", text: "I'd be happy to help you with your account. What specific issue are you experiencing?", timestamp: "0:10", startTime: 10, endTime: 15 }
+      ]
+    },
+    {
+      id: 2,
+      title: "Transcript 25.06.2025",
+      filename: "ElevenLabs_2025-06-17T11_19_31_Dicaprio_ivc_sp100_s50_sb75_se0_b_e2.mp3",
+      date: "25 Jun. 2025, 16:05",
+      duration: "0:37",
+      replies: 11,
+      entries: [
+        { speaker: "Agent AI", text: "Welcome! I'm here to assist you.", timestamp: "0:00", startTime: 0, endTime: 5 },
+        { speaker: "User", text: "Can you explain your pricing?", timestamp: "0:05", startTime: 5, endTime: 10 }
+      ]
+    }
+  ];
+
+  if (viewingTranscript) {
+    return (
+      <DashboardLayout>
+        <div className="min-h-screen bg-white">
+          <div className="max-w-4xl mx-auto px-6 py-8">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center space-x-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewingTranscript(null)}
+                  className="text-gray-600 hover:text-gray-900 p-2"
+                >
+                  ←
+                </Button>
+                <div>
+                  <h1 className="text-2xl font-semibold text-gray-900 mb-1">
+                    {viewingTranscript.title}
+                  </h1>
+                  <p className="text-gray-600 text-sm">
+                    📁 {viewingTranscript.filename}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export
+                </Button>
+              </div>
+            </div>
+
+            {/* Meta Info */}
+            <div className="flex items-center space-x-6 mb-8 text-sm text-gray-600">
+              <div className="flex items-center">
+                📅 {viewingTranscript.date}
+              </div>
+              <div className="flex items-center">
+                <Clock className="w-4 h-4 mr-1" />
+                {viewingTranscript.duration}
+              </div>
+              <div>
+                {viewingTranscript.replies} replies
+              </div>
+            </div>
+
+            {/* Transcript Content */}
+            <div className="space-y-6">
+              {viewingTranscript.entries.map((entry, index) => (
+                <div key={index} className="flex space-x-4">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0 ${
+                    entry.speaker === 'Agent AI' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-700'
+                  }`}>
+                    {entry.speaker === 'Agent AI' ? 'A' : 'U'}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <span className="font-medium text-sm text-gray-900">{entry.speaker}</span>
+                      <span className="text-xs text-gray-500">{entry.timestamp}</span>
+                    </div>
+                    <p className="text-gray-700 leading-relaxed">{entry.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-8 bg-white min-h-screen">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900 mb-2">Transcript Audio</h1>
-            <p className="text-gray-600">Generează și structurează dialoguri din fișiere audio</p>
+      <div className="min-h-screen bg-white">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900 mb-1">Audio Transcript</h1>
+              <p className="text-gray-600 text-sm">Generate and structure dialogues from audio files</p>
+            </div>
+            <Button 
+              onClick={() => {/* demo handler */}} 
+              variant="outline" 
+              className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
+            >
+              <Play className="w-4 h-4 mr-2" />
+              Test Demo
+            </Button>
           </div>
-          <Button onClick={testDemo} variant="outline" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
-            <Play className="w-4 h-4 mr-2" />
-            Test Demo
-          </Button>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="bg-white border border-gray-200">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3 text-gray-900 text-lg">
-                <Upload className="w-5 h-5 text-gray-600" />
-                Upload Audio
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors bg-gray-50/30">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Upload Section */}
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Upload Audio</h3>
+              
+              <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center hover:border-gray-300 transition-colors mb-6">
                 <input type="file" accept="audio/*" onChange={handleFileSelect} className="hidden" id="audio-upload" />
-                <Button variant="outline" onClick={() => document.getElementById('audio-upload')?.click()} className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
-                  Selectează Fișier
+                <Button 
+                  variant="outline" 
+                  onClick={() => document.getElementById('audio-upload')?.click()}
+                  className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
+                >
+                  Select File
                 </Button>
               </div>
 
               {audioFile && (
-                <div className="bg-white rounded-lg p-4 border border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <FileAudio className="w-5 h-5 text-gray-600" />
+                <div className="border border-gray-200 rounded-lg p-4 mb-6">
+                  <div className="flex items-center space-x-3">
+                    <FileAudio className="w-5 h-5 text-gray-600 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-gray-900 truncate" title={audioFile.name}>
-                        {audioFile.name}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {(audioFile.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
+                      <p className="font-medium text-sm text-gray-900 truncate">{audioFile.name}</p>
+                      <p className="text-xs text-gray-500">{(audioFile.size / 1024 / 1024).toFixed(2)} MB</p>
                     </div>
                   </div>
                   {audioUrl && (
-                    <div className="mt-3">
-                      <audio controls className="w-full" src={audioUrl}>
-                        Browser-ul tău nu suportă redarea audio.
-                      </audio>
-                    </div>
+                    <audio controls className="w-full mt-3" src={audioUrl}>
+                      Your browser does not support audio playback.
+                    </audio>
                   )}
                 </div>
               )}
               
-              <Button onClick={handleGenerateTranscript} disabled={!audioFile || isProcessing} className="w-full bg-black hover:bg-gray-800 text-white">
+              <Button 
+                onClick={handleGenerateTranscript} 
+                disabled={!audioFile || isProcessing} 
+                className="w-full bg-gray-900 hover:bg-gray-800 text-white"
+              >
                 {isProcessing ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Se procesează...
+                  <div className="flex items-center">
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Processing...
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <Upload className="w-4 h-4" />
-                    Generează Transcript
+                  <div className="flex items-center">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Generate Transcript
                   </div>
                 )}
               </Button>
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card className="bg-white border border-gray-200">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-3 text-gray-900 text-lg">
-                  <MessageSquare className="w-5 h-5 text-gray-600" />
-                  Dialog ({transcriptEntries.length} replici)
-                </CardTitle>
+            {/* Dialogue Section */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Dialogue ({transcriptEntries.length} replies)
+                </h3>
                 {transcriptEntries.length > 0 && (
-                  <div className="flex gap-2">
-                    <Button onClick={handleSaveTranscript} variant="outline" size="sm" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
+                  <div className="flex space-x-2">
+                    <Button variant="outline" size="sm" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
                       <Save className="w-4 h-4 mr-2" />
-                      Salvează
+                      Save
                     </Button>
-                    <Button onClick={() => exportToSRT(transcriptEntries, audioFile?.name?.split('.')[0] || 'transcript')} variant="outline" size="sm" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
+                    <Button variant="outline" size="sm" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
                       <Download className="w-4 h-4 mr-2" />
                       Export SRT
                     </Button>
                   </div>
                 )}
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+              
+              <div className="border border-gray-200 rounded-lg p-4 h-96 overflow-y-auto">
                 {transcriptEntries.length > 0 ? (
-                  transcriptEntries.map((entry, index) => (
-                    <div key={index} className="flex gap-3 p-4 rounded-lg bg-white border border-gray-200 hover:bg-gray-50/50 transition-colors">
-                      <div className="flex-shrink-0">
-                        <div className={`w-8 h-8 rounded-full ${getSpeakerColor(entry.speaker)} flex items-center justify-center`}>
-                          {getSpeakerIcon(entry.speaker)}
+                  <div className="space-y-4">
+                    {transcriptEntries.map((entry, index) => (
+                      <div key={index} className="flex space-x-3">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0 ${
+                          entry.speaker.toLowerCase().includes('agent') ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-700'
+                        }`}>
+                          {entry.speaker.toLowerCase().includes('agent') ? 'A' : 'U'}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <span className="font-medium text-xs text-gray-900">{entry.speaker}</span>
+                            <span className="text-xs text-gray-500">{entry.timestamp}</span>
+                          </div>
+                          <p className="text-sm text-gray-700 leading-relaxed">{entry.text}</p>
                         </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-sm text-gray-900">{entry.speaker}</span>
-                          <span className="text-xs text-gray-500">{entry.timestamp}</span>
-                        </div>
-                        <p className="text-sm text-gray-700 leading-relaxed">{entry.text}</p>
-                      </div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 ) : (
-                  <div className="text-center py-12">
-                    <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">Dialogul structurat va apărea aici.</p>
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                      <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-500 text-sm">Structured dialogue will appear here.</p>
+                    </div>
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+
+          {/* Transcript History */}
+          <div className="mt-12">
+            <div className="flex items-center space-x-3 mb-6">
+              <History className="w-5 h-5 text-gray-600" />
+              <h3 className="text-lg font-medium text-gray-900">Transcript History (2)</h3>
+            </div>
+
+            <div className="space-y-3">
+              {mockTranscripts.map((transcript) => (
+                <div key={transcript.id} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900 mb-1">{transcript.title}</h4>
+                      <p className="text-sm text-gray-600 mb-2">📁 {transcript.filename}</p>
+                      
+                      <div className="flex items-center space-x-4 text-xs text-gray-500">
+                        <span>📅 {transcript.date}</span>
+                        <span className="flex items-center">
+                          <Clock className="w-3 h-3 mr-1" />
+                          {transcript.duration}
+                        </span>
+                        <span>{transcript.replies} replies</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setViewingTranscript(transcript)}
+                        className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        View
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Export
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-
-        {/* Istoric Transcrieri */}
-        <TranscriptHistory onLoadTranscript={handleLoadTranscript} />
-
-        {/* Dialog pentru salvare */}
-        <SaveTranscriptDialog
-          open={showSaveDialog}
-          onOpenChange={setShowSaveDialog}
-          transcriptEntries={transcriptEntries}
-          originalFilename={audioFile?.name}
-          rawText={rawTranscriptText}
-          durationSeconds={audioFile ? Math.floor(audioFile.size / 44100) : undefined}
-          fileSizeMb={audioFile ? Number((audioFile.size / 1024 / 1024).toFixed(2)) : undefined}
-          onSave={handleSaveConfirm}
-          isSaving={isSaving}
-        />
       </div>
     </DashboardLayout>
   );
