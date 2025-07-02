@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -337,7 +336,10 @@ const AgentEdit = () => {
             </div>
           </div>
           
-          <Button onClick={() => setIsTestModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 w-full lg:w-auto">
+          <Button 
+            onClick={() => setIsTestModalOpen(true)} 
+            className="bg-accent text-white hover:bg-accent/90 border border-accent/20 shadow-md flex items-center gap-2 w-full lg:w-auto transition-all duration-200"
+          >
             <TestTube className="w-4 h-4" />
             Testează Agent
           </Button>
