@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -65,8 +64,9 @@ export const useCallInitiation = ({
 
   // Function to wait for call completion with real-time status updates
   const waitForCallCompletion = async (conversationId: string, contactName: string): Promise<any> => {
-    const maxAttempts = 120; // 10 minutes max wait (5 seconds * 120)
+    const maxAttempts = 60; // 5 minutes max wait (5 seconds * 60)
     let attempts = 0;
+    let consecutiveErrors = 0;
     
     while (attempts < maxAttempts) {
       try {
@@ -76,7 +76,8 @@ export const useCallInitiation = ({
         const callData = await checkCallStatus(conversationId);
         
         if (callData) {
-          const status = callData.state || callData.status;
+          consecutiveErrors = 0; // Reset error count on successful response
+          const status = callData.state || callData.status || 'unknown';
           console.log(`Call status for ${contactName}:`, status);
           
           // Update current call status display
@@ -89,22 +90,35 @@ export const useCallInitiation = ({
               break;
             case 'in_progress':
             case 'ongoing':
+            case 'active':
               setCurrentCallStatus(`În conversație cu ${contactName}`);
               break;
             case 'ended':
             case 'completed':
             case 'finished':
+            case 'done':
               setCurrentCallStatus(`Apel finalizat cu ${contactName}`);
               console.log('Call completed, returning data:', callData);
               return callData;
             case 'failed':
             case 'no_answer':
             case 'busy':
+            case 'rejected':
+            case 'cancelled':
               setCurrentCallStatus(`Apel eșuat către ${contactName}: ${status}`);
               console.log('Call failed, returning data:', callData);
               return callData;
             default:
-              setCurrentCallStatus(`Status necunoscut pentru ${contactName}: ${status}`);
+              setCurrentCallStatus(`Status: ${status} pentru ${contactName}`);
+          }
+        } else {
+          consecutiveErrors++;
+          console.log(`No data received for ${contactName}, consecutive errors: ${consecutiveErrors}`);
+          
+          // If we have too many consecutive errors, assume call is done
+          if (consecutiveErrors >= 5) {
+            setCurrentCallStatus(`Timeout pentru apelul către ${contactName} - presupunem că s-a finalizat`);
+            return { state: 'ended', error: 'timeout' };
           }
         }
 
@@ -112,7 +126,16 @@ export const useCallInitiation = ({
         await new Promise(resolve => setTimeout(resolve, 5000));
         attempts++;
       } catch (error) {
+        consecutiveErrors++;
         console.error('Error in waitForCallCompletion:', error);
+        
+        // If we have too many consecutive errors, break the loop
+        if (consecutiveErrors >= 5) {
+          console.log('Too many consecutive errors, assuming call ended');
+          setCurrentCallStatus(`Eroare de comunicare pentru ${contactName} - presupunem că s-a finalizat`);
+          return { state: 'ended', error: 'communication_error' };
+        }
+        
         attempts++;
         await new Promise(resolve => setTimeout(resolve, 5000));
       }
@@ -120,7 +143,7 @@ export const useCallInitiation = ({
 
     console.log('Call completion timeout reached for', contactName);
     setCurrentCallStatus(`Timeout pentru apelul către ${contactName}`);
-    return null;
+    return { state: 'ended', error: 'timeout' };
   };
 
   // Function to save complete call information
@@ -132,10 +155,10 @@ export const useCallInitiation = ({
       
       if (callData && callHistoryId) {
         // Extract relevant information from ElevenLabs response
-        const summary = callData.summary || `Apel finalizat către ${contactInfo.name}`;
+        const summary = callData.summary || callData.transcript || `Apel finalizat către ${contactInfo.name}`;
         const cost = callData.cost_details?.total_cost || callData.cost || 0;
-        const duration = callData.duration_seconds || 0;
-        const finalStatus = callData.state === 'ended' || callData.state === 'completed' ? 'success' : 'failed';
+        const duration = callData.duration_seconds || callData.duration || 0;
+        const finalStatus = (callData.state === 'ended' || callData.state === 'completed' || callData.state === 'done') && !callData.error ? 'success' : 'failed';
         
         // Update the call history record with complete information
         const { error: updateError } = await supabase
@@ -301,14 +324,14 @@ export const useCallInitiation = ({
             
             // Update final status
             if (completeCallData) {
-              const finalStatus = completeCallData.state === 'ended' || completeCallData.state === 'completed' ? 'completed' : 'failed';
+              const finalStatus = (completeCallData.state === 'ended' || completeCallData.state === 'completed' || completeCallData.state === 'done') && !completeCallData.error ? 'completed' : 'failed';
               setCallStatuses(prev => prev.map(status => 
                 status.contactId === contact.id 
                   ? { 
                       ...status, 
                       status: finalStatus, 
                       endTime: new Date(),
-                      duration: completeCallData.duration_seconds,
+                      duration: completeCallData.duration_seconds || completeCallData.duration,
                       cost: completeCallData.cost_details?.total_cost || completeCallData.cost
                     }
                   : status
@@ -316,7 +339,7 @@ export const useCallInitiation = ({
               
               toast({
                 title: "Apel finalizat",
-                description: `Apelul către ${contact.name} s-a finalizat cu succes`,
+                description: `Apelul către ${contact.name} s-a finalizat`,
               });
             } else {
               setCallStatuses(prev => prev.map(status => 
@@ -360,7 +383,7 @@ export const useCallInitiation = ({
       setCurrentCallStatus('Procesare batch completă');
       toast({
         title: "Procesare completă",
-        description: `Toate cele ${contacts.length} contacte au fost procesate cu informații complete.`,
+        description: `Toate cele ${contacts.length} contacte au fost procesate.`,
       });
 
     } catch (error) {

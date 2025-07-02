@@ -7,7 +7,7 @@ interface CallHistoryRecord {
   id: string;
   phone_number: string;
   contact_name: string;
-  call_status: 'success' | 'failed' | 'busy' | 'no-answer' | 'unknown';
+  call_status: 'success' | 'failed' | 'busy' | 'no-answer' | 'unknown' | 'initiated';
   summary: string;
   call_date: string;
   cost_usd: number;
