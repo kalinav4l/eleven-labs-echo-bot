@@ -1,6 +1,9 @@
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { useAuth } from '@/components/AuthContext';
+import { ElevenLabsController } from '@/controllers/ElevenLabsController';
 
 interface DeleteAgentFromElevenLabsParams {
   agentId: string;
@@ -12,19 +15,12 @@ interface UpdateAgentStatusParams {
 }
 
 interface DuplicateAgentParams {
-  agent: {
-    id: string;
-    agent_id: string;
-    name: string;
-    description?: string;
-    system_prompt?: string;
-    voice_id?: string;
-    user_id: string;
-  };
+  agent: any;
 }
 
 export const useAgentOperations = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Delete agent from ElevenLabs using Supabase Edge Function
   const deleteAgentFromElevenLabs = async ({ agentId }: DeleteAgentFromElevenLabsParams) => {
@@ -78,54 +74,49 @@ export const useAgentOperations = () => {
     }
   };
 
-  const duplicateAgentInElevenLabs = async ({ agent }: DuplicateAgentParams) => {
-    console.log('Duplicating agent in ElevenLabs via Supabase Edge Function:', agent.agent_id);
-    
+  const duplicateAgentInElevenLabs = async (originalAgent: any) => {
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
     try {
-      const { data, error } = await supabase.functions.invoke('get-elevenlabs-agent', {
-        body: { agentId: agent.agent_id }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      // Create new agent with original agent data
-      const newAgentData = {
-        ...data,
-        name: `${agent.name} - Copie`,
+      // Get the original agent data from ElevenLabs
+      const originalAgentData = await ElevenLabsController.getAgent(originalAgent.agent_id);
+      
+      // Create new agent with modified name
+      const duplicatedName = `${originalAgent.name} (Copie)`;
+      
+      const createAgentRequest = {
+        name: duplicatedName,
+        conversation_config: originalAgentData.conversation_config
       };
 
-      const { data: createdAgent, error: createError } = await supabase.functions.invoke('create-elevenlabs-agent', {
-        body: newAgentData
-      });
+      console.log('Creating duplicated agent:', createAgentRequest);
+      const newAgentResponse = await ElevenLabsController.createAgent(createAgentRequest);
 
-      if (createError) {
-        throw createError;
-      }
-
-      // Save to database with user_id
-      const { data: dbAgent, error: dbError } = await supabase
+      // Save the duplicated agent to database
+      const { data: newAgentRecord, error: dbError } = await supabase
         .from('kalina_agents')
         .insert({
-          agent_id: createdAgent.agent_id,
-          elevenlabs_agent_id: createdAgent.agent_id,
-          name: `${agent.name} - Copie`,
-          description: agent.description || null,
-          system_prompt: agent.system_prompt || null,
-          voice_id: agent.voice_id || null,
-          provider: 'elevenlabs',
-          is_active: true,
-          user_id: agent.user_id
+          agent_id: newAgentResponse.agent_id,
+          user_id: user.id,
+          name: duplicatedName,
+          description: originalAgent.description ? `${originalAgent.description} (Copie)` : null,
+          system_prompt: originalAgent.system_prompt,
+          voice_id: originalAgent.voice_id,
+          provider: originalAgent.provider,
+          elevenlabs_agent_id: newAgentResponse.agent_id,
+          is_active: true
         })
         .select()
         .single();
 
       if (dbError) {
+        console.error('Error saving duplicated agent to database:', dbError);
         throw dbError;
       }
 
-      return dbAgent;
+      return newAgentRecord;
     } catch (error) {
       console.error('Error duplicating agent:', error);
       throw error;
@@ -202,11 +193,11 @@ export const useAgentOperations = () => {
 
   const duplicateAgentMutation = useMutation({
     mutationFn: duplicateAgentInElevenLabs,
-    onSuccess: () => {
+    onSuccess: (newAgent) => {
       queryClient.invalidateQueries({ queryKey: ['user-agents'] });
       toast({
         title: "Agent duplicat",
-        description: "Agentul a fost duplicat cu succes",
+        description: `Agentul "${newAgent.name}" a fost creat cu succes`,
       });
     },
     onError: (error) => {

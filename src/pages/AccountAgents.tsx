@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
@@ -29,7 +28,7 @@ const AccountAgents = () => {
   };
 
   const handleDuplicateAgent = (agent: any) => {
-    duplicateAgent({ agent });
+    duplicateAgent(agent);
   };
 
   const copyWidgetCode = (agentId: string, agentName: string) => {
@@ -60,7 +59,7 @@ const AccountAgents = () => {
       <div className="p-6">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-black mb-2">Agenții Tăi</h1>
+            <h1 className="text-3xl font-bold text-black mb-2">Agenți</h1>
             <p className="text-gray-600">Gestionează și testează agenții tăi AI</p>
           </div>
           <Link to="/account/agent-consultant">
@@ -97,7 +96,7 @@ const AccountAgents = () => {
                         <DropdownMenuContent>
                           <DropdownMenuItem onClick={() => handleDuplicateAgent(agent)} disabled={isDuplicating}>
                             <Files className="w-4 h-4 mr-2" />
-                            {isDuplicating ? 'Se duplică...' : 'Duplică'}
+                            {isDuplicating ? 'Se duplică...' : 'Duplică Agent'}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

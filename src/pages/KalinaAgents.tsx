@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -34,7 +33,7 @@ const KalinaAgents = () => {
   const [testCallAgent, setTestCallAgent] = useState<any>(null);
   const navigate = useNavigate();
 
-  // Filter agents based on search query - only user's agents
+  // Filter agents based on search query
   const filteredAgents = useMemo(() => {
     if (!userAgents) return [];
     if (!searchQuery.trim()) return userAgents;
@@ -68,7 +67,7 @@ const KalinaAgents = () => {
   };
 
   const handleDuplicateAgent = (agent: any) => {
-    duplicateAgent({ agent });
+    duplicateAgent(agent);
   };
 
   const handleEditAgent = (agentId: string) => {
@@ -97,7 +96,7 @@ const KalinaAgents = () => {
     <div className="p-6 space-y-6 my-[60px]">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Agenții Tăi</h1>
+          <h1 className="text-3xl font-bold text-foreground">Agenții Kalina</h1>
           <p className="text-muted-foreground">Gestionează agenții tăi AI pentru diverse scenarii</p>
         </div>
         <Link to="/account/agent-consultant">
@@ -143,6 +142,11 @@ const KalinaAgents = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="w-56">
+                        <DropdownMenuItem onClick={() => handleDuplicateAgent(agent)} disabled={isDuplicating}>
+                          <Files className="w-4 h-4 mr-2" />
+                          {isDuplicating ? 'Se duplică...' : 'Duplică'}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleToggleAgentStatus(agent)}>
                           {agent.is_active ? (
                               <>
@@ -155,10 +159,6 @@ const KalinaAgents = () => {
                                 Activează
                               </>
                           )}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDuplicateAgent(agent)} disabled={isDuplicating}>
-                          <Files className="w-4 h-4 mr-2" />
-                          {isDuplicating ? 'Se duplică...' : 'Duplică'}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
