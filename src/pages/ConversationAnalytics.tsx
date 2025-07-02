@@ -118,11 +118,11 @@ const ConversationAnalytics = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'success':
-        return 'bg-[#0A5B4C]/10 text-[#0A5B4C] border-[#0A5B4C]/20';
+        return 'bg-green-100 text-green-800';
       case 'failed':
-        return 'bg-red-50 text-red-700 border-red-200';
+        return 'bg-red-100 text-red-800';
       default:
-        return 'bg-gray-50 text-gray-700 border-gray-200';
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -143,7 +143,7 @@ const ConversationAnalytics = () => {
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0A5B4C] mx-auto"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto"></div>
             <p className="mt-2 text-gray-600">Se încarcă conversația...</p>
           </div>
         </div>
@@ -153,88 +153,83 @@ const ConversationAnalytics = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        {/* Header with ElevenLabs-style navigation */}
-        <div className="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-20">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                {conversationId && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate('/account/conversation-analytics')}
-                    className="mr-2"
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Înapoi
-                  </Button>
-                )}
-                <div className="w-12 h-12 bg-gradient-to-r from-[#0A5B4C] to-[#0d6b56] rounded-xl flex items-center justify-center">
-                  <Activity className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">
-                    {conversationId ? 'Analiza Conversației' : 'Analytics Hub'}
-                  </h1>
-                  <p className="text-gray-600">
-                    {conversationId && elevenLabsData ? 
-                      `Conversație ElevenLabs ID: ${conversationId}` :
-                      'Real-time conversation insights'
-                    }
-                  </p>
-                </div>
-              </div>
-              
-              {!conversationId && (
-                <div className="flex items-center space-x-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input 
-                      placeholder="Search conversations..." 
-                      value={searchTerm} 
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 w-80 bg-white/70 border-gray-200 focus:bg-white" 
-                    />
-                  </div>
-                  
-                  <Select value={selectedAgent} onValueChange={setSelectedAgent}>
-                    <SelectTrigger className="w-32 bg-white/70">
-                      <SelectValue placeholder="All Agents" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Agents</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+      <div className="p-6 space-y-6">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            {conversationId && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/account/conversation-analytics')}
+                className="mr-2"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Înapoi
+              </Button>
+            )}
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                {conversationId ? 'Analiza Conversației' : 'Analiză Conversații'}
+              </h1>
+              <p className="text-gray-600 text-sm mt-1">
+                {conversationId && elevenLabsData ? 
+                  `Conversație ElevenLabs ID: ${conversationId}` :
+                  'Analizează conversațiile și performanța agenților'
+                }
+              </p>
             </div>
           </div>
+          
+          {!conversationId && (
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input 
+                  placeholder="Caută conversații..." 
+                  value={searchTerm} 
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 w-80 bg-white" 
+                />
+              </div>
+              
+              <Select value={selectedAgent} onValueChange={setSelectedAgent}>
+                <SelectTrigger className="w-32 bg-white">
+                  <SelectValue placeholder="Toți Agenții" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toți Agenții</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
-        {/* Main content with ElevenLabs-style layout */}
-        <div className="flex h-[calc(100vh-120px)]">
-          {/* Left Panel - Call List (ElevenLabs style) */}
-          <div className="w-1/2 border-r border-gray-200/50 bg-white/50 backdrop-blur-xl">
-            {/* Stats Cards */}
-            <div className="p-4 grid grid-cols-3 gap-3 border-b border-gray-200/50">
-              <div className="futuristic-card p-3 text-center">
-                <div className="text-2xl font-bold text-[#0A5B4C]">{filteredCalls.length}</div>
-                <div className="text-xs text-gray-600">Total Calls</div>
-              </div>
-              <div className="futuristic-card p-3 text-center">
-                <div className="text-2xl font-bold text-[#0A5B4C]">
-                  {Math.round(filteredCalls.filter(c => c.call_status === 'success').length / filteredCalls.length * 100 || 0)}%
-                </div>
-                <div className="text-xs text-gray-600">Success Rate</div>
-              </div>
-              <div className="futuristic-card p-3 text-center">
-                <div className="text-2xl font-bold text-[#0A5B4C]">4.8</div>
-                <div className="text-xs text-gray-600">Avg Rating</div>
-              </div>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-3 gap-6">
+          <Card className="p-4 text-center">
+            <div className="text-2xl font-bold text-gray-900">{filteredCalls.length}</div>
+            <div className="text-sm text-gray-600">Total Apeluri</div>
+          </Card>
+          <Card className="p-4 text-center">
+            <div className="text-2xl font-bold text-gray-900">
+              {Math.round(filteredCalls.filter(c => c.call_status === 'success').length / filteredCalls.length * 100 || 0)}%
             </div>
+            <div className="text-sm text-gray-600">Rata de Succes</div>
+          </Card>
+          <Card className="p-4 text-center">
+            <div className="text-2xl font-bold text-gray-900">4.8</div>
+            <div className="text-sm text-gray-600">Rating Mediu</div>
+          </Card>
+        </div>
 
-            {/* Call List - ElevenLabs style */}
+        {/* Main Content */}
+        <div className="flex h-[calc(100vh-320px)] gap-6">
+          {/* Left Panel - Call List */}
+          <div className="w-1/2 bg-white rounded-lg overflow-hidden">
+            <div className="p-4 border-b border-gray-100">
+              <h3 className="font-semibold text-gray-900">Conversații</h3>
+            </div>
+            
             <div className="overflow-y-auto h-full">
               {filteredCalls.map((call, index) => {
                 const dateInfo = formatDate(call.call_date);
@@ -244,31 +239,28 @@ const ConversationAnalytics = () => {
                 return (
                   <div 
                     key={call.id} 
-                    className={`p-4 border-b border-gray-100/50 cursor-pointer hover:bg-white/70 transition-all duration-200 ${
-                      isSelected ? 'bg-[#0A5B4C]/5 border-l-4 border-l-[#0A5B4C]' : ''
+                    className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
+                      isSelected ? 'bg-gray-50' : ''
                     }`}
                     onClick={() => handleCallClick(call)}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-r from-[#0A5B4C] to-[#0d6b56] rounded-full flex items-center justify-center">
-                          <Phone className="w-5 h-5 text-white" />
+                        <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                          <Phone className="w-5 h-5 text-gray-600" />
                         </div>
                         <div>
-                          <div className="font-semibold text-gray-900">{call.phone_number}</div>
-                          <div className="text-sm text-gray-600">{dateInfo.date} • {dateInfo.time}</div>
-                          {call.elevenlabs_history_id && (
-                            <div className="text-xs text-blue-600">ElevenLabs: {call.elevenlabs_history_id}</div>
-                          )}
+                          <div className="font-medium text-gray-900">{call.phone_number}</div>
+                          <div className="text-sm text-gray-500">{dateInfo.date} • {dateInfo.time}</div>
                         </div>
                       </div>
-                      <Badge className={`${getStatusColor(call.call_status)} border`}>
-                        {call.call_status === 'success' ? 'Success' : 'Failed'}
+                      <Badge className={getStatusColor(call.call_status)}>
+                        {call.call_status === 'success' ? 'Succes' : 'Eșuat'}
                       </Badge>
                     </div>
                     
                     <p className="text-sm text-gray-700 line-clamp-2 mb-2">
-                      {call.summary || 'No summary available'}
+                      {call.summary || 'Fără rezumat disponibil'}
                     </p>
                     
                     <div className="flex items-center justify-between text-xs text-gray-500">
@@ -287,21 +279,21 @@ const ConversationAnalytics = () => {
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Phone className="w-8 h-8 text-gray-400" />
                   </div>
-                  <p className="text-gray-500">No conversations found</p>
+                  <p className="text-gray-500">Nu s-au găsit conversații</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Right Panel - Analytics (ElevenLabs style) */}
-          <div className="w-1/2 bg-white/30 backdrop-blur-xl">
+          {/* Right Panel - Analytics */}
+          <div className="w-1/2 bg-white rounded-lg overflow-hidden">
             {selectedCall ? (
               <div className="h-full flex flex-col">
                 {/* Header */}
-                <div className="p-6 border-b border-gray-200/50">
+                <div className="p-6 border-b border-gray-100">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">
-                      Conversation Analysis
+                      Analiza Conversației
                     </h3>
                     <Button variant="ghost" size="sm" onClick={() => {
                       setSelectedCall(null);
@@ -314,43 +306,43 @@ const ConversationAnalytics = () => {
                   {/* Quick Stats */}
                   <div className="grid grid-cols-3 gap-4">
                     <div className="text-center">
-                      <div className="text-xl font-bold text-[#0A5B4C]">{selectedConversation.satisfaction}%</div>
-                      <div className="text-xs text-gray-600">Satisfaction</div>
+                      <div className="text-xl font-bold text-gray-900">{selectedConversation.satisfaction}%</div>
+                      <div className="text-xs text-gray-600">Satisfacție</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-xl font-bold text-[#0A5B4C]">{selectedConversation.duration}</div>
-                      <div className="text-xs text-gray-600">Duration</div>
+                      <div className="text-xl font-bold text-gray-900">{selectedConversation.duration}</div>
+                      <div className="text-xs text-gray-600">Durată</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-xl font-bold text-[#0A5B4C]">{selectedConversation.sentiment}</div>
+                      <div className="text-xl font-bold text-gray-900">{selectedConversation.sentiment}</div>
                       <div className="text-xs text-gray-600">Sentiment</div>
                     </div>
                   </div>
 
                   {/* ElevenLabs Data Display */}
                   {elevenLabsData && (
-                    <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <div className="text-sm font-medium text-blue-900 mb-2">ElevenLabs Data</div>
+                    <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                      <div className="text-sm font-medium text-blue-900 mb-2">Date ElevenLabs</div>
                       <div className="text-xs text-blue-700 space-y-1">
                         {elevenLabsData.history_item_id && <div>ID: {elevenLabsData.history_item_id}</div>}
-                        {elevenLabsData.date_unix && <div>Date: {new Date(elevenLabsData.date_unix * 1000).toLocaleString()}</div>}
+                        {elevenLabsData.date_unix && <div>Data: {new Date(elevenLabsData.date_unix * 1000).toLocaleString()}</div>}
                         {elevenLabsData.character_count_change_from && (
-                          <div>Characters: {elevenLabsData.character_count_change_from} → {elevenLabsData.character_count_change_to}</div>
+                          <div>Caractere: {elevenLabsData.character_count_change_from} → {elevenLabsData.character_count_change_to}</div>
                         )}
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* Audio Waveform - ElevenLabs style */}
-                <div className="p-6 border-b border-gray-200/50">
-                  <div className="bg-gradient-to-r from-gray-100 to-gray-200 rounded-xl p-6 mb-4">
+                {/* Audio Waveform */}
+                <div className="p-6 border-b border-gray-100">
+                  <div className="bg-gray-100 rounded-lg p-6 mb-4">
                     <div className="flex items-center justify-center h-16">
                       <div className="flex items-center space-x-1 h-full">
                         {Array.from({ length: 40 }, (_, i) => (
                           <div 
                             key={i} 
-                            className="bg-[#0A5B4C] w-1 rounded-full transition-all duration-300 hover:bg-[#0d6b56]"
+                            className="bg-black w-1 rounded-full transition-all duration-300 hover:bg-gray-700"
                             style={{ height: `${Math.random() * 60 + 20}%` }}
                           />
                         ))}
@@ -362,34 +354,34 @@ const ConversationAnalytics = () => {
                     <div className="flex items-center space-x-3">
                       <Button 
                         size="sm" 
-                        className="rounded-full w-10 h-10 p-0 bg-[#0A5B4C] hover:bg-[#0d6b56]"
+                        className="rounded-full w-10 h-10 p-0"
                         onClick={() => setIsPlaying(!isPlaying)}
                       >
                         {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                       </Button>
                       <div className="flex items-center space-x-2 text-sm text-gray-600">
                         <Headphones className="w-4 h-4" />
-                        <span>HD Quality</span>
+                        <span>Calitate HD</span>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="text-[#0A5B4C]">
+                    <Button variant="ghost" size="sm">
                       <Download className="w-4 h-4 mr-2" />
                       Export
                     </Button>
                   </div>
                 </div>
 
-                {/* Content Tabs - ElevenLabs style */}
+                {/* Content Tabs */}
                 <Tabs defaultValue="transcript" className="flex-1 flex flex-col">
-                  <TabsList className="mx-6 mt-4 grid w-auto grid-cols-3 bg-gray-100/80">
-                    <TabsTrigger value="transcript" className="data-[state=active]:bg-[#0A5B4C] data-[state=active]:text-white">
-                      Transcript
+                  <TabsList className="mx-6 mt-4 grid w-auto grid-cols-3">
+                    <TabsTrigger value="transcript">
+                      Transcriere
                     </TabsTrigger>
-                    <TabsTrigger value="insights" className="data-[state=active]:bg-[#0A5B4C] data-[state=active]:text-white">
-                      AI Insights
+                    <TabsTrigger value="insights">
+                      Insights AI
                     </TabsTrigger>
-                    <TabsTrigger value="metrics" className="data-[state=active]:bg-[#0A5B4C] data-[state=active]:text-white">
-                      Metrics
+                    <TabsTrigger value="metrics">
+                      Metrici
                     </TabsTrigger>
                   </TabsList>
 
@@ -398,7 +390,7 @@ const ConversationAnalytics = () => {
                       {selectedConversation.transcript.map((message, index) => (
                         <div key={index} className="flex space-x-3 group">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
-                            message.speaker === 'Kalina' ? 'bg-[#0A5B4C] text-white' : 'bg-gray-200 text-gray-700'
+                            message.speaker === 'Kalina' ? 'bg-black text-white' : 'bg-gray-200 text-gray-700'
                           }`}>
                             {message.speaker === 'Kalina' ? 'K' : 'C'}
                           </div>
@@ -419,75 +411,75 @@ const ConversationAnalytics = () => {
 
                   <TabsContent value="insights" className="flex-1 px-6 pb-6 overflow-y-auto">
                     <div className="space-y-4 mt-4">
-                      <div className="futuristic-card p-4">
+                      <Card className="p-4">
                         <div className="flex items-center mb-3">
-                          <Zap className="w-5 h-5 text-[#0A5B4C] mr-2" />
-                          <h4 className="font-semibold text-gray-900">Key Insights</h4>
+                          <Zap className="w-5 h-5 text-black mr-2" />
+                          <h4 className="font-semibold text-gray-900">Insights Cheie</h4>
                         </div>
                         <ul className="space-y-2 text-sm text-gray-700">
-                          <li>• High engagement throughout conversation</li>
-                          <li>• Client showed interest in premium features</li>
-                          <li>• Positive sentiment maintained</li>
-                          <li>• Effective problem resolution</li>
+                          <li>• Angajament ridicat pe parcursul conversației</li>
+                          <li>• Clientul a arătat interesse pentru funcții premium</li>
+                          <li>• Sentiment pozitiv menținut</li>
+                          <li>• Rezolvare eficientă a problemei</li>
                         </ul>
-                      </div>
+                      </Card>
                       
-                      <div className="futuristic-card p-4">
+                      <Card className="p-4">
                         <div className="flex items-center mb-3">
-                          <TrendingUp className="w-5 h-5 text-[#0A5B4C] mr-2" />
-                          <h4 className="font-semibold text-gray-900">Performance Score</h4>
+                          <TrendingUp className="w-5 h-5 text-black mr-2" />
+                          <h4 className="font-semibold text-gray-900">Scorul de Performanță</h4>
                         </div>
                         <div className="space-y-3">
                           <div className="flex justify-between items-center">
-                            <span className="text-sm">Response Time</span>
+                            <span className="text-sm">Timp de Răspuns</span>
                             <div className="flex items-center">
                               <div className="w-20 h-2 bg-gray-200 rounded-full mr-2">
-                                <div className="w-4/5 h-full bg-[#0A5B4C] rounded-full"></div>
+                                <div className="w-4/5 h-full bg-black rounded-full"></div>
                               </div>
-                              <span className="text-sm text-[#0A5B4C] font-semibold">95%</span>
+                              <span className="text-sm text-black font-semibold">95%</span>
                             </div>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-sm">Clarity</span>
+                            <span className="text-sm">Claritate</span>
                             <div className="flex items-center">
                               <div className="w-20 h-2 bg-gray-200 rounded-full mr-2">
-                                <div className="w-full h-full bg-[#0A5B4C] rounded-full"></div>
+                                <div className="w-full h-full bg-black rounded-full"></div>
                               </div>
-                              <span className="text-sm text-[#0A5B4C] font-semibold">98%</span>
+                              <span className="text-sm text-black font-semibold">98%</span>
                             </div>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-sm">Empathy</span>
+                            <span className="text-sm">Empatie</span>
                             <div className="flex items-center">
                               <div className="w-20 h-2 bg-gray-200 rounded-full mr-2">
-                                <div className="w-4/5 h-full bg-[#0A5B4C] rounded-full"></div>
+                                <div className="w-4/5 h-full bg-black rounded-full"></div>
                               </div>
-                              <span className="text-sm text-[#0A5B4C] font-semibold">92%</span>
+                              <span className="text-sm text-black font-semibold">92%</span>
                             </div>
                           </div>
                         </div>
-                      </div>
+                      </Card>
                     </div>
                   </TabsContent>
 
                   <TabsContent value="metrics" className="flex-1 px-6 pb-6">
                     <div className="grid grid-cols-2 gap-4 mt-4">
-                      <div className="futuristic-card p-4 text-center">
-                        <div className="text-2xl font-bold text-[#0A5B4C] mb-1">${selectedCall.cost_usd?.toFixed(4) || '0.0000'}</div>
-                        <div className="text-xs text-gray-600">Total Cost</div>
-                      </div>
-                      <div className="futuristic-card p-4 text-center">
-                        <div className="text-2xl font-bold text-[#0A5B4C] mb-1">$0.10</div>
-                        <div className="text-xs text-gray-600">Per Minute</div>
-                      </div>
-                      <div className="futuristic-card p-4 text-center">
-                        <div className="text-2xl font-bold text-[#0A5B4C] mb-1">15</div>
-                        <div className="text-xs text-gray-600">Exchanges</div>
-                      </div>
-                      <div className="futuristic-card p-4 text-center">
-                        <div className="text-2xl font-bold text-[#0A5B4C] mb-1">2.3s</div>
-                        <div className="text-xs text-gray-600">Avg Response</div>
-                      </div>
+                      <Card className="p-4 text-center">
+                        <div className="text-2xl font-bold text-gray-900 mb-1">${selectedCall.cost_usd?.toFixed(4) || '0.0000'}</div>
+                        <div className="text-xs text-gray-600">Cost Total</div>
+                      </Card>
+                      <Card className="p-4 text-center">
+                        <div className="text-2xl font-bold text-gray-900 mb-1">$0.10</div>
+                        <div className="text-xs text-gray-600">Pe Minut</div>
+                      </Card>
+                      <Card className="p-4 text-center">
+                        <div className="text-2xl font-bold text-gray-900 mb-1">15</div>
+                        <div className="text-xs text-gray-600">Schimburi</div>
+                      </Card>
+                      <Card className="p-4 text-center">
+                        <div className="text-2xl font-bold text-gray-900 mb-1">2.3s</div>
+                        <div className="text-xs text-gray-600">Răspuns Mediu</div>
+                      </Card>
                     </div>
                   </TabsContent>
                 </Tabs>
@@ -495,14 +487,14 @@ const ConversationAnalytics = () => {
             ) : (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="w-20 h-20 bg-gradient-to-r from-[#0A5B4C] to-[#0d6b56] rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse-glow">
-                    <Activity className="w-10 h-10 text-white" />
+                  <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                    <Activity className="w-10 h-10 text-gray-400" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Select a Conversation
+                    Selectează o Conversație
                   </h3>
                   <p className="text-gray-600">
-                    Choose a call from the list to view detailed analytics powered by ElevenLabs
+                    Alege un apel din listă pentru a vedea analiza detaliată
                   </p>
                 </div>
               </div>
