@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -129,7 +128,8 @@ const Outbound = () => {
         description: "Apelul a fost inițiat. Se monitorizează statusul în timp real...",
       });
       
-      // Refresh history after a delay to show the new call
+      // The call will be automatically saved to history in useCallInitiation hook
+      // Just refresh after a short delay
       setTimeout(() => {
         refetchHistory();
       }, 2000);
@@ -167,10 +167,11 @@ const Outbound = () => {
     const contactsToProcess = contacts.filter(c => selectedContacts.has(c.id));
     await processBatchCalls(contactsToProcess, agentId);
     
-    // Refresh history after batch processing
+    // Calls will be automatically saved to history in useCallInitiation hook
+    // Refresh history after processing completes
     setTimeout(() => {
       refetchHistory();
-    }, 5000);
+    }, 2000);
   };
 
   const downloadTemplate = () => {

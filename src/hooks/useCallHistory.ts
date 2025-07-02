@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
@@ -6,7 +7,7 @@ export interface CallHistoryRecord {
   id: string;
   phone_number: string;
   contact_name: string;
-  call_status: 'success' | 'failed' | 'busy' | 'no-answer' | 'unknown';
+  call_status: 'success' | 'failed' | 'busy' | 'no-answer' | 'unknown' | 'initiated';
   summary: string;
   dialog_json: string;
   call_date: string;
@@ -14,7 +15,8 @@ export interface CallHistoryRecord {
   agent_id?: string;
   language?: string;
   conversation_id?: string;
-  elevenlabs_history_id?: string; // Added this field for ElevenLabs integration
+  elevenlabs_history_id?: string;
+  duration_seconds?: number;
 }
 
 export const useCallHistory = () => {
@@ -28,7 +30,6 @@ export const useCallHistory = () => {
       
       console.log('Fetching call history for user:', user.id);
       
-      // Simple query that will be automatically filtered by RLS
       const { data, error } = await supabase
         .from('call_history')
         .select('*')
@@ -56,7 +57,8 @@ export const useCallHistory = () => {
           agent_id: record.agent_id,
           language: record.language,
           conversation_id: record.conversation_id,
-          elevenlabs_history_id: record.elevenlabs_history_id // Include ElevenLabs ID
+          elevenlabs_history_id: record.elevenlabs_history_id,
+          duration_seconds: record.duration_seconds
         };
       }) || [];
 
@@ -64,6 +66,7 @@ export const useCallHistory = () => {
       return mappedData;
     },
     enabled: !!user,
+    refetchInterval: 10000, // Auto-refresh every 10 seconds
   });
 
   const saveCallResults = useMutation({
@@ -147,7 +150,7 @@ export const useCallHistory = () => {
           language: language,
           timestamps: timestamps,
           conversation_id: conversationId,
-          elevenlabs_history_id: elevenLabsHistoryId // Include ElevenLabs history ID
+          elevenlabs_history_id: elevenLabsHistoryId
         };
 
         console.log('Record to insert with ElevenLabs history ID:', record);
