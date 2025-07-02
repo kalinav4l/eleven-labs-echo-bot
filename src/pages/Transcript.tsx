@@ -1,10 +1,9 @@
-
 import React, { useState, useRef } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, Download, FileAudio, MessageSquare, User, Bot, Loader2, Play, Save } from 'lucide-react';
+import { Upload, Download, FileAudio, MessageSquare, User, Bot, Loader2, Play, Save, ArrowLeft } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,6 +27,7 @@ const Transcript = () => {
   const [audioUrl, setAudioUrl] = useState<string>('');
   const [rawTranscriptText, setRawTranscriptText] = useState<string>('');
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [viewMode, setViewMode] = useState<'upload' | 'viewer'>('upload');
   const audioRef = useRef<HTMLAudioElement>(null);
   
   const { saveTranscript, isSaving, exportToSRT, exportToTXT, exportToJSON } = useTranscripts();
@@ -120,7 +120,7 @@ const Transcript = () => {
       setTranscriptEntries(entries);
     }
   };
-
+  
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -197,35 +197,7 @@ const Transcript = () => {
       setIsProcessing(false);
     }
   };
-  
-  const handleDownloadSRT = () => {
-    if (transcriptEntries.length === 0) return;
-    let srtContent = '';
-    transcriptEntries.forEach((entry, index) => {
-      const formatSRTTime = (seconds: number) => {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor(seconds % 3600 / 60);
-        const secs = Math.floor(seconds % 60);
-        const milliseconds = Math.floor(seconds % 1 * 1000);
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')},${milliseconds.toString().padStart(3, '0')}`;
-      };
 
-      const speakerId = entry.speaker.toLowerCase().includes('agent') ? 'Agent AI' : 'User';
-      srtContent += `${index + 1}\n${formatSRTTime(entry.startTime)} --> ${formatSRTTime(entry.endTime)}\n[${speakerId}] ${entry.text}\n\n`;
-    });
-    
-    const blob = new Blob([srtContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `transcript_${Date.now()}.srt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast({ title: "Descărcare Completă", description: "Fișierul SRT a fost salvat." });
-  };
-  
   const testDemo = async () => {
     const demoText = `Agent AI: Bună ziua! Numele meu este Alex și sunt un agent AI. Cum vă pot ajuta astăzi?
 User: Salut, Alex! Aș dori să aflu mai multe despre pachetele voastre de credite.
@@ -257,11 +229,82 @@ Agent AI: Un minut de convorbire cu un agent AI consumă 1.000 de credite. Deci 
     setAudioFile(null);
     setAudioUrl('');
     setRawTranscriptText('');
+    setViewMode('viewer');
     toast({
       title: "Transcript încărcat",
       description: "Transcriptul a fost încărcat cu succes.",
     });
   };
+
+  const handleViewTranscript = () => {
+    if (transcriptEntries.length === 0) {
+      toast({
+        title: "Eroare",
+        description: "Nu există transcript pentru vizualizare.",
+        variant: "destructive"
+      });
+      return;
+    }
+    setViewMode('viewer');
+  };
+
+  if (viewMode === 'viewer') {
+    return (
+      <DashboardLayout>
+        <div className="p-6 space-y-6 bg-white min-h-screen">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button 
+                onClick={() => setViewMode('upload')} 
+                variant="outline" 
+                className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Înapoi
+              </Button>
+              <div>
+                <h1 className="text-2xl font-semibold text-gray-900">Vizualizare Transcript</h1>
+                <p className="text-gray-600">Dialog ({transcriptEntries.length} replici)</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleSaveTranscript} variant="outline" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
+                <Save className="w-4 h-4 mr-2" />
+                Salvează
+              </Button>
+              <Button onClick={() => exportToSRT(transcriptEntries, audioFile?.name?.split('.')[0] || 'transcript')} variant="outline" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
+                <Download className="w-4 h-4 mr-2" />
+                Export SRT
+              </Button>
+            </div>
+          </div>
+
+          <Card className="bg-white border border-gray-200">
+            <CardContent className="p-6">
+              <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-2">
+                {transcriptEntries.map((entry, index) => (
+                  <div key={index} className="flex gap-3 p-4 rounded-lg bg-white border border-gray-200 hover:bg-gray-50/50 transition-colors">
+                    <div className="flex-shrink-0">
+                      <div className={`w-8 h-8 rounded-full ${getSpeakerColor(entry.speaker)} flex items-center justify-center`}>
+                        {getSpeakerIcon(entry.speaker)}
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium text-sm text-gray-900">{entry.speaker}</span>
+                        <span className="text-xs text-gray-500">{entry.timestamp}</span>
+                      </div>
+                      <p className="text-sm text-gray-700 leading-relaxed">{entry.text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -340,23 +383,16 @@ Agent AI: Un minut de convorbire cu un agent AI consumă 1.000 de credite. Deci 
                   Dialog ({transcriptEntries.length} replici)
                 </CardTitle>
                 {transcriptEntries.length > 0 && (
-                  <div className="flex gap-2">
-                    <Button onClick={handleSaveTranscript} variant="outline" size="sm" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
-                      <Save className="w-4 h-4 mr-2" />
-                      Salvează
-                    </Button>
-                    <Button onClick={() => exportToSRT(transcriptEntries, audioFile?.name?.split('.')[0] || 'transcript')} variant="outline" size="sm" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
-                      <Download className="w-4 h-4 mr-2" />
-                      Export SRT
-                    </Button>
-                  </div>
+                  <Button onClick={handleViewTranscript} variant="outline" size="sm" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
+                    Vizualizează
+                  </Button>
                 )}
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                 {transcriptEntries.length > 0 ? (
-                  transcriptEntries.map((entry, index) => (
+                  transcriptEntries.slice(0, 3).map((entry, index) => (
                     <div key={index} className="flex gap-3 p-4 rounded-lg bg-white border border-gray-200 hover:bg-gray-50/50 transition-colors">
                       <div className="flex-shrink-0">
                         <div className={`w-8 h-8 rounded-full ${getSpeakerColor(entry.speaker)} flex items-center justify-center`}>
@@ -378,15 +414,20 @@ Agent AI: Un minut de convorbire cu un agent AI consumă 1.000 de credite. Deci 
                     <p className="text-gray-500">Dialogul structurat va apărea aici.</p>
                   </div>
                 )}
+                {transcriptEntries.length > 3 && (
+                  <div className="text-center pt-4">
+                    <Button onClick={handleViewTranscript} variant="outline" size="sm" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
+                      Vezi toate ({transcriptEntries.length} replici)
+                    </Button>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Istoric Transcrieri */}
         <TranscriptHistory onLoadTranscript={handleLoadTranscript} />
 
-        {/* Dialog pentru salvare */}
         <SaveTranscriptDialog
           open={showSaveDialog}
           onOpenChange={setShowSaveDialog}

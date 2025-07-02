@@ -1,341 +1,289 @@
-import React, { useState, useRef } from 'react';
+
+import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, Download, FileAudio, MessageSquare, User, Bot, Loader2, Play } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { PhoneCall, Settings, TrendingUp, Clock, DollarSign, Users, BarChart3, CheckCircle, Globe, Calendar } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { toast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
-interface TranscriptEntry {
-  speaker: string;
-  text: string;
-  timestamp: string;
-  startTime: number;
-  endTime: number;
-}
+const callsData = [
+  { date: 'Jun 02', calls: 0 },
+  { date: 'Jun 04', calls: 0 },
+  { date: 'Jun 06', calls: 0 },
+  { date: 'Jun 08', calls: 0 },
+  { date: 'Jun 10', calls: 0 },
+  { date: 'Jun 12', calls: 0 },
+  { date: 'Jun 14', calls: 0 },
+  { date: 'Jun 16', calls: 0 },
+  { date: 'Jun 18', calls: 0 },
+  { date: 'Jun 20', calls: 0 },
+  { date: 'Jun 22', calls: 0 },
+  { date: 'Jun 24', calls: 0 },
+  { date: 'Jun 26', calls: 0 },
+  { date: 'Jun 28', calls: 0 },
+  { date: 'Jun 30', calls: 8 },
+  { date: 'Jul 02', calls: 12 },
+];
 
-const Transcript = () => {
+const successData = [
+  { date: 'Jun 02', rate: 0 },
+  { date: 'Jun 04', rate: 0 },
+  { date: 'Jun 06', rate: 0 },
+  { date: 'Jun 08', rate: 0 },
+  { date: 'Jun 10', rate: 0 },
+  { date: 'Jun 12', rate: 0 },
+  { date: 'Jun 14', rate: 0 },
+  { date: 'Jun 16', rate: 0 },
+  { date: 'Jun 18', rate: 0 },
+  { date: 'Jun 20', rate: 0 },
+  { date: 'Jun 22', rate: 0 },
+  { date: 'Jun 24', rate: 0 },
+  { date: 'Jun 26', rate: 0 },
+  { date: 'Jun 28', rate: 0 },
+  { date: 'Jun 30', rate: 85 },
+  { date: 'Jul 02', rate: 100 },
+];
+
+const agentsData = [
+  { name: 'werget', calls: 7, minutes: 19, cost: 0.099, credits: 15543 },
+  { name: 'Connect Imobil', calls: 4, minutes: 4, cost: 0.079, credits: 2432 },
+  { name: 'Moldova GAZ Kalina 2', calls: 3, minutes: 2, cost: 0.038, credits: 1671 },
+];
+
+const languageData = [
+  { language: 'Romanian', percentage: 96.0 },
+  { language: 'English', percentage: 4.0 },
+];
+
+const Index = () => {
   const { user } = useAuth();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [transcriptEntries, setTranscriptEntries] = useState<TranscriptEntry[]>([]);
-  const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string>('');
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const [selectedAgent, setSelectedAgent] = useState('all');
+  const [selectedPeriod, setSelectedPeriod] = useState('last-month');
 
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
-  const getSpeakerColor = (speaker: string) => {
-    if (speaker.toLowerCase().includes('agent') || speaker.toLowerCase().includes('ai')) {
-      return 'bg-purple-500';
-    }
-    return 'bg-blue-500';
-  };
-
-  const getSpeakerIcon = (speaker: string) => {
-    if (speaker.toLowerCase().includes('agent') || speaker.toLowerCase().includes('ai')) {
-      return <Bot className="w-4 h-4 text-white" />;
-    }
-    return <User className="w-4 h-4 text-white" />;
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  // Parses the final, structured dialogue from the AI
-  const parseStructuredDialogue = (dialogue: any[]): TranscriptEntry[] => {
-    return dialogue.map((item: any, index: number) => ({
-      speaker: item.speaker || 'Necunoscut',
-      text: item.text || '',
-      timestamp: formatTime(index * 5), // Mock timestamp, can be improved
-      startTime: index * 5,
-      endTime: (index + 1) * 5,
-    }));
-  };
-  
-  // A simple fallback parser if AI processing fails
-  const fallbackParse = (text: string): TranscriptEntry[] => {
-    return text.split('\n').filter(line => line.trim()).map((line, index) => ({
-      speaker: `Vorbitor ${index % 2 + 1}`,
-      text: line,
-      timestamp: formatTime(index * 5),
-      startTime: index * 5,
-      endTime: (index + 1) * 5,
-    }));
-  };
-
-  const processAndSetTranscript = async (rawText: string) => {
-    if (!rawText) {
-      toast({
-        title: "Eroare",
-        description: "Transcriptul generat este gol.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    try {
-      toast({ title: "Analiză AI", description: "Transcriptul este procesat pentru a identifica vorbitorii..." });
-      const { data, error } = await supabase.functions.invoke('process-transcript', {
-        body: { transcriptText: rawText }
-      });
-
-      if (error) throw error;
-
-      if (data && data.dialogue && Array.isArray(data.dialogue)) {
-        const processedEntries = parseStructuredDialogue(data.dialogue);
-        setTranscriptEntries(processedEntries);
-        toast({
-          title: "Succes",
-          description: `Dialog structurat generat cu succes! (${processedEntries.length} intrări)`
-        });
-      } else {
-        throw new Error('Răspuns invalid de la AI. Se afișează textul brut.');
-      }
-    } catch (error: any) {
-      console.error('Error processing with AI:', error);
-      toast({
-        title: "Avertisment",
-        description: "Procesarea AI a eșuat. Se afișează transcriptul nestructurat.",
-        variant: "destructive"
-      });
-      // Fallback to simple parsing on error
-      const entries = fallbackParse(rawText);
-      setTranscriptEntries(entries);
-    }
-  };
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const validTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/m4a', 'audio/ogg'];
-      if (!validTypes.some(type => file.type.startsWith('audio/'))) {
-        toast({
-          title: "Eroare",
-          description: "Te rog selectează un fișier audio valid.",
-          variant: "destructive"
-        });
-        return;
-      }
-      if (file.size > 25 * 1024 * 1024) {
-        toast({
-          title: "Eroare",
-          description: "Fișierul este prea mare. Mărimea maximă este 25 MB.",
-          variant: "destructive"
-        });
-        return;
-      }
-      setAudioFile(file);
-      setAudioUrl(URL.createObjectURL(file));
-      setTranscriptEntries([]);
-      toast({
-        title: "Fișier selectat",
-        description: `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`
-      });
-    }
-  };
-
-  const handleGenerateTranscript = async () => {
-    if (!audioFile) {
-      toast({ title: "Eroare", description: "Te rog selectează un fișier audio.", variant: "destructive" });
-      return;
-    }
-    
-    setIsProcessing(true);
-    setTranscriptEntries([]);
-
-    try {
-      const formData = new FormData();
-      formData.append("file", audioFile);
-      formData.append("model_id", "scribe_v1"); // Using ElevenLabs' speech-to-text
-      
-      toast({ title: "Procesare Audio", description: "Fișierul tău este transcris..." });
-
-      const response = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
-        method: "POST",
-        headers: { "Xi-Api-Key": "sk_2685ed11d030a3f3befffd09cb2602ac8a19a26458df4873" },
-        body: formData
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Eroare API ElevenLabs: ${errorText}`);
-      }
-      
-      const body = await response.json();
-      
-      if (body.text) {
-        // Automatically process the raw text to structure the dialogue
-        await processAndSetTranscript(body.text);
-      } else {
-        throw new Error('Nu s-a primit text în răspuns de la ElevenLabs');
-      }
-    } catch (error: any) {
-      console.error('Error during transcript generation:', error);
-      toast({
-        title: "Eroare Generală",
-        description: `Nu s-a putut procesa fișierul audio: ${error.message}`,
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-  
-  const handleDownloadSRT = () => {
-    if (transcriptEntries.length === 0) return;
-    let srtContent = '';
-    transcriptEntries.forEach((entry, index) => {
-      const formatSRTTime = (seconds: number) => {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor(seconds % 3600 / 60);
-        const secs = Math.floor(seconds % 60);
-        const milliseconds = Math.floor(seconds % 1 * 1000);
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')},${milliseconds.toString().padStart(3, '0')}`;
-      };
-
-      const speakerId = entry.speaker.toLowerCase().includes('agent') ? 'Agent AI' : 'User';
-      srtContent += `${index + 1}\n${formatSRTTime(entry.startTime)} --> ${formatSRTTime(entry.endTime)}\n[${speakerId}] ${entry.text}\n\n`;
-    });
-    
-    const blob = new Blob([srtContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `transcript_${Date.now()}.srt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast({ title: "Descărcare Completă", description: "Fișierul SRT a fost salvat." });
-  };
-  
-  const testDemo = async () => {
-    const demoText = `Agent AI: Bună ziua! Numele meu este Alex și sunt un agent AI. Cum vă pot ajuta astăzi?
-User: Salut, Alex! Aș dori să aflu mai multe despre pachetele voastre de credite.
-Agent AI: Desigur! Avem mai multe pachete disponibile, concepute pentru nevoi diferite. Cel mai popular este pachetul "Starter" care oferă 100.000 de credite.
-User: Și ce pot face cu aceste credite?
-Agent AI: Un minut de convorbire cu un agent AI consumă 1.000 de credite. Deci pachetul Starter vă oferă aproximativ 100 de minute de conversație.`;
-    await processAndSetTranscript(demoText);
-  };
-
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-8">
-        <div className="flex justify-between items-center">
+      <div className="p-6 space-y-6 bg-white min-h-screen">
+        {/* Header */}
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Transcript Audio</h1>
-            <p className="text-gray-600">Generează și structurează dialoguri din fișiere audio</p>
+            <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+              Active calls: 0
+            </div>
+            <div className="mb-4">
+              <p className="text-sm text-gray-600">My Workspace</p>
+              <h1 className="text-2xl font-bold text-gray-900">Good afternoon, {user.email?.split('@')[0] || 'User'}</h1>
+            </div>
           </div>
-          <Button onClick={testDemo} variant="outline" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
-            <Play className="w-4 h-4 mr-2" />
-            Test Demo
-          </Button>
+          <div className="flex items-center gap-4">
+            <Select value={selectedAgent} onValueChange={setSelectedAgent}>
+              <SelectTrigger className="w-32 bg-white border-gray-300">
+                <SelectValue placeholder="All agents" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All agents</SelectItem>
+                <SelectItem value="werget">werget</SelectItem>
+                <SelectItem value="connect">Connect Imobil</SelectItem>
+                <SelectItem value="moldova">Moldova GAZ</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <SelectTrigger className="w-32 bg-white border-gray-300">
+                <SelectValue placeholder="Last month" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="last-month">Last month</SelectItem>
+                <SelectItem value="last-week">Last week</SelectItem>
+                <SelectItem value="last-year">Last year</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="sm" className="bg-white border-gray-300">
+              <Settings className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card className="bg-white border-gray-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3 text-gray-900">
-                <Upload className="w-6 h-6 text-[#0A5B4C]" />
-                Upload Audio
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-[#0A5B4C]/50 transition-colors bg-gray-50/50">
-                <input type="file" accept="audio/*" onChange={handleFileSelect} className="hidden" id="audio-upload" />
-                <Button variant="outline" onClick={() => document.getElementById('audio-upload')?.click()} className="mt-4 bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
-                  Selectează Fișier
-                </Button>
-              </div>
-
-              {audioFile && (
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <FileAudio className="w-5 h-5 text-[#0A5B4C]" />
-                    {/* MODIFICARE: Am adăugat `min-w-0` pentru a permite trunchierea textului */}
-                    <div className="flex-1 min-w-0">
-                      {/* MODIFICARE: Am adăugat clasa `truncate` și un `title` pentru a afișa numele complet la hover */}
-                      <p className="font-medium text-sm text-gray-900 truncate" title={audioFile.name}>
-                        {audioFile.name}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {(audioFile.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                    </div>
-                  </div>
-                  {audioUrl && (
-                    <div className="mt-3">
-                      <audio controls className="w-full" src={audioUrl}>
-                        Browser-ul tău nu suportă redarea audio.
-                      </audio>
-                    </div>
-                  )}
+        {/* Metrics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <Card className="bg-white border border-gray-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Number of calls</p>
+                  <p className="text-3xl font-bold text-gray-900">25</p>
                 </div>
-              )}
-              
-              <Button onClick={handleGenerateTranscript} disabled={!audioFile || isProcessing} className="w-full bg-gray-900 hover:bg-gray-800 text-white">
-                {isProcessing ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Se procesează...
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Upload className="w-4 h-4" />
-                    Generează Transcript
-                  </div>
-                )}
-              </Button>
+                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <PhoneCall className="w-5 h-5 text-gray-600" />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white border-gray-200 shadow-sm">
-            <CardHeader>
+          <Card className="bg-white border border-gray-200">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-3 text-gray-900">
-                  <MessageSquare className="w-6 h-6 text-[#0A5B4C]" />
-                  Dialog ({transcriptEntries.length} replici)
-                </CardTitle>
-                {transcriptEntries.length > 0 && (
-                  <Button onClick={handleDownloadSRT} variant="outline" size="sm" className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
-                    <Download className="w-4 h-4 mr-2" />
-                    Export SRT
-                  </Button>
-                )}
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Average duration</p>
+                  <p className="text-3xl font-bold text-gray-900">1:11</p>
+                </div>
+                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-gray-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border border-gray-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Total cost</p>
+                  <p className="text-2xl font-bold text-gray-900">25.000 <span className="text-sm font-normal text-gray-600">credits</span></p>
+                </div>
+                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-gray-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border border-gray-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Average cost</p>
+                  <p className="text-2xl font-bold text-gray-900">1.000 <span className="text-sm font-normal text-gray-600">credits/call</span></p>
+                </div>
+                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <BarChart3 className="w-5 h-5 text-gray-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border border-gray-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Total leads</p>
+                  <p className="text-3xl font-bold text-gray-900">0,19</p>
+                </div>
+                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Users className="w-5 h-5 text-gray-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Calls Chart */}
+          <Card className="bg-white border border-gray-200">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-gray-900">Call Volume</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={callsData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="calls" stroke="#2563eb" strokeWidth={2} dot={{ fill: '#2563eb' }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Success Rate Chart */}
+          <Card className="bg-white border border-gray-200">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+                <CardTitle className="text-lg font-semibold text-gray-900">Overall success rate</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4 max-h-96 overflow-y-auto pr-4">
-                {transcriptEntries.length > 0 ? (
-                  transcriptEntries.map((entry, index) => (
-                    <div key={index} className="flex gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100">
-                      <div className="flex-shrink-0">
-                        <div className={`w-8 h-8 rounded-full ${getSpeakerColor(entry.speaker)} flex items-center justify-center`}>
-                          {getSpeakerIcon(entry.speaker)}
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-sm text-gray-900">{entry.speaker}</span>
-                          <span className="text-xs text-gray-500">{entry.timestamp}</span>
-                        </div>
-                        <p className="text-sm text-gray-700 leading-relaxed">{entry.text}</p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-12">
-                    <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">Dialogul structurat va apărea aici.</p>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={successData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Bar dataKey="rate" fill="#10b981" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Bottom Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Most Called Agents */}
+          <Card className="lg:col-span-2 bg-white border border-gray-200">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-semibold text-gray-900">Most called agents</CardTitle>
+                <Button variant="link" className="text-sm text-blue-600 hover:text-blue-700">
+                  See all 14 agents
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-5 gap-4 text-sm font-medium text-gray-600 pb-2 border-b border-gray-200">
+                  <div>Agent name</div>
+                  <div className="text-center">Number of calls</div>
+                  <div className="text-center">Call minutes</div>
+                  <div className="text-center">LLM cost</div>
+                  <div className="text-center">Credits spent</div>
+                </div>
+                {agentsData.map((agent, index) => (
+                  <div key={index} className="grid grid-cols-5 gap-4 text-sm py-3 border-b border-gray-100 last:border-b-0">
+                    <div className="font-medium text-gray-900">{agent.name}</div>
+                    <div className="text-center text-gray-700">{agent.calls}</div>
+                    <div className="text-center text-gray-700">{agent.minutes}</div>
+                    <div className="text-center text-gray-700">{agent.cost.toFixed(3)} USD</div>
+                    <div className="text-center text-gray-700">{agent.credits.toLocaleString()}</div>
                   </div>
-                )}
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Language Distribution */}
+          <Card className="bg-white border border-gray-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                <Globe className="w-5 h-5" />
+                Language
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {languageData.map((lang, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-900">{lang.language}</span>
+                      <span className="text-sm text-gray-600">{lang.percentage}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                        style={{ width: `${lang.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -345,4 +293,4 @@ Agent AI: Un minut de convorbire cu un agent AI consumă 1.000 de credite. Deci 
   );
 };
 
-export default Transcript;
+export default Index;
