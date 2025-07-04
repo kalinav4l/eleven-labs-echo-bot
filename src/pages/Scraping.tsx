@@ -369,6 +369,210 @@ const detectProducts = (doc: Document, targetUrl: string): Product[] => {
   return products;
 };
 
+// Funcția pentru generarea raportului text structurat
+const generateStructuredReport = (data: ScrapedData): string => {
+  let report = `# RAPORT COMPLET SCRAPING SITE WEB\n\n`;
+  report += `## INFORMAȚII GENERALE\n`;
+  report += `**URL:** ${data.url}\n`;
+  report += `**Titlu:** ${data.title}\n`;
+  report += `**Descriere:** ${data.description}\n`;
+  report += `**Cuvinte cheie:** ${data.keywords}\n`;
+  report += `**Data extragerii:** ${new Date(data.timestamp).toLocaleString('ro-RO')}\n\n`;
+
+  // Produse și prețuri
+  if (data.products.length > 0) {
+    report += `## PRODUSE ȘI PREȚURI (${data.products.length} produse găsite)\n\n`;
+    data.products.forEach((product, index) => {
+      report += `### ${index + 1}. ${product.name}\n`;
+      if (product.price) report += `**Preț:** ${product.price} ${product.currency || ''}\n`;
+      if (product.originalPrice) report += `**Preț original:** ${product.originalPrice}\n`;
+      if (product.discount) report += `**Reducere:** ${product.discount}\n`;
+      if (product.description) report += `**Descriere:** ${product.description}\n`;
+      if (product.category) report += `**Categorie:** ${product.category}\n`;
+      if (product.availability) report += `**Disponibilitate:** ${product.availability}\n`;
+      if (product.brand) report += `**Brand:** ${product.brand}\n`;
+      if (product.model) report += `**Model:** ${product.model}\n`;
+      if (product.sku) report += `**SKU:** ${product.sku}\n`;
+      
+      if (Object.keys(product.specifications).length > 0) {
+        report += `**Specificații:**\n`;
+        Object.entries(product.specifications).forEach(([key, value]) => {
+          report += `  - ${key}: ${value}\n`;
+        });
+      }
+      
+      if (product.features.length > 0) {
+        report += `**Caracteristici:** ${product.features.join(', ')}\n`;
+      }
+      
+      if (product.images.length > 0) {
+        report += `**Imagini:** ${product.images.length} imagini disponibile\n`;
+      }
+      report += `\n`;
+    });
+  }
+
+  // Informații de contact
+  if (data.contactInfo.emails.length > 0 || data.contactInfo.phones.length > 0) {
+    report += `## INFORMAȚII DE CONTACT\n`;
+    if (data.contactInfo.emails.length > 0) {
+      report += `**Email-uri:**\n`;
+      data.contactInfo.emails.forEach(email => report += `  - ${email}\n`);
+    }
+    if (data.contactInfo.phones.length > 0) {
+      report += `**Telefoane:**\n`;
+      data.contactInfo.phones.forEach(phone => report += `  - ${phone}\n`);
+    }
+    report += `\n`;
+  }
+
+  // Link-uri sociale
+  if (data.socialLinks.length > 0) {
+    report += `## REȚELE SOCIALE\n`;
+    data.socialLinks.forEach(link => {
+      report += `  - ${link.text || 'Link social'}: ${link.url}\n`;
+    });
+    report += `\n`;
+  }
+
+  // Structura conținutului
+  if (data.headings.length > 0) {
+    report += `## STRUCTURA CONȚINUTULUI\n`;
+    data.headings.forEach(heading => {
+      const indent = '  '.repeat(heading.level - 1);
+      report += `${indent}- H${heading.level}: ${heading.text}\n`;
+    });
+    report += `\n`;
+  }
+
+  // Tabele importante
+  if (data.tables.length > 0) {
+    report += `## TABELE ȘI DATE STRUCTURATE\n`;
+    data.tables.forEach((table, index) => {
+      if (table.rows.length > 0) {
+        report += `### Tabel ${index + 1}:\n`;
+        if (table.caption) report += `**Titlu:** ${table.caption}\n`;
+        if (table.headers.length > 0) {
+          report += `**Coloane:** ${table.headers.join(' | ')}\n`;
+        }
+        table.rows.slice(0, 5).forEach(row => {
+          if (row.some(cell => cell.trim())) {
+            report += `  ${row.join(' | ')}\n`;
+          }
+        });
+        if (table.rows.length > 5) {
+          report += `  [... și încă ${table.rows.length - 5} rânduri]\n`;
+        }
+        report += `\n`;
+      }
+    });
+  }
+
+  // Liste importante
+  if (data.lists.length > 0) {
+    report += `## LISTE ȘI ENUMERĂRI\n`;
+    data.lists.forEach((list, index) => {
+      if (list.items.length > 0) {
+        report += `### Lista ${index + 1} (${list.type.toUpperCase()}):\n`;
+        list.items.slice(0, 10).forEach(item => {
+          if (item.trim()) report += `  - ${item}\n`;
+        });
+        if (list.items.length > 10) {
+          report += `  [... și încă ${list.items.length - 10} elemente]\n`;
+        }
+        report += `\n`;
+      }
+    });
+  }
+
+  // Link-uri importante
+  const importantLinks = data.links.filter(link => 
+    link.text && link.text.length > 5 && link.text.length < 100 && 
+    !link.url.includes('#') && link.url !== data.url
+  );
+  
+  if (importantLinks.length > 0) {
+    report += `## LINK-URI IMPORTANTE\n`;
+    importantLinks.slice(0, 20).forEach(link => {
+      report += `  - ${link.text}: ${link.url}\n`;
+    });
+    if (importantLinks.length > 20) {
+      report += `  [... și încă ${importantLinks.length - 20} link-uri]\n`;
+    }
+    report += `\n`;
+  }
+
+  // Conținut media
+  if (data.media.videos.length > 0 || data.media.audios.length > 0 || data.images.length > 0) {
+    report += `## CONȚINUT MULTIMEDIA\n`;
+    if (data.media.videos.length > 0) {
+      report += `**Video-uri:** ${data.media.videos.length} video-uri găsite\n`;
+      data.media.videos.slice(0, 5).forEach(video => {
+        if (video.src) report += `  - ${video.src}\n`;
+      });
+    }
+    if (data.media.audios.length > 0) {
+      report += `**Audio:** ${data.media.audios.length} fișiere audio\n`;
+    }
+    if (data.images.length > 0) {
+      report += `**Imagini:** ${data.images.length} imagini găsite\n`;
+    }
+    report += `\n`;
+  }
+
+  // Tehnologii detectate
+  const allTechs = [...data.technologies.cms, ...data.technologies.frameworks, ...data.technologies.analytics, ...data.technologies.advertising];
+  if (allTechs.length > 0) {
+    report += `## TEHNOLOGII DETECTATE\n`;
+    report += `**CMS:** ${data.technologies.cms.join(', ') || 'Niciunul detectat'}\n`;
+    report += `**Framework-uri:** ${data.technologies.frameworks.join(', ') || 'Niciunul detectat'}\n`;
+    report += `**Analytics:** ${data.technologies.analytics.join(', ') || 'Niciunul detectat'}\n`;
+    report += `**Publicitate:** ${data.technologies.advertising.join(', ') || 'Niciunul detectat'}\n\n`;
+  }
+
+  // Formulare
+  if (data.forms.length > 0) {
+    report += `## FORMULARE DISPONIBILE\n`;
+    data.forms.forEach((form, index) => {
+      report += `### Formular ${index + 1}:\n`;
+      report += `  - Acțiune: ${form.action || 'Nu este specificată'}\n`;
+      report += `  - Metodă: ${form.method}\n`;
+      if (form.inputs.length > 0) {
+        report += `  - Câmpuri: ${form.inputs.map(input => input.name || input.type).join(', ')}\n`;
+      }
+      report += `\n`;
+    });
+  }
+
+  // Metadata important
+  const importantMeta = Object.entries(data.metadata).filter(([key, value]) => 
+    !key.startsWith('og:') && !key.startsWith('twitter:') && value.length > 5 && value.length < 200
+  );
+  
+  if (importantMeta.length > 0) {
+    report += `## METADATA IMPORTANT\n`;
+    importantMeta.forEach(([key, value]) => {
+      report += `**${key}:** ${value}\n`;
+    });
+    report += `\n`;
+  }
+
+  // Text complet pentru context AI
+  report += `## CONȚINUT TEXT COMPLET (pentru analiză AI)\n`;
+  const cleanText = data.text.replace(/\s+/g, ' ').trim();
+  if (cleanText.length > 2000) {
+    report += `${cleanText.substring(0, 3000)}...\n`;
+    report += `\n[Text truncat pentru brevitate - ${cleanText.length} caractere în total]\n`;
+  } else {
+    report += `${cleanText}\n`;
+  }
+
+  report += `\n---\n**Raport generat automat de Web Scraper Universal**\n`;
+  report += `**Total informații extrase:** ${data.products.length} produse, ${data.links.length} link-uri, ${data.images.length} imagini, ${data.tables.length} tabele, ${data.lists.length} liste\n`;
+
+  return report;
+};
+
 // Funcția principală de extragere a conținutului
 const extractAllContent = async (htmlContent: string, targetUrl: string): Promise<ScrapedData> => {
   const parser = new DOMParser();
@@ -649,6 +853,7 @@ const Scraping = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [scrapedData, setScrapedData] = useState<ScrapedData | null>(null);
   const [error, setError] = useState('');
+  const [structuredReport, setStructuredReport] = useState('');
 
   const handleSubmit = async () => {
     if (!url.trim()) {
@@ -675,10 +880,15 @@ const Scraping = () => {
     setIsLoading(true);
     setError('');
     setScrapedData(null);
+    setStructuredReport('');
 
     try {
       const data = await handleScrape(url);
       setScrapedData(data);
+      
+      // Generăm raportul structurat
+      const report = generateStructuredReport(data);
+      setStructuredReport(report);
       
       toast({
         title: "Scraping finalizat",
@@ -695,6 +905,22 @@ const Scraping = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(structuredReport);
+      toast({
+        title: "Copiat în clipboard",
+        description: "Raportul a fost copiat cu succes în clipboard"
+      });
+    } catch (err) {
+      toast({
+        title: "Eroare la copiere",
+        description: "Nu am putut copia raportul în clipboard",
+        variant: "destructive"
+      });
     }
   };
 
@@ -780,8 +1006,9 @@ const Scraping = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 text-xs">
+              <Tabs defaultValue="report" className="w-full">
+                <TabsList className="grid w-full grid-cols-5 lg:grid-cols-9 text-xs">
+                  <TabsTrigger value="report">Raport</TabsTrigger>
                   <TabsTrigger value="overview">General</TabsTrigger>
                   <TabsTrigger value="content">Conținut</TabsTrigger>
                   <TabsTrigger value="media">Media</TabsTrigger>
@@ -791,6 +1018,34 @@ const Scraping = () => {
                   <TabsTrigger value="products">Produse</TabsTrigger>
                   <TabsTrigger value="data">Date</TabsTrigger>
                 </TabsList>
+
+                <TabsContent value="report" className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Raport Text Structurat</h3>
+                    <Button 
+                      onClick={copyToClipboard}
+                      variant="outline"
+                      size="sm"
+                      className="ml-2"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Copiază Raportul
+                    </Button>
+                  </div>
+                  
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-4">
+                      Acest raport conține toate informațiile extrase din site într-un format structurat,
+                      perfect pentru a fi analizat de un agent AI.
+                    </p>
+                    
+                    <ScrollArea className="h-[500px] w-full">
+                      <pre className="text-xs text-gray-800 whitespace-pre-wrap font-mono bg-white p-4 rounded border">
+                        {structuredReport}
+                      </pre>
+                    </ScrollArea>
+                  </div>
+                </TabsContent>
 
                 <TabsContent value="overview" className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
