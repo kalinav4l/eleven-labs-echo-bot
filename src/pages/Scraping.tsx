@@ -1597,42 +1597,85 @@ const handleScrape = async (url: string, onProgress?: (current: number, total: n
         // Adaugă link-urile noi în coada de vizitat
         internalLinks.forEach(link => {
           if (!visitedUrls.has(link) && !urlsToVisit.includes(link)) {
-            urlsToVisit.push(link);
+        // Extrage toate datele de pe pagina curentă
+        const scrapedPageData = await extractAllDataFromPage(doc, urlCurent);
+        dateleToatePaginilor.push(scrapedPageData);
+        
+        // Salvează prima pagină ca date principale
+        if (!mainData) {
+          mainData = scrapedPageData;
+        }
+        
+        // Adaugă produsele găsite
+        produseTotale.push(...scrapedPageData.products);
+        linkuriTotale.push(...scrapedPageData.links);
+        imaginiTotale.push(...scrapedPageData.images);
+
+        // Descoperă link-uri noi pentru crawling
+        const linkuriNoi = doc.querySelectorAll('a[href]');
+        let linkuriAdaugate = 0;
+        
+        linkuriNoi.forEach(link => {
+          try {
+            const href = link.getAttribute('href');
+            if (!href) return;
+            
+            let urlNou = '';
+            if (href.startsWith('//')) {
+              urlNou = 'https:' + href;
+            } else if (href.startsWith('/')) {
+              urlNou = `${baseUrl.protocol}//${baseUrl.host}${href}`;
+            } else if (href.startsWith('http')) {
+              urlNou = href;
+            } else {
+              urlNou = new URL(href, urlCurent).href;
+            }
+            
+            const urlNouObj = new URL(urlNou);
+            
+            // Filtrează link-urile
+            if (urlNouObj.hostname === domeniuPrincipal && 
+                !urlsVizitate.has(urlNou) && 
+                !urlsDeVizitat.includes(urlNou) &&
+                !urlNou.includes('#') &&
+                !urlNou.match(/\.(pdf|jpg|jpeg|png|gif|svg|css|js|ico|xml|zip|doc|docx)$/i)) {
+              
+              urlsDeVizitat.push(urlNou);
+              linkuriAdaugate++;
+            }
+          } catch (error) {
+            // Ignoră erorile de URL invalid
           }
         });
         
-        // Actualizează progresul
-        const totalEstimated = Math.min(visitedUrls.size + urlsToVisit.length, maxPages);
-        if (onProgress) {
-          onProgress(processedPages, totalEstimated);
-        }
-        
-        console.log(`✅ Procesată: ${currentUrl} - Găsite ${enhancedProducts.length} produse îmbunătățite`);
-        console.log(`📊 Total până acum: ${allProducts.length} produse din ${processedPages} pagini`);
-        console.log(`🔗 În coadă: ${urlsToVisit.length} link-uri de vizitat`);
+        console.log(`✅ PAGINĂ ${pagineProcesate} PROCESATĂ CU SUCCES!`);
+        console.log(`📈 Statistici pagină: ${scrapedPageData.products.length} produse găsite`);
+        console.log(`➕ Link-uri noi adăugate în coadă: ${linkuriAdaugate}`);
+        console.log(`📊 Total produse până acum: ${produseTotale.length}`);
+        console.log(`🔗 Total link-uri în coadă: ${urlsDeVizitat.length}`);
         
         // Pauză între cereri pentru a evita blocarea
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, delayIntreRequest));
         
       } catch (pageError) {
-        console.error(`❌ Eroare la procesarea paginii ${currentUrl}:`, pageError);
-        visitedUrls.add(currentUrl); // Marchează ca vizitată pentru a evita reîncercarea
+        console.error(`❌ Eroare la procesarea paginii ${urlCurent}:`, pageError);
+        continue;
       }
     }
     
     if (!mainData) {
-      throw new Error('Nu s-a putut procesa pagina principală');
+      throw new Error('Nu s-a putut procesa pagina principală - verifică URL-ul');
     }
     
-    console.log(`🎉 Crawling profund finalizat! Procesate ${processedPages} pagini, găsite ${allProducts.length} produse cu detalii complete`);
+    console.log(`🎉 Crawling sistematic finalizat! Procesate ${pagineProcesate} pagini, găsite ${produseTotale.length} produse cu detalii complete`);
     
     // Returnează datele combinate cu informații din toate paginile
     return {
       ...mainData,
-      products: allProducts,
-      links: allLinks,
-      images: allImages,
-      text: mainData.text + `\n\n[CRAWLING SISTEMATIC FINALIZAT - ${processedPages} PAGINI PROCESATE - ${allProducts.length} PRODUSE CU DETALII COMPLETE]`
+      products: produseTotale,
+      links: linkuriTotale,
+      images: imaginiTotale,
+      text: mainData.text + `\n\n[CRAWLING SISTEMATIC FINALIZAT - ${pagineProcesate} PAGINI PROCESATE - ${produseTotale.length} PRODUSE CU DETALII COMPLETE]`
     };
     
   } catch (error) {
