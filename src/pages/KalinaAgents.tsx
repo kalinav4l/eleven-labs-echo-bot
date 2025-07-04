@@ -5,13 +5,14 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Bot, Plus, Settings, Phone, Trash2, Power, PowerOff, Search, Copy, Files } from 'lucide-react';
+import { Bot, Plus, Settings, Phone, Trash2, Power, PowerOff, Search, Copy, Files, Mic } from 'lucide-react';
 import { useUserAgents } from '@/hooks/useUserAgents';
 import { useAgentOperations } from '@/hooks/useAgentOperations';
 import { useClipboard } from '@/hooks/useClipboard';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { AgentTestCallModal } from '@/components/AgentTestCallModal';
+import VoiceTestButton from '@/components/VoiceTestButton';
 
 const KalinaAgents = () => {
   const {
@@ -32,6 +33,7 @@ const KalinaAgents = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAgentForDeletion, setSelectedAgentForDeletion] = useState<any>(null);
   const [testCallAgent, setTestCallAgent] = useState<any>(null);
+  const [voiceTestAgent, setVoiceTestAgent] = useState<any>(null);
   const navigate = useNavigate();
 
   // Filter agents based on search query
@@ -176,6 +178,16 @@ const KalinaAgents = () => {
                 <div className="flex items-center gap-2">
                   <Button 
                     size="sm" 
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 px-3" 
+                    disabled={!agent.is_active}
+                    onClick={() => setVoiceTestAgent(agent)}
+                  >
+                    <Mic className="w-3 h-3 mr-1" />
+                    Test Audio
+                  </Button>
+                  
+                  <Button 
+                    size="sm" 
                     className="bg-black hover:bg-gray-800 text-white text-xs h-8 px-3" 
                     disabled={!agent.is_active}
                     onClick={() => handleTestCall(agent)}
@@ -266,6 +278,34 @@ const KalinaAgents = () => {
         onClose={() => setTestCallAgent(null)}
         agent={testCallAgent || { id: '', agent_id: '', name: '' }}
       />
+
+      {/* Voice Test Modal */}
+      {voiceTestAgent && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 max-w-[90vw]">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Test Audio - {voiceTestAgent.name}
+              </h3>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setVoiceTestAgent(null)}
+                className="h-8 w-8 p-0"
+              >
+                ×
+              </Button>
+            </div>
+            
+            <div className="flex justify-center">
+              <VoiceTestButton 
+                agentId={voiceTestAgent.agent_id}
+                agentName={voiceTestAgent.name}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       <AlertDialog open={!!selectedAgentForDeletion} onOpenChange={(open) => {
         if (!open) setSelectedAgentForDeletion(null);
