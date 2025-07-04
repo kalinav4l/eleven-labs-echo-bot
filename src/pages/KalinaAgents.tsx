@@ -281,27 +281,43 @@ const KalinaAgents = () => {
 
       {/* Voice Test Modal */}
       {voiceTestAgent && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 max-w-[90vw]">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Test Audio - {voiceTestAgent.name}
-              </h3>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto border border-gray-100">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                  Test Audio
+                </h3>
+                <p className="text-sm text-gray-500">
+                  {voiceTestAgent.name}
+                </p>
+              </div>
               <Button 
                 variant="ghost" 
                 size="sm"
                 onClick={() => setVoiceTestAgent(null)}
-                className="h-8 w-8 p-0"
+                className="h-10 w-10 p-0 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600"
               >
                 ×
               </Button>
             </div>
             
-            <div className="flex justify-center">
+            <div className="p-8 flex flex-col items-center">
               <VoiceTestButton 
                 agentId={voiceTestAgent.agent_id}
                 agentName={voiceTestAgent.name}
               />
+            </div>
+            
+            <div className="px-6 pb-6">
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Agent ID:</span>
+                  <code className="text-xs text-gray-600 bg-white px-2 py-1 rounded border font-mono">
+                    {voiceTestAgent.agent_id}
+                  </code>
+                </div>
+              </div>
             </div>
           </div>
         </div>
