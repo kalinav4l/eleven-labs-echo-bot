@@ -789,8 +789,72 @@ const detectAdvertising = (doc: Document): string[] => {
   return advertising;
 };
 
-// Funcția principală de scraping
-const handleScrape = async (url: string): Promise<ScrapedData | null> => {
+// Funcție pentru detectarea link-urilor de paginare
+const detectPaginationLinks = (doc: Document, baseUrl: string): string[] => {
+  const paginationLinks: Set<string> = new Set();
+  
+  const paginationSelectors = [
+    'a[href*="page="]',
+    'a[href*="p="]',
+    'a[href*="pagina="]',
+    '.pagination a, .pager a, .page-numbers a',
+    'a:contains("Next"), a:contains("Următoarea"), a:contains("Următor")',
+    'a:contains("›"), a:contains("»")',
+    '.next a, .next-page a',
+    'a[class*="next"], a[class*="page"]',
+    'nav a[href*="page"]',
+    '.paginate a, .paging a'
+  ];
+
+  paginationSelectors.forEach(selector => {
+    try {
+      const links = doc.querySelectorAll(selector);
+      links.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href) {
+          let fullUrl = '';
+          if (href.startsWith('http')) {
+            fullUrl = href;
+          } else if (href.startsWith('/')) {
+            fullUrl = new URL(baseUrl).origin + href;
+          } else {
+            fullUrl = new URL(href, baseUrl).href;
+          }
+          
+          // Verifică dacă link-ul pare să fie pentru paginare
+          if (fullUrl.includes('page=') || fullUrl.includes('p=') || fullUrl.includes('pagina=') || 
+              /\/\d+\/?$/.test(fullUrl) || /page\/\d+/.test(fullUrl)) {
+            paginationLinks.add(fullUrl);
+          }
+        }
+      });
+    } catch (e) {
+      // Ignoră erorile pentru selectori invalizi
+    }
+  });
+
+  // Detectează automat numerele de pagină din URL-ul curent
+  const currentUrl = new URL(baseUrl);
+  const urlPattern = currentUrl.pathname;
+  
+  // Încearcă să detecteze pattern-uri comune de paginare
+  for (let i = 2; i <= 50; i++) { // Limitează la primele 50 de pagini pentru performanță
+    const patterns = [
+      `${currentUrl.origin}${urlPattern}?page=${i}`,
+      `${currentUrl.origin}${urlPattern}?p=${i}`,
+      `${currentUrl.origin}${urlPattern}/page/${i}`,
+      `${currentUrl.origin}${urlPattern}/${i}`,
+      `${currentUrl.origin}${urlPattern}?pagina=${i}`
+    ];
+    
+    patterns.forEach(pattern => paginationLinks.add(pattern));
+  }
+
+  return Array.from(paginationLinks).slice(0, 20); // Limitează la 20 de link-uri pentru performanță
+};
+
+// Funcție pentru scraping cu paginare
+const scrapePageWithProxy = async (url: string): Promise<string | null> => {
   const proxyServices = [
     `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
     `https://cors-anywhere.herokuapp.com/${url}`,
@@ -835,10 +899,10 @@ const handleScrape = async (url: string): Promise<ScrapedData | null> => {
         throw new Error('Conținut HTML prea mic sau invalid');
       }
 
-      return await extractAllContent(htmlContent, url);
+      return htmlContent;
       
     } catch (err) {
-      console.error(`Eroare cu proxy ${i + 1}:`, err);
+      console.error(`Eroare cu proxy ${i + 1} pentru ${url}:`, err);
       if (i === proxyServices.length - 1) {
         throw err;
       }
@@ -848,12 +912,107 @@ const handleScrape = async (url: string): Promise<ScrapedData | null> => {
   return null;
 };
 
+// Funcția principală de scraping cu paginare
+const handleScrape = async (url: string, onProgress?: (current: number, total: number) => void): Promise<ScrapedData | null> => {
+  try {
+    // Scrape pagina principală
+    const mainHtml = await scrapePageWithProxy(url);
+    if (!mainHtml) throw new Error('Nu s-a putut încărca pagina principală');
+
+    const mainData = await extractAllContent(mainHtml, url);
+    const parser = new DOMParser();
+    const mainDoc = parser.parseFromString(mainHtml, 'text/html');
+    
+    // Detectează link-urile de paginare
+    const paginationLinks = detectPaginationLinks(mainDoc, url);
+    console.log(`Găsite ${paginationLinks.length} link-uri de paginare:`, paginationLinks);
+    
+    if (onProgress) onProgress(1, paginationLinks.length + 1);
+    
+    // Scrape paginile suplimentare
+    const allProducts: Product[] = [...mainData.products];
+    const allLinks: Array<{ url: string; text: string; type: string; target: string; title: string }> = [...mainData.links];
+    const allImages: Array<{ src: string; alt: string; title: string; width: string; height: string; loading: string }> = [...mainData.images];
+    
+    let processedPages = 1;
+    
+    for (const pageUrl of paginationLinks.slice(0, 10)) { // Limitează la primele 10 pagini pentru performanță
+      try {
+        console.log(`Procesez pagina: ${pageUrl}`);
+        const pageHtml = await scrapePageWithProxy(pageUrl);
+        if (pageHtml && pageHtml.length > 100) {
+          const pageData = await extractAllContent(pageHtml, pageUrl);
+          
+          // Adaugă produsele unice (evită duplicatele)
+          pageData.products.forEach(product => {
+            const exists = allProducts.some(existing => 
+              existing.name === product.name || 
+              (existing.url === product.url && product.url !== url)
+            );
+            if (!exists) {
+              allProducts.push(product);
+            }
+          });
+          
+          // Adaugă link-urile și imaginile unice
+          pageData.links.forEach(link => {
+            const exists = allLinks.some(existing => existing.url === link.url);
+            if (!exists) allLinks.push({
+              url: link.url,
+              text: link.text,
+              type: link.type,
+              target: link.target || '',
+              title: link.title || ''
+            });
+          });
+          
+          pageData.images.forEach(image => {
+            const exists = allImages.some(existing => existing.src === image.src);
+            if (!exists) allImages.push({
+              src: image.src,
+              alt: image.alt,
+              title: image.title,
+              width: image.width || '',
+              height: image.height || '',
+              loading: image.loading || ''
+            });
+          });
+        }
+        
+        processedPages++;
+        if (onProgress) onProgress(processedPages, paginationLinks.length + 1);
+        
+        // Pauză între cereri pentru a evita blocarea
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+      } catch (pageError) {
+        console.error(`Eroare la procesarea paginii ${pageUrl}:`, pageError);
+        // Continuă cu următoarea pagină
+      }
+    }
+    
+    // Returnează datele combinate
+    return {
+      ...mainData,
+      products: allProducts,
+      links: allLinks,
+      images: allImages,
+      text: mainData.text + `\n\n[SCRAPED FROM ${processedPages} PAGES]`
+    };
+    
+  } catch (error) {
+    console.error('Eroare la scraping:', error);
+    throw error;
+  }
+};
+
 const Scraping = () => {
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [scrapedData, setScrapedData] = useState<ScrapedData | null>(null);
   const [error, setError] = useState('');
   const [structuredReport, setStructuredReport] = useState('');
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
 
   const handleSubmit = async () => {
     if (!url.trim()) {
@@ -881,9 +1040,12 @@ const Scraping = () => {
     setError('');
     setScrapedData(null);
     setStructuredReport('');
+    setProgress({ current: 0, total: 0 });
 
     try {
-      const data = await handleScrape(url);
+      const data = await handleScrape(url, (current, total) => {
+        setProgress({ current, total });
+      });
       setScrapedData(data);
       
       // Generăm raportul structurat
@@ -892,7 +1054,7 @@ const Scraping = () => {
       
       toast({
         title: "Scraping finalizat",
-        description: `Am extras ${data?.products.length || 0} produse și ${data?.links.length || 0} link-uri`,
+        description: `Am extras ${data?.products.length || 0} produse și ${data?.links.length || 0} link-uri din ${progress.current} pagini`,
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Eroare necunoscută';
@@ -905,6 +1067,7 @@ const Scraping = () => {
       });
     } finally {
       setIsLoading(false);
+      setProgress({ current: 0, total: 0 });
     }
   };
 
