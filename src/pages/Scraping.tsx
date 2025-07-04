@@ -73,13 +73,20 @@ interface ScrapedData {
   description: string;
   keywords: string;
   text: string;
-  links: Array<{ url: string; text: string; type: string }>;
-  images: Array<{ src: string; alt: string; title: string }>;
+  links: Array<{ url: string; text: string; type: string; target: string; title: string }>;
+  images: Array<{ src: string; alt: string; title: string; width: string; height: string; loading: string }>;
   metadata: Record<string, string>;
-  headings: Array<{ level: number; text: string }>;
-  forms: Array<{ action: string; method: string; inputs: Array<{ name: string; type: string }> }>;
-  scripts: string[];
-  styles: string[];
+  headings: Array<{ level: number; text: string; id: string; className: string }>;
+  forms: Array<{ action: string; method: string; enctype: string; inputs: Array<{ name: string; type: string; placeholder: string; required: boolean; id: string }> }>;
+  scripts: Array<{ src: string; content: string; type: string; async: boolean; defer: boolean }>;
+  styles: Array<{ href: string; content: string; media: string; type: string }>;
+  tables: Array<{ id: string; caption: string; headers: string[]; rows: string[][] }>;
+  lists: Array<{ id: string; type: string; items: string[] }>;
+  contactInfo: { emails: string[]; phones: string[]; addresses: string[] };
+  socialLinks: Array<{ url: string; text: string; type: string; target: string; title: string }>;
+  structuredData: any[];
+  media: { videos: Array<{ src: string; poster: string; controls: boolean; autoplay: boolean }>; audios: Array<{ src: string; controls: boolean; autoplay: boolean }> };
+  technologies: { cms: string[]; frameworks: string[]; analytics: string[]; advertising: string[] };
   products: Product[];
   timestamp: string;
 }
@@ -372,18 +379,38 @@ const extractAllContent = async (htmlContent: string, targetUrl: string): Promis
   const keywords = doc.querySelector('meta[name="keywords"]')?.getAttribute('content') || '';
   const textContent = doc.body?.textContent || '';
 
-  const links = Array.from(doc.querySelectorAll('a')).map(link => ({
-    url: link.href || link.getAttribute('href') || '',
-    text: link.textContent?.trim() || '',
-    type: link.getAttribute('rel') || 'link'
-  }));
+  // Extrage toate link-urile cu informații detaliate
+  const links = Array.from(doc.querySelectorAll('a')).map(link => {
+    let url = link.href || link.getAttribute('href') || '';
+    if (url.startsWith('/') && !url.startsWith('//')) {
+      url = new URL(targetUrl).origin + url;
+    }
+    return {
+      url,
+      text: link.textContent?.trim() || '',
+      type: link.getAttribute('rel') || 'link',
+      target: link.getAttribute('target') || '',
+      title: link.getAttribute('title') || ''
+    };
+  });
 
-  const images = Array.from(doc.querySelectorAll('img')).map(img => ({
-    src: img.src || img.getAttribute('src') || '',
-    alt: img.alt || '',
-    title: img.title || ''
-  }));
+  // Extrage toate imaginile cu informații complete
+  const images = Array.from(doc.querySelectorAll('img')).map(img => {
+    let src = img.src || img.getAttribute('src') || img.getAttribute('data-src') || '';
+    if (src.startsWith('/') && !src.startsWith('//')) {
+      src = new URL(targetUrl).origin + src;
+    }
+    return {
+      src,
+      alt: img.alt || '',
+      title: img.title || '',
+      width: img.getAttribute('width') || '',
+      height: img.getAttribute('height') || '',
+      loading: img.getAttribute('loading') || ''
+    };
+  });
 
+  // Extrage toate meta tag-urile
   const metadata: Record<string, string> = {};
   Array.from(doc.querySelectorAll('meta')).forEach(meta => {
     const name = meta.getAttribute('name') || meta.getAttribute('property') || meta.getAttribute('http-equiv');
@@ -393,27 +420,105 @@ const extractAllContent = async (htmlContent: string, targetUrl: string): Promis
     }
   });
 
+  // Extrage structura titlurilor
   const headings = Array.from(doc.querySelectorAll('h1, h2, h3, h4, h5, h6')).map(heading => ({
     level: parseInt(heading.tagName.replace('H', '')),
-    text: heading.textContent?.trim() || ''
+    text: heading.textContent?.trim() || '',
+    id: heading.getAttribute('id') || '',
+    className: heading.getAttribute('class') || ''
   }));
 
+  // Extrage toate formularele
   const forms = Array.from(doc.querySelectorAll('form')).map(form => ({
     action: form.action || '',
     method: form.method || 'GET',
+    enctype: form.getAttribute('enctype') || '',
     inputs: Array.from(form.querySelectorAll('input, textarea, select')).map(input => ({
       name: input.getAttribute('name') || '',
-      type: input.getAttribute('type') || input.tagName.toLowerCase()
+      type: input.getAttribute('type') || input.tagName.toLowerCase(),
+      placeholder: input.getAttribute('placeholder') || '',
+      required: input.hasAttribute('required'),
+      id: input.getAttribute('id') || ''
     }))
   }));
 
-  const scripts = Array.from(doc.querySelectorAll('script')).map(script => 
-    script.src || script.textContent || ''
-  ).filter(Boolean);
+  // Extrage toate script-urile
+  const scripts = Array.from(doc.querySelectorAll('script')).map(script => ({
+    src: script.src || '',
+    content: script.textContent?.slice(0, 500) || '',
+    type: script.getAttribute('type') || '',
+    async: script.hasAttribute('async'),
+    defer: script.hasAttribute('defer')
+  })).filter(script => script.src || script.content);
 
-  const styles = Array.from(doc.querySelectorAll('link[rel="stylesheet"], style')).map(style => 
-    style.getAttribute('href') || style.textContent || ''
-  ).filter(Boolean);
+  // Extrage toate stilurile
+  const styles = Array.from(doc.querySelectorAll('link[rel="stylesheet"], style')).map(style => ({
+    href: style.getAttribute('href') || '',
+    content: style.textContent?.slice(0, 500) || '',
+    media: style.getAttribute('media') || '',
+    type: style.getAttribute('type') || ''
+  })).filter(style => style.href || style.content);
+
+  // Extrage toate tabelele
+  const tables = Array.from(doc.querySelectorAll('table')).map((table, index) => ({
+    id: `table_${index}`,
+    caption: table.querySelector('caption')?.textContent?.trim() || '',
+    headers: Array.from(table.querySelectorAll('th')).map(th => th.textContent?.trim() || ''),
+    rows: Array.from(table.querySelectorAll('tr')).map(tr => 
+      Array.from(tr.querySelectorAll('td')).map(td => td.textContent?.trim() || '')
+    ).filter(row => row.length > 0)
+  }));
+
+  // Extrage toate listele
+  const lists = Array.from(doc.querySelectorAll('ul, ol')).map((list, index) => ({
+    id: `list_${index}`,
+    type: list.tagName.toLowerCase(),
+    items: Array.from(list.querySelectorAll('li')).map(li => li.textContent?.trim() || '')
+  }));
+
+  // Extrage informații de contact
+  const contactInfo = {
+    emails: Array.from(new Set(textContent.match(/[\w\.-]+@[\w\.-]+\.\w+/g) || [])),
+    phones: Array.from(new Set(textContent.match(/(\+\d{1,3}[-.\s]?)?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g) || [])),
+    addresses: Array.from(doc.querySelectorAll('[itemtype*="PostalAddress"], .address, [class*="address"]')).map(el => el.textContent?.trim() || '')
+  };
+
+  // Extrage link-uri sociale
+  const socialLinks = links.filter(link => 
+    /facebook|twitter|instagram|linkedin|youtube|tiktok|pinterest|snapchat/i.test(link.url)
+  );
+
+  // Extrage date structurate JSON-LD
+  const structuredData = Array.from(doc.querySelectorAll('script[type="application/ld+json"]')).map(script => {
+    try {
+      return JSON.parse(script.textContent || '');
+    } catch {
+      return null;
+    }
+  }).filter(Boolean);
+
+  // Extrage toate elementele video și audio
+  const media = {
+    videos: Array.from(doc.querySelectorAll('video, iframe[src*="youtube"], iframe[src*="vimeo"]')).map(video => ({
+      src: video.getAttribute('src') || '',
+      poster: video.getAttribute('poster') || '',
+      controls: video.hasAttribute('controls'),
+      autoplay: video.hasAttribute('autoplay')
+    })),
+    audios: Array.from(doc.querySelectorAll('audio')).map(audio => ({
+      src: audio.getAttribute('src') || '',
+      controls: audio.hasAttribute('controls'),
+      autoplay: audio.hasAttribute('autoplay')
+    }))
+  };
+
+  // Detectează tehnologiile folosite
+  const technologies = {
+    cms: detectCMS(doc),
+    frameworks: detectFrameworks(doc),
+    analytics: detectAnalytics(doc),
+    advertising: detectAdvertising(doc)
+  };
 
   const products = detectProducts(doc, targetUrl);
 
@@ -430,9 +535,54 @@ const extractAllContent = async (htmlContent: string, targetUrl: string): Promis
     forms,
     scripts,
     styles,
+    tables,
+    lists,
+    contactInfo,
+    socialLinks,
+    structuredData,
+    media,
+    technologies,
     products,
     timestamp: new Date().toISOString()
   };
+};
+
+// Funcții pentru detectarea tehnologiilor
+const detectCMS = (doc: Document): string[] => {
+  const cms = [];
+  if (doc.querySelector('meta[name="generator"][content*="WordPress"]')) cms.push('WordPress');
+  if (doc.querySelector('script[src*="drupal"]')) cms.push('Drupal');
+  if (doc.querySelector('script[src*="joomla"]')) cms.push('Joomla');
+  if (doc.querySelector('meta[name="generator"][content*="Shopify"]')) cms.push('Shopify');
+  if (doc.querySelector('script[src*="wix"]')) cms.push('Wix');
+  return cms;
+};
+
+const detectFrameworks = (doc: Document): string[] => {
+  const frameworks = [];
+  if (doc.querySelector('script[src*="react"]')) frameworks.push('React');
+  if (doc.querySelector('script[src*="vue"]')) frameworks.push('Vue.js');
+  if (doc.querySelector('script[src*="angular"]')) frameworks.push('Angular');
+  if (doc.querySelector('script[src*="jquery"]')) frameworks.push('jQuery');
+  if (doc.querySelector('script[src*="bootstrap"]')) frameworks.push('Bootstrap');
+  return frameworks;
+};
+
+const detectAnalytics = (doc: Document): string[] => {
+  const analytics = [];
+  if (doc.querySelector('script[src*="google-analytics"]') || doc.querySelector('script[src*="gtag"]')) analytics.push('Google Analytics');
+  if (doc.querySelector('script[src*="facebook.net"]')) analytics.push('Facebook Pixel');
+  if (doc.querySelector('script[src*="hotjar"]')) analytics.push('Hotjar');
+  if (doc.querySelector('script[src*="mixpanel"]')) analytics.push('Mixpanel');
+  return analytics;
+};
+
+const detectAdvertising = (doc: Document): string[] => {
+  const advertising = [];
+  if (doc.querySelector('script[src*="googlesyndication"]')) advertising.push('Google AdSense');
+  if (doc.querySelector('script[src*="doubleclick"]')) advertising.push('Google Ad Manager');
+  if (doc.querySelector('script[src*="amazon-adsystem"]')) advertising.push('Amazon Ads');
+  return advertising;
 };
 
 // Funcția principală de scraping
@@ -620,20 +770,26 @@ const Scraping = () => {
                 <FileText className="w-5 h-5" />
                 Rezultate Scraping
               </CardTitle>
-              <div className="flex gap-4 text-sm text-gray-600">
-                <span>{scrapedData.products.length} produse găsite</span>
+              <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                <span>{scrapedData.products.length} produse</span>
                 <span>{scrapedData.images.length} imagini</span>
                 <span>{scrapedData.links.length} link-uri</span>
+                <span>{scrapedData.tables.length} tabele</span>
+                <span>{scrapedData.contactInfo.emails.length} email-uri</span>
+                <span>{scrapedData.technologies.cms.length + scrapedData.technologies.frameworks.length} tehnologii</span>
               </div>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="grid w-full grid-cols-5">
-                  <TabsTrigger value="overview">Prezentare</TabsTrigger>
-                  <TabsTrigger value="products">Produse</TabsTrigger>
-                  <TabsTrigger value="images">Imagini</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 text-xs">
+                  <TabsTrigger value="overview">General</TabsTrigger>
+                  <TabsTrigger value="content">Conținut</TabsTrigger>
+                  <TabsTrigger value="media">Media</TabsTrigger>
                   <TabsTrigger value="links">Link-uri</TabsTrigger>
-                  <TabsTrigger value="metadata">Metadata</TabsTrigger>
+                  <TabsTrigger value="contact">Contact</TabsTrigger>
+                  <TabsTrigger value="tech">Tehnologii</TabsTrigger>
+                  <TabsTrigger value="products">Produse</TabsTrigger>
+                  <TabsTrigger value="data">Date</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-4">
@@ -782,33 +938,314 @@ const Scraping = () => {
                   </ScrollArea>
                 </TabsContent>
 
-                <TabsContent value="metadata" className="space-y-4">
-                  <div className="space-y-4">
-                    <Card className="p-4">
-                      <h4 className="font-medium text-gray-900 mb-3">Meta Tags</h4>
-                      <div className="space-y-2">
-                        {Object.entries(scrapedData.metadata).map(([key, value]) => (
-                          <div key={key} className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
-                            <span className="font-medium text-gray-700">{key}</span>
-                            <span className="md:col-span-2 text-gray-600 break-words">{value}</span>
+                <TabsContent value="content" className="space-y-4">
+                  <ScrollArea className="h-[600px]">
+                    <div className="space-y-4">
+                      <Card className="p-4">
+                        <h4 className="font-medium text-gray-900 mb-3">Titluri și Structură</h4>
+                        <div className="space-y-1">
+                          {scrapedData.headings.map((heading, index) => (
+                            <div key={index} className="flex items-center gap-2 text-sm">
+                              <Badge variant="outline" className="text-xs">H{heading.level}</Badge>
+                              <span className="text-gray-700">{heading.text}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </Card>
+
+                      {scrapedData.tables.length > 0 && (
+                        <Card className="p-4">
+                          <h4 className="font-medium text-gray-900 mb-3">Tabele ({scrapedData.tables.length})</h4>
+                          <div className="space-y-3">
+                            {scrapedData.tables.slice(0, 3).map((table) => (
+                              <div key={table.id} className="border rounded-lg p-3 bg-gray-50">
+                                {table.caption && <h5 className="font-medium mb-2">{table.caption}</h5>}
+                                {table.headers.length > 0 && (
+                                  <div className="text-xs text-gray-600 mb-1">
+                                    Coloane: {table.headers.join(', ')}
+                                  </div>
+                                )}
+                                <div className="text-xs text-gray-500">
+                                  {table.rows.length} rânduri de date
+                                </div>
+                              </div>
+                            ))}
                           </div>
+                        </Card>
+                      )}
+
+                      {scrapedData.lists.length > 0 && (
+                        <Card className="p-4">
+                          <h4 className="font-medium text-gray-900 mb-3">Liste ({scrapedData.lists.length})</h4>
+                          <div className="space-y-3">
+                            {scrapedData.lists.slice(0, 5).map((list) => (
+                              <div key={list.id} className="border rounded-lg p-3 bg-gray-50">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Badge variant="outline" className="text-xs">{list.type.toUpperCase()}</Badge>
+                                  <span className="text-xs text-gray-500">{list.items.length} elemente</span>
+                                </div>
+                                <div className="text-sm text-gray-700">
+                                  {list.items.slice(0, 3).map((item, i) => (
+                                    <div key={i} className="truncate">• {item}</div>
+                                  ))}
+                                  {list.items.length > 3 && (
+                                    <div className="text-xs text-gray-500">...și încă {list.items.length - 3}</div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </Card>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+
+                <TabsContent value="media" className="space-y-4">
+                  <ScrollArea className="h-[600px]">
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {scrapedData.images.slice(0, 20).map((image, index) => (
+                          <Card key={index} className="p-3">
+                            <img 
+                              src={image.src} 
+                              alt={image.alt}
+                              className="w-full h-24 object-cover rounded mb-2 bg-gray-100"
+                              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                            />
+                            <div className="text-xs space-y-1">
+                              <p className="truncate font-medium" title={image.alt}>
+                                {image.alt || 'Fără descriere'}
+                              </p>
+                              {image.width && image.height && (
+                                <p className="text-gray-500">{image.width}×{image.height}</p>
+                              )}
+                            </div>
+                          </Card>
                         ))}
+                      </div>
+
+                      {scrapedData.media.videos.length > 0 && (
+                        <Card className="p-4">
+                          <h4 className="font-medium text-gray-900 mb-3">Video ({scrapedData.media.videos.length})</h4>
+                          <div className="space-y-2">
+                            {scrapedData.media.videos.map((video, index) => (
+                              <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                                <p className="text-sm truncate">{video.src}</p>
+                                <div className="flex gap-2 mt-1">
+                                  {video.controls && <Badge variant="outline" className="text-xs">Controls</Badge>}
+                                  {video.autoplay && <Badge variant="outline" className="text-xs">Autoplay</Badge>}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </Card>
+                      )}
+
+                      {scrapedData.media.audios.length > 0 && (
+                        <Card className="p-4">
+                          <h4 className="font-medium text-gray-900 mb-3">Audio ({scrapedData.media.audios.length})</h4>
+                          <div className="space-y-2">
+                            {scrapedData.media.audios.map((audio, index) => (
+                              <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                                <p className="text-sm truncate">{audio.src}</p>
+                                <div className="flex gap-2 mt-1">
+                                  {audio.controls && <Badge variant="outline" className="text-xs">Controls</Badge>}
+                                  {audio.autoplay && <Badge variant="outline" className="text-xs">Autoplay</Badge>}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </Card>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+
+                <TabsContent value="contact" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card className="p-4">
+                      <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                        Email ({scrapedData.contactInfo.emails.length})
+                      </h4>
+                      <div className="space-y-1">
+                        {scrapedData.contactInfo.emails.map((email, index) => (
+                          <p key={index} className="text-sm text-gray-700 truncate">{email}</p>
+                        ))}
+                        {scrapedData.contactInfo.emails.length === 0 && (
+                          <p className="text-sm text-gray-500">Nu au fost găsite email-uri</p>
+                        )}
                       </div>
                     </Card>
 
                     <Card className="p-4">
-                      <h4 className="font-medium text-gray-900 mb-3">Structura Titlurilor</h4>
+                      <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                        Telefon ({scrapedData.contactInfo.phones.length})
+                      </h4>
                       <div className="space-y-1">
-                        {scrapedData.headings.map((heading, index) => (
-                          <div key={index} className="flex items-center gap-2 text-sm">
-                            <Badge variant="outline" className="text-xs">
-                              H{heading.level}
-                            </Badge>
-                            <span className="text-gray-700">{heading.text}</span>
+                        {scrapedData.contactInfo.phones.map((phone, index) => (
+                          <p key={index} className="text-sm text-gray-700">{phone}</p>
+                        ))}
+                        {scrapedData.contactInfo.phones.length === 0 && (
+                          <p className="text-sm text-gray-500">Nu au fost găsite telefoane</p>
+                        )}
+                      </div>
+                    </Card>
+
+                    <Card className="p-4">
+                      <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                        Adrese ({scrapedData.contactInfo.addresses.length})
+                      </h4>
+                      <div className="space-y-1">
+                        {scrapedData.contactInfo.addresses.map((address, index) => (
+                          <p key={index} className="text-sm text-gray-700">{address}</p>
+                        ))}
+                        {scrapedData.contactInfo.addresses.length === 0 && (
+                          <p className="text-sm text-gray-500">Nu au fost găsite adrese</p>
+                        )}
+                      </div>
+                    </Card>
+                  </div>
+
+                  {scrapedData.socialLinks.length > 0 && (
+                    <Card className="p-4">
+                      <h4 className="font-medium text-gray-900 mb-3">Social Media ({scrapedData.socialLinks.length})</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {scrapedData.socialLinks.map((social, index) => (
+                          <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{social.text || 'Link social'}</p>
+                              <p className="text-xs text-gray-500 truncate">{social.url}</p>
+                            </div>
                           </div>
                         ))}
                       </div>
                     </Card>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="tech" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card className="p-4">
+                      <h4 className="font-medium text-gray-900 mb-3">CMS & Platforme</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {scrapedData.technologies.cms.map((cms, index) => (
+                          <Badge key={index} variant="outline">{cms}</Badge>
+                        ))}
+                        {scrapedData.technologies.cms.length === 0 && (
+                          <p className="text-sm text-gray-500">Nu au fost detectate</p>
+                        )}
+                      </div>
+                    </Card>
+
+                    <Card className="p-4">
+                      <h4 className="font-medium text-gray-900 mb-3">Framework-uri</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {scrapedData.technologies.frameworks.map((framework, index) => (
+                          <Badge key={index} variant="outline">{framework}</Badge>
+                        ))}
+                        {scrapedData.technologies.frameworks.length === 0 && (
+                          <p className="text-sm text-gray-500">Nu au fost detectate</p>
+                        )}
+                      </div>
+                    </Card>
+
+                    <Card className="p-4">
+                      <h4 className="font-medium text-gray-900 mb-3">Analytics</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {scrapedData.technologies.analytics.map((analytics, index) => (
+                          <Badge key={index} variant="outline">{analytics}</Badge>
+                        ))}
+                        {scrapedData.technologies.analytics.length === 0 && (
+                          <p className="text-sm text-gray-500">Nu au fost detectate</p>
+                        )}
+                      </div>
+                    </Card>
+
+                    <Card className="p-4">
+                      <h4 className="font-medium text-gray-900 mb-3">Publicitate</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {scrapedData.technologies.advertising.map((ad, index) => (
+                          <Badge key={index} variant="outline">{ad}</Badge>
+                        ))}
+                        {scrapedData.technologies.advertising.length === 0 && (
+                          <p className="text-sm text-gray-500">Nu au fost detectate</p>
+                        )}
+                      </div>
+                    </Card>
+                  </div>
+
+                  {scrapedData.scripts.length > 0 && (
+                    <Card className="p-4">
+                      <h4 className="font-medium text-gray-900 mb-3">Script-uri ({scrapedData.scripts.length})</h4>
+                      <ScrollArea className="h-48">
+                        <div className="space-y-2">
+                          {scrapedData.scripts.slice(0, 10).map((script, index) => (
+                            <div key={index} className="p-2 bg-gray-50 rounded text-xs">
+                              <p className="truncate font-mono">{script.src || 'Script inline'}</p>
+                              <div className="flex gap-2 mt-1">
+                                {script.type && <Badge variant="outline" className="text-xs">{script.type}</Badge>}
+                                {script.async && <Badge variant="outline" className="text-xs">async</Badge>}
+                                {script.defer && <Badge variant="outline" className="text-xs">defer</Badge>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </Card>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="data" className="space-y-4">
+                  <div className="space-y-4">
+                    <Card className="p-4">
+                      <h4 className="font-medium text-gray-900 mb-3">Meta Tags</h4>
+                      <ScrollArea className="h-64">
+                        <div className="space-y-2">
+                          {Object.entries(scrapedData.metadata).map(([key, value]) => (
+                            <div key={key} className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                              <span className="font-medium text-gray-700">{key}</span>
+                              <span className="md:col-span-2 text-gray-600 break-words">{value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </Card>
+
+                    {scrapedData.structuredData.length > 0 && (
+                      <Card className="p-4">
+                        <h4 className="font-medium text-gray-900 mb-3">Date Structurate JSON-LD ({scrapedData.structuredData.length})</h4>
+                        <ScrollArea className="h-64">
+                          <div className="space-y-2">
+                            {scrapedData.structuredData.map((data, index) => (
+                              <div key={index} className="p-3 bg-gray-50 rounded">
+                                <pre className="text-xs overflow-auto">{JSON.stringify(data, null, 2)}</pre>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                      </Card>
+                    )}
+
+                    {scrapedData.forms.length > 0 && (
+                      <Card className="p-4">
+                        <h4 className="font-medium text-gray-900 mb-3">Formulare ({scrapedData.forms.length})</h4>
+                        <div className="space-y-3">
+                          {scrapedData.forms.map((form, index) => (
+                            <div key={index} className="border rounded-lg p-3 bg-gray-50">
+                              <div className="flex gap-2 mb-2">
+                                <Badge variant="outline" className="text-xs">{form.method}</Badge>
+                                {form.enctype && <Badge variant="outline" className="text-xs">{form.enctype}</Badge>}
+                              </div>
+                              <p className="text-sm truncate mb-2">{form.action || 'Fără action'}</p>
+                              <div className="text-xs text-gray-600">
+                                {form.inputs.length} câmpuri: {form.inputs.map(i => i.type).join(', ')}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </Card>
+                    )}
 
                     <div className="text-xs text-gray-500">
                       Extras la: {new Date(scrapedData.timestamp).toLocaleString('ro-RO')}
