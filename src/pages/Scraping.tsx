@@ -946,7 +946,304 @@ const scrapePageWithProxy = async (url: string): Promise<string | null> => {
   return null;
 };
 
-// Funcția principală de scraping cu CRAWLING PROFUND
+// Funcția pentru scraping profund al unui produs individual
+const scrapeProductDetails = async (productUrl: string): Promise<any> => {
+  try {
+    console.log(`🔍 Scraping detalii produs: ${productUrl}`);
+    
+    const htmlContent = await scrapePageWithProxy(productUrl);
+    if (!htmlContent || htmlContent.length < 100) {
+      return null;
+    }
+    
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlContent, 'text/html');
+    
+    // Extrage toate detaliile posibile automat
+    const details: any = {};
+    
+    // Titlul principal - încearcă mai multe selectori
+    const titleSelectors = [
+      'h1', '.product-title', '.title', '.name', '.product-name',
+      '[class*="title"]', '[class*="name"]', '[data-title]', '.heading',
+      '.product-heading', '.item-title', '.page-title'
+    ];
+    for (const selector of titleSelectors) {
+      const titleEl = doc.querySelector(selector);
+      if (titleEl?.textContent?.trim()) {
+        details.title = titleEl.textContent.trim();
+        break;
+      }
+    }
+    
+    // Preț - selectori extinși
+    const priceSelectors = [
+      '[class*="price"]', '[class*="cost"]', '[class*="amount"]', '[class*="valor"]',
+      '.price', '.cost', '.amount', '[data-price]', '.pricing', '.price-current',
+      '.sale-price', '.regular-price', '.product-price', '.item-price',
+      '.precio', '.pret', '.pris', '.prix'
+    ];
+    for (const selector of priceSelectors) {
+      const priceEl = doc.querySelector(selector);
+      if (priceEl?.textContent?.trim()) {
+        const priceText = priceEl.textContent.trim();
+        if (/[\d,.\s]+/.test(priceText)) {
+          details.price = priceText;
+          break;
+        }
+      }
+    }
+    
+    // Descriere completă
+    const descSelectors = [
+      '.description', '.product-description', '[class*="desc"]', '.content',
+      '.details', '.summary', '.info', '.product-info', '.overview',
+      '.about', '.features', '.product-features', '.detail', '.specification'
+    ];
+    let fullDescription = '';
+    for (const selector of descSelectors) {
+      const descEl = doc.querySelector(selector);
+      if (descEl?.textContent?.trim()) {
+        const desc = descEl.textContent.trim();
+        if (desc.length > fullDescription.length) {
+          fullDescription = desc;
+        }
+      }
+    }
+    if (fullDescription) details.description = fullDescription;
+    
+    // Specificații și caracteristici - extragere automată avansată
+    const specs: any = {};
+    
+    // Caută tabele cu specificații
+    const specTables = doc.querySelectorAll('table, .specs-table, .specifications, .specs, .attributes, .properties');
+    specTables.forEach(table => {
+      const rows = table.querySelectorAll('tr, .row, .spec-item, .attribute, .property');
+      rows.forEach(row => {
+        const cells = row.querySelectorAll('td, th, .key, .value, .label, .name, .spec-name, .spec-value');
+        if (cells.length >= 2) {
+          const key = cells[0].textContent?.trim();
+          const value = cells[1].textContent?.trim();
+          if (key && value && key.length < 200 && value.length < 1000) {
+            specs[key] = value;
+          }
+        }
+      });
+    });
+    
+    // Caută specificații în format listă cu două puncte
+    const listItems = doc.querySelectorAll('li, p, div, span');
+    listItems.forEach(item => {
+      const text = item.textContent?.trim();
+      if (text && text.includes(':') && text.length < 300) {
+        const [key, ...valueParts] = text.split(':');
+        const value = valueParts.join(':').trim();
+        if (key.trim() && value && key.length < 100 && value.length < 500) {
+          specs[key.trim()] = value;
+        }
+      }
+    });
+    
+    // Caută specificații în elemente cu clase specifice
+    const specSelectors = [
+      '.spec', '.attribute', '.property', '.feature', '.characteristic',
+      '[class*="spec"]', '[class*="attribute"]', '[class*="property"]',
+      '[class*="feature"]', '[class*="detail"]'
+    ];
+    specSelectors.forEach(selector => {
+      const elements = doc.querySelectorAll(selector);
+      elements.forEach(el => {
+        const text = el.textContent?.trim();
+        if (text && text.includes(':')) {
+          const [key, ...valueParts] = text.split(':');
+          const value = valueParts.join(':').trim();
+          if (key.trim() && value && key.length < 100 && value.length < 500) {
+            specs[key.trim()] = value;
+          }
+        }
+      });
+    });
+    
+    if (Object.keys(specs).length > 0) {
+      details.specifications = specs;
+    }
+    
+    // Dimensiuni - caută automat
+    const dimensionKeywords = ['dimensiuni', 'mărime', 'size', 'dimensions', 'lungime', 'lățime', 'înălțime', 'greutate', 'weight'];
+    const dimensions: any = {};
+    
+    Object.entries(specs).forEach(([key, value]) => {
+      if (dimensionKeywords.some(keyword => key.toLowerCase().includes(keyword))) {
+        dimensions[key] = value;
+      }
+    });
+    
+    // Caută dimensiuni și în textul principal
+    const dimensionPatterns = [
+      /dimensiuni[:\s]*([^\n\r.;]+)/i,
+      /mărime[:\s]*([^\n\r.;]+)/i,
+      /size[:\s]*([^\n\r.;]+)/i,
+      /(\d+[x×]\d+[x×]?\d*\s*(?:cm|mm|m|inch|in)?)/gi
+    ];
+    
+    const bodyText = doc.body.textContent || '';
+    dimensionPatterns.forEach(pattern => {
+      const matches = bodyText.match(pattern);
+      if (matches) {
+        matches.forEach(match => {
+          if (!dimensions['Dimensiuni detectate']) {
+            dimensions['Dimensiuni detectate'] = [];
+          }
+          if (Array.isArray(dimensions['Dimensiuni detectate'])) {
+            dimensions['Dimensiuni detectate'].push(match.trim());
+          }
+        });
+      }
+    });
+    
+    if (Object.keys(dimensions).length > 0) {
+      details.dimensions = dimensions;
+    }
+    
+    // Imagini - extragere completă
+    const images = [];
+    const imgElements = doc.querySelectorAll('img, source, [style*="background-image"]');
+    imgElements.forEach(img => {
+      let src = '';
+      if (img.tagName === 'IMG') {
+        src = img.getAttribute('src') || img.getAttribute('data-src') || img.getAttribute('data-lazy-src') || '';
+      } else if (img.tagName === 'SOURCE') {
+        src = img.getAttribute('srcset')?.split(' ')[0] || '';
+      } else {
+        const style = img.getAttribute('style') || '';
+        const match = style.match(/background-image:\s*url\(['"]?([^'"]+)['"]?\)/);
+        if (match) src = match[1];
+      }
+      
+      if (src && !src.includes('data:') && !src.includes('placeholder')) {
+        try {
+          const fullUrl = new URL(src, productUrl).href;
+          images.push({
+            src: fullUrl,
+            alt: img.getAttribute('alt') || '',
+            title: img.getAttribute('title') || ''
+          });
+        } catch (e) {
+          // Skip invalid URLs
+        }
+      }
+    });
+    
+    if (images.length > 0) {
+      details.images = images.slice(0, 20); // Limitează la 20 imagini
+    }
+    
+    // Brand/Producător
+    const brandSelectors = [
+      '.brand', '.manufacturer', '[class*="brand"]', '[class*="manufacturer"]',
+      '[data-brand]', '.make', '.producer', '.fabricant'
+    ];
+    for (const selector of brandSelectors) {
+      const brandEl = doc.querySelector(selector);
+      if (brandEl?.textContent?.trim()) {
+        details.brand = brandEl.textContent.trim();
+        break;
+      }
+    }
+    
+    // Disponibilitate/Stock
+    const stockSelectors = [
+      '.stock', '.availability', '[class*="available"]', '[class*="stock"]',
+      '.in-stock', '.out-of-stock', '[data-stock]', '.inventory'
+    ];
+    for (const selector of stockSelectors) {
+      const stockEl = doc.querySelector(selector);
+      if (stockEl?.textContent?.trim()) {
+        details.availability = stockEl.textContent.trim();
+        break;
+      }
+    }
+    
+    // Categorie/Breadcrumbs
+    const categorySelectors = [
+      '.breadcrumb', '.breadcrumbs', '.category', '.categories',
+      '[class*="breadcrumb"]', '[class*="category"]', 'nav a', '.nav a'
+    ];
+    const categories = [];
+    for (const selector of categorySelectors) {
+      const catElements = doc.querySelectorAll(selector);
+      catElements.forEach(el => {
+        const text = el.textContent?.trim();
+        if (text && text.length < 100 && !categories.includes(text)) {
+          categories.push(text);
+        }
+      });
+      if (categories.length > 0) break;
+    }
+    if (categories.length > 0) {
+      details.category = categories.join(' > ');
+    }
+    
+    // Rating/Recenzii
+    const ratingSelectors = [
+      '.rating', '.stars', '[class*="rating"]', '[class*="review"]',
+      '[class*="star"]', '.score', '.reviews'
+    ];
+    for (const selector of ratingSelectors) {
+      const ratingEl = doc.querySelector(selector);
+      if (ratingEl?.textContent?.trim()) {
+        details.rating = ratingEl.textContent.trim();
+        break;
+      }
+    }
+    
+    // Informații suplimentare - extrage tot textul util
+    const additionalInfo = [];
+    const textSelectors = ['p', 'li', 'span', 'div'];
+    const textElements = doc.querySelectorAll(textSelectors.join(', '));
+    
+    textElements.forEach(el => {
+      const text = el.textContent?.trim();
+      if (text && text.length > 20 && text.length < 500 && 
+          !text.includes('cookie') && !text.includes('privacy') &&
+          !text.includes('copyright') && !text.includes('©')) {
+        additionalInfo.push(text);
+      }
+    });
+    
+    details.additionalInfo = additionalInfo.slice(0, 50); // Primele 50 texte relevante
+    
+    // Meta informații
+    const metaSelectors = [
+      'meta[name="description"]',
+      'meta[property="og:description"]',
+      'meta[name="keywords"]'
+    ];
+    
+    metaSelectors.forEach(selector => {
+      const metaEl = doc.querySelector(selector);
+      if (metaEl) {
+        const content = metaEl.getAttribute('content');
+        if (content) {
+          details.metaInfo = details.metaInfo || {};
+          details.metaInfo[selector.replace(/[^a-zA-Z]/g, '')] = content;
+        }
+      }
+    });
+    
+    // Conținut complet de pe pagină (primele 3000 caractere)
+    details.fullPageContent = doc.body.textContent?.trim().substring(0, 3000);
+    
+    console.log(`✅ Extras detalii pentru: ${details.title || 'Produs neidentificat'}`);
+    return details;
+    
+  } catch (error) {
+    console.error('❌ Eroare la scraping detalii produs:', error);
+    return null;
+  }
+};
+
+// Funcția principală de scraping cu CRAWLING PROFUND ȘI SCRAPING INDIVIDUAL AL PRODUSELOR
 const handleScrape = async (url: string, onProgress?: (current: number, total: number) => void): Promise<ScrapedData | null> => {
   try {
     const visitedUrls: Set<string> = new Set();
@@ -985,8 +1282,84 @@ const handleScrape = async (url: string, onProgress?: (current: number, total: n
           mainData = pageData;
         }
         
-        // Adaugă produsele unice
-        pageData.products.forEach(product => {
+        // Pentru fiecare produs găsit, fă scraping profund individual
+        const enhancedProducts: Product[] = [];
+        for (const product of pageData.products) {
+          let enhancedProduct = { ...product };
+          
+          // Dacă produsul are un link, fă scraping profund
+          if (product.url && product.url !== currentUrl) {
+            try {
+              console.log(`🔍 Analizez produsul: ${product.name}`);
+              const productDetails = await scrapeProductDetails(product.url);
+              
+              if (productDetails) {
+                // Combină informațiile existente cu cele noi
+                enhancedProduct = {
+                  ...enhancedProduct,
+                  name: productDetails.title || enhancedProduct.name,
+                  description: productDetails.description || enhancedProduct.description,
+                  price: productDetails.price || enhancedProduct.price,
+                  specifications: {
+                    ...enhancedProduct.specifications,
+                    ...productDetails.specifications
+                  },
+                  brand: productDetails.brand || enhancedProduct.brand,
+                  availability: productDetails.availability || enhancedProduct.availability,
+                  category: productDetails.category || enhancedProduct.category,
+                  rating: productDetails.rating || enhancedProduct.rating,
+                };
+                
+                // Adaugă imaginile noi
+                if (productDetails.images && productDetails.images.length > 0) {
+                  const existingImages = enhancedProduct.images.map(img => img.src);
+                  const newImages = productDetails.images
+                    .filter((img: any) => !existingImages.includes(img.src))
+                    .map((img: any) => ({
+                      src: img.src,
+                      alt: img.alt || '',
+                      title: img.title || '',
+                      type: 'gallery' as const
+                    }));
+                  enhancedProduct.images = [...enhancedProduct.images, ...newImages];
+                }
+                
+                // Adaugă informații suplimentare
+                if (productDetails.dimensions) {
+                  enhancedProduct.specifications = {
+                    ...enhancedProduct.specifications,
+                    'Dimensiuni': JSON.stringify(productDetails.dimensions)
+                  };
+                }
+                
+                if (productDetails.additionalInfo && productDetails.additionalInfo.length > 0) {
+                  enhancedProduct.features = [
+                    ...enhancedProduct.features,
+                    ...productDetails.additionalInfo.slice(0, 10)
+                  ];
+                }
+                
+                if (productDetails.fullPageContent) {
+                  enhancedProduct.specifications = {
+                    ...enhancedProduct.specifications,
+                    'Conținut complet pagină': productDetails.fullPageContent.substring(0, 1000)
+                  };
+                }
+              }
+              
+              // Pauză între cererile de produse
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              
+            } catch (productError) {
+              console.error(`❌ Eroare la scraping produs ${product.name}:`, productError);
+            }
+          }
+          
+          enhancedProducts.push(enhancedProduct);
+        }
+        
+        // Adaugă produsele îmbunătățite la lista globală
+        enhancedProducts.forEach(product => {
           const exists = allProducts.some(existing => 
             existing.name === product.name && existing.price === product.price
           );
@@ -1042,7 +1415,7 @@ const handleScrape = async (url: string, onProgress?: (current: number, total: n
           onProgress(processedPages, totalEstimated);
         }
         
-        console.log(`✅ Procesată: ${currentUrl} - Găsite ${pageData.products.length} produse`);
+        console.log(`✅ Procesată: ${currentUrl} - Găsite ${enhancedProducts.length} produse îmbunătățite`);
         console.log(`📊 Total până acum: ${allProducts.length} produse din ${processedPages} pagini`);
         console.log(`🔗 În coadă: ${urlsToVisit.length} link-uri de vizitat`);
         
@@ -1059,7 +1432,7 @@ const handleScrape = async (url: string, onProgress?: (current: number, total: n
       throw new Error('Nu s-a putut procesa pagina principală');
     }
     
-    console.log(`🎉 Crawling finalizat! Procesate ${processedPages} pagini, găsite ${allProducts.length} produse`);
+    console.log(`🎉 Crawling profund finalizat! Procesate ${processedPages} pagini, găsite ${allProducts.length} produse cu detalii complete`);
     
     // Returnează datele combinate cu informații din toate paginile
     return {
@@ -1067,7 +1440,7 @@ const handleScrape = async (url: string, onProgress?: (current: number, total: n
       products: allProducts,
       links: allLinks,
       images: allImages,
-      text: mainData.text + `\n\n[CRAWLING PROFUND FINALIZAT - ${processedPages} PAGINI PROCESATE - ${allProducts.length} PRODUSE GĂSITE]`
+      text: mainData.text + `\n\n[CRAWLING PROFUND FINALIZAT - ${processedPages} PAGINI PROCESATE - ${allProducts.length} PRODUSE GĂSITE CU DETALII COMPLETE]`
     };
     
   } catch (error) {
