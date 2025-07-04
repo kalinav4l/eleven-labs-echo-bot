@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { User, Settings, Bot, FileText, PhoneCall, X, BarChart3, Calendar } from 'lucide-react';
+import { User, Settings, Bot, FileText, PhoneCall, X, BarChart3, Calendar, Globe } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -98,7 +98,16 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             </Link>
 
             <Link 
-              to="/account/settings" 
+              to="/account/scraping" 
+              className={`${location.pathname === '/account/scraping' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`}
+              onClick={isMobile ? onClose : undefined}
+            >
+              <Globe className="mr-3 h-4 w-4" />
+              <span>Scraping</span>
+            </Link>
+
+            <Link 
+              to="/account/settings"
               className={`${location.pathname === '/account/settings' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`}
               onClick={isMobile ? onClose : undefined}
             >
