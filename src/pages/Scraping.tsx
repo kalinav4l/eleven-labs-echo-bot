@@ -99,6 +99,90 @@ interface ScrapedData {
   timestamp: string;
 }
 
+// Funcția pentru detectarea limbii dominante
+const detectDominantLanguage = (doc: Document): string => {
+  const htmlLang = doc.documentElement?.getAttribute('lang') || doc.querySelector('html')?.getAttribute('lang');
+  if (htmlLang) return htmlLang.split('-')[0].toLowerCase();
+
+  const textContent = doc.body?.textContent?.toLowerCase() || '';
+  const languageKeywords = {
+    'ro': ['și', 'sau', 'pentru', 'este', 'cu', 'de', 'la', 'în', 'pe', 'lei', 'ron', 'produs'],
+    'ru': ['и', 'или', 'для', 'есть', 'с', 'от', 'в', 'на', 'рубли', 'товар'],
+    'en': ['and', 'or', 'for', 'is', 'with', 'from', 'in', 'on', 'usd', 'product']
+  };
+
+  let maxScore = 0;
+  let detectedLang = 'en';
+  Object.entries(languageKeywords).forEach(([lang, keywords]) => {
+    const score = keywords.filter(keyword => textContent.includes(keyword)).length;
+    if (score > maxScore) { maxScore = score; detectedLang = lang; }
+  });
+  return detectedLang;
+};
+
+// Funcția pentru filtrarea textului într-o singură limbă
+const filterTextByLanguage = (text: string, targetLang: string): string => {
+  if (!text) return text;
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim());
+  const keywords = {'ro': ['și', 'cu', 'pentru'], 'ru': ['и', 'с'], 'en': ['and', 'with']}[targetLang] || [];
+  return sentences.filter(s => keywords.some(k => s.toLowerCase().includes(k)) || s.length > 50).join('. ');
+};
+
+// Funcție îmbunătățită pentru extragerea informațiilor de contact
+const extractEnhancedContactInfo = (doc: Document, textContent: string, targetLang: string) => {
+  return {
+    emails: Array.from(new Set(textContent.match(/[\w\.-]+@[\w\.-]+\.\w+/g) || [])),
+    phones: Array.from(new Set(textContent.match(/(\+\d{1,3}[-.\s]?)?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g) || [])),
+    addresses: Array.from(doc.querySelectorAll('.address, [class*="address"]')).map(el => el.textContent?.trim() || ''),
+    socialMedia: Array.from(doc.querySelectorAll('a[href*="facebook"], a[href*="instagram"]')).map(el => el.getAttribute('href') || ''),
+    website: '',
+    companyName: doc.querySelector('.company-name, .brand-name')?.textContent?.trim() || ''
+  };
+};
+
+// Funcția îmbunătățită pentru detectarea TUTUROR produselor
+const detectAllProducts = (doc: Document, targetUrl: string, targetLang: string): Product[] => {
+  const products: Product[] = [];
+  const selectors = [
+    '.product, .product-item, .item, .listing-item',
+    '[data-product], [data-product-id]',
+    'div, article, li, section'
+  ];
+  
+  let elements: Element[] = [];
+  for (const selector of selectors) {
+    elements = Array.from(doc.querySelectorAll(selector));
+    if (elements.length > 0) {
+      console.log(`✅ Găsite ${elements.length} elemente cu selectorul: ${selector}`);
+      break;
+    }
+  }
+
+  elements.forEach((el, i) => {
+    const text = el.textContent || '';
+    const hasPrice = /(\d+[.,]\d+\s*(lei|ron|usd|\$|€))/i.test(text);
+    const title = el.querySelector('h1,h2,h3,h4,h5,h6,.title,.name')?.textContent?.trim() || '';
+    
+    if ((hasPrice || title) && text.length > 20 && text.length < 3000) {
+      products.push({
+        id: `product_${i}`,
+        name: filterTextByLanguage(title, targetLang) || `Produs ${i + 1}`,
+        description: filterTextByLanguage(text.substring(0, 500), targetLang),
+        price: text.match(/(\d+[.,]\d+\s*(lei|ron|usd|\$|€))/i)?.[0] || '',
+        category: 'Necategorizat',
+        images: extractAllImages(el, targetUrl),
+        specifications: {},
+        features: [],
+        availability: 'Informații indisponibile',
+        url: targetUrl
+      });
+    }
+  });
+  
+  console.log(`✅ Procesate ${elements.length} elemente, extrase ${products.length} produse valide`);
+  return products;
+};
+
 // Funcții de utilitate pentru extragerea imaginilor
 const extractAllImages = (element: Element, baseUrl: string): Array<{src: string; alt: string; title: string; type: 'main' | 'gallery' | 'thumbnail' | 'zoom'}> => {
   const images: Array<{src: string; alt: string; title: string; type: 'main' | 'gallery' | 'thumbnail' | 'zoom'}> = [];
@@ -1280,86 +1364,6 @@ const scrapeProductDetails = async (productUrl: string): Promise<any> => {
     console.error('❌ Eroare la scraping detalii produs:', error);
     return null;
   }
-};
-
-// Funcție îmbunătățită pentru extragerea informațiilor de contact
-const extractEnhancedContactInfo = (doc: Document, textContent: string, targetLang: string) => {
-  const contactInfo = {
-    emails: [] as string[],
-    phones: [] as string[],
-    addresses: [] as string[],
-    socialMedia: [] as string[],
-    website: '',
-    companyName: ''
-  };
-
-  // Extrage email-uri cu pattern îmbunătățit
-  const emailPattern = /[\w\.-]+@[\w\.-]+\.\w+/g;
-  const emails = Array.from(new Set(textContent.match(emailPattern) || []));
-  contactInfo.emails = emails.filter(email => 
-    !email.includes('example') && 
-    !email.includes('test') && 
-    !email.includes('noreply')
-  );
-
-  // Extrage telefoane cu pattern îmbunătățit
-  const phonePatterns = [
-    /(\+\d{1,3}[-.\s]?)?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g,
-    /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/g,
-    /\b\d{4}[-.\s]?\d{3}[-.\s]?\d{3}\b/g
-  ];
-
-  phonePatterns.forEach(pattern => {
-    const matches = textContent.match(pattern) || [];
-    matches.forEach(phone => {
-      const cleanPhone = phone.replace(/[^\d+]/g, '');
-      if (cleanPhone.length >= 9 && cleanPhone.length <= 15) {
-        contactInfo.phones.push(phone.trim());
-      }
-    });
-  });
-
-  contactInfo.phones = Array.from(new Set(contactInfo.phones));
-
-  // Extrage adrese
-  const addressSelectors = [
-    '[itemtype*="PostalAddress"]', 
-    '.address', '[class*="address"]', 
-    '.location', '[class*="location"]',
-    '.contact-info', '.contact-details'
-  ];
-
-  addressSelectors.forEach(selector => {
-    const elements = doc.querySelectorAll(selector);
-    elements.forEach(el => {
-      const text = el.textContent?.trim();
-      if (text && text.length > 10 && text.length < 500) {
-        contactInfo.addresses.push(filterTextByLanguage(text, targetLang));
-      }
-    });
-  });
-
-  // Extrage numele companiei
-  const companySelectors = [
-    '.company-name', '.brand-name', '.logo-text',
-    'h1[class*="company"]', 'h1[class*="brand"]',
-    '.site-title', '.header-title'
-  ];
-
-  for (const selector of companySelectors) {
-    const element = doc.querySelector(selector);
-    if (element && element.textContent?.trim()) {
-      contactInfo.companyName = filterTextByLanguage(element.textContent.trim(), targetLang);
-      break;
-    }
-  }
-
-  // Extrage link-uri sociale
-  const socialSelectors = 'a[href*="facebook"], a[href*="twitter"], a[href*="instagram"], a[href*="linkedin"], a[href*="youtube"]';
-  const socialLinks = doc.querySelectorAll(socialSelectors);
-  contactInfo.socialMedia = Array.from(socialLinks).map(link => link.getAttribute('href') || '').filter(href => href);
-
-  return contactInfo;
 };
 
 // Funcția principală de scraping FOCUSATĂ PE O SINGURĂ PAGINĂ
