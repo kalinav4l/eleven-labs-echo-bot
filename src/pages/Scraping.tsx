@@ -259,7 +259,8 @@ const extractProductDescription = (element: Element): string => {
     return fullText.substring(0, 500) + (fullText.length > 500 ? '...' : '');
   }
 
-;
+  return '';
+};
 
 // Funcția îmbunătățită pentru detectarea TUTUROR produselor REALE
 const detectAllProducts = (doc: Document, targetUrl: string, targetLang: string): Product[] => {
