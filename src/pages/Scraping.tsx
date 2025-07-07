@@ -1,1687 +1,788 @@
 import React, { useState } from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Globe, Search, Package, Image, FileText, Link2, Code, Loader2, AlertCircle } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
+import { Separator } from '@/components/ui/separator';
+import { AlertCircle, ShoppingCart, FileText, Link2, Image, DollarSign, Package, Percent, Star, Eye, Download, Globe, Search, Zap } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
-// Interfețe TypeScript
-interface Product {
-  id: string;
+interface ScrapedProduct {
   name: string;
-  description: string;
   price: string;
   originalPrice?: string;
   discount?: string;
-  discountPercentage?: string;
-  currency?: string;
-  category: string;
-  subcategory?: string;
-  breadcrumbs?: string[];
-  brand?: string;
-  model?: string;
-  sku?: string;
-  barcode?: string;
+  description: string;
   images: Array<{
     src: string;
     alt: string;
-    title: string;
-    type: 'main' | 'gallery' | 'thumbnail' | 'zoom';
+    type: 'main' | 'gallery' | 'thumbnail';
   }>;
-  specifications: Record<string, string>;
-  features: string[];
   availability: string;
-  stock?: string;
+  category: string;
   rating?: string;
-  reviewsCount?: string;
-  reviews?: Array<{
-    rating: string;
-    text: string;
-    author: string;
-    date: string;
-  }>;
+  reviews?: string;
+  quantity?: string;
+  promotion?: string;
+  specifications?: { [key: string]: string };
+  features: string[];
   url: string;
-  condition?: string;
+  sku?: string;
+  brand?: string;
+  inStock?: boolean;
+  deliveryInfo?: string;
   warranty?: string;
-  shipping?: string;
   returnPolicy?: string;
-  variants?: Array<{
-    name: string;
-    value: string;
-    price?: string;
-    image?: string;
-  }>;
-  relatedProducts?: string[];
-  tags?: string[];
-  seo?: {
-    title: string;
-    description: string;
-    keywords: string;
-  };
+}
+
+interface ScrapedLink {
+  url: string;
+  text: string;
+  type: 'internal' | 'external' | 'product' | 'category' | 'navigation';
+  title: string;
+  target: string;
+  discovered_from: string;
+  depth: number;
+  anchor_context: string;
+}
+
+interface ScrapedImage {
+  src: string;
+  alt: string;
+  title: string;
+  width: string;
+  height: string;
+  loading: string;
+  type: 'product' | 'banner' | 'logo' | 'content' | 'background';
+  context: string;
 }
 
 interface ScrapedData {
   url: string;
   title: string;
   description: string;
-  keywords: string;
+  keywords: string[];
   text: string;
-  links: Array<{ url: string; text: string; type: string; target: string; title: string }>;
-  images: Array<{ src: string; alt: string; title: string; width: string; height: string; loading: string }>;
-  metadata: Record<string, string>;
-  headings: Array<{ level: number; text: string; id: string; className: string }>;
-  forms: Array<{ action: string; method: string; enctype: string; inputs: Array<{ name: string; type: string; placeholder: string; required: boolean; id: string }> }>;
-  scripts: Array<{ src: string; content: string; type: string; async: boolean; defer: boolean }>;
-  styles: Array<{ href: string; content: string; media: string; type: string }>;
-  tables: Array<{ id: string; caption: string; headers: string[]; rows: string[][] }>;
-  lists: Array<{ id: string; type: string; items: string[] }>;
-  contactInfo: { emails: string[]; phones: string[]; addresses: string[] };
-  socialLinks: Array<{ url: string; text: string; type: string; target: string; title: string }>;
-  structuredData: any[];
-  media: { videos: Array<{ src: string; poster: string; controls: boolean; autoplay: boolean }>; audios: Array<{ src: string; controls: boolean; autoplay: boolean }> };
-  technologies: { cms: string[]; frameworks: string[]; analytics: string[]; advertising: string[] };
-  products: Product[];
-  timestamp: string;
+  products: ScrapedProduct[];
+  links: ScrapedLink[];
+  images: ScrapedImage[];
+  headings: { level: number; text: string }[];
+  metadata: { [key: string]: string };
+  schema: any[];
+  contentType: 'ecommerce' | 'informational' | 'mixed';
+  language: string;
+  lastModified?: string;
+  totalPages: number;
+  extractionStats: {
+    totalProducts: number;
+    totalLinks: number;
+    totalImages: number;
+    uniqueDomains: number;
+    processingTime: number;
+  };
 }
 
-// Funcții de utilitate pentru extragerea imaginilor
-const extractAllImages = (element: Element, baseUrl: string): Array<{src: string; alt: string; title: string; type: 'main' | 'gallery' | 'thumbnail' | 'zoom'}> => {
-  const images: Array<{src: string; alt: string; title: string; type: 'main' | 'gallery' | 'thumbnail' | 'zoom'}> = [];
-  
-  const imageSelectors = [
-    'img', 'source', '[data-src]', '[data-lazy-src]', '[data-original]',
-    '[style*="background-image"]', 'picture img', 'figure img'
-  ];
-
-  imageSelectors.forEach(selector => {
-    const imageElements = element.querySelectorAll(selector);
-    imageElements.forEach(img => {
-      let src = '';
-      
-      if (img.tagName === 'IMG') {
-        src = img.getAttribute('src') || 
-              img.getAttribute('data-src') || 
-              img.getAttribute('data-lazy-src') || 
-              img.getAttribute('data-original') || '';
-      } else if (img.tagName === 'SOURCE') {
-        src = img.getAttribute('srcset')?.split(' ')[0] || '';
-      } else {
-        const style = img.getAttribute('style') || '';
-        const bgMatch = style.match(/background-image:\s*url\(['"]?([^'"]+)['"]?\)/);
-        if (bgMatch) src = bgMatch[1];
-      }
-
-      if (src && !src.includes('placeholder') && !src.includes('loading') && !src.includes('spinner')) {
-        if (src.startsWith('//')) src = 'https:' + src;
-        else if (src.startsWith('/')) src = new URL(baseUrl).origin + src;
-        else if (!src.startsWith('http')) src = new URL(src, baseUrl).href;
-
-        let type: 'main' | 'gallery' | 'thumbnail' | 'zoom' = 'gallery';
-        const className = img.className?.toLowerCase() || '';
-        const id = img.id?.toLowerCase() || '';
-        
-        if (className.includes('main') || className.includes('primary') || id.includes('main')) type = 'main';
-        else if (className.includes('thumb') || className.includes('small') || id.includes('thumb')) type = 'thumbnail';
-        else if (className.includes('zoom') || className.includes('large') || id.includes('zoom')) type = 'zoom';
-
-        images.push({
-          src,
-          alt: img.getAttribute('alt') || '',
-          title: img.getAttribute('title') || '',
-          type
-        });
-      }
-    });
-  });
-
-  return images.filter((img, index, arr) => arr.findIndex(i => i.src === img.src) === index);
-};
-
-// Funcție pentru extragerea informațiilor despre preț
-const extractPriceInfo = (element: Element) => {
-  const priceInfo = {
+// Funcția de extragere completă pentru produse (E-COMMERCE)
+const extractCompleteProductDetails = (element: Element, pageUrl: string): ScrapedProduct => {
+  const product: ScrapedProduct = {
+    name: '',
     price: '',
-    originalPrice: '',
-    discount: '',
-    discountPercentage: '',
-    currency: ''
+    description: '',
+    images: [],
+    availability: '',
+    category: '',
+    features: [],
+    url: pageUrl,
+    specifications: {}
   };
 
+  // EXTRAGERE NUME PRODUS - căutare în multiple locuri
+  const nameSelectors = [
+    'h1', '.product-title', '.product-name', '[data-testid*="product-title"]',
+    '.title', '.name', '.product-heading', '.item-title', '.product-info h1',
+    '.product-details h1', '.product-header h1', '[itemprop="name"]'
+  ];
+  
+  for (const selector of nameSelectors) {
+    const nameEl = element.querySelector(selector);
+    if (nameEl?.textContent?.trim()) {
+      product.name = nameEl.textContent.trim();
+      break;
+    }
+  }
+
+  // EXTRAGERE PREȚ - extragere detaliată cu reduceri
   const priceSelectors = [
-    '.price, .cost, .amount, .pricing',
-    '[class*="price"], [class*="cost"], [class*="amount"]',
-    '.price_color, .price-current, .current-price, .sale-price',
-    '.priceValue, .price-value, .price_value',
-    '[data-price], [data-cost]',
-    '.product-price, .item-price'
+    '.price', '.product-price', '.current-price', '.sale-price', '.offer-price',
+    '[data-testid*="price"]', '.price-current', '.price-now', '[itemprop="price"]',
+    '.cost', '.amount', '.value', '.product-cost', '.final-price'
   ];
-
+  
   for (const selector of priceSelectors) {
-    const priceElement = element.querySelector(selector);
-    if (priceElement && priceElement.textContent?.trim()) {
-      const priceText = priceElement.textContent.trim();
-      const currencyMatch = priceText.match(/(lei|ron|\$|€|£|USD|EUR|MDL)/i);
-      if (currencyMatch) priceInfo.currency = currencyMatch[0];
-      
-      const priceMatch = priceText.match(/[\d.,]+/);
-      if (priceMatch) priceInfo.price = priceText;
+    const priceEl = element.querySelector(selector);
+    if (priceEl?.textContent?.trim()) {
+      product.price = priceEl.textContent.trim();
       break;
     }
   }
 
+  // EXTRAGERE PREȚ ORIGINAL (înainte de reducere)
   const originalPriceSelectors = [
-    '.old-price, .original-price, .was-price',
-    '.price-old, .regular-price, .list-price',
-    '[class*="old-price"], [class*="original"]'
+    '.original-price', '.old-price', '.regular-price', '.was-price',
+    '.price-before', '.crossed-price', '.list-price', '.msrp'
   ];
-
+  
   for (const selector of originalPriceSelectors) {
-    const originalElement = element.querySelector(selector);
-    if (originalElement && originalElement.textContent?.trim()) {
-      priceInfo.originalPrice = originalElement.textContent.trim();
+    const originalPriceEl = element.querySelector(selector);
+    if (originalPriceEl?.textContent?.trim()) {
+      product.originalPrice = originalPriceEl.textContent.trim();
       break;
     }
   }
 
-  return priceInfo;
-};
+  // CALCULARE REDUCERE
+  if (product.price && product.originalPrice) {
+    const currentPrice = parseFloat(product.price.replace(/[^\d.]/g, ''));
+    const originalPrice = parseFloat(product.originalPrice.replace(/[^\d.]/g, ''));
+    if (!isNaN(currentPrice) && !isNaN(originalPrice) && originalPrice > currentPrice) {
+      const discountPercent = Math.round(((originalPrice - currentPrice) / originalPrice) * 100);
+      product.discount = `${discountPercent}%`;
+    }
+  }
 
-// Funcție pentru extragerea specificațiilor
-const extractSpecifications = (element: Element): Record<string, string> => {
-  const specs: Record<string, string> = {};
-
-  const tables = element.querySelectorAll('table, .specs-table, .specifications-table, .product-attributes');
-  tables.forEach(table => {
-    const rows = table.querySelectorAll('tr, .spec-row, .attribute-row, .feature-row');
-    rows.forEach(row => {
-      const cells = row.querySelectorAll('td, th, .spec-name, .spec-value');
-      if (cells.length >= 2) {
-        const key = cells[0].textContent?.trim();
-        const value = cells[1].textContent?.trim();
-        if (key && value && key.length < 100 && value.length < 500) {
-          specs[key] = value;
-        }
-      }
-    });
-  });
-
-  return specs;
-};
-
-// Funcția principală de detectare a produselor
-const detectProducts = (doc: Document, targetUrl: string): Product[] => {
-  const products: Product[] = [];
-  
-  const productSelectors = [
-    '.product, .product-item, .product-card, .item, .listing-item',
-    '[data-product], [data-product-id], [data-item-id], [data-sku]',
-    '.woocommerce-product, .product-container, .product-box, .product-wrapper',
-    '.product_pod, .product-pod',
-    '.s-result-item, .s-item',
-    '.product-tile, .product-grid-item',
-    '.productCard, .product-card'
+  // EXTRAGERE DESCRIERE COMPLETĂ
+  const descSelectors = [
+    '.description', '.product-description', '.product-info', '.product-details',
+    '[data-testid*="description"]', '.about', '.overview', '.summary',
+    '.content', '.details', '.info', '[itemprop="description"]'
   ];
-
-  let foundProducts: Element[] = [];
   
-  for (const selector of productSelectors) {
-    const elements = doc.querySelectorAll(selector);
-    if (elements.length > 0) {
-      foundProducts = Array.from(elements);
+  const descriptions: string[] = [];
+  for (const selector of descSelectors) {
+    const descEl = element.querySelector(selector);
+    if (descEl?.textContent?.trim()) {
+      descriptions.push(descEl.textContent.trim());
+    }
+  }
+  product.description = descriptions.join(' | ');
+
+  // EXTRAGERE IMAGINI COMPLETE
+  const imgSelectors = [
+    '.product-image img', '.product-photo img', '.gallery img', '.carousel img',
+    '.slider img', '.thumbnail img', '.zoom img', '[data-testid*="image"] img',
+    '.main-image img', '.featured-image img', 'img[itemprop="image"]'
+  ];
+  
+  const imageSet = new Set<string>();
+  for (const selector of imgSelectors) {
+    const images = element.querySelectorAll(selector);
+    images.forEach((img, index) => {
+      const src = img.getAttribute('src') || img.getAttribute('data-src') || img.getAttribute('data-lazy-src');
+      if (src && !imageSet.has(src)) {
+        imageSet.add(src);
+        product.images.push({
+          src: src.startsWith('//') ? 'https:' + src : src.startsWith('/') ? new URL(pageUrl).origin + src : src,
+          alt: img.getAttribute('alt') || product.name || `Product image ${index + 1}`,
+          type: index === 0 ? 'main' : 'gallery'
+        });
+      }
+    });
+  }
+
+  // EXTRAGERE DISPONIBILITATE
+  const availabilitySelectors = [
+    '.availability', '.stock', '.in-stock', '.out-of-stock', '.stock-status',
+    '[data-testid*="stock"]', '.inventory', '.quantity-available'
+  ];
+  
+  for (const selector of availabilitySelectors) {
+    const availEl = element.querySelector(selector);
+    if (availEl?.textContent?.trim()) {
+      product.availability = availEl.textContent.trim();
+      product.inStock = !availEl.textContent.toLowerCase().includes('out of stock');
       break;
     }
   }
 
-  if (foundProducts.length === 0) {
-    const potentialProducts = doc.querySelectorAll('div, article, section, li, .item');
-    foundProducts = Array.from(potentialProducts).filter(element => {
-      const text = element.textContent || '';
-      const hasPrice = /(\$|€|£|lei|ron|mdl|\d+[.,]\d+)/i.test(text);
-      const hasTitle = element.querySelector('h1, h2, h3, h4, h5, h6, .title, .name, [class*="title"], [class*="name"], a[title]');
-      const hasImage = element.querySelector('img');
-      const textLength = text.length;
-      
-      return hasPrice && hasTitle && textLength > 30 && textLength < 3000;
-    });
-  }
-
-  foundProducts.forEach((productElement, index) => {
-    try {
-      const product: Product = {
-        id: `product_${Date.now()}_${index}`,
-        name: '',
-        description: '',
-        price: '',
-        category: '',
-        images: [],
-        specifications: {},
-        features: [],
-        availability: '',
-        url: targetUrl
-      };
-
-      // Extrage numele produsului
-      const titleSelectors = [
-        'h1, h2, h3, h4, h5, h6',
-        '.title, .name, .product-title, .product-name',
-        '[class*="title"], [class*="name"]',
-        'a[title]'
-      ];
-
-      for (const selector of titleSelectors) {
-        const titleElement = productElement.querySelector(selector);
-        if (titleElement && titleElement.textContent?.trim()) {
-          let title = titleElement.textContent.trim();
-          title = title.replace(/(\$|€|£|lei|ron|mdl)[\d.,\s]+/gi, '').trim();
-          if (title.length > 3 && title.length < 200) {
-            product.name = title;
-            break;
-          }
-        }
-      }
-
-      // Extrage informațiile despre preț
-      const priceInfo = extractPriceInfo(productElement);
-      product.price = priceInfo.price;
-      product.originalPrice = priceInfo.originalPrice;
-      product.discount = priceInfo.discount;
-      product.discountPercentage = priceInfo.discountPercentage;
-      product.currency = priceInfo.currency;
-
-      // Extrage descrierea
-      const descSelectors = [
-        '.description, .desc, .summary, .content',
-        '[class*="description"], [class*="desc"]',
-        '.product-description'
-      ];
-
-      for (const selector of descSelectors) {
-        const descElement = productElement.querySelector(selector);
-        if (descElement && descElement.textContent?.trim() && descElement.textContent.length > 20) {
-          product.description = descElement.textContent.trim();
-          break;
-        }
-      }
-
-      // Extrage imaginile
-      product.images = extractAllImages(productElement, targetUrl);
-
-      // Extrage categoria
-      const categorySelectors = [
-        '.breadcrumb, .breadcrumbs, .category, .categories',
-        '[class*="breadcrumb"], [class*="category"]',
-        'nav a, .nav a'
-      ];
-
-      const breadcrumbs: string[] = [];
-      for (const selector of categorySelectors) {
-        const categoryElements = productElement.querySelectorAll(selector);
-        categoryElements.forEach(el => {
-          const text = el.textContent?.trim();
-          if (text && text.length < 100 && !breadcrumbs.includes(text)) {
-            breadcrumbs.push(text);
-          }
-        });
-        if (breadcrumbs.length > 0) break;
-      }
-      
-      product.breadcrumbs = breadcrumbs;
-      product.category = breadcrumbs.join(' > ') || 'Necategorizat';
-
-      // Extrage specificațiile
-      product.specifications = extractSpecifications(productElement);
-
-      // Extrage disponibilitatea
-      const availabilitySelectors = [
-        '.availability, .stock, .in-stock, .out-of-stock',
-        '[class*="availability"], [class*="stock"]'
-      ];
-
-      for (const selector of availabilitySelectors) {
-        const availElement = productElement.querySelector(selector);
-        if (availElement && availElement.textContent?.trim()) {
-          product.availability = availElement.textContent.trim();
-          break;
-        }
-      }
-
-      if (!product.availability) {
-        product.availability = 'Informații indisponibile';
-      }
-
-      // Adaugă produsul doar dacă are informații esențiale
-      if (product.name && (product.price || product.description || product.images.length > 0)) {
-        products.push(product);
-      }
-
-    } catch (error) {
-      console.error(`Eroare la extragerea produsului ${index + 1}:`, error);
-    }
-  });
-
-  return products;
-};
-
-// Funcția pentru generarea raportului text structurat
-const generateStructuredReport = (data: ScrapedData): string => {
-  let report = `# RAPORT COMPLET SCRAPING SITE WEB\n\n`;
-  report += `## INFORMAȚII GENERALE\n`;
-  report += `**URL:** ${data.url}\n`;
-  report += `**Titlu:** ${data.title}\n`;
-  report += `**Descriere:** ${data.description}\n`;
-  report += `**Cuvinte cheie:** ${data.keywords}\n`;
-  report += `**Data extragerii:** ${new Date(data.timestamp).toLocaleString('ro-RO')}\n\n`;
-
-  // Produse și prețuri
-  if (data.products.length > 0) {
-    report += `## PRODUSE ȘI PREȚURI (${data.products.length} produse găsite)\n\n`;
-    data.products.forEach((product, index) => {
-      report += `### ${index + 1}. ${product.name}\n`;
-      if (product.price) report += `**Preț:** ${product.price} ${product.currency || ''}\n`;
-      if (product.originalPrice) report += `**Preț original:** ${product.originalPrice}\n`;
-      if (product.discount) report += `**Reducere:** ${product.discount}\n`;
-      if (product.description) report += `**Descriere:** ${product.description}\n`;
-      if (product.category) report += `**Categorie:** ${product.category}\n`;
-      if (product.availability) report += `**Disponibilitate:** ${product.availability}\n`;
-      if (product.brand) report += `**Brand:** ${product.brand}\n`;
-      if (product.model) report += `**Model:** ${product.model}\n`;
-      if (product.sku) report += `**SKU:** ${product.sku}\n`;
-      
-      if (Object.keys(product.specifications).length > 0) {
-        report += `**Specificații:**\n`;
-        Object.entries(product.specifications).forEach(([key, value]) => {
-          report += `  - ${key}: ${value}\n`;
-        });
-      }
-      
-      if (product.features.length > 0) {
-        report += `**Caracteristici:** ${product.features.join(', ')}\n`;
-      }
-      
-      if (product.images.length > 0) {
-        report += `**Imagini:** ${product.images.length} imagini disponibile\n`;
-      }
-      report += `\n`;
-    });
-  }
-
-  // Informații de contact
-  if (data.contactInfo.emails.length > 0 || data.contactInfo.phones.length > 0) {
-    report += `## INFORMAȚII DE CONTACT\n`;
-    if (data.contactInfo.emails.length > 0) {
-      report += `**Email-uri:**\n`;
-      data.contactInfo.emails.forEach(email => report += `  - ${email}\n`);
-    }
-    if (data.contactInfo.phones.length > 0) {
-      report += `**Telefoane:**\n`;
-      data.contactInfo.phones.forEach(phone => report += `  - ${phone}\n`);
-    }
-    report += `\n`;
-  }
-
-  // Link-uri sociale
-  if (data.socialLinks.length > 0) {
-    report += `## REȚELE SOCIALE\n`;
-    data.socialLinks.forEach(link => {
-      report += `  - ${link.text || 'Link social'}: ${link.url}\n`;
-    });
-    report += `\n`;
-  }
-
-  // Structura conținutului
-  if (data.headings.length > 0) {
-    report += `## STRUCTURA CONȚINUTULUI\n`;
-    data.headings.forEach(heading => {
-      const indent = '  '.repeat(heading.level - 1);
-      report += `${indent}- H${heading.level}: ${heading.text}\n`;
-    });
-    report += `\n`;
-  }
-
-  // Tabele importante
-  if (data.tables.length > 0) {
-    report += `## TABELE ȘI DATE STRUCTURATE\n`;
-    data.tables.forEach((table, index) => {
-      if (table.rows.length > 0) {
-        report += `### Tabel ${index + 1}:\n`;
-        if (table.caption) report += `**Titlu:** ${table.caption}\n`;
-        if (table.headers.length > 0) {
-          report += `**Coloane:** ${table.headers.join(' | ')}\n`;
-        }
-        table.rows.slice(0, 5).forEach(row => {
-          if (row.some(cell => cell.trim())) {
-            report += `  ${row.join(' | ')}\n`;
-          }
-        });
-        if (table.rows.length > 5) {
-          report += `  [... și încă ${table.rows.length - 5} rânduri]\n`;
-        }
-        report += `\n`;
-      }
-    });
-  }
-
-  // Liste importante
-  if (data.lists.length > 0) {
-    report += `## LISTE ȘI ENUMERĂRI\n`;
-    data.lists.forEach((list, index) => {
-      if (list.items.length > 0) {
-        report += `### Lista ${index + 1} (${list.type.toUpperCase()}):\n`;
-        list.items.slice(0, 10).forEach(item => {
-          if (item.trim()) report += `  - ${item}\n`;
-        });
-        if (list.items.length > 10) {
-          report += `  [... și încă ${list.items.length - 10} elemente]\n`;
-        }
-        report += `\n`;
-      }
-    });
-  }
-
-  // Link-uri importante
-  const importantLinks = data.links.filter(link => 
-    link.text && link.text.length > 5 && link.text.length < 100 && 
-    !link.url.includes('#') && link.url !== data.url
-  );
+  // EXTRAGERE CANTITATE
+  const quantitySelectors = [
+    '.quantity', '.qty', '.amount-available', '.stock-quantity',
+    '[data-testid*="quantity"]', '.inventory-count'
+  ];
   
-  if (importantLinks.length > 0) {
-    report += `## LINK-URI IMPORTANTE\n`;
-    importantLinks.slice(0, 20).forEach(link => {
-      report += `  - ${link.text}: ${link.url}\n`;
-    });
-    if (importantLinks.length > 20) {
-      report += `  [... și încă ${importantLinks.length - 20} link-uri]\n`;
+  for (const selector of quantitySelectors) {
+    const qtyEl = element.querySelector(selector);
+    if (qtyEl?.textContent?.trim()) {
+      product.quantity = qtyEl.textContent.trim();
+      break;
     }
-    report += `\n`;
   }
 
-  // Conținut media
-  if (data.media.videos.length > 0 || data.media.audios.length > 0 || data.images.length > 0) {
-    report += `## CONȚINUT MULTIMEDIA\n`;
-    if (data.media.videos.length > 0) {
-      report += `**Video-uri:** ${data.media.videos.length} video-uri găsite\n`;
-      data.media.videos.slice(0, 5).forEach(video => {
-        if (video.src) report += `  - ${video.src}\n`;
+  // EXTRAGERE PROMOȚII
+  const promotionSelectors = [
+    '.promotion', '.offer', '.deal', '.special', '.badge', '.label',
+    '.discount-badge', '.sale-badge', '.promo-text', '.offer-text'
+  ];
+  
+  const promotions: string[] = [];
+  for (const selector of promotionSelectors) {
+    const promoEls = element.querySelectorAll(selector);
+    promoEls.forEach(promo => {
+      if (promo.textContent?.trim()) {
+        promotions.push(promo.textContent.trim());
+      }
+    });
+  }
+  product.promotion = promotions.join(' | ');
+
+  // EXTRAGERE RATING
+  const ratingSelectors = [
+    '.rating', '.stars', '.score', '.review-score', '[data-testid*="rating"]',
+    '[itemprop="ratingValue"]', '.star-rating', '.rating-value'
+  ];
+  
+  for (const selector of ratingSelectors) {
+    const ratingEl = element.querySelector(selector);
+    if (ratingEl?.textContent?.trim()) {
+      product.rating = ratingEl.textContent.trim();
+      break;
+    }
+  }
+
+  // EXTRAGERE NUMĂR REVIEW-URI
+  const reviewSelectors = [
+    '.reviews', '.review-count', '.rating-count', '[data-testid*="review"]',
+    '[itemprop="reviewCount"]', '.reviews-number'
+  ];
+  
+  for (const selector of reviewSelectors) {
+    const reviewEl = element.querySelector(selector);
+    if (reviewEl?.textContent?.trim()) {
+      product.reviews = reviewEl.textContent.trim();
+      break;
+    }
+  }
+
+  // EXTRAGERE SPECIFICAȚII TEHNICE
+  const specSelectors = [
+    '.specifications', '.specs', '.tech-specs', '.product-specs',
+    '.attributes', '.properties', '.features-list', '.details-table'
+  ];
+  
+  for (const selector of specSelectors) {
+    const specEl = element.querySelector(selector);
+    if (specEl) {
+      const specItems = specEl.querySelectorAll('tr, li, .spec-item, .attribute');
+      specItems.forEach(item => {
+        const label = item.querySelector('.label, .key, .name, td:first-child, .spec-label');
+        const value = item.querySelector('.value, .spec-value, td:last-child');
+        if (label?.textContent && value?.textContent) {
+          product.specifications![label.textContent.trim()] = value.textContent.trim();
+        }
       });
     }
-    if (data.media.audios.length > 0) {
-      report += `**Audio:** ${data.media.audios.length} fișiere audio\n`;
-    }
-    if (data.images.length > 0) {
-      report += `**Imagini:** ${data.images.length} imagini găsite\n`;
-    }
-    report += `\n`;
   }
 
-  // Tehnologii detectate
-  const allTechs = [...data.technologies.cms, ...data.technologies.frameworks, ...data.technologies.analytics, ...data.technologies.advertising];
-  if (allTechs.length > 0) {
-    report += `## TEHNOLOGII DETECTATE\n`;
-    report += `**CMS:** ${data.technologies.cms.join(', ') || 'Niciunul detectat'}\n`;
-    report += `**Framework-uri:** ${data.technologies.frameworks.join(', ') || 'Niciunul detectat'}\n`;
-    report += `**Analytics:** ${data.technologies.analytics.join(', ') || 'Niciunul detectat'}\n`;
-    report += `**Publicitate:** ${data.technologies.advertising.join(', ') || 'Niciunul detectat'}\n\n`;
-  }
-
-  // Formulare
-  if (data.forms.length > 0) {
-    report += `## FORMULARE DISPONIBILE\n`;
-    data.forms.forEach((form, index) => {
-      report += `### Formular ${index + 1}:\n`;
-      report += `  - Acțiune: ${form.action || 'Nu este specificată'}\n`;
-      report += `  - Metodă: ${form.method}\n`;
-      if (form.inputs.length > 0) {
-        report += `  - Câmpuri: ${form.inputs.map(input => input.name || input.type).join(', ')}\n`;
-      }
-      report += `\n`;
-    });
-  }
-
-  // Metadata important
-  const importantMeta = Object.entries(data.metadata).filter(([key, value]) => 
-    !key.startsWith('og:') && !key.startsWith('twitter:') && value.length > 5 && value.length < 200
-  );
+  // EXTRAGERE BRAND
+  const brandSelectors = [
+    '.brand', '.manufacturer', '[itemprop="brand"]', '.brand-name',
+    '[data-testid*="brand"]', '.producer', '.make'
+  ];
   
-  if (importantMeta.length > 0) {
-    report += `## METADATA IMPORTANT\n`;
-    importantMeta.forEach(([key, value]) => {
-      report += `**${key}:** ${value}\n`;
-    });
-    report += `\n`;
+  for (const selector of brandSelectors) {
+    const brandEl = element.querySelector(selector);
+    if (brandEl?.textContent?.trim()) {
+      product.brand = brandEl.textContent.trim();
+      break;
+    }
   }
 
-  // Text complet pentru context AI
-  report += `## CONȚINUT TEXT COMPLET (pentru analiză AI)\n`;
-  const cleanText = data.text.replace(/\s+/g, ' ').trim();
-  if (cleanText.length > 2000) {
-    report += `${cleanText.substring(0, 3000)}...\n`;
-    report += `\n[Text truncat pentru brevitate - ${cleanText.length} caractere în total]\n`;
-  } else {
-    report += `${cleanText}\n`;
+  // EXTRAGERE SKU
+  const skuSelectors = [
+    '.sku', '.product-code', '.item-code', '[itemprop="sku"]',
+    '.model', '.product-id', '.part-number'
+  ];
+  
+  for (const selector of skuSelectors) {
+    const skuEl = element.querySelector(selector);
+    if (skuEl?.textContent?.trim()) {
+      product.sku = skuEl.textContent.trim();
+      break;
+    }
   }
 
-  report += `\n---\n**Raport generat automat de Web Scraper Universal**\n`;
-  report += `**Total informații extrase:** ${data.products.length} produse, ${data.links.length} link-uri, ${data.images.length} imagini, ${data.tables.length} tabele, ${data.lists.length} liste\n`;
+  // EXTRAGERE INFORMAȚII LIVRARE
+  const deliverySelectors = [
+    '.delivery', '.shipping', '.delivery-info', '.shipping-info',
+    '.delivery-time', '.shipping-time', '.arrival-time'
+  ];
+  
+  for (const selector of deliverySelectors) {
+    const deliveryEl = element.querySelector(selector);
+    if (deliveryEl?.textContent?.trim()) {
+      product.deliveryInfo = deliveryEl.textContent.trim();
+      break;
+    }
+  }
 
-  return report;
+  // EXTRAGERE CATEGORIE
+  const categorySelectors = [
+    '.category', '.breadcrumb', '.nav-path', '.product-category',
+    '[itemprop="category"]', '.section', '.department'
+  ];
+  
+  for (const selector of categorySelectors) {
+    const catEl = element.querySelector(selector);
+    if (catEl?.textContent?.trim()) {
+      product.category = catEl.textContent.trim();
+      break;
+    }
+  }
+
+  return product;
 };
 
-// Funcția principală de extragere a conținutului
-const extractAllContent = async (htmlContent: string, targetUrl: string): Promise<ScrapedData> => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(htmlContent, 'text/html');
-
-  const title = doc.querySelector('title')?.textContent || '';
-  const description = doc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
-  const keywords = doc.querySelector('meta[name="keywords"]')?.getAttribute('content') || '';
-  const textContent = doc.body?.textContent || '';
-
-  // Extrage toate link-urile cu informații detaliate
-  const links = Array.from(doc.querySelectorAll('a')).map(link => {
-    let url = link.href || link.getAttribute('href') || '';
-    if (url.startsWith('/') && !url.startsWith('//')) {
-      url = new URL(targetUrl).origin + url;
+// Funcția de extragere completă pentru conținut informațional
+const extractInformationalContent = (doc: Document, url: string): ScrapedData => {
+  const data: ScrapedData = {
+    url,
+    title: '',
+    description: '',
+    keywords: [],
+    text: '',
+    products: [],
+    links: [],
+    images: [],
+    headings: [],
+    metadata: {},
+    schema: [],
+    contentType: 'informational',
+    language: 'ro',
+    totalPages: 1,
+    extractionStats: {
+      totalProducts: 0,
+      totalLinks: 0,
+      totalImages: 0,
+      uniqueDomains: 0,
+      processingTime: 0
     }
-    return {
-      url,
-      text: link.textContent?.trim() || '',
-      type: link.getAttribute('rel') || 'link',
-      target: link.getAttribute('target') || '',
-      title: link.getAttribute('title') || ''
-    };
-  });
+  };
 
-  // Extrage toate imaginile cu informații complete
-  const images = Array.from(doc.querySelectorAll('img')).map(img => {
-    let src = img.src || img.getAttribute('src') || img.getAttribute('data-src') || '';
-    if (src.startsWith('/') && !src.startsWith('//')) {
-      src = new URL(targetUrl).origin + src;
-    }
-    return {
-      src,
-      alt: img.alt || '',
-      title: img.title || '',
-      width: img.getAttribute('width') || '',
-      height: img.getAttribute('height') || '',
-      loading: img.getAttribute('loading') || ''
-    };
-  });
+  // EXTRAGERE TITLE
+  const titleEl = doc.querySelector('title');
+  data.title = titleEl?.textContent?.trim() || '';
 
-  // Extrage toate meta tag-urile
-  const metadata: Record<string, string> = {};
-  Array.from(doc.querySelectorAll('meta')).forEach(meta => {
+  // EXTRAGERE META DESCRIPTION
+  const descriptionEl = doc.querySelector('meta[name="description"]');
+  data.description = descriptionEl?.getAttribute('content') || '';
+
+  // EXTRAGERE KEYWORDS
+  const keywordsEl = doc.querySelector('meta[name="keywords"]');
+  if (keywordsEl?.getAttribute('content')) {
+    data.keywords = keywordsEl.getAttribute('content')!.split(',').map(k => k.trim());
+  }
+
+  // EXTRAGERE TOATE HEADINGS (H1-H6)
+  for (let i = 1; i <= 6; i++) {
+    const headings = doc.querySelectorAll(`h${i}`);
+    headings.forEach(heading => {
+      if (heading.textContent?.trim()) {
+        data.headings.push({
+          level: i,
+          text: heading.textContent.trim()
+        });
+      }
+    });
+  }
+
+  // EXTRAGERE TEXT COMPLET
+  const textSelectors = ['p', 'article', 'section', '.content', '.main', '.text', '.description'];
+  const textParts: string[] = [];
+  
+  textSelectors.forEach(selector => {
+    const elements = doc.querySelectorAll(selector);
+    elements.forEach(el => {
+      if (el.textContent?.trim()) {
+        textParts.push(el.textContent.trim());
+      }
+    });
+  });
+  
+  data.text = textParts.join(' ');
+
+  // EXTRAGERE METADATA COMPLETĂ
+  const metaTags = doc.querySelectorAll('meta');
+  metaTags.forEach(meta => {
     const name = meta.getAttribute('name') || meta.getAttribute('property') || meta.getAttribute('http-equiv');
     const content = meta.getAttribute('content');
     if (name && content) {
-      metadata[name] = content;
+      data.metadata[name] = content;
     }
   });
 
-  // Extrage structura titlurilor
-  const headings = Array.from(doc.querySelectorAll('h1, h2, h3, h4, h5, h6')).map(heading => ({
-    level: parseInt(heading.tagName.replace('H', '')),
-    text: heading.textContent?.trim() || '',
-    id: heading.getAttribute('id') || '',
-    className: heading.getAttribute('class') || ''
-  }));
-
-  // Extrage toate formularele
-  const forms = Array.from(doc.querySelectorAll('form')).map(form => ({
-    action: form.action || '',
-    method: form.method || 'GET',
-    enctype: form.getAttribute('enctype') || '',
-    inputs: Array.from(form.querySelectorAll('input, textarea, select')).map(input => ({
-      name: input.getAttribute('name') || '',
-      type: input.getAttribute('type') || input.tagName.toLowerCase(),
-      placeholder: input.getAttribute('placeholder') || '',
-      required: input.hasAttribute('required'),
-      id: input.getAttribute('id') || ''
-    }))
-  }));
-
-  // Extrage toate script-urile
-  const scripts = Array.from(doc.querySelectorAll('script')).map(script => ({
-    src: script.src || '',
-    content: script.textContent?.slice(0, 500) || '',
-    type: script.getAttribute('type') || '',
-    async: script.hasAttribute('async'),
-    defer: script.hasAttribute('defer')
-  })).filter(script => script.src || script.content);
-
-  // Extrage toate stilurile
-  const styles = Array.from(doc.querySelectorAll('link[rel="stylesheet"], style')).map(style => ({
-    href: style.getAttribute('href') || '',
-    content: style.textContent?.slice(0, 500) || '',
-    media: style.getAttribute('media') || '',
-    type: style.getAttribute('type') || ''
-  })).filter(style => style.href || style.content);
-
-  // Extrage toate tabelele
-  const tables = Array.from(doc.querySelectorAll('table')).map((table, index) => ({
-    id: `table_${index}`,
-    caption: table.querySelector('caption')?.textContent?.trim() || '',
-    headers: Array.from(table.querySelectorAll('th')).map(th => th.textContent?.trim() || ''),
-    rows: Array.from(table.querySelectorAll('tr')).map(tr => 
-      Array.from(tr.querySelectorAll('td')).map(td => td.textContent?.trim() || '')
-    ).filter(row => row.length > 0)
-  }));
-
-  // Extrage toate listele
-  const lists = Array.from(doc.querySelectorAll('ul, ol')).map((list, index) => ({
-    id: `list_${index}`,
-    type: list.tagName.toLowerCase(),
-    items: Array.from(list.querySelectorAll('li')).map(li => li.textContent?.trim() || '')
-  }));
-
-  // Extrage informații de contact
-  const contactInfo = {
-    emails: Array.from(new Set(textContent.match(/[\w\.-]+@[\w\.-]+\.\w+/g) || [])),
-    phones: Array.from(new Set(textContent.match(/(\+\d{1,3}[-.\s]?)?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g) || [])),
-    addresses: Array.from(doc.querySelectorAll('[itemtype*="PostalAddress"], .address, [class*="address"]')).map(el => el.textContent?.trim() || '')
-  };
-
-  // Extrage link-uri sociale
-  const socialLinks = links.filter(link => 
-    /facebook|twitter|instagram|linkedin|youtube|tiktok|pinterest|snapchat/i.test(link.url)
-  );
-
-  // Extrage date structurate JSON-LD
-  const structuredData = Array.from(doc.querySelectorAll('script[type="application/ld+json"]')).map(script => {
+  // EXTRAGERE SCHEMA.ORG DATA
+  const schemaScripts = doc.querySelectorAll('script[type="application/ld+json"]');
+  schemaScripts.forEach(script => {
     try {
-      return JSON.parse(script.textContent || '');
-    } catch {
-      return null;
+      const schemaData = JSON.parse(script.textContent || '');
+      data.schema.push(schemaData);
+    } catch (e) {
+      // Ignoră erorile JSON
     }
-  }).filter(Boolean);
+  });
 
-  // Extrage toate elementele video și audio
-  const media = {
-    videos: Array.from(doc.querySelectorAll('video, iframe[src*="youtube"], iframe[src*="vimeo"]')).map(video => ({
-      src: video.getAttribute('src') || '',
-      poster: video.getAttribute('poster') || '',
-      controls: video.hasAttribute('controls'),
-      autoplay: video.hasAttribute('autoplay')
-    })),
-    audios: Array.from(doc.querySelectorAll('audio')).map(audio => ({
-      src: audio.getAttribute('src') || '',
-      controls: audio.hasAttribute('controls'),
-      autoplay: audio.hasAttribute('autoplay')
-    }))
-  };
-
-  // Detectează tehnologiile folosite
-  const technologies = {
-    cms: detectCMS(doc),
-    frameworks: detectFrameworks(doc),
-    analytics: detectAnalytics(doc),
-    advertising: detectAdvertising(doc)
-  };
-
-  const products = detectProducts(doc, targetUrl);
-
-  return {
-    url: targetUrl,
-    title,
-    description,
-    keywords,
-    text: textContent,
-    links,
-    images,
-    metadata,
-    headings,
-    forms,
-    scripts,
-    styles,
-    tables,
-    lists,
-    contactInfo,
-    socialLinks,
-    structuredData,
-    media,
-    technologies,
-    products,
-    timestamp: new Date().toISOString()
-  };
+  return data;
 };
 
-// Funcții pentru detectarea tehnologiilor
-const detectCMS = (doc: Document): string[] => {
-  const cms = [];
-  if (doc.querySelector('meta[name="generator"][content*="WordPress"]')) cms.push('WordPress');
-  if (doc.querySelector('script[src*="drupal"]')) cms.push('Drupal');
-  if (doc.querySelector('script[src*="joomla"]')) cms.push('Joomla');
-  if (doc.querySelector('meta[name="generator"][content*="Shopify"]')) cms.push('Shopify');
-  if (doc.querySelector('script[src*="wix"]')) cms.push('Wix');
-  return cms;
-};
-
-const detectFrameworks = (doc: Document): string[] => {
-  const frameworks = [];
-  if (doc.querySelector('script[src*="react"]')) frameworks.push('React');
-  if (doc.querySelector('script[src*="vue"]')) frameworks.push('Vue.js');
-  if (doc.querySelector('script[src*="angular"]')) frameworks.push('Angular');
-  if (doc.querySelector('script[src*="jquery"]')) frameworks.push('jQuery');
-  if (doc.querySelector('script[src*="bootstrap"]')) frameworks.push('Bootstrap');
-  return frameworks;
-};
-
-const detectAnalytics = (doc: Document): string[] => {
-  const analytics = [];
-  if (doc.querySelector('script[src*="google-analytics"]') || doc.querySelector('script[src*="gtag"]')) analytics.push('Google Analytics');
-  if (doc.querySelector('script[src*="facebook.net"]')) analytics.push('Facebook Pixel');
-  if (doc.querySelector('script[src*="hotjar"]')) analytics.push('Hotjar');
-  if (doc.querySelector('script[src*="mixpanel"]')) analytics.push('Mixpanel');
-  return analytics;
-};
-
-const detectAdvertising = (doc: Document): string[] => {
-  const advertising = [];
-  if (doc.querySelector('script[src*="googlesyndication"]')) advertising.push('Google AdSense');
-  if (doc.querySelector('script[src*="doubleclick"]')) advertising.push('Google Ad Manager');
-  if (doc.querySelector('script[src*="amazon-adsystem"]')) advertising.push('Amazon Ads');
-  return advertising;
-};
-
-// Funcție pentru detectarea TUTUROR link-urilor interne de pe site
-const detectAllInternalLinks = (doc: Document, baseUrl: string): string[] => {
-  const internalLinks: Set<string> = new Set();
-  const baseDomain = new URL(baseUrl).hostname;
+// Funcția de extragere COMPLETĂ pentru E-commerce
+const extractEcommerceData = (doc: Document, url: string): ScrapedData => {
+  const data = extractInformationalContent(doc, url);
+  data.contentType = 'ecommerce';
   
-  // Găsește toate link-urile de pe pagină
-  const allLinks = doc.querySelectorAll('a[href]');
+  // DETECTARE PRODUSE - căutare în toate containerele posibile
+  const productSelectors = [
+    '.product', '.item', '.product-item', '.product-card', '.product-box',
+    '.product-container', '.listing-item', '.catalog-item', '.shop-item',
+    '[data-testid*="product"]', '[itemtype*="Product"]', '.product-tile',
+    '.product-summary', '.product-info', '.product-details', '.single-product'
+  ];
+
+  const products: ScrapedProduct[] = [];
+  const processedUrls = new Set<string>();
+
+  productSelectors.forEach(selector => {
+    const productElements = doc.querySelectorAll(selector);
+    productElements.forEach(element => {
+      try {
+        const product = extractCompleteProductDetails(element, url);
+        
+        // Verifică dacă produsul are informații suficiente și nu este duplicat
+        if (product.name && product.price && !processedUrls.has(product.name + product.price)) {
+          processedUrls.add(product.name + product.price);
+          products.push(product);
+        }
+      } catch (error) {
+        console.warn('Eroare la extragerea produsului:', error);
+      }
+    });
+  });
+
+  data.products = products;
+  return data;
+};
+
+// Funcția de extragere COMPLETĂ a link-urilor cu detalii
+const extractAllLinksWithDetails = (doc: Document, baseUrl: string, depth: number = 0): ScrapedLink[] => {
+  const links: ScrapedLink[] = [];
+  const domain = new URL(baseUrl).hostname;
   
-  allLinks.forEach(link => {
-    const href = link.getAttribute('href');
-    if (!href) return;
-    
+  const linkElements = doc.querySelectorAll('a[href]');
+  
+  linkElements.forEach((link, index) => {
     try {
+      const href = link.getAttribute('href');
+      if (!href) return;
+
       let fullUrl = '';
-      
-      // Construiește URL-ul complet
-      if (href.startsWith('http')) {
-        fullUrl = href;
+      if (href.startsWith('//')) {
+        fullUrl = 'https:' + href;
       } else if (href.startsWith('/')) {
         fullUrl = new URL(baseUrl).origin + href;
-      } else if (href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) {
-        return; // Skip anchors, emails, and phone links
+      } else if (href.startsWith('http')) {
+        fullUrl = href;
       } else {
         fullUrl = new URL(href, baseUrl).href;
       }
-      
+
       const linkUrl = new URL(fullUrl);
+      const isInternal = linkUrl.hostname === domain;
       
-      // Verifică dacă este link intern (același domeniu)
-      if (linkUrl.hostname === baseDomain || linkUrl.hostname.endsWith(`.${baseDomain}`)) {
-        // Exclude fișierele care nu sunt pagini web
-        const excludeExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.pdf', '.doc', '.docx', '.zip', '.rar', 
-                                 '.mp3', '.mp4', '.avi', '.css', '.js', '.xml', '.json', '.csv'];
-        const hasExcludedExtension = excludeExtensions.some(ext => 
-          linkUrl.pathname.toLowerCase().endsWith(ext)
-        );
-        
-        if (!hasExcludedExtension) {
-          // Curăță URL-ul de parametri irelevanti
-          const cleanUrl = `${linkUrl.protocol}//${linkUrl.hostname}${linkUrl.pathname}`;
-          internalLinks.add(cleanUrl);
-        }
-      }
-    } catch (e) {
-      // Ignoră link-urile invalide
-    }
-  });
-  
-  return Array.from(internalLinks);
-};
-
-// Funcție pentru detectarea link-urilor de paginare (păstrată pentru compatibilitate)
-const detectPaginationLinks = (doc: Document, baseUrl: string): string[] => {
-  const paginationLinks: Set<string> = new Set();
-  
-  const paginationSelectors = [
-    'a[href*="page="]',
-    'a[href*="p="]',
-    'a[href*="pagina="]',
-    '.pagination a, .pager a, .page-numbers a',
-    'a:contains("Next"), a:contains("Următoarea"), a:contains("Următor")',
-    'a:contains("›"), a:contains("»")',
-    '.next a, .next-page a',
-    'a[class*="next"], a[class*="page"]',
-    'nav a[href*="page"]',
-    '.paginate a, .paging a'
-  ];
-
-  paginationSelectors.forEach(selector => {
-    try {
-      const links = doc.querySelectorAll(selector);
-      links.forEach(link => {
-        const href = link.getAttribute('href');
-        if (href) {
-          let fullUrl = '';
-          if (href.startsWith('http')) {
-            fullUrl = href;
-          } else if (href.startsWith('/')) {
-            fullUrl = new URL(baseUrl).origin + href;
-          } else {
-            fullUrl = new URL(href, baseUrl).href;
-          }
-          
-          // Verifică dacă link-ul pare să fie pentru paginare
-          if (fullUrl.includes('page=') || fullUrl.includes('p=') || fullUrl.includes('pagina=') || 
-              /\/\d+\/?$/.test(fullUrl) || /page\/\d+/.test(fullUrl)) {
-            paginationLinks.add(fullUrl);
-          }
-        }
-      });
-    } catch (e) {
-      // Ignoră erorile pentru selectori invalizi
-    }
-  });
-
-  return Array.from(paginationLinks).slice(0, 20);
-};
-
-// Funcție pentru scraping cu paginare
-const scrapePageWithProxy = async (url: string): Promise<string | null> => {
-  const proxyServices = [
-    `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-    `https://cors-anywhere.herokuapp.com/${url}`,
-    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-    url
-  ];
-
-  for (let i = 0; i < proxyServices.length; i++) {
-    const proxyUrl = proxyServices[i];
-    
-    try {
-      const headers: Record<string, string> = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      };
-
-      if (proxyUrl.includes('cors-anywhere')) {
-        headers['X-Requested-With'] = 'XMLHttpRequest';
-      }
-
-      const response = await fetch(proxyUrl, {
-        method: 'GET',
-        headers: headers,
-        mode: 'cors',
-      });
+      // Detectare tip link
+      let linkType: 'internal' | 'external' | 'product' | 'category' | 'navigation' = isInternal ? 'internal' : 'external';
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      let htmlContent = '';
+      const linkText = link.textContent?.trim().toLowerCase() || '';
+      const linkHref = href.toLowerCase();
       
-      if (proxyUrl.includes('allorigins.win')) {
-        const data = await response.json();
-        htmlContent = data.contents;
-      } else if (proxyUrl.includes('codetabs.com')) {
-        htmlContent = await response.text();
-      } else {
-        htmlContent = await response.text();
+      if (linkHref.includes('/product') || linkHref.includes('/p/') || linkText.includes('produs')) {
+        linkType = 'product';
+      } else if (linkHref.includes('/category') || linkHref.includes('/cat/') || linkText.includes('categorie')) {
+        linkType = 'category';
+      } else if (link.closest('nav, .navigation, .menu, .navbar, header')) {
+        linkType = 'navigation';
       }
 
-      if (!htmlContent || htmlContent.trim().length < 100) {
-        throw new Error('Conținut HTML prea mic sau invalid');
-      }
-
-      return htmlContent;
+      // Context în care se află link-ul
+      const parent = link.parentElement;
+      const contextSelectors = ['nav', '.menu', '.breadcrumb', '.product', '.category', 'footer', 'header'];
+      let context = 'content';
       
-    } catch (err) {
-      console.error(`Eroare cu proxy ${i + 1} pentru ${url}:`, err);
-      if (i === proxyServices.length - 1) {
-        throw err;
-      }
-    }
-  }
-  
-  return null;
-};
-
-// Funcția pentru scraping profund al unui produs individual
-const scrapeProductDetails = async (productUrl: string): Promise<any> => {
-  try {
-    console.log(`🔍 Scraping detalii produs: ${productUrl}`);
-    
-    const htmlContent = await scrapePageWithProxy(productUrl);
-    if (!htmlContent || htmlContent.length < 100) {
-      return null;
-    }
-    
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlContent, 'text/html');
-    
-    // Extrage toate detaliile posibile automat
-    const details: any = {};
-    
-    // Titlul principal - încearcă mai multe selectori
-    const titleSelectors = [
-      'h1', '.product-title', '.title', '.name', '.product-name',
-      '[class*="title"]', '[class*="name"]', '[data-title]', '.heading',
-      '.product-heading', '.item-title', '.page-title'
-    ];
-    for (const selector of titleSelectors) {
-      const titleEl = doc.querySelector(selector);
-      if (titleEl?.textContent?.trim()) {
-        details.title = titleEl.textContent.trim();
-        break;
-      }
-    }
-    
-    // Preț - selectori extinși
-    const priceSelectors = [
-      '[class*="price"]', '[class*="cost"]', '[class*="amount"]', '[class*="valor"]',
-      '.price', '.cost', '.amount', '[data-price]', '.pricing', '.price-current',
-      '.sale-price', '.regular-price', '.product-price', '.item-price',
-      '.precio', '.pret', '.pris', '.prix'
-    ];
-    for (const selector of priceSelectors) {
-      const priceEl = doc.querySelector(selector);
-      if (priceEl?.textContent?.trim()) {
-        const priceText = priceEl.textContent.trim();
-        if (/[\d,.\s]+/.test(priceText)) {
-          details.price = priceText;
+      for (const selector of contextSelectors) {
+        if (link.closest(selector)) {
+          context = selector.replace('.', '');
           break;
         }
       }
-    }
-    
-    // Descriere completă
-    const descSelectors = [
-      '.description', '.product-description', '[class*="desc"]', '.content',
-      '.details', '.summary', '.info', '.product-info', '.overview',
-      '.about', '.features', '.product-features', '.detail', '.specification'
-    ];
-    let fullDescription = '';
-    for (const selector of descSelectors) {
-      const descEl = doc.querySelector(selector);
-      if (descEl?.textContent?.trim()) {
-        const desc = descEl.textContent.trim();
-        if (desc.length > fullDescription.length) {
-          fullDescription = desc;
-        }
-      }
-    }
-    if (fullDescription) details.description = fullDescription;
-    
-    // Specificații și caracteristici - extragere automată avansată
-    const specs: any = {};
-    
-    // Caută tabele cu specificații
-    const specTables = doc.querySelectorAll('table, .specs-table, .specifications, .specs, .attributes, .properties');
-    specTables.forEach(table => {
-      const rows = table.querySelectorAll('tr, .row, .spec-item, .attribute, .property');
-      rows.forEach(row => {
-        const cells = row.querySelectorAll('td, th, .key, .value, .label, .name, .spec-name, .spec-value');
-        if (cells.length >= 2) {
-          const key = cells[0].textContent?.trim();
-          const value = cells[1].textContent?.trim();
-          if (key && value && key.length < 200 && value.length < 1000) {
-            specs[key] = value;
-          }
-        }
+
+      links.push({
+        url: fullUrl,
+        text: link.textContent?.trim() || '',
+        type: linkType,
+        title: link.getAttribute('title') || '',
+        target: link.getAttribute('target') || '',
+        discovered_from: baseUrl,
+        depth: depth,
+        anchor_context: context
       });
-    });
-    
-    // Caută specificații în format listă cu două puncte
-    const listItems = doc.querySelectorAll('li, p, div, span');
-    listItems.forEach(item => {
-      const text = item.textContent?.trim();
-      if (text && text.includes(':') && text.length < 300) {
-        const [key, ...valueParts] = text.split(':');
-        const value = valueParts.join(':').trim();
-        if (key.trim() && value && key.length < 100 && value.length < 500) {
-          specs[key.trim()] = value;
-        }
-      }
-    });
-    
-    // Caută specificații în elemente cu clase specifice
-    const specSelectors = [
-      '.spec', '.attribute', '.property', '.feature', '.characteristic',
-      '[class*="spec"]', '[class*="attribute"]', '[class*="property"]',
-      '[class*="feature"]', '[class*="detail"]'
-    ];
-    specSelectors.forEach(selector => {
-      const elements = doc.querySelectorAll(selector);
-      elements.forEach(el => {
-        const text = el.textContent?.trim();
-        if (text && text.includes(':')) {
-          const [key, ...valueParts] = text.split(':');
-          const value = valueParts.join(':').trim();
-          if (key.trim() && value && key.length < 100 && value.length < 500) {
-            specs[key.trim()] = value;
-          }
-        }
-      });
-    });
-    
-    if (Object.keys(specs).length > 0) {
-      details.specifications = specs;
+
+      // LOG DETALIAT pentru fiecare link descoperit
+      console.log(`🔗 LINK ${index + 1} DESCOPERIT:`);
+      console.log(`   📍 URL: ${fullUrl}`);
+      console.log(`   📝 Text: "${link.textContent?.trim() || 'No text'}"}`);
+      console.log(`   🏷️ Tip: ${linkType}`);
+      console.log(`   📦 Context: ${context}`);
+      console.log(`   🌐 ${isInternal ? 'INTERN' : 'EXTERN'}`);
+      console.log(`   ⬇️ Descoperit din: ${baseUrl}`);
+      console.log(`   📊 Adâncime: ${depth}`);
+      console.log('   ───────────────────────────────');
+
+    } catch (error) {
+      console.warn(`Eroare la procesarea link-ului ${index}:`, error);
     }
-    
-    // Dimensiuni - caută automat
-    const dimensionKeywords = ['dimensiuni', 'mărime', 'size', 'dimensions', 'lungime', 'lățime', 'înălțime', 'greutate', 'weight'];
-    const dimensions: any = {};
-    
-    Object.entries(specs).forEach(([key, value]) => {
-      if (dimensionKeywords.some(keyword => key.toLowerCase().includes(keyword))) {
-        dimensions[key] = value;
-      }
-    });
-    
-    // Caută dimensiuni și în textul principal
-    const dimensionPatterns = [
-      /dimensiuni[:\s]*([^\n\r.;]+)/i,
-      /mărime[:\s]*([^\n\r.;]+)/i,
-      /size[:\s]*([^\n\r.;]+)/i,
-      /(\d+[x×]\d+[x×]?\d*\s*(?:cm|mm|m|inch|in)?)/gi
-    ];
-    
-    const bodyText = doc.body.textContent || '';
-    dimensionPatterns.forEach(pattern => {
-      const matches = bodyText.match(pattern);
-      if (matches) {
-        matches.forEach(match => {
-          if (!dimensions['Dimensiuni detectate']) {
-            dimensions['Dimensiuni detectate'] = [];
-          }
-          if (Array.isArray(dimensions['Dimensiuni detectate'])) {
-            dimensions['Dimensiuni detectate'].push(match.trim());
-          }
-        });
-      }
-    });
-    
-    if (Object.keys(dimensions).length > 0) {
-      details.dimensions = dimensions;
-    }
-    
-    // Imagini - extragere completă
-    const images = [];
-    const imgElements = doc.querySelectorAll('img, source, [style*="background-image"]');
-    imgElements.forEach(img => {
-      let src = '';
-      if (img.tagName === 'IMG') {
-        src = img.getAttribute('src') || img.getAttribute('data-src') || img.getAttribute('data-lazy-src') || '';
-      } else if (img.tagName === 'SOURCE') {
-        src = img.getAttribute('srcset')?.split(' ')[0] || '';
+  });
+
+  return links;
+};
+
+// Funcția de extragere completă a imaginilor
+const extractAllImagesWithDetails = (doc: Document, baseUrl: string): ScrapedImage[] => {
+  const images: ScrapedImage[] = [];
+  const imageElements = doc.querySelectorAll('img');
+  
+  imageElements.forEach((img, index) => {
+    try {
+      const src = img.getAttribute('src') || img.getAttribute('data-src') || img.getAttribute('data-lazy-src');
+      if (!src) return;
+
+      let fullSrc = '';
+      if (src.startsWith('//')) {
+        fullSrc = 'https:' + src;
+      } else if (src.startsWith('/')) {
+        fullSrc = new URL(baseUrl).origin + src;
+      } else if (src.startsWith('http')) {
+        fullSrc = src;
       } else {
-        const style = img.getAttribute('style') || '';
-        const match = style.match(/background-image:\s*url\(['"]?([^'"]+)['"]?\)/);
-        if (match) src = match[1];
+        fullSrc = new URL(src, baseUrl).href;
       }
+
+      // Detectare tip imagine
+      let imageType: 'product' | 'banner' | 'logo' | 'content' | 'background' = 'content';
       
-      if (src && !src.includes('data:') && !src.includes('placeholder')) {
-        try {
-          const fullUrl = new URL(src, productUrl).href;
-          images.push({
-            src: fullUrl,
-            alt: img.getAttribute('alt') || '',
-            title: img.getAttribute('title') || ''
-          });
-        } catch (e) {
-          // Skip invalid URLs
+      const alt = img.getAttribute('alt')?.toLowerCase() || '';
+      const className = img.className.toLowerCase();
+      const parent = img.parentElement;
+      
+      if (alt.includes('logo') || className.includes('logo') || img.closest('.logo')) {
+        imageType = 'logo';
+      } else if (img.closest('.product, .item, [data-testid*="product"]')) {
+        imageType = 'product';
+      } else if (img.closest('.banner, .hero, .carousel, .slider')) {
+        imageType = 'banner';
+      } else if (className.includes('background') || img.closest('.background')) {
+        imageType = 'background';
+      }
+
+      // Context imagine
+      let context = 'general';
+      const contextSelectors = ['.product', '.banner', '.header', '.footer', '.content', '.gallery'];
+      for (const selector of contextSelectors) {
+        if (img.closest(selector)) {
+          context = selector.replace('.', '');
+          break;
         }
       }
-    });
-    
-    if (images.length > 0) {
-      details.images = images.slice(0, 20); // Limitează la 20 imagini
-    }
-    
-    // Brand/Producător
-    const brandSelectors = [
-      '.brand', '.manufacturer', '[class*="brand"]', '[class*="manufacturer"]',
-      '[data-brand]', '.make', '.producer', '.fabricant'
-    ];
-    for (const selector of brandSelectors) {
-      const brandEl = doc.querySelector(selector);
-      if (brandEl?.textContent?.trim()) {
-        details.brand = brandEl.textContent.trim();
-        break;
-      }
-    }
-    
-    // Disponibilitate/Stock
-    const stockSelectors = [
-      '.stock', '.availability', '[class*="available"]', '[class*="stock"]',
-      '.in-stock', '.out-of-stock', '[data-stock]', '.inventory'
-    ];
-    for (const selector of stockSelectors) {
-      const stockEl = doc.querySelector(selector);
-      if (stockEl?.textContent?.trim()) {
-        details.availability = stockEl.textContent.trim();
-        break;
-      }
-    }
-    
-    // Categorie/Breadcrumbs
-    const categorySelectors = [
-      '.breadcrumb', '.breadcrumbs', '.category', '.categories',
-      '[class*="breadcrumb"]', '[class*="category"]', 'nav a', '.nav a'
-    ];
-    const categories = [];
-    for (const selector of categorySelectors) {
-      const catElements = doc.querySelectorAll(selector);
-      catElements.forEach(el => {
-        const text = el.textContent?.trim();
-        if (text && text.length < 100 && !categories.includes(text)) {
-          categories.push(text);
-        }
+
+      images.push({
+        src: fullSrc,
+        alt: img.getAttribute('alt') || '',
+        title: img.getAttribute('title') || '',
+        width: img.getAttribute('width') || '',
+        height: img.getAttribute('height') || '',
+        loading: img.getAttribute('loading') || '',
+        type: imageType,
+        context: context
       });
-      if (categories.length > 0) break;
+
+    } catch (error) {
+      console.warn(`Eroare la procesarea imaginii ${index}:`, error);
     }
-    if (categories.length > 0) {
-      details.category = categories.join(' > ');
-    }
-    
-    // Rating/Recenzii
-    const ratingSelectors = [
-      '.rating', '.stars', '[class*="rating"]', '[class*="review"]',
-      '[class*="star"]', '.score', '.reviews'
-    ];
-    for (const selector of ratingSelectors) {
-      const ratingEl = doc.querySelector(selector);
-      if (ratingEl?.textContent?.trim()) {
-        details.rating = ratingEl.textContent.trim();
-        break;
-      }
-    }
-    
-    // Informații suplimentare - extrage tot textul util
-    const additionalInfo = [];
-    const textSelectors = ['p', 'li', 'span', 'div'];
-    const textElements = doc.querySelectorAll(textSelectors.join(', '));
-    
-    textElements.forEach(el => {
-      const text = el.textContent?.trim();
-      if (text && text.length > 20 && text.length < 500 && 
-          !text.includes('cookie') && !text.includes('privacy') &&
-          !text.includes('copyright') && !text.includes('©')) {
-        additionalInfo.push(text);
-      }
-    });
-    
-    details.additionalInfo = additionalInfo.slice(0, 50); // Primele 50 texte relevante
-    
-    // Meta informații
-    const metaSelectors = [
-      'meta[name="description"]',
-      'meta[property="og:description"]',
-      'meta[name="keywords"]'
-    ];
-    
-    metaSelectors.forEach(selector => {
-      const metaEl = doc.querySelector(selector);
-      if (metaEl) {
-        const content = metaEl.getAttribute('content');
-        if (content) {
-          details.metaInfo = details.metaInfo || {};
-          details.metaInfo[selector.replace(/[^a-zA-Z]/g, '')] = content;
-        }
-      }
-    });
-    
-    // Conținut complet de pe pagină (primele 3000 caractere)
-    details.fullPageContent = doc.body.textContent?.trim().substring(0, 3000);
-    
-    console.log(`✅ Extras detalii pentru: ${details.title || 'Produs neidentificat'}`);
-    return details;
-    
-  } catch (error) {
-    console.error('❌ Eroare la scraping detalii produs:', error);
-    return null;
-  }
+  });
+
+  return images;
 };
 
-// Funcția principală de scraping cu LOGICA SISTEMATICĂ DE CRAWLING ȘI EXTRAGERE COMPLETĂ
-const handleScrape = async (url: string, onProgress?: (current: number, total: number) => void): Promise<ScrapedData | null> => {
-  try {
-    console.log('🚀 INIȚIEZ CRAWLING-UL SISTEMATIC PROFUND...');
-    
-    // === PASUL 1: INIȚIALIZAREA STRUCTURILOR DE DATE ===
-    const urlsDeVizitat: string[] = [url]; // Coada de URL-uri de procesat
-    const urlsVizitate = new Set<string>(); // Set pentru evitarea duplicatelor 
-    let mainData: ScrapedData | null = null;
-    
-    // Colectori pentru TOATE datele de pe TOATE paginile
-    const produseTotale: Product[] = [];
-    const linkuriTotale: Array<{ url: string; text: string; type: string; target: string; title: string }> = [];
-    const imaginiTotale: Array<{ src: string; alt: string; title: string; width: string; height: string; loading: string }> = [];
-    const dateleToatePaginilor: ScrapedData[] = [];
-    
-    // === PASUL 2: CONFIGURAREA PENTRU PERFORMANȚĂ ȘI POLITEȚE ===
-    const limitaPagini = 100; // Creștem limita pentru mai multe date
-    const delayIntreRequest = 800; // 0.8 secunde între cereri pentru politețe
-    let pagineProcesate = 0;
-    
-    // Analiză domeniu pentru filtrarea link-urilor
-    const baseUrl = new URL(url);
-    const domeniuPrincipal = baseUrl.hostname;
-    
-    console.log(`📍 Domeniu țintă: ${domeniuPrincipal}`);
-    console.log(`⚙️ Configurare: max ${limitaPagini} pagini, delay ${delayIntreRequest}ms`);
-    console.log(`🎯 User-Agent: KalinaDeepScraper/2.0 pentru respectarea robots.txt`);
+// Funcția de CRAWLING COMPLET fără limite
+const performUnlimitedCrawling = async (
+  startUrl: string, 
+  scrapingType: 'ecommerce' | 'informational',
+  onProgress?: (current: number, total: number, details: string) => void
+): Promise<ScrapedData> => {
+  const startTime = Date.now();
+  console.log(`🚀 ÎNCEPE CRAWLING ${scrapingType.toUpperCase()} NELIMITAT: ${startUrl}`);
 
-    // === PASUL 3: BUCLA PRINCIPALĂ DE CRAWLING SISTEMATIC ===
-    while (urlsDeVizitat.length > 0 && pagineProcesate < limitaPagini) {
-      const urlCurent = urlsDeVizitat.shift()!;
-      
-      // Evită procesarea duplicatelor (crucial pentru evitarea buclelor infinite)
-      if (urlsVizitate.has(urlCurent)) {
-        console.log(`⏭️ Skip URL duplicat: ${urlCurent}`);
-        continue;
-      }
-      
-      urlsVizitate.add(urlCurent);
-      pagineProcesate++;
-      
-      // Actualizează progresul pentru UI
-      const totalEstimat = Math.min(urlsDeVizitat.length + pagineProcesate, limitaPagini);
-      if (onProgress) {
-        onProgress(pagineProcesate, totalEstimat);
-      }
+  const urlsToVisit: string[] = [startUrl];
+  const visitedUrls = new Set<string>();
+  const allProducts: ScrapedProduct[] = [];
+  const allLinks: ScrapedLink[] = [];
+  const allImages: ScrapedImage[] = [];
+  const domain = new URL(startUrl).hostname;
+  let mainData: ScrapedData | null = null;
+  let totalPagesProcessed = 0;
+  const maxConcurrentRequests = 3;
+  const delayBetweenRequests = 1000;
 
-      console.log(`\n📄 === PROCESEZ PAGINA ${pagineProcesate}/${totalEstimat} ===`);
-      console.log(`🌐 URL: ${urlCurent}`);
-
+  // Proces de crawling nelimitat
+  while (urlsToVisit.length > 0) {
+    const currentBatch = urlsToVisit.splice(0, maxConcurrentRequests);
+    const batchPromises = currentBatch.map(async (currentUrl) => {
+      if (visitedUrls.has(currentUrl)) return;
+      
+      visitedUrls.add(currentUrl);
+      totalPagesProcessed++;
+      
+      console.log(`\n📄 PROCESEZ PAGINA ${totalPagesProcessed}: ${currentUrl}`);
+      
       try {
-        // === PASUL 4: POLITEȚEA FAȚĂ DE SERVER (RATE LIMITING) ===
-        if (pagineProcesate > 1) {
-          console.log(`⏳ Pauză de ${delayIntreRequest}ms pentru politețe...`);
-          await new Promise(resolve => setTimeout(resolve, delayIntreRequest));
-        }
-
-        // === PASUL 5: DESCĂRCAREA CONȚINUTULUI PAGINII ===
-        console.log(`📥 Descarc HTML-ul pentru ${urlCurent}...`);
-        const response = await fetch(urlCurent, {
+        const response = await fetch(currentUrl, {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (compatible; KalinaDeepScraper/2.0; +https://kalina.ai) AppleWebKit/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'ro-RO,ro;q=0.9,en;q=0.8',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'DNT': '1',
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1',
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          },
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          }
         });
-        
+
         if (!response.ok) {
-          console.warn(`❌ Eroare HTTP ${response.status} pentru ${urlCurent} - ${response.statusText}`);
-          continue;
+          console.warn(`❌ HTTP ${response.status} pentru ${currentUrl}`);
+          return;
         }
-        
-        const htmlContent = await response.text();
-        console.log(`✅ HTML descărcat: ${Math.round(htmlContent.length / 1024)}KB`);
-        
-        // === PASUL 6: PARSAREA HTML-ULUI ===
+
+        const html = await response.text();
         const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlContent, 'text/html');
+        const doc = parser.parseFromString(html, 'text/html');
 
-        // === PASUL 7: EXTRAGEREA COMPLETĂ A DATELOR ===
-        console.log(`🔍 EXTRAG TOATE DATELE din ${urlCurent}...`);
-        const scrapedPageData = await extractAllDataFromPage(doc, urlCurent);
-        dateleToatePaginilor.push(scrapedPageData);
-        
-        // Salvează prima pagină ca date principale
-        if (!mainData) {
-          console.log(`🏠 Pagina principală procesată cu ${scrapedPageData.products.length} produse`);
-          mainData = scrapedPageData;
+        // Extrage datele în funcție de tipul de scraping
+        let pageData: ScrapedData;
+        if (scrapingType === 'ecommerce') {
+          pageData = extractEcommerceData(doc, currentUrl);
+        } else {
+          pageData = extractInformationalContent(doc, currentUrl);
         }
 
-        // === PASUL 8: PROCESARE SPECIALĂ PENTRU PAGINI DE PRODUSE ===
-        console.log(`🛍️ Verific dacă ${urlCurent} este pagină de produs...`);
-        if (isProductPage(doc, urlCurent)) {
-          console.log(`✨ PAGINĂ DE PRODUS DETECTATĂ! Extrag detalii complete...`);
-          const produsDetaliat = await scrapeIndividualProductPage(doc, urlCurent, baseUrl);
-          if (produsDetaliat) {
-            produseTotale.push(produsDetaliat);
-            console.log(`🎯 Produs detaliat extras: ${produsDetaliat.name}`);
-            console.log(`📊 Specificații: ${Object.keys(produsDetaliat.specifications).length}`);
-            console.log(`🖼️ Imagini: ${produsDetaliat.images.length}`);
-          }
-        }
-        
-        // Adaugă produsele generale găsite pe pagină
-        produseTotale.push(...scrapedPageData.products);
-        linkuriTotale.push(...scrapedPageData.links);
-        imaginiTotale.push(...scrapedPageData.images);
-
-        // === PASUL 9: DESCOPERIREA LINK-URILOR INTERNE (CRAWLING) ===
-        console.log(`🔗 DESCOPĂR LINK-URI NOI în ${urlCurent}...`);
-        const linkuriNoi = await discoverAllInternalLinks(doc, urlCurent, baseUrl, domeniuPrincipal);
-        
-        let linkuriAdaugate = 0;
-        linkuriNoi.forEach(linkNou => {
-          if (!urlsVizitate.has(linkNou) && !urlsDeVizitat.includes(linkNou)) {
-            urlsDeVizitat.push(linkNou);
-            linkuriAdaugate++;
-          }
-        });
-
-        console.log(`✅ PAGINĂ ${pagineProcesate} PROCESATĂ CU SUCCES!`);
-        console.log(`📈 Statistici pagină: ${scrapedPageData.products.length} produse, ${linkuriNoi.length} link-uri găsite`);
-        console.log(`➕ Link-uri noi adăugate în coadă: ${linkuriAdaugate}`);
-        console.log(`📊 Total produse până acum: ${produseTotale.length}`);
-        console.log(`🔗 Total link-uri în coadă: ${urlsDeVizitat.length}`);
-
-      } catch (pageError) {
-        console.error(`❌ EROARE la procesarea paginii ${urlCurent}:`, pageError);
-        // Continuă cu următoarea pagină în loc să se oprească complet
-        continue;
-      }
-    }
-    
-    if (!mainData) {
-      throw new Error('Nu s-a putut procesa pagina principală - verifică URL-ul');
-    }
-    
-    console.log(`\n🎉 === CRAWLING SISTEMATIC COMPLETAT ===`);
-    console.log(`📊 STATISTICI FINALE:`);
-    console.log(`   • Pagini procesate: ${pagineProcesate}`);
-    console.log(`   • Produse totale: ${produseTotale.length}`);
-    console.log(`   • Link-uri totale: ${linkuriTotale.length}`);
-    console.log(`   • Imagini totale: ${imaginiTotale.length}`);
-    console.log(`   • Domain principal: ${domeniuPrincipal}`);
-
-    // === PASUL 10: COMBINAREA FINALĂ A TUTUROR DATELOR ===
-    console.log(`🔄 Combin toate datele într-un rezultat final...`);
-    
-    // Elimină duplicatele și combină datele
-    const produseFiltrate = produseTotale.filter((product, index, arr) => 
-      arr.findIndex(p => p.name === product.name && p.url === product.url) === index
-    );
-    
-    const linkuriFiltrate = linkuriTotale.filter((link, index, arr) => 
-      arr.findIndex(l => l.url === link.url) === index
-    );
-    
-    const imaginiFiltrate = imaginiTotale.filter((img, index, arr) => 
-      arr.findIndex(i => i.src === img.src) === index
-    );
-
-    // Returnează rezultatul final cu TOATE datele combinate
-    const rezultatFinal: ScrapedData = {
-      ...mainData,
-      products: produseFiltrate,
-      links: linkuriFiltrate,
-      images: imaginiFiltrate,
-      text: mainData.text + `\n\n[CRAWLING SISTEMATIC FINALIZAT - ${pagineProcesate} PAGINI PROCESATE - ${produseFiltrate.length} PRODUSE CU DETALII COMPLETE]`,
-      // Combină toate metadatele
-      headings: dateleToatePaginilor.flatMap(d => d.headings),
-      tables: dateleToatePaginilor.flatMap(d => d.tables),
-      lists: dateleToatePaginilor.flatMap(d => d.lists),
-      contactInfo: {
-        emails: [...new Set(dateleToatePaginilor.flatMap(d => d.contactInfo.emails))],
-        phones: [...new Set(dateleToatePaginilor.flatMap(d => d.contactInfo.phones))],
-        addresses: [...new Set(dateleToatePaginilor.flatMap(d => d.contactInfo.addresses))]
-      },
-      socialLinks: dateleToatePaginilor.flatMap(d => d.socialLinks).filter((link, index, arr) => 
-        arr.findIndex(l => l.url === link.url) === index
-      ),
-      technologies: {
-        cms: [...new Set(dateleToatePaginilor.flatMap(d => d.technologies.cms))],
-        frameworks: [...new Set(dateleToatePaginilor.flatMap(d => d.technologies.frameworks))],
-        analytics: [...new Set(dateleToatePaginilor.flatMap(d => d.technologies.analytics))],
-        advertising: [...new Set(dateleToatePaginilor.flatMap(d => d.technologies.advertising))]
-      }
-    };
-    
-    console.log(`✅ REZULTAT FINAL GENERAT CU SUCCES!`);
-    return rezultatFinal;
-    
-  } catch (error) {
-    console.error('❌ EROARE CRITICĂ la crawling sistematic:', error);
-    throw error;
-  }
-};
-    
-    console.log('🚀 Încep crawling-ul profund pentru:', url);
-    
-    while (urlsToVisit.length > 0 && processedPages < maxPages) {
-      const currentUrl = urlsToVisit.shift()!;
-      
-      // Skip dacă am vizitat deja această pagină
-      if (visitedUrls.has(currentUrl)) continue;
-      
-      try {
-        console.log(`📄 Procesez pagina ${processedPages + 1}: ${currentUrl}`);
-        
-        // Scrape pagina curentă
-        const htmlContent = await scrapePageWithProxy(currentUrl);
-        if (!htmlContent || htmlContent.length < 100) {
-          console.log(`⚠️ Conținut invalid pentru: ${currentUrl}`);
-          continue;
-        }
-        
-        const pageData = await extractAllContent(htmlContent, currentUrl);
-        visitedUrls.add(currentUrl);
-        processedPages++;
-        
-        // Prima pagină devine pagina principală
+        // Salvează datele principale de la prima pagină
         if (!mainData) {
           mainData = pageData;
         }
-        
-        // Pentru fiecare produs găsit, fă scraping profund individual
-        const enhancedProducts: Product[] = [];
-        for (const product of pageData.products) {
-          let enhancedProduct = { ...product };
-          
-          // Dacă produsul are un link, fă scraping profund
-          if (product.url && product.url !== currentUrl) {
-            try {
-              console.log(`🔍 Analizez produsul: ${product.name}`);
-              const productDetails = await scrapeProductDetails(product.url);
-              
-              if (productDetails) {
-                // Combină informațiile existente cu cele noi
-                enhancedProduct = {
-                  ...enhancedProduct,
-                  name: productDetails.title || enhancedProduct.name,
-                  description: productDetails.description || enhancedProduct.description,
-                  price: productDetails.price || enhancedProduct.price,
-                  specifications: {
-                    ...enhancedProduct.specifications,
-                    ...productDetails.specifications
-                  },
-                  brand: productDetails.brand || enhancedProduct.brand,
-                  availability: productDetails.availability || enhancedProduct.availability,
-                  category: productDetails.category || enhancedProduct.category,
-                  rating: productDetails.rating || enhancedProduct.rating,
-                };
-                
-                // Adaugă imaginile noi
-                if (productDetails.images && productDetails.images.length > 0) {
-                  const existingImages = enhancedProduct.images.map(img => img.src);
-                  const newImages = productDetails.images
-                    .filter((img: any) => !existingImages.includes(img.src))
-                    .map((img: any) => ({
-                      src: img.src,
-                      alt: img.alt || '',
-                      title: img.title || '',
-                      type: 'gallery' as const
-                    }));
-                  enhancedProduct.images = [...enhancedProduct.images, ...newImages];
-                }
-                
-                // Adaugă informații suplimentare
-                if (productDetails.dimensions) {
-                  enhancedProduct.specifications = {
-                    ...enhancedProduct.specifications,
-                    'Dimensiuni': JSON.stringify(productDetails.dimensions)
-                  };
-                }
-                
-                if (productDetails.additionalInfo && productDetails.additionalInfo.length > 0) {
-                  enhancedProduct.features = [
-                    ...enhancedProduct.features,
-                    ...productDetails.additionalInfo.slice(0, 10)
-                  ];
-                }
-                
-                if (productDetails.fullPageContent) {
-                  enhancedProduct.specifications = {
-                    ...enhancedProduct.specifications,
-                    'Conținut complet pagină': productDetails.fullPageContent.substring(0, 1000)
-                  };
-                }
-              }
-              
-              // Pauză între cererile de produse
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              
-            } catch (productError) {
-              console.error(`❌ Eroare la scraping produs ${product.name}:`, productError);
+
+        // Adaugă produsele găsite (pentru e-commerce)
+        if (scrapingType === 'ecommerce') {
+          pageData.products.forEach(product => {
+            const exists = allProducts.some(existing => 
+              existing.name === product.name && existing.url === product.url
+            );
+            if (!exists) {
+              allProducts.push(product);
             }
-          }
-          
-          enhancedProducts.push(enhancedProduct);
+          });
         }
-        
-        // Adaugă produsele îmbunătățite la lista globală
-        enhancedProducts.forEach(product => {
-          const exists = allProducts.some(existing => 
-            existing.name === product.name && existing.price === product.price
-          );
-          if (!exists) {
-            allProducts.push(product);
-          }
-        });
-        
-        // Adaugă link-urile unice
-        pageData.links.forEach(link => {
+
+        // Extrage și adaugă toate link-urile cu detalii complete
+        const pageLinks = extractAllLinksWithDetails(doc, currentUrl, totalPagesProcessed);
+        pageLinks.forEach(link => {
           const exists = allLinks.some(existing => existing.url === link.url);
           if (!exists) {
-            allLinks.push({
-              url: link.url,
-              text: link.text,
-              type: link.type,
-              target: link.target || '',
-              title: link.title || ''
-            });
+            allLinks.push(link);
+            
+            // Adaugă link-uri noi interne pentru crawling
+            const linkUrl = new URL(link.url);
+            if (linkUrl.hostname === domain && 
+                !visitedUrls.has(link.url) && 
+                !urlsToVisit.includes(link.url) &&
+                !link.url.includes('#') &&
+                !link.url.match(/\.(pdf|jpg|jpeg|png|gif|svg|css|js|ico|xml|zip|doc|docx)$/i)) {
+              
+              urlsToVisit.push(link.url);
+              console.log(`➕ ADĂUGAT PENTRU CRAWLING: ${link.url}`);
+            }
           }
         });
-        
-        // Adaugă imaginile unice
-        pageData.images.forEach(image => {
+
+        // Extrage și adaugă toate imaginile
+        const pageImages = extractAllImagesWithDetails(doc, currentUrl);
+        pageImages.forEach(image => {
           const exists = allImages.some(existing => existing.src === image.src);
           if (!exists) {
-            allImages.push({
-              src: image.src,
-              alt: image.alt,
-              title: image.title,
-              width: image.width || '',
-              height: image.height || '',
-              loading: image.loading || ''
-            });
+            allImages.push(image);
           }
         });
-        
-        // Detectează toate link-urile interne de pe pagina curentă
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlContent, 'text/html');
-        const internalLinks = detectAllInternalLinks(doc, currentUrl);
-        
-        // Adaugă link-urile noi în coada de vizitat
-        internalLinks.forEach(link => {
-          if (!visitedUrls.has(link) && !urlsToVisit.includes(link)) {
-        // Extrage toate datele de pe pagina curentă
-        const scrapedPageData = await extractAllDataFromPage(doc, urlCurent);
-        dateleToatePaginilor.push(scrapedPageData);
-        
-        // Salvează prima pagină ca date principale
-        if (!mainData) {
-          mainData = scrapedPageData;
-        }
-        
-        // Adaugă produsele găsite
-        produseTotale.push(...scrapedPageData.products);
-        linkuriTotale.push(...scrapedPageData.links);
-        imaginiTotale.push(...scrapedPageData.images);
 
-        // Descoperă link-uri noi pentru crawling
-        const linkuriNoi = doc.querySelectorAll('a[href]');
-        let linkuriAdaugate = 0;
-        
-        linkuriNoi.forEach(link => {
-          try {
-            const href = link.getAttribute('href');
-            if (!href) return;
-            
-            let urlNou = '';
-            if (href.startsWith('//')) {
-              urlNou = 'https:' + href;
-            } else if (href.startsWith('/')) {
-              urlNou = `${baseUrl.protocol}//${baseUrl.host}${href}`;
-            } else if (href.startsWith('http')) {
-              urlNou = href;
-            } else {
-              urlNou = new URL(href, urlCurent).href;
-            }
-            
-            const urlNouObj = new URL(urlNou);
-            
-            // Filtrează link-urile
-            if (urlNouObj.hostname === domeniuPrincipal && 
-                !urlsVizitate.has(urlNou) && 
-                !urlsDeVizitat.includes(urlNou) &&
-                !urlNou.includes('#') &&
-                !urlNou.match(/\.(pdf|jpg|jpeg|png|gif|svg|css|js|ico|xml|zip|doc|docx)$/i)) {
-              
-              urlsDeVizitat.push(urlNou);
-              linkuriAdaugate++;
-            }
-          } catch (error) {
-            // Ignoră erorile de URL invalid
-          }
-        });
-        
-        console.log(`✅ PAGINĂ ${pagineProcesate} PROCESATĂ CU SUCCES!`);
-        console.log(`📈 Statistici pagină: ${scrapedPageData.products.length} produse găsite`);
-        console.log(`➕ Link-uri noi adăugate în coadă: ${linkuriAdaugate}`);
-        console.log(`📊 Total produse până acum: ${produseTotale.length}`);
-        console.log(`🔗 Total link-uri în coadă: ${urlsDeVizitat.length}`);
-        
-        // Pauză între cereri pentru a evita blocarea
-        await new Promise(resolve => setTimeout(resolve, delayIntreRequest));
-        
-      } catch (pageError) {
-        console.error(`❌ Eroare la procesarea paginii ${urlCurent}:`, pageError);
-        continue;
+        // Actualizează progresul
+        const progressDetails = `Pagina ${totalPagesProcessed}: ${allProducts.length} produse, ${allLinks.length} link-uri, ${allImages.length} imagini`;
+        if (onProgress) {
+          onProgress(totalPagesProcessed, visitedUrls.size + urlsToVisit.length, progressDetails);
+        }
+
+        console.log(`✅ FINALIZAT ${currentUrl}:`);
+        console.log(`   🛍️ Produse găsite: ${pageData.products.length}`);
+        console.log(`   🔗 Link-uri găsite: ${pageLinks.length}`);
+        console.log(`   🖼️ Imagini găsite: ${pageImages.length}`);
+        console.log(`   📊 Total acumulat: ${allProducts.length} produse, ${allLinks.length} link-uri, ${allImages.length} imagini`);
+        console.log(`   🚀 Rămase în coadă: ${urlsToVisit.length} pagini`);
+
+      } catch (error) {
+        console.error(`❌ EROARE la procesarea ${currentUrl}:`, error);
       }
+    });
+
+    // Așteaptă procesarea batch-ului curent
+    await Promise.all(batchPromises);
+    
+    // Pauză între batch-uri
+    if (urlsToVisit.length > 0) {
+      await new Promise(resolve => setTimeout(resolve, delayBetweenRequests));
     }
-    
-    if (!mainData) {
-      throw new Error('Nu s-a putut procesa pagina principală - verifică URL-ul');
-    }
-    
-    console.log(`🎉 Crawling sistematic finalizat! Procesate ${pagineProcesate} pagini, găsite ${produseTotale.length} produse cu detalii complete`);
-    
-    // Returnează datele combinate cu informații din toate paginile
-    return {
-      ...mainData,
-      products: produseTotale,
-      links: linkuriTotale,
-      images: imaginiTotale,
-      text: mainData.text + `\n\n[CRAWLING SISTEMATIC FINALIZAT - ${pagineProcesate} PAGINI PROCESATE - ${produseTotale.length} PRODUSE CU DETALII COMPLETE]`
-    };
-    
-  } catch (error) {
-    console.error('❌ EROARE CRITICĂ la crawling sistematic:', error);
-    throw error;
   }
+
+  if (!mainData) {
+    throw new Error('Nu s-a putut procesa pagina principală');
+  }
+
+  const processingTime = Date.now() - startTime;
+  const uniqueDomains = new Set(allLinks.map(link => new URL(link.url).hostname)).size;
+
+  console.log(`\n🎉 CRAWLING NELIMITAT FINALIZAT!`);
+  console.log(`⏱️ Timp procesare: ${(processingTime / 1000).toFixed(2)} secunde`);
+  console.log(`📄 Pagini procesate: ${totalPagesProcessed}`);
+  console.log(`🛍️ Total produse: ${allProducts.length}`);
+  console.log(`🔗 Total link-uri: ${allLinks.length}`);
+  console.log(`🖼️ Total imagini: ${allImages.length}`);
+  console.log(`🌐 Domenii unice: ${uniqueDomains}`);
+
+  // Returnează datele complete combinate
+  return {
+    ...mainData,
+    products: allProducts,
+    links: allLinks,
+    images: allImages,
+    totalPages: totalPagesProcessed,
+    extractionStats: {
+      totalProducts: allProducts.length,
+      totalLinks: allLinks.length,
+      totalImages: allImages.length,
+      uniqueDomains: uniqueDomains,
+      processingTime: processingTime
+    },
+    text: mainData.text + `\n\n[CRAWLING NELIMITAT FINALIZAT - ${totalPagesProcessed} PAGINI - ${allProducts.length} PRODUSE - ${allLinks.length} LINK-URI - ${allImages.length} IMAGINI]`
+  };
 };
 
 const Scraping = () => {
@@ -1689,695 +790,629 @@ const Scraping = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [scrapedData, setScrapedData] = useState<ScrapedData | null>(null);
   const [error, setError] = useState('');
-  const [structuredReport, setStructuredReport] = useState('');
-  const [progress, setProgress] = useState({ current: 0, total: 0 });
+  const [scrapingType, setScrapingType] = useState<'ecommerce' | 'informational'>('ecommerce');
+  const [progress, setProgress] = useState({ current: 0, total: 0, details: '' });
 
-  const handleSubmit = async () => {
+  const handleScrape = async () => {
     if (!url.trim()) {
-      toast({
-        title: "URL necesar",
-        description: "Te rog introdu un URL valid pentru a începe scraping-ul",
-        variant: "destructive",
-      });
+      setError('Te rog introdu un URL valid');
       return;
     }
-    
-    // Validare URL
-    try {
-      new URL(url);
-    } catch {
-      toast({
-        title: "URL invalid",
-        description: "Te rog introdu un URL valid (ex: https://example.com)",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+
     setIsLoading(true);
     setError('');
     setScrapedData(null);
-    setStructuredReport('');
-    setProgress({ current: 0, total: 0 });
+    setProgress({ current: 0, total: 0, details: '' });
 
     try {
-      const data = await handleScrape(url, (current, total) => {
-        setProgress({ current, total });
-      });
+      console.log(`🎯 ÎNCEPE SCRAPING ${scrapingType.toUpperCase()} PENTRU: ${url}`);
+      
+      const data = await performUnlimitedCrawling(
+        url, 
+        scrapingType, 
+        (current, total, details) => {
+          setProgress({ current, total, details });
+        }
+      );
+      
       setScrapedData(data);
+      console.log('✅ SCRAPING FINALIZAT CU SUCCES!');
       
-      // Generăm raportul structurat
-      const report = generateStructuredReport(data);
-      setStructuredReport(report);
-      
-      toast({
-        title: "Crawling profund finalizat",
-        description: `Am extras ${data?.products.length || 0} produse și ${data?.links.length || 0} link-uri din ${progress.current} pagini procesate`,
-      });
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Eroare necunoscută';
-      setError(errorMessage);
-      
-      toast({
-        title: "Eroare la scraping",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      console.error('❌ EROARE LA SCRAPING:', err);
+      setError(err instanceof Error ? err.message : 'Eroare la scraping');
     } finally {
       setIsLoading(false);
-      setProgress({ current: 0, total: 0 });
     }
   };
 
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(structuredReport);
-      toast({
-        title: "Copiat în clipboard",
-        description: "Raportul a fost copiat cu succes în clipboard"
-      });
-    } catch (err) {
-      toast({
-        title: "Eroare la copiere",
-        description: "Nu am putut copia raportul în clipboard",
-        variant: "destructive"
-      });
-    }
+  const downloadJson = () => {
+    if (!scrapedData) return;
+    
+    const dataStr = JSON.stringify(scrapedData, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `scraped-data-${scrapingType}-${Date.now()}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
   };
 
   return (
-    <DashboardLayout>
-      <div className="p-6 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900 mb-1">Web Scraping</h1>
-          <p className="text-gray-600 text-sm">
-            Extrage automat toate datele dintr-un site urmărind fiecare pagină internă
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            🕷️ Web Scraper Profesional NELIMITAT
+          </h1>
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            Extrage TOATE datele de pe orice site web - fără limite! 
+            Specializat pentru magazine online și site-uri informaționale.
           </p>
         </div>
 
         {/* Input Section */}
-        <Card>
+        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Globe className="w-5 h-5" />
-              Scraping URL
+              <Globe className="h-6 w-6 text-blue-600" />
+              Configurare Scraping
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
+            {/* Tip de scraping */}
             <div className="space-y-2">
-              <Label htmlFor="url">URL Site Web</Label>
+              <label className="text-sm font-medium">Tip de scraping:</label>
+              <Tabs value={scrapingType} onValueChange={(value) => setScrapingType(value as 'ecommerce' | 'informational')}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="ecommerce" className="flex items-center gap-2">
+                    <ShoppingCart className="h-4 w-4" />
+                    E-commerce (Produse)
+                  </TabsTrigger>
+                  <TabsTrigger value="informational" className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Informațional (Conținut)
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
+            {/* URL Input */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">URL pentru scraping:</label>
               <div className="flex gap-2">
                 <Input
-                  id="url"
                   type="url"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://example.com"
+                  placeholder="https://exemplu.com"
                   className="flex-1"
-                  disabled={isLoading}
                 />
                 <Button 
-                  onClick={handleSubmit} 
-                  disabled={isLoading || !url.trim()}
-                  className="bg-black hover:bg-gray-800 text-white"
+                  onClick={handleScrape} 
+                  disabled={isLoading}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                 >
                   {isLoading ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <Zap className="h-4 w-4 mr-2 animate-spin" />
                       Procesez...
                     </>
                   ) : (
                     <>
-                      <Search className="w-4 h-4 mr-2" />
-                      Extrage Date
+                      <Search className="h-4 w-4 mr-2" />
+                      Începe Scraping
                     </>
                   )}
                 </Button>
               </div>
             </div>
 
-            {error && (
-              <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <AlertCircle className="w-5 h-5 text-red-600" />
-                <div>
-                  <h4 className="font-medium text-red-900">Eroare</h4>
-                  <p className="text-sm text-red-700">{error}</p>
-                </div>
-              </div>
-            )}
+            {/* Descrieri tipuri de scraping */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <Card className={`border-2 transition-colors ${
+                scrapingType === 'ecommerce' ? 'border-blue-500 bg-blue-50/50' : 'border-gray-200'
+              }`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <ShoppingCart className="h-5 w-5 text-blue-600" />
+                    <h3 className="font-semibold">E-commerce Scraping</h3>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Perfect pentru magazine online. Extrage:
+                  </p>
+                  <div className="space-y-1 text-xs">
+                    <Badge variant="secondary" className="mr-1">Nume produse</Badge>
+                    <Badge variant="secondary" className="mr-1">Prețuri & Reduceri</Badge>
+                    <Badge variant="secondary" className="mr-1">Descrieri complete</Badge>
+                    <Badge variant="secondary" className="mr-1">Imagini produse</Badge>
+                    <Badge variant="secondary" className="mr-1">Disponibilitate</Badge>
+                    <Badge variant="secondary" className="mr-1">Cantități</Badge>
+                    <Badge variant="secondary" className="mr-1">Promoții</Badge>
+                    <Badge variant="secondary" className="mr-1">Rating & Review-uri</Badge>
+                    <Badge variant="secondary" className="mr-1">Specificații</Badge>
+                  </div>
+                </CardContent>
+              </Card>
 
-            {isLoading && progress.current > 0 && (
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-                  <span className="text-sm font-medium text-blue-900">
-                    Crawling profund în progres...
-                  </span>
-                </div>
-                <div className="text-sm text-blue-700 mb-2">
-                  Procesez pagina {progress.current} din {progress.total} 
-                  {progress.total > 50 ? " (limitat la 50 pentru performanță)" : ""}
-                </div>
-                <div className="w-full bg-blue-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min((progress.current / progress.total) * 100, 100)}%` }}
-                  />
-                </div>
-                <div className="text-xs text-blue-600 mt-1">
-                  Urmăresc toate link-urile interne pentru extragerea completă a datelor...
-                </div>
-              </div>
-            )}
+              <Card className={`border-2 transition-colors ${
+                scrapingType === 'informational' ? 'border-purple-500 bg-purple-50/50' : 'border-gray-200'
+              }`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FileText className="h-5 w-5 text-purple-600" />
+                    <h3 className="font-semibold">Informational Scraping</h3>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Perfect pentru site-uri cu conținut. Extrage:
+                  </p>
+                  <div className="space-y-1 text-xs">
+                    <Badge variant="outline" className="mr-1">Titluri & Headings</Badge>
+                    <Badge variant="outline" className="mr-1">Text complet</Badge>
+                    <Badge variant="outline" className="mr-1">Meta informații</Badge>
+                    <Badge variant="outline" className="mr-1">Toate link-urile</Badge>
+                    <Badge variant="outline" className="mr-1">Imagini & Context</Badge>
+                    <Badge variant="outline" className="mr-1">Structura site-ului</Badge>
+                    <Badge variant="outline" className="mr-1">Schema.org data</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Results Section */}
-        {scrapedData && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                Rezultate Scraping
-              </CardTitle>
-              <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                <span>{scrapedData.products.length} produse</span>
-                <span>{scrapedData.images.length} imagini</span>
-                <span>{scrapedData.links.length} link-uri</span>
-                <span>{scrapedData.tables.length} tabele</span>
-                <span>{scrapedData.contactInfo.emails.length} email-uri</span>
-                <span>{scrapedData.technologies.cms.length + scrapedData.technologies.frameworks.length} tehnologii</span>
+        {/* Progress */}
+        {isLoading && (
+          <Card className="shadow-lg">
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Zap className="h-5 w-5 animate-pulse text-blue-600" />
+                    Progres Crawling Nelimitat
+                  </h3>
+                  <Badge variant="outline">
+                    {progress.current} / {progress.total || '∞'} pagini
+                  </Badge>
+                </div>
+                <Progress value={progress.total > 0 ? (progress.current / progress.total) * 100 : 0} />
+                <p className="text-sm text-gray-600">{progress.details}</p>
               </div>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="report" className="w-full">
-                <TabsList className="grid w-full grid-cols-5 lg:grid-cols-9 text-xs">
-                  <TabsTrigger value="report">Raport</TabsTrigger>
-                  <TabsTrigger value="overview">General</TabsTrigger>
-                  <TabsTrigger value="content">Conținut</TabsTrigger>
-                  <TabsTrigger value="media">Media</TabsTrigger>
-                  <TabsTrigger value="links">Link-uri</TabsTrigger>
-                  <TabsTrigger value="contact">Contact</TabsTrigger>
-                  <TabsTrigger value="tech">Tehnologii</TabsTrigger>
-                  <TabsTrigger value="products">Produse</TabsTrigger>
-                  <TabsTrigger value="data">Date</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="report" className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">Raport Text Structurat</h3>
-                    <Button 
-                      onClick={copyToClipboard}
-                      variant="outline"
-                      size="sm"
-                      className="ml-2"
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      Copiază Raportul
-                    </Button>
-                  </div>
-                  
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-sm text-gray-600 mb-4">
-                      Acest raport conține toate informațiile extrase din site într-un format structurat,
-                      perfect pentru a fi analizat de un agent AI.
-                    </p>
-                    
-                    <ScrollArea className="h-[500px] w-full">
-                      <pre className="text-xs text-gray-800 whitespace-pre-wrap font-mono bg-white p-4 rounded border">
-                        {structuredReport}
-                      </pre>
-                    </ScrollArea>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="overview" className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Titlu</Label>
-                      <p className="text-sm bg-gray-50 p-3 rounded-lg">{scrapedData.title}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>URL</Label>
-                      <p className="text-sm bg-gray-50 p-3 rounded-lg break-all">{scrapedData.url}</p>
-                    </div>
-                  </div>
-                  
-                  {scrapedData.description && (
-                    <div className="space-y-2">
-                      <Label>Descriere</Label>
-                      <p className="text-sm bg-gray-50 p-3 rounded-lg">{scrapedData.description}</p>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <Package className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-                      <div className="text-2xl font-bold text-blue-900">{scrapedData.products.length}</div>
-                      <div className="text-sm text-blue-700">Produse</div>
-                    </div>
-                    <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <Image className="w-8 h-8 mx-auto mb-2 text-green-600" />
-                      <div className="text-2xl font-bold text-green-900">{scrapedData.images.length}</div>
-                      <div className="text-sm text-green-700">Imagini</div>
-                    </div>
-                    <div className="text-center p-4 bg-purple-50 rounded-lg">
-                      <Link2 className="w-8 h-8 mx-auto mb-2 text-purple-600" />
-                      <div className="text-2xl font-bold text-purple-900">{scrapedData.links.length}</div>
-                      <div className="text-sm text-purple-700">Link-uri</div>
-                    </div>
-                    <div className="text-center p-4 bg-orange-50 rounded-lg">
-                      <Code className="w-8 h-8 mx-auto mb-2 text-orange-600" />
-                      <div className="text-2xl font-bold text-orange-900">{scrapedData.headings.length}</div>
-                      <div className="text-sm text-orange-700">Titluri</div>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="products" className="space-y-4">
-                  <ScrollArea className="h-[600px]">
-                    <div className="space-y-4">
-                      {scrapedData.products.map((product) => (
-                        <Card key={product.id} className="p-4">
-                          <div className="flex gap-4">
-                            {product.images.length > 0 && (
-                              <img 
-                                src={product.images[0].src} 
-                                alt={product.images[0].alt}
-                                className="w-20 h-20 object-cover rounded-lg bg-gray-100"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                }}
-                              />
-                            )}
-                            <div className="flex-1 space-y-2">
-                              <h3 className="font-semibold text-gray-900">{product.name}</h3>
-                              {product.price && (
-                                <div className="flex items-center gap-2">
-                                  <Badge variant="secondary">{product.price}</Badge>
-                                  {product.currency && <span className="text-sm text-gray-500">{product.currency}</span>}
-                                </div>
-                              )}
-                              {product.description && (
-                                <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
-                              )}
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline">{product.category}</Badge>
-                                <Badge variant="outline">{product.availability}</Badge>
-                              </div>
-                              {Object.keys(product.specifications).length > 0 && (
-                                <div className="text-xs text-gray-500">
-                                  {Object.keys(product.specifications).length} specificații disponibile
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                      
-                      {scrapedData.products.length === 0 && (
-                        <div className="text-center py-8 text-gray-500">
-                          Nu au fost găsite produse pe această pagină
-                        </div>
-                      )}
-                    </div>
-                  </ScrollArea>
-                </TabsContent>
-
-                <TabsContent value="images" className="space-y-4">
-                  <ScrollArea className="h-[600px]">
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {scrapedData.images.slice(0, 50).map((image, index) => (
-                        <div key={index} className="space-y-2">
-                          <img 
-                            src={image.src} 
-                            alt={image.alt}
-                            className="w-full h-32 object-cover rounded-lg bg-gray-100"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                          <p className="text-xs text-gray-500 truncate" title={image.alt}>
-                            {image.alt || 'Fără descriere'}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                    {scrapedData.images.length > 50 && (
-                      <p className="text-center text-gray-500 mt-4">
-                        Afișez primele 50 din {scrapedData.images.length} imagini
-                      </p>
-                    )}
-                  </ScrollArea>
-                </TabsContent>
-
-                <TabsContent value="links" className="space-y-4">
-                  <ScrollArea className="h-[600px]">
-                    <div className="space-y-2">
-                      {scrapedData.links.slice(0, 100).map((link, index) => (
-                        <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <Link2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                              {link.text || 'Link fără text'}
-                            </p>
-                            <p className="text-xs text-gray-500 truncate">{link.url}</p>
-                          </div>
-                          <Badge variant="outline" className="text-xs">
-                            {link.type}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                    {scrapedData.links.length > 100 && (
-                      <p className="text-center text-gray-500 mt-4">
-                        Afișez primele 100 din {scrapedData.links.length} link-uri
-                      </p>
-                    )}
-                  </ScrollArea>
-                </TabsContent>
-
-                <TabsContent value="content" className="space-y-4">
-                  <ScrollArea className="h-[600px]">
-                    <div className="space-y-4">
-                      <Card className="p-4">
-                        <h4 className="font-medium text-gray-900 mb-3">Titluri și Structură</h4>
-                        <div className="space-y-1">
-                          {scrapedData.headings.map((heading, index) => (
-                            <div key={index} className="flex items-center gap-2 text-sm">
-                              <Badge variant="outline" className="text-xs">H{heading.level}</Badge>
-                              <span className="text-gray-700">{heading.text}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </Card>
-
-                      {scrapedData.tables.length > 0 && (
-                        <Card className="p-4">
-                          <h4 className="font-medium text-gray-900 mb-3">Tabele ({scrapedData.tables.length})</h4>
-                          <div className="space-y-3">
-                            {scrapedData.tables.slice(0, 3).map((table) => (
-                              <div key={table.id} className="border rounded-lg p-3 bg-gray-50">
-                                {table.caption && <h5 className="font-medium mb-2">{table.caption}</h5>}
-                                {table.headers.length > 0 && (
-                                  <div className="text-xs text-gray-600 mb-1">
-                                    Coloane: {table.headers.join(', ')}
-                                  </div>
-                                )}
-                                <div className="text-xs text-gray-500">
-                                  {table.rows.length} rânduri de date
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </Card>
-                      )}
-
-                      {scrapedData.lists.length > 0 && (
-                        <Card className="p-4">
-                          <h4 className="font-medium text-gray-900 mb-3">Liste ({scrapedData.lists.length})</h4>
-                          <div className="space-y-3">
-                            {scrapedData.lists.slice(0, 5).map((list) => (
-                              <div key={list.id} className="border rounded-lg p-3 bg-gray-50">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Badge variant="outline" className="text-xs">{list.type.toUpperCase()}</Badge>
-                                  <span className="text-xs text-gray-500">{list.items.length} elemente</span>
-                                </div>
-                                <div className="text-sm text-gray-700">
-                                  {list.items.slice(0, 3).map((item, i) => (
-                                    <div key={i} className="truncate">• {item}</div>
-                                  ))}
-                                  {list.items.length > 3 && (
-                                    <div className="text-xs text-gray-500">...și încă {list.items.length - 3}</div>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </Card>
-                      )}
-                    </div>
-                  </ScrollArea>
-                </TabsContent>
-
-                <TabsContent value="media" className="space-y-4">
-                  <ScrollArea className="h-[600px]">
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {scrapedData.images.slice(0, 20).map((image, index) => (
-                          <Card key={index} className="p-3">
-                            <img 
-                              src={image.src} 
-                              alt={image.alt}
-                              className="w-full h-24 object-cover rounded mb-2 bg-gray-100"
-                              onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                            />
-                            <div className="text-xs space-y-1">
-                              <p className="truncate font-medium" title={image.alt}>
-                                {image.alt || 'Fără descriere'}
-                              </p>
-                              {image.width && image.height && (
-                                <p className="text-gray-500">{image.width}×{image.height}</p>
-                              )}
-                            </div>
-                          </Card>
-                        ))}
-                      </div>
-
-                      {scrapedData.media.videos.length > 0 && (
-                        <Card className="p-4">
-                          <h4 className="font-medium text-gray-900 mb-3">Video ({scrapedData.media.videos.length})</h4>
-                          <div className="space-y-2">
-                            {scrapedData.media.videos.map((video, index) => (
-                              <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                                <p className="text-sm truncate">{video.src}</p>
-                                <div className="flex gap-2 mt-1">
-                                  {video.controls && <Badge variant="outline" className="text-xs">Controls</Badge>}
-                                  {video.autoplay && <Badge variant="outline" className="text-xs">Autoplay</Badge>}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </Card>
-                      )}
-
-                      {scrapedData.media.audios.length > 0 && (
-                        <Card className="p-4">
-                          <h4 className="font-medium text-gray-900 mb-3">Audio ({scrapedData.media.audios.length})</h4>
-                          <div className="space-y-2">
-                            {scrapedData.media.audios.map((audio, index) => (
-                              <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                                <p className="text-sm truncate">{audio.src}</p>
-                                <div className="flex gap-2 mt-1">
-                                  {audio.controls && <Badge variant="outline" className="text-xs">Controls</Badge>}
-                                  {audio.autoplay && <Badge variant="outline" className="text-xs">Autoplay</Badge>}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </Card>
-                      )}
-                    </div>
-                  </ScrollArea>
-                </TabsContent>
-
-                <TabsContent value="contact" className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card className="p-4">
-                      <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                        Email ({scrapedData.contactInfo.emails.length})
-                      </h4>
-                      <div className="space-y-1">
-                        {scrapedData.contactInfo.emails.map((email, index) => (
-                          <p key={index} className="text-sm text-gray-700 truncate">{email}</p>
-                        ))}
-                        {scrapedData.contactInfo.emails.length === 0 && (
-                          <p className="text-sm text-gray-500">Nu au fost găsite email-uri</p>
-                        )}
-                      </div>
-                    </Card>
-
-                    <Card className="p-4">
-                      <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                        Telefon ({scrapedData.contactInfo.phones.length})
-                      </h4>
-                      <div className="space-y-1">
-                        {scrapedData.contactInfo.phones.map((phone, index) => (
-                          <p key={index} className="text-sm text-gray-700">{phone}</p>
-                        ))}
-                        {scrapedData.contactInfo.phones.length === 0 && (
-                          <p className="text-sm text-gray-500">Nu au fost găsite telefoane</p>
-                        )}
-                      </div>
-                    </Card>
-
-                    <Card className="p-4">
-                      <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                        Adrese ({scrapedData.contactInfo.addresses.length})
-                      </h4>
-                      <div className="space-y-1">
-                        {scrapedData.contactInfo.addresses.map((address, index) => (
-                          <p key={index} className="text-sm text-gray-700">{address}</p>
-                        ))}
-                        {scrapedData.contactInfo.addresses.length === 0 && (
-                          <p className="text-sm text-gray-500">Nu au fost găsite adrese</p>
-                        )}
-                      </div>
-                    </Card>
-                  </div>
-
-                  {scrapedData.socialLinks.length > 0 && (
-                    <Card className="p-4">
-                      <h4 className="font-medium text-gray-900 mb-3">Social Media ({scrapedData.socialLinks.length})</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {scrapedData.socialLinks.map((social, index) => (
-                          <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{social.text || 'Link social'}</p>
-                              <p className="text-xs text-gray-500 truncate">{social.url}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </Card>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="tech" className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Card className="p-4">
-                      <h4 className="font-medium text-gray-900 mb-3">CMS & Platforme</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {scrapedData.technologies.cms.map((cms, index) => (
-                          <Badge key={index} variant="outline">{cms}</Badge>
-                        ))}
-                        {scrapedData.technologies.cms.length === 0 && (
-                          <p className="text-sm text-gray-500">Nu au fost detectate</p>
-                        )}
-                      </div>
-                    </Card>
-
-                    <Card className="p-4">
-                      <h4 className="font-medium text-gray-900 mb-3">Framework-uri</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {scrapedData.technologies.frameworks.map((framework, index) => (
-                          <Badge key={index} variant="outline">{framework}</Badge>
-                        ))}
-                        {scrapedData.technologies.frameworks.length === 0 && (
-                          <p className="text-sm text-gray-500">Nu au fost detectate</p>
-                        )}
-                      </div>
-                    </Card>
-
-                    <Card className="p-4">
-                      <h4 className="font-medium text-gray-900 mb-3">Analytics</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {scrapedData.technologies.analytics.map((analytics, index) => (
-                          <Badge key={index} variant="outline">{analytics}</Badge>
-                        ))}
-                        {scrapedData.technologies.analytics.length === 0 && (
-                          <p className="text-sm text-gray-500">Nu au fost detectate</p>
-                        )}
-                      </div>
-                    </Card>
-
-                    <Card className="p-4">
-                      <h4 className="font-medium text-gray-900 mb-3">Publicitate</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {scrapedData.technologies.advertising.map((ad, index) => (
-                          <Badge key={index} variant="outline">{ad}</Badge>
-                        ))}
-                        {scrapedData.technologies.advertising.length === 0 && (
-                          <p className="text-sm text-gray-500">Nu au fost detectate</p>
-                        )}
-                      </div>
-                    </Card>
-                  </div>
-
-                  {scrapedData.scripts.length > 0 && (
-                    <Card className="p-4">
-                      <h4 className="font-medium text-gray-900 mb-3">Script-uri ({scrapedData.scripts.length})</h4>
-                      <ScrollArea className="h-48">
-                        <div className="space-y-2">
-                          {scrapedData.scripts.slice(0, 10).map((script, index) => (
-                            <div key={index} className="p-2 bg-gray-50 rounded text-xs">
-                              <p className="truncate font-mono">{script.src || 'Script inline'}</p>
-                              <div className="flex gap-2 mt-1">
-                                {script.type && <Badge variant="outline" className="text-xs">{script.type}</Badge>}
-                                {script.async && <Badge variant="outline" className="text-xs">async</Badge>}
-                                {script.defer && <Badge variant="outline" className="text-xs">defer</Badge>}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                    </Card>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="data" className="space-y-4">
-                  <div className="space-y-4">
-                    <Card className="p-4">
-                      <h4 className="font-medium text-gray-900 mb-3">Meta Tags</h4>
-                      <ScrollArea className="h-64">
-                        <div className="space-y-2">
-                          {Object.entries(scrapedData.metadata).map(([key, value]) => (
-                            <div key={key} className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
-                              <span className="font-medium text-gray-700">{key}</span>
-                              <span className="md:col-span-2 text-gray-600 break-words">{value}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                    </Card>
-
-                    {scrapedData.structuredData.length > 0 && (
-                      <Card className="p-4">
-                        <h4 className="font-medium text-gray-900 mb-3">Date Structurate JSON-LD ({scrapedData.structuredData.length})</h4>
-                        <ScrollArea className="h-64">
-                          <div className="space-y-2">
-                            {scrapedData.structuredData.map((data, index) => (
-                              <div key={index} className="p-3 bg-gray-50 rounded">
-                                <pre className="text-xs overflow-auto">{JSON.stringify(data, null, 2)}</pre>
-                              </div>
-                            ))}
-                          </div>
-                        </ScrollArea>
-                      </Card>
-                    )}
-
-                    {scrapedData.forms.length > 0 && (
-                      <Card className="p-4">
-                        <h4 className="font-medium text-gray-900 mb-3">Formulare ({scrapedData.forms.length})</h4>
-                        <div className="space-y-3">
-                          {scrapedData.forms.map((form, index) => (
-                            <div key={index} className="border rounded-lg p-3 bg-gray-50">
-                              <div className="flex gap-2 mb-2">
-                                <Badge variant="outline" className="text-xs">{form.method}</Badge>
-                                {form.enctype && <Badge variant="outline" className="text-xs">{form.enctype}</Badge>}
-                              </div>
-                              <p className="text-sm truncate mb-2">{form.action || 'Fără action'}</p>
-                              <div className="text-xs text-gray-600">
-                                {form.inputs.length} câmpuri: {form.inputs.map(i => i.type).join(', ')}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </Card>
-                    )}
-
-                    <div className="text-xs text-gray-500">
-                      Extras la: {new Date(scrapedData.timestamp).toLocaleString('ro-RO')}
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
             </CardContent>
           </Card>
         )}
+
+        {/* Error */}
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Results */}
+        {scrapedData && (
+          <div className="space-y-6">
+            {/* Stats */}
+            <Card className="shadow-xl border-0 bg-gradient-to-r from-green-50 to-blue-50">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Eye className="h-6 w-6 text-green-600" />
+                    Rezultate Scraping Nelimitat
+                  </CardTitle>
+                  <Button 
+                    onClick={downloadJson}
+                    variant="outline"
+                    className="bg-white/80"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Descarcă JSON
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                  <div className="text-center p-4 bg-white/80 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">{scrapedData.totalPages}</div>
+                    <div className="text-sm text-gray-600">Pagini</div>
+                  </div>
+                  <div className="text-center p-4 bg-white/80 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">{scrapedData.products.length}</div>
+                    <div className="text-sm text-gray-600">Produse</div>
+                  </div>
+                  <div className="text-center p-4 bg-white/80 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-600">{scrapedData.links.length}</div>
+                    <div className="text-sm text-gray-600">Link-uri</div>
+                  </div>
+                  <div className="text-center p-4 bg-white/80 rounded-lg">
+                    <div className="text-2xl font-bold text-orange-600">{scrapedData.images.length}</div>
+                    <div className="text-sm text-gray-600">Imagini</div>
+                  </div>
+                  <div className="text-center p-4 bg-white/80 rounded-lg">
+                    <div className="text-2xl font-bold text-red-600">{scrapedData.extractionStats.uniqueDomains}</div>
+                    <div className="text-sm text-gray-600">Domenii</div>
+                  </div>
+                </div>
+                
+                <div className="text-center">
+                  <Badge variant="outline" className="text-sm">
+                    ⏱️ Procesat în {(scrapedData.extractionStats.processingTime / 1000).toFixed(2)} secunde
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Detailed Results */}
+            <Tabs defaultValue="products" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="products" className="flex items-center gap-2">
+                  <ShoppingCart className="h-4 w-4" />
+                  Produse ({scrapedData.products.length})
+                </TabsTrigger>
+                <TabsTrigger value="links" className="flex items-center gap-2">
+                  <Link2 className="h-4 w-4" />
+                  Link-uri ({scrapedData.links.length})
+                </TabsTrigger>
+                <TabsTrigger value="images" className="flex items-center gap-2">
+                  <Image className="h-4 w-4" />
+                  Imagini ({scrapedData.images.length})
+                </TabsTrigger>
+                <TabsTrigger value="content" className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Conținut
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Products Tab */}
+              <TabsContent value="products" className="space-y-4">
+                {scrapedData.products.length > 0 ? (
+                  <div className="grid gap-6">
+                    {scrapedData.products.map((product, index) => (
+                      <Card key={index} className="border-l-4 border-l-blue-500">
+                        <CardContent className="p-6">
+                          <div className="grid md:grid-cols-3 gap-6">
+                            {/* Product Images */}
+                            <div className="space-y-2">
+                              {product.images.length > 0 ? (
+                                <div className="grid grid-cols-2 gap-2">
+                                  {product.images.slice(0, 4).map((img, imgIndex) => (
+                                    <img
+                                      key={imgIndex}
+                                      src={img.src}
+                                      alt={img.alt}
+                                      className="w-full h-24 object-cover rounded-lg border"
+                                      loading="lazy"
+                                    />
+                                  ))}
+                                  {product.images.length > 4 && (
+                                    <div className="bg-gray-100 rounded-lg border flex items-center justify-center h-24">
+                                      <span className="text-sm text-gray-600">
+                                        +{product.images.length - 4} imagini
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="bg-gray-100 rounded-lg border flex items-center justify-center h-24">
+                                  <Package className="h-8 w-8 text-gray-400" />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Product Details */}
+                            <div className="md:col-span-2 space-y-4">
+                              <div>
+                                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                                  {product.name}
+                                </h3>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Badge variant="secondary" className="flex items-center gap-1">
+                                    <DollarSign className="h-3 w-3" />
+                                    {product.price}
+                                  </Badge>
+                                  {product.originalPrice && (
+                                    <Badge variant="outline" className="line-through">
+                                      {product.originalPrice}
+                                    </Badge>
+                                  )}
+                                  {product.discount && (
+                                    <Badge variant="destructive" className="flex items-center gap-1">
+                                      <Percent className="h-3 w-3" />
+                                      -{product.discount}
+                                    </Badge>
+                                  )}
+                                </div>
+                                {product.rating && (
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                    <span className="text-sm">{product.rating}</span>
+                                    {product.reviews && (
+                                      <span className="text-sm text-gray-500">({product.reviews})</span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="space-y-2">
+                                {product.description && (
+                                  <div>
+                                    <h4 className="font-medium text-gray-700 mb-1">Descriere:</h4>
+                                    <p className="text-sm text-gray-600 line-clamp-3">
+                                      {product.description}
+                                    </p>
+                                  </div>
+                                )}
+
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                  {product.brand && (
+                                    <div>
+                                      <span className="font-medium">Brand:</span> {product.brand}
+                                    </div>
+                                  )}
+                                  {product.category && (
+                                    <div>
+                                      <span className="font-medium">Categorie:</span> {product.category}
+                                    </div>
+                                  )}
+                                  {product.availability && (
+                                    <div>
+                                      <span className="font-medium">Disponibilitate:</span> {product.availability}
+                                    </div>
+                                  )}
+                                  {product.quantity && (
+                                    <div>
+                                      <span className="font-medium">Cantitate:</span> {product.quantity}
+                                    </div>
+                                  )}
+                                  {product.sku && (
+                                    <div>
+                                      <span className="font-medium">SKU:</span> {product.sku}
+                                    </div>
+                                  )}
+                                  {product.deliveryInfo && (
+                                    <div>
+                                      <span className="font-medium">Livrare:</span> {product.deliveryInfo}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {product.promotion && (
+                                  <div>
+                                    <Badge variant="outline" className="bg-green-50 text-green-700">
+                                      🎁 {product.promotion}
+                                    </Badge>
+                                  </div>
+                                )}
+
+                                {product.specifications && Object.keys(product.specifications).length > 0 && (
+                                  <div>
+                                    <h4 className="font-medium text-gray-700 mb-2">Specificații:</h4>
+                                    <div className="grid grid-cols-2 gap-1 text-xs">
+                                      {Object.entries(product.specifications).slice(0, 6).map(([key, value]) => (
+                                        <div key={key} className="bg-gray-50 p-2 rounded">
+                                          <span className="font-medium">{key}:</span> {value}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <Card>
+                    <CardContent className="p-6 text-center">
+                      <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600">Nu au fost găsite produse pe această pagină.</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+
+              {/* Links Tab */}
+              <TabsContent value="links" className="space-y-4">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold">Toate Link-urile Descoperite</h3>
+                        <Badge variant="outline">{scrapedData.links.length} link-uri totale</Badge>
+                      </div>
+                      
+                      <div className="grid gap-3 max-h-96 overflow-y-auto">
+                        {scrapedData.links.map((link, index) => (
+                          <div key={index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Badge 
+                                    variant={link.type === 'external' ? 'destructive' : 'secondary'}
+                                    className="text-xs"
+                                  >
+                                    {link.type}
+                                  </Badge>
+                                  <Badge variant="outline" className="text-xs">
+                                    Adâncime: {link.depth}
+                                  </Badge>
+                                  <Badge variant="outline" className="text-xs">
+                                    {link.anchor_context}
+                                  </Badge>
+                                </div>
+                                <a 
+                                  href={link.url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 font-medium text-sm truncate block"
+                                >
+                                  {link.url}
+                                </a>
+                                {link.text && (
+                                  <p className="text-sm text-gray-600 mt-1 truncate">
+                                    "{link.text}"
+                                  </p>
+                                )}
+                                {link.title && (
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    Title: {link.title}
+                                  </p>
+                                )}
+                                <p className="text-xs text-gray-400 mt-1">
+                                  Descoperit din: {link.discovered_from}
+                                </p>
+                              </div>
+                              <Link2 className="h-4 w-4 text-gray-400 flex-shrink-0 mt-1" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Images Tab */}
+              <TabsContent value="images" className="space-y-4">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold">Toate Imaginile Descoperite</h3>
+                        <Badge variant="outline">{scrapedData.images.length} imagini totale</Badge>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-96 overflow-y-auto">
+                        {scrapedData.images.map((image, index) => (
+                          <div key={index} className="border rounded-lg p-2 hover:shadow-md transition-shadow">
+                            <img
+                              src={image.src}
+                              alt={image.alt}
+                              className="w-full h-32 object-cover rounded mb-2"
+                              loading="lazy"
+                            />
+                            <div className="space-y-1">
+                              <Badge variant="outline" className="text-xs">
+                                {image.type}
+                              </Badge>
+                              <Badge variant="secondary" className="text-xs ml-1">
+                                {image.context}
+                              </Badge>
+                              {image.alt && (
+                                <p className="text-xs text-gray-600 truncate" title={image.alt}>
+                                  {image.alt}
+                                </p>
+                              )}
+                              {(image.width || image.height) && (
+                                <p className="text-xs text-gray-400">
+                                  {image.width}x{image.height}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Content Tab */}
+              <TabsContent value="content" className="space-y-4">
+                <div className="grid gap-6">
+                  {/* Basic Info */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Informații Generale</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <label className="font-medium text-sm">Titlu:</label>
+                        <p className="text-gray-700">{scrapedData.title}</p>
+                      </div>
+                      <div>
+                        <label className="font-medium text-sm">Descriere:</label>
+                        <p className="text-gray-700">{scrapedData.description}</p>
+                      </div>
+                      <div>
+                        <label className="font-medium text-sm">URL:</label>
+                        <a href={scrapedData.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 break-all">
+                          {scrapedData.url}
+                        </a>
+                      </div>
+                      <div>
+                        <label className="font-medium text-sm">Tip conținut:</label>
+                        <Badge variant="outline">{scrapedData.contentType}</Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Headings */}
+                  {scrapedData.headings.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Structura Heading-urilor</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                          {scrapedData.headings.map((heading, index) => (
+                            <div key={index} className="flex items-start gap-2">
+                              <Badge variant="outline" className="text-xs">
+                                H{heading.level}
+                              </Badge>
+                              <p className="text-sm flex-1">{heading.text}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Keywords */}
+                  {scrapedData.keywords.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Cuvinte Cheie</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                          {scrapedData.keywords.map((keyword, index) => (
+                            <Badge key={index} variant="secondary">
+                              {keyword}
+                            </Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Full Text Content */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Conținut Text Complet</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Textarea
+                        value={scrapedData.text}
+                        readOnly
+                        className="min-h-64 text-sm"
+                        placeholder="Conținutul text al paginii..."
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
       </div>
-    </DashboardLayout>
+    </div>
   );
 };
 
