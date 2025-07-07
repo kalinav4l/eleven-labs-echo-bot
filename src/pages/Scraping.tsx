@@ -320,18 +320,50 @@ const detectProducts = (doc: Document, targetUrl: string): Product[] => {
       product.discountPercentage = priceInfo.discountPercentage;
       product.currency = priceInfo.currency;
 
-      // Extrage descrierea
+      // Extrage descrierea - versiune îmbunătățită
       const descSelectors = [
-        '.description, .desc, .summary, .content',
-        '[class*="description"], [class*="desc"]',
-        '.product-description'
+        '.description, .desc, .summary, .content, .product-description',
+        '[class*="description"], [class*="desc"], [class*="summary"]',
+        '.product-desc, .item-desc, .product-summary',
+        '.product-details, .details, .product-info',
+        '.excerpt, .short-description, .product-excerpt',
+        'p[class*="desc"], div[class*="desc"]',
+        '.product-content, .item-content',
+        '[data-description], [data-desc]',
+        '.text, .product-text, .item-text'
       ];
 
+      // Caută descripții în toate elementele posibile
       for (const selector of descSelectors) {
-        const descElement = productElement.querySelector(selector);
-        if (descElement && descElement.textContent?.trim() && descElement.textContent.length > 20) {
-          product.description = descElement.textContent.trim();
-          break;
+        const descElements = productElement.querySelectorAll(selector);
+        for (const descElement of descElements) {
+          if (descElement && descElement.textContent?.trim()) {
+            const descText = descElement.textContent.trim();
+            // Verifică dacă textul este o descriere validă
+            if (descText.length > 20 && descText.length < 2000 && 
+                !descText.match(/^[\d\s\.,\-€$£]+$/) && // Nu doar preturi
+                !descText.toLowerCase().includes('add to cart') &&
+                !descText.toLowerCase().includes('buy now')) {
+              product.description = descText;
+              break;
+            }
+          }
+        }
+        if (product.description) break;
+      }
+
+      // Dacă nu s-a găsit descriere, încearcă să extragă din textul general
+      if (!product.description) {
+        const allText = productElement.textContent || '';
+        const sentences = allText.split(/[.!?]+/).filter(s => s.trim().length > 30);
+        const validSentences = sentences.filter(s => 
+          !s.match(/^[\d\s\.,\-€$£]+$/) && 
+          !s.toLowerCase().includes('price') &&
+          !s.toLowerCase().includes('buy') &&
+          s.length < 500
+        );
+        if (validSentences.length > 0) {
+          product.description = validSentences[0].trim();
         }
       }
 
@@ -836,41 +868,49 @@ const Scraping = () => {
               />
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col sm:flex-row gap-4 items-start">
               <Button 
                 onClick={handleSubmit} 
                 disabled={isLoading}
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                size="lg"
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Se încarcă...
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Se procesează...
                   </>
                 ) : (
                   <>
-                    <Search className="w-4 h-4 mr-2" />
-                    Extrage Date
+                    <Search className="w-5 h-5 mr-2" />
+                    🔍 Extrage Produse din Pagină
                   </>
                 )}
               </Button>
 
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  value={maxDepth}
-                  onChange={(e) => setMaxDepth(Number(e.target.value))}
-                  min="1"
-                  max="5"
-                  className="w-20"
-                />
+              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200">
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-gray-700 mb-1">
+                    Adâncimea scanării:
+                  </label>
+                  <Input
+                    type="number"
+                    value={maxDepth}
+                    onChange={(e) => setMaxDepth(Number(e.target.value))}
+                    min="1"
+                    max="5"
+                    className="w-16 text-center font-bold"
+                  />
+                  <span className="text-xs text-gray-500 mt-1">niveluri</span>
+                </div>
                 <Button
                   onClick={handleFullSiteScraping}
                   disabled={isLoading}
-                  variant="outline"
+                  size="lg"
+                  className="bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
                 >
-                  <Globe className="w-4 h-4 mr-2" />
-                  Scraping Complet Site
+                  <Globe className="w-5 h-5 mr-2" />
+                  🌐 Scanează Întreg Site-ul
                 </Button>
               </div>
             </div>
