@@ -13,6 +13,7 @@ import { Search, Download, Globe, Package, Image, Link, FileText, AlertCircle, C
 import DashboardLayout from '@/components/DashboardLayout';
 import { ScrapingHistory } from '@/components/scraping/ScrapingHistory';
 import { useScrapingHistory } from '@/hooks/useScrapingHistory';
+import ElasticSlider from '@/components/ElasticSlider';
 
 // Interfețe TypeScript
 interface Product {
@@ -1405,17 +1406,12 @@ const Scraping = () => {
 
                 <div className="flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-lg bg-muted/30 h-8">
                   <span className="text-xs text-muted-foreground whitespace-nowrap">Adâncime:</span>
-                  <select
-                    value={maxDepth}
-                    onChange={(e) => setMaxDepth(Number(e.target.value))}
-                    className="elevenlabs-input w-12 p-1 text-center h-6 text-xs"
-                  >
-                    <option value={1}>1</option>
-                    <option value={2}>2</option>
-                    <option value={3}>3</option>
-                    <option value={4}>4</option>
-                    <option value={5}>5</option>
-                  </select>
+                  <ElasticSlider
+                    defaultValue={maxDepth}
+                    startingValue={1}
+                    maxValue={5}
+                    onValueChange={(value) => setMaxDepth(value)}
+                  />
                 </div>
 
                 <Button
