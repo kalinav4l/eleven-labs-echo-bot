@@ -1312,8 +1312,11 @@ const Scraping = () => {
           <div className="flex items-center gap-2">
             <Button
               onClick={() => setShowHistory(true)}
-              variant="outline"
-              className="flex items-center gap-2"
+              className={`flex items-center gap-2 transition-all duration-200 ${
+                showHistory
+                  ? 'bg-black text-white' 
+                  : 'bg-gray-500 hover:bg-black text-white'
+              }`}
             >
               <History className="w-4 h-4" />
               Istoric
@@ -1322,8 +1325,7 @@ const Scraping = () => {
             {(scrapedData || fullSiteData) && (
               <Button
                 onClick={clearAllData}
-                variant="outline"
-                className="flex items-center gap-2 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white transition-all duration-200"
               >
                 <Save className="w-4 h-4" />
                 Șterge Tot
@@ -1382,7 +1384,11 @@ const Scraping = () => {
                   onClick={handleSubmit} 
                   disabled={isLoading}
                   size="default"
-                  className="elevenlabs-button h-10"
+                  className={`h-10 transition-all duration-200 ${
+                    isLoading 
+                      ? 'bg-black text-white' 
+                      : 'bg-gray-500 hover:bg-black text-white'
+                  }`}
                 >
                   {isLoading ? (
                     <>
@@ -1415,13 +1421,61 @@ const Scraping = () => {
                 <Button
                   onClick={handleFullSiteScraping}
                   disabled={isLoading}
-                  variant="secondary"
                   size="default"
-                  className="elevenlabs-button-secondary h-10"
+                  className={`h-10 transition-all duration-200 ${
+                    isLoading 
+                      ? 'bg-black text-white' 
+                      : 'bg-gray-500 hover:bg-black text-white'
+                  }`}
                 >
                   <Globe className="w-4 h-4 mr-2" />
                   Scanează Site
                 </Button>
+              </div>
+
+              {/* Opțiuni avansate de scanare */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                <div 
+                  onClick={() => setDeepScraping(!deepScraping)}
+                  className={`cursor-pointer p-4 rounded-lg border transition-all duration-200 ${
+                    deepScraping 
+                      ? 'bg-black text-white border-black' 
+                      : 'bg-gray-100 hover:bg-black hover:text-white border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                      deepScraping ? 'border-white bg-white' : 'border-gray-400'
+                    }`}>
+                      {deepScraping && <div className="w-3 h-3 bg-black rounded"></div>}
+                    </div>
+                    <div>
+                      <div className="font-medium">Scanare profundă</div>
+                      <div className="text-sm opacity-75">(extrage descrieri din paginile produselor)</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div 
+                  onClick={() => setUnlimitedScraping(!unlimitedScraping)}
+                  className={`cursor-pointer p-4 rounded-lg border transition-all duration-200 ${
+                    unlimitedScraping 
+                      ? 'bg-black text-white border-black' 
+                      : 'bg-gray-100 hover:bg-black hover:text-white border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                      unlimitedScraping ? 'border-white bg-white' : 'border-gray-400'
+                    }`}>
+                      {unlimitedScraping && <div className="w-3 h-3 bg-black rounded"></div>}
+                    </div>
+                    <div>
+                      <div className="font-medium">Scanare nelimitată</div>
+                      <div className="text-sm opacity-75">(continuă până extrage tot - poate dura mult)</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1456,48 +1510,48 @@ const Scraping = () => {
                 <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
-                    variant="outline"
                     onClick={() => exportToJSON(scrapedData)}
+                    className="bg-gray-500 hover:bg-black text-white transition-all duration-200"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Export JSON
                   </Button>
                   <Button
                     size="sm"
-                    variant="outline"
                     onClick={() => exportToCSV(scrapedData.products)}
+                    className="bg-gray-500 hover:bg-black text-white transition-all duration-200"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Export CSV
                   </Button>
                   <Button
                     size="sm"
-                    variant="outline"
                     onClick={() => exportToTXT(scrapedData.products)}
+                    className="bg-gray-500 hover:bg-black text-white transition-all duration-200"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Export TXT
                   </Button>
                   <Button
                     size="sm"
-                    variant="outline"
                     onClick={() => exportToExcel(scrapedData.products)}
+                    className="bg-gray-500 hover:bg-black text-white transition-all duration-200"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Export XLS
                   </Button>
                   <Button
                     size="sm"
-                    variant="outline"
                     onClick={() => exportToXML(scrapedData.products)}
+                    className="bg-gray-500 hover:bg-black text-white transition-all duration-200"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Export XML
                   </Button>
                   <Button
                     size="sm"
-                    variant="outline"
                     onClick={() => exportToJSONL(scrapedData.products)}
+                    className="bg-gray-500 hover:bg-black text-white transition-all duration-200"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Export JSONL
