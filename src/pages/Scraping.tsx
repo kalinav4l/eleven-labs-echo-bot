@@ -1129,7 +1129,78 @@ const Scraping = () => {
   const [deepScraping, setDeepScraping] = useState(false);
   const [unlimitedScraping, setUnlimitedScraping] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [fullSiteData, setFullSiteData] = useState<SiteMapData | null>(null);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
   const { saveScrapingSession } = useScrapingHistory();
+
+  // Salvare automată în localStorage
+  React.useEffect(() => {
+    if (scrapedData && autoSaveEnabled) {
+      localStorage.setItem('lastScrapedData', JSON.stringify(scrapedData));
+    }
+  }, [scrapedData, autoSaveEnabled]);
+
+  React.useEffect(() => {
+    if (fullSiteData && autoSaveEnabled) {
+      localStorage.setItem('lastFullSiteData', JSON.stringify(fullSiteData));
+    }
+  }, [fullSiteData, autoSaveEnabled]);
+
+  // Restaurare automată la încărcare
+  React.useEffect(() => {
+    const savedScrapedData = localStorage.getItem('lastScrapedData');
+    const savedFullSiteData = localStorage.getItem('lastFullSiteData');
+    const savedUrl = localStorage.getItem('lastScrapedUrl');
+    
+    if (savedScrapedData) {
+      try {
+        setScrapedData(JSON.parse(savedScrapedData));
+        toast({
+          title: "Datele au fost restaurate",
+          description: "Sesiunea anterioară a fost încărcată automat.",
+        });
+      } catch (error) {
+        console.error('Eroare la restaurarea datelor:', error);
+      }
+    }
+    
+    if (savedFullSiteData) {
+      try {
+        setFullSiteData(JSON.parse(savedFullSiteData));
+      } catch (error) {
+        console.error('Eroare la restaurarea datelor site complet:', error);
+      }
+    }
+    
+    if (savedUrl) {
+      setUrl(savedUrl);
+    }
+  }, []);
+
+  // Salvare URL în localStorage
+  React.useEffect(() => {
+    if (url) {
+      localStorage.setItem('lastScrapedUrl', url);
+    }
+  }, [url]);
+
+  // Funcție pentru ștergerea datelor
+  const clearAllData = () => {
+    setScrapedData(null);
+    setFullSiteData(null);
+    setUrl('');
+    setError('');
+    
+    // Șterge și din localStorage
+    localStorage.removeItem('lastScrapedData');
+    localStorage.removeItem('lastFullSiteData');
+    localStorage.removeItem('lastScrapedUrl');
+    
+    toast({
+      title: "Date șterse",
+      description: "Toate datele au fost șterse cu succes",
+    });
+  };
   
   const {
     siteMap,
@@ -1237,15 +1308,28 @@ const Scraping = () => {
             <h1 className="text-3xl font-bold text-foreground">Web Scraper Universal</h1>
           </div>
           
-          {/* Buton istoric în colțul drept */}
-          <Button
-            onClick={() => setShowHistory(true)}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <History className="w-4 h-4" />
-            Istoric
-          </Button>
+          {/* Butoane în colțul drept */}
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setShowHistory(true)}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <History className="w-4 h-4" />
+              Istoric
+            </Button>
+            
+            {(scrapedData || fullSiteData) && (
+              <Button
+                onClick={clearAllData}
+                variant="outline"
+                className="flex items-center gap-2 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              >
+                <Save className="w-4 h-4" />
+                Șterge Tot
+              </Button>
+            )}
+          </div>
         </div>
 
         <Card className="liquid-glass">
