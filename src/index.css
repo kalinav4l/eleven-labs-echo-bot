@@ -230,17 +230,6 @@
     @apply bg-gray-100 text-gray-900;
   }
 
-  /* Mobile responsive classes */
-  .xs\:inline {
-    @apply hidden;
-  }
-  
-  @media (min-width: 480px) {
-    .xs\:inline {
-      @apply inline;
-    }
-  }
-
   @media (max-width: 768px) {
     body {
       font-size: 14px;
@@ -252,35 +241,6 @@
 
     .elevenlabs-card {
       @apply p-4;
-    }
-    
-    /* Mobile-specific table responsiveness */
-    .elevenlabs-table {
-      @apply text-xs;
-    }
-    
-    .elevenlabs-table th,
-    .elevenlabs-table td {
-      @apply px-2 py-2;
-    }
-    
-    /* Mobile button adjustments */
-    .elevenlabs-button {
-      @apply px-3 py-2 text-xs;
-    }
-    
-    .elevenlabs-button-secondary {
-      @apply px-3 py-2 text-xs;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    .elevenlabs-container {
-      @apply px-2;
-    }
-    
-    .elevenlabs-card {
-      @apply p-3;
     }
   }
 }

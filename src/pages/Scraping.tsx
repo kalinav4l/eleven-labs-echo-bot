@@ -1301,34 +1301,32 @@ const Scraping = () => {
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <Globe className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Web Scraper Universal</h1>
+            <Globe className="w-8 h-8 text-primary" />
+            <h1 className="text-3xl font-bold text-foreground">Web Scraper Universal</h1>
           </div>
           
           {/* Butoane în colțul drept */}
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-2">
             <Button
               onClick={() => setShowHistory(true)}
               variant="outline"
-              className="flex items-center gap-2 flex-1 sm:flex-initial"
-              size="sm"
+              className="flex items-center gap-2"
             >
               <History className="w-4 h-4" />
-              <span className="hidden xs:inline">Istoric</span>
+              Istoric
             </Button>
             
             {(scrapedData || fullSiteData) && (
               <Button
                 onClick={clearAllData}
                 variant="outline"
-                className="flex items-center gap-2 text-destructive hover:bg-destructive hover:text-destructive-foreground flex-1 sm:flex-initial"
-                size="sm"
+                className="flex items-center gap-2 text-destructive hover:bg-destructive hover:text-destructive-foreground"
               >
                 <Save className="w-4 h-4" />
-                <span className="hidden xs:inline">Șterge Tot</span>
+                Șterge Tot
               </Button>
             )}
           </div>
@@ -1341,7 +1339,7 @@ const Scraping = () => {
               Extragere Date Website
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 p-4 sm:p-6">
+          <CardContent className="space-y-4">
             <div>
               <Input
                 type="url"
@@ -1353,28 +1351,28 @@ const Scraping = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-start gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-3">
                 <input
                   type="checkbox"
                   id="deepScraping"
                   checked={deepScraping}
                   onChange={(e) => setDeepScraping(e.target.checked)}
-                  className="w-4 h-4 mt-0.5"
+                  className="w-4 h-4"
                 />
-                <label htmlFor="deepScraping" className="text-sm text-muted-foreground leading-relaxed">
+                <label htmlFor="deepScraping" className="text-sm text-muted-foreground">
                   Scanare profundă (extrage descrieri din paginile produselor)
                 </label>
               </div>
               
-              <div className="flex items-start gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-3">
                 <input
                   type="checkbox"
                   id="unlimitedScraping"
                   checked={unlimitedScraping}
                   onChange={(e) => setUnlimitedScraping(e.target.checked)}
-                  className="w-4 h-4 mt-0.5"
+                  className="w-4 h-4"
                 />
-                <label htmlFor="unlimitedScraping" className="text-sm text-muted-foreground leading-relaxed">
+                <label htmlFor="unlimitedScraping" className="text-sm text-muted-foreground">
                   Scanare nelimitată (continuă până extrage tot - poate dura mult)
                 </label>
               </div>
@@ -1383,7 +1381,7 @@ const Scraping = () => {
                 <Button 
                   onClick={handleSubmit} 
                   disabled={isLoading}
-                  className="elevenlabs-button flex-1 sm:flex-none w-full sm:w-auto"
+                  className="elevenlabs-button flex-1 sm:flex-none"
                 >
                   {isLoading ? (
                     <>
