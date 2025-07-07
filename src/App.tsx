@@ -21,6 +21,7 @@ import { Toaster } from "@/components/ui/toaster";
 import AgentConsultant from "./pages/AgentConsultant";
 import Landing from "./pages/Landing";
 import Scraping from "./pages/Scraping";
+import SettingsPanel from "./components/SettingsPanel";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ function App() {
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
           <Toaster />
+          <SettingsPanel />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/landing" element={<Landing />} />
