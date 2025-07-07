@@ -1377,11 +1377,12 @@ const Scraping = () => {
                 </label>
               </div>
               
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
                 <Button 
                   onClick={handleSubmit} 
                   disabled={isLoading}
-                  className="elevenlabs-button flex-1 sm:flex-none"
+                  size="default"
+                  className="elevenlabs-button h-10"
                 >
                   {isLoading ? (
                     <>
@@ -1396,12 +1397,12 @@ const Scraping = () => {
                   )}
                 </Button>
 
-                <div className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-muted/30">
-                  <span className="text-sm text-muted-foreground">Adâncime:</span>
+                <div className="flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-lg bg-muted/30 h-10">
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">Adâncime:</span>
                   <select
                     value={maxDepth}
                     onChange={(e) => setMaxDepth(Number(e.target.value))}
-                    className="elevenlabs-input w-16 p-1 text-center"
+                    className="elevenlabs-input w-16 p-1 text-center h-7"
                   >
                     <option value={1}>1</option>
                     <option value={2}>2</option>
@@ -1409,17 +1410,18 @@ const Scraping = () => {
                     <option value={4}>4</option>
                     <option value={5}>5</option>
                   </select>
-                  <Button
-                    onClick={handleFullSiteScraping}
-                    disabled={isLoading}
-                    variant="secondary"
-                    size="sm"
-                    className="elevenlabs-button-secondary"
-                  >
-                    <Globe className="w-4 h-4 mr-1" />
-                    Scanează Site
-                  </Button>
                 </div>
+
+                <Button
+                  onClick={handleFullSiteScraping}
+                  disabled={isLoading}
+                  variant="secondary"
+                  size="default"
+                  className="elevenlabs-button-secondary h-10"
+                >
+                  <Globe className="w-4 h-4 mr-2" />
+                  Scanează Site
+                </Button>
               </div>
             </div>
 
