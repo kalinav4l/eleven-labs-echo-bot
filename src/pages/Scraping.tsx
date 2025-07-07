@@ -140,7 +140,128 @@ const extractEnhancedContactInfo = (doc: Document, textContent: string, targetLa
   };
 };
 
-// Funcția îmbunătățită pentru detectarea TUTUROR produselor
+// Funcție pentru curățirea textului de HTML și caractere nedorite
+const cleanText = (text: string): string => {
+  if (!text) return '';
+  
+  return text
+    .replace(/<[^>]*>/g, '') // Elimină tag-urile HTML
+    .replace(/\s+/g, ' ') // Înlocuiește spațiile multiple cu unul singur
+    .replace(/&nbsp;|&amp;|&lt;|&gt;|&#\d+;/g, ' ') // Elimină entitățile HTML
+    .replace(/\n\s*\n/g, '\n') // Elimină liniile goale multiple
+    .trim();
+};
+
+// Funcție îmbunătățită pentru detectarea prețurilor
+const extractPrice = (element: Element): { price: string; currency: string; originalPrice?: string } => {
+  const text = element.textContent || '';
+  const priceInfo = { price: '', currency: '', originalPrice: '' };
+  
+  // Pattern-uri pentru diverse formate de preț
+  const pricePatterns = [
+    /(\d+[.,]\d+)\s*(lei|ron|mdl)/gi,
+    /(\d+)\s*(lei|ron|mdl)/gi,
+    /(lei|ron|mdl)\s*(\d+[.,]\d+)/gi,
+    /(lei|ron|mdl)\s*(\d+)/gi,
+    /(\d+[.,]\d+)\s*(\$|€|£)/gi,
+    /(\$|€|£)\s*(\d+[.,]\d+)/gi
+  ];
+
+  for (const pattern of pricePatterns) {
+    const match = text.match(pattern);
+    if (match && match[0]) {
+      priceInfo.price = match[0].trim();
+      const currencyMatch = match[0].match(/(lei|ron|mdl|\$|€|£)/i);
+      if (currencyMatch) priceInfo.currency = currencyMatch[0];
+      break;
+    }
+  }
+
+  // Caută prețul original (tăiat)
+  const oldPriceSelectors = ['.old-price', '.original-price', '.was-price', '[class*="old"]', '[class*="original"]'];
+  for (const selector of oldPriceSelectors) {
+    const oldPriceEl = element.querySelector(selector);
+    if (oldPriceEl && oldPriceEl.textContent?.trim()) {
+      priceInfo.originalPrice = oldPriceEl.textContent.trim();
+      break;
+    }
+  }
+
+  return priceInfo;
+};
+
+// Funcție îmbunătățită pentru extragerea numelui produsului
+const extractProductName = (element: Element): string => {
+  // Caută în ordine de prioritate
+  const nameSelectors = [
+    'h1', 'h2', 'h3', 'h4',
+    '.product-title', '.product-name', '.title', '.name',
+    '.product-heading', '.item-title', '.heading',
+    'a[title]', '.link-title',
+    '.caption', '.label'
+  ];
+
+  for (const selector of nameSelectors) {
+    const nameEl = element.querySelector(selector);
+    if (nameEl && nameEl.textContent?.trim()) {
+      let name = cleanText(nameEl.textContent);
+      
+      // Elimină cuvintele comune care nu sunt parte din numele produsului
+      name = name.replace(/\b(cumpara|acum|oferta|pret|reducere|calitate)\b/gi, '').trim();
+      
+      if (name.length > 3 && name.length < 200) {
+        return name;
+      }
+    }
+  }
+
+  // Dacă nu găsește, ia primul text semnificativ din element
+  const allText = cleanText(element.textContent || '');
+  const sentences = allText.split(/[.!?]+/).filter(s => s.trim().length > 5);
+  
+  for (const sentence of sentences) {
+    const clean = sentence.replace(/\b(cumpara|acum|oferta|pret|reducere|calitate)\b/gi, '').trim();
+    if (clean.length > 5 && clean.length < 100) {
+      return clean;
+    }
+  }
+
+  return '';
+};
+
+// Funcție îmbunătățită pentru extragerea descrierii
+const extractProductDescription = (element: Element): string => {
+  const descSelectors = [
+    '.description', '.desc', '.summary', '.content',
+    '.product-description', '.item-description', '.product-summary',
+    '.details', '.info', '.about', '.overview'
+  ];
+
+  for (const selector of descSelectors) {
+    const descEl = element.querySelector(selector);
+    if (descEl && descEl.textContent?.trim()) {
+      let desc = cleanText(descEl.textContent);
+      
+      // Elimină textul generic
+      desc = desc.replace(/\b(cumpara|acum|oferta|calitate japoneză|japoneza)\b/gi, '').trim();
+      
+      if (desc.length > 20 && desc.length < 2000) {
+        return desc;
+      }
+    }
+  }
+
+  // Dacă nu găsește descriere dedicată, ia textul complet dar curat
+  let fullText = cleanText(element.textContent || '');
+  fullText = fullText.replace(/\b(cumpara|acum|oferta|calitate japoneză|japoneza)\b/gi, '').trim();
+  
+  if (fullText.length > 50) {
+    return fullText.substring(0, 500) + (fullText.length > 500 ? '...' : '');
+  }
+
+;
+
+// Funcția îmbunătățită pentru detectarea TUTUROR produselor REALE
 const detectAllProducts = (doc: Document, targetUrl: string, targetLang: string): Product[] => {
   const products: Product[] = [];
   const selectors = [
