@@ -868,50 +868,73 @@ const Scraping = () => {
               />
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 items-start">
-              <Button 
-                onClick={handleSubmit} 
-                disabled={isLoading}
-                size="lg"
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Se procesează...
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-5 h-5 mr-2" />
-                    🔍 Extrage Produse din Pagină
-                  </>
-                )}
-              </Button>
-
-              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200">
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium text-gray-700 mb-1">
-                    Adâncimea scanării:
-                  </label>
-                  <Input
-                    type="number"
-                    value={maxDepth}
-                    onChange={(e) => setMaxDepth(Number(e.target.value))}
-                    min="1"
-                    max="5"
-                    className="w-16 text-center font-bold"
-                  />
-                  <span className="text-xs text-gray-500 mt-1">niveluri</span>
+            <div className="flex flex-col lg:flex-row gap-6 items-start">
+              <div className="elevenlabs-card hover:bg-muted/50 border border-border p-6 rounded-lg w-full lg:w-auto">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Search className="w-5 h-5 text-primary" />
+                    <h3 className="font-semibold text-foreground">Extragere Rapidă</h3>
+                  </div>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Extrage produse și informații din pagina curentă
+                  </p>
+                  <Button 
+                    onClick={handleSubmit} 
+                    disabled={isLoading}
+                    size="lg"
+                    className="elevenlabs-button w-full justify-center py-3 font-medium"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Se procesează...
+                      </>
+                    ) : (
+                      <>
+                        <Search className="w-5 h-5 mr-2" />
+                        Extrage Date din Pagină
+                      </>
+                    )}
+                  </Button>
                 </div>
-                <Button
-                  onClick={handleFullSiteScraping}
-                  disabled={isLoading}
-                  size="lg"
-                  className="bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
-                >
-                  <Globe className="w-5 h-5 mr-2" />
-                  🌐 Scanează Întreg Site-ul
-                </Button>
+              </div>
+
+              <div className="elevenlabs-card hover:bg-muted/50 border border-border p-6 rounded-lg w-full lg:w-auto">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Globe className="w-5 h-5 text-primary" />
+                    <h3 className="font-semibold text-foreground">Scanare Completă</h3>
+                  </div>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Scanează întreg site-ul la adâncimea selectată
+                  </p>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-foreground mb-1">
+                        Adâncimea scanării:
+                      </label>
+                      <Input
+                        type="number"
+                        value={maxDepth}
+                        onChange={(e) => setMaxDepth(Number(e.target.value))}
+                        min="1"
+                        max="5"
+                        className="elevenlabs-input w-20 text-center font-medium"
+                      />
+                      <span className="text-xs text-muted-foreground mt-1">niveluri</span>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={handleFullSiteScraping}
+                    disabled={isLoading}
+                    size="lg"
+                    variant="secondary"
+                    className="w-full justify-center py-3 font-medium hover:bg-secondary/80"
+                  >
+                    <Globe className="w-5 h-5 mr-2" />
+                    Scanează Întreg Site-ul
+                  </Button>
+                </div>
               </div>
             </div>
 
