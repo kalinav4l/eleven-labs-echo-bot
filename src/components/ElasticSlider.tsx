@@ -204,7 +204,7 @@ const Slider: React.FC<SliderProps> = ({
           <Plus className="w-3 h-3" />
         </motion.div>
       </motion.div>
-      <span className="text-xs text-foreground ml-1">{Math.round(value)}</span>
+      <span className="text-xs text-foreground font-medium ml-1">{Math.round(value)}</span>
     </>
   );
 };
