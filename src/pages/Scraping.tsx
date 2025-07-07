@@ -764,14 +764,7 @@ const handleScrape = async (url: string, deepScraping: boolean = false): Promise
 const useFullSiteScraper = () => {
   const [siteMap, setSiteMap] = useState<SiteMapData | null>(null);
   const [isScrapingComplete, setIsScrapingComplete] = useState(false);
-  const [currentProgress, setCurrentProgress] = useState({ 
-    current: 0, 
-    total: 0, 
-    currentUrl: '', 
-    foundProducts: 0, 
-    foundLinks: 0, 
-    foundImages: 0 
-  });
+  const [currentProgress, setCurrentProgress] = useState({ current: 0, total: 0, currentUrl: '' });
 
   const normalizeUrl = (url: string, baseUrl: string): string => {
     try {
@@ -822,26 +815,11 @@ const useFullSiteScraper = () => {
       }
 
       visitedUrls.add(url);
-      setCurrentProgress(prev => ({ 
-        ...prev, 
-        currentUrl: url, 
-        current: visitedUrls.size,
-        foundProducts: 0,
-        foundLinks: 0,
-        foundImages: 0
-      }));
+      setCurrentProgress(prev => ({ ...prev, currentUrl: url, current: visitedUrls.size }));
       
       try {
         const pageData = await handleScrape(url, false); // Nu folosim deep scraping în full site scan pentru performanță
         if (pageData) {
-          // Actualizează progresul cu datele găsite
-          setCurrentProgress(prev => ({ 
-            ...prev,
-            foundProducts: pageData.products.length,
-            foundLinks: pageData.links.length,
-            foundImages: pageData.images.length
-          }));
-
           // Procesează linkurile pentru a continua crawling-ul
           pageData.links.forEach(link => {
             const normalizedUrl = normalizeUrl(link.url, baseUrl);
@@ -1094,125 +1072,69 @@ const Scraping = () => {
               />
             </div>
 
-            {/* Toate controalele pe un singur rând - fără borduri */}
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Scanare profundă */}
-              <div className="flex items-center gap-2 px-3 py-2 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setDeepScraping(!deepScraping)}>
-                <div className={`w-4 h-4 rounded flex items-center justify-center ${deepScraping ? 'bg-primary' : 'bg-muted'}`}>
-                  {deepScraping && <div className="w-2 h-2 bg-primary-foreground rounded-sm"></div>}
-                </div>
-                <span className="text-sm text-foreground">Scanare profundă</span>
-              </div>
-              
-              {/* Scanare nelimitată */}
-              <div className="flex items-center gap-2 px-3 py-2 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setUnlimitedScraping(!unlimitedScraping)}>
-                <div className={`w-4 h-4 rounded flex items-center justify-center ${unlimitedScraping ? 'bg-primary' : 'bg-muted'}`}>
-                  {unlimitedScraping && <div className="w-2 h-2 bg-primary-foreground rounded-sm"></div>}
-                </div>
-                <span className="text-sm text-foreground">Scanare nelimitată</span>
-              </div>
-              
-              {/* Extrage date */}
-              <button 
-                onClick={handleSubmit} 
-                disabled={isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Extrage date
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-4 h-4" />
-                    Extrage date
-                  </>
-                )}
-              </button>
-
-              {/* Adâncime */}
-              <div className="flex items-center gap-2 px-3 py-2 bg-muted/30 rounded-lg">
-                <span className="text-sm text-foreground">Adâncime:</span>
-                <select
-                  value={maxDepth}
-                  onChange={(e) => setMaxDepth(Number(e.target.value))}
-                  className="bg-transparent text-sm text-foreground focus:outline-none cursor-pointer"
-                >
-                  <option value={1}>1</option>
-                  <option value={2}>2</option>
-                  <option value={3}>3</option>
-                  <option value={4}>4</option>
-                  <option value={5}>5</option>
-                </select>
-              </div>
-              
-              {/* Scanează site */}
-              <button
-                onClick={handleFullSiteScraping}
-                disabled={isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
-                <Globe className="w-4 h-4" />
-                Scanează site
-              </button>
-            </div>
-
-            {/* Progres în timp real - animație când se scanează */}
-            {(isLoading || currentProgress.currentUrl) && (
-              <Card className="mt-4 animate-fade-in">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                    Scanare în progres...
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {currentProgress.currentUrl && (
-                      <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg animate-slide-in-right">
-                        <Globe className="w-4 h-4 text-primary flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground">Se procesează</p>
-                          <p className="text-xs text-muted-foreground truncate">{currentProgress.currentUrl}</p>
-                        </div>
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      </div>
-                    )}
-                    
-                    {currentProgress.foundProducts > 0 && (
-                      <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg animate-slide-in-right">
-                        <Package className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                        <div className="flex-1">
-                          <p className="text-sm text-foreground">Produse găsite: <span className="font-semibold">{currentProgress.foundProducts}</span></p>
-                        </div>
-                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                      </div>
-                    )}
-                    
-                    {currentProgress.foundLinks > 0 && (
-                      <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg animate-slide-in-right">
-                        <Link className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        <div className="flex-1">
-                          <p className="text-sm text-foreground">Link-uri găsite: <span className="font-semibold">{currentProgress.foundLinks}</span></p>
-                        </div>
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      </div>
-                    )}
-                    
-                    {currentProgress.foundImages > 0 && (
-                      <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg animate-slide-in-right">
-                        <Image className="w-4 h-4 text-purple-500 flex-shrink-0" />
-                        <div className="flex-1">
-                          <p className="text-sm text-foreground">Imagini găsite: <span className="font-semibold">{currentProgress.foundImages}</span></p>
-                        </div>
-                        <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                      </div>
-                    )}
+            <div className="space-y-4">
+              {/* Opțiuni de scanare - stil clean */}
+              <div className="flex gap-3">
+                <div className="flex items-center gap-2 px-3 py-2 bg-background border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setDeepScraping(!deepScraping)}>
+                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${deepScraping ? 'bg-primary border-primary' : 'border-border'}`}>
+                    {deepScraping && <div className="w-2 h-2 bg-primary-foreground rounded-sm"></div>}
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                  <span className="text-sm text-foreground">Scanare profundă</span>
+                </div>
+                
+                <div className="flex items-center gap-2 px-3 py-2 bg-background border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setUnlimitedScraping(!unlimitedScraping)}>
+                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${unlimitedScraping ? 'bg-primary border-primary' : 'border-border'}`}>
+                    {unlimitedScraping && <div className="w-2 h-2 bg-primary-foreground rounded-sm"></div>}
+                  </div>
+                  <span className="text-sm text-foreground">Scanare nelimitată</span>
+                </div>
+              </div>
+              
+              {/* Butoane principale - stil clean */}
+              <div className="flex gap-3">
+                <button 
+                  onClick={handleSubmit} 
+                  disabled={isLoading}
+                  className="flex items-center gap-2 px-4 py-2 bg-background border border-border rounded-lg hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm text-foreground"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Extrage date
+                    </>
+                  ) : (
+                    <>
+                      <Search className="w-4 h-4" />
+                      Extrage date
+                    </>
+                  )}
+                </button>
+
+                <div className="flex items-center gap-2 px-3 py-2 bg-background border border-border rounded-lg">
+                  <span className="text-sm text-foreground">Adâncime:</span>
+                  <select
+                    value={maxDepth}
+                    onChange={(e) => setMaxDepth(Number(e.target.value))}
+                    className="bg-transparent border-none text-sm text-foreground focus:outline-none cursor-pointer"
+                  >
+                    <option value={1}>1</option>
+                    <option value={2}>2</option>
+                    <option value={3}>3</option>
+                    <option value={4}>4</option>
+                    <option value={5}>5</option>
+                  </select>
+                </div>
+                
+                <button
+                  onClick={handleFullSiteScraping}
+                  disabled={isLoading}
+                  className="flex items-center gap-2 px-4 py-2 bg-background border border-border rounded-lg hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm text-foreground"
+                >
+                  <Globe className="w-4 h-4" />
+                  Scanează site
+                </button>
+              </div>
+            </div>
 
             {currentProgress.currentUrl && (
               <div className="text-sm text-muted-foreground">
