@@ -10,7 +10,8 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Globe, Search, Package, Image, FileText, Link2, Code, Loader2, AlertCircle } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ScrapedData {
   url: string;
@@ -61,68 +62,23 @@ const Scraping = () => {
     setScrapedData(null);
 
     try {
-      const response = await fetch(url);
-      const htmlContent = await response.text();
-      
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlContent, 'text/html');
-
-      const title = doc.querySelector('title')?.textContent || 'Fără titlu';
-      const description = doc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
-      const text = doc.body?.textContent?.substring(0, 1000) || '';
-
-      const links = Array.from(doc.querySelectorAll('a'))
-        .map(link => ({
-          url: link.href || '',
-          text: link.textContent?.trim() || ''
-        }))
-        .filter(link => link.url && link.text)
-        .slice(0, 20);
-
-      const images = Array.from(doc.querySelectorAll('img'))
-        .map(img => ({
-          src: img.src || '',
-          alt: img.alt || ''
-        }))
-        .filter(img => img.src && !img.src.includes('data:'))
-        .slice(0, 20);
-
-      const products = [];
-      const productElements = doc.querySelectorAll('.product, .product-item, [data-product]');
-      
-      productElements.forEach((element, index) => {
-        const nameEl = element.querySelector('h1, h2, h3, .title, .name');
-        const priceEl = element.querySelector('.price, [class*="price"]');
-        const descEl = element.querySelector('.description, .desc');
-        const imgEl = element.querySelector('img');
-
-        if (nameEl && priceEl) {
-          products.push({
-            id: `product_${index}`,
-            name: nameEl.textContent?.trim() || `Produs ${index + 1}`,
-            description: descEl?.textContent?.trim() || '',
-            price: priceEl.textContent?.trim() || '',
-            images: imgEl ? [{ src: imgEl.src, alt: imgEl.alt || '' }] : []
-          });
-        }
+      const { data, error } = await supabase.functions.invoke('web-scraper', {
+        body: { url }
       });
 
-      const data: ScrapedData = {
-        url,
-        title,
-        description,
-        text,
-        links,
-        images,
-        products,
-        timestamp: new Date().toISOString()
-      };
+      if (error) {
+        throw new Error(error.message || 'Eroare la scraping');
+      }
+
+      if (!data) {
+        throw new Error('Nu s-au primit date de la server');
+      }
 
       setScrapedData(data);
       
       toast({
         title: "Scraping finalizat!",
-        description: `Găsite ${products.length} produse, ${links.length} link-uri și ${images.length} imagini`,
+        description: `Găsite ${data.products?.length || 0} produse, ${data.links?.length || 0} link-uri și ${data.images?.length || 0} imagini`,
       });
 
     } catch (err) {
