@@ -534,6 +534,57 @@ export type Database = {
         }
         Relationships: []
       }
+      scraping_history: {
+        Row: {
+          created_at: string
+          description: string | null
+          error_message: string | null
+          id: string
+          scraping_data: Json
+          scraping_type: string | null
+          status: string | null
+          title: string
+          total_images: number | null
+          total_links: number | null
+          total_products: number | null
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          error_message?: string | null
+          id?: string
+          scraping_data: Json
+          scraping_type?: string | null
+          status?: string | null
+          title: string
+          total_images?: number | null
+          total_links?: number | null
+          total_products?: number | null
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          error_message?: string | null
+          id?: string
+          scraping_data?: Json
+          scraping_type?: string | null
+          status?: string | null
+          title?: string
+          total_images?: number | null
+          total_links?: number | null
+          total_products?: number | null
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_balance: {
         Row: {
           balance_usd: number

@@ -7,9 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/use-toast';
-import { Search, Download, Globe, Package, Image, Link, FileText, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { Search, Download, Globe, Package, Image, Link, FileText, AlertCircle, CheckCircle, Loader2, History, Save } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
+import { ScrapingHistory } from '@/components/scraping/ScrapingHistory';
+import { useScrapingHistory } from '@/hooks/useScrapingHistory';
 
 // Interfețe TypeScript
 interface Product {
@@ -765,6 +768,7 @@ const useFullSiteScraper = () => {
   const [siteMap, setSiteMap] = useState<SiteMapData | null>(null);
   const [isScrapingComplete, setIsScrapingComplete] = useState(false);
   const [currentProgress, setCurrentProgress] = useState({ current: 0, total: 0, currentUrl: '' });
+  const { saveScrapingSession } = useScrapingHistory();
 
   const normalizeUrl = (url: string, baseUrl: string): string => {
     try {
@@ -861,6 +865,27 @@ const useFullSiteScraper = () => {
     }));
 
     setIsScrapingComplete(true);
+    
+    // Salvare automată în istoric pentru scraping complet
+    const finalSiteMap = {
+      ...siteMapData,
+      endTime: new Date().toISOString()
+    };
+    
+    const allProducts = finalSiteMap.pages.flatMap(page => page.products);
+    const allImages = finalSiteMap.pages.flatMap(page => page.images);
+    const allLinks = finalSiteMap.pages.flatMap(page => page.links);
+    
+    saveScrapingSession({
+      url: baseUrl,
+      title: `Scraping complet - ${new URL(baseUrl).hostname}`,
+      description: `Site scanat complet cu ${finalSiteMap.pages.length} pagini`,
+      scraping_data: finalSiteMap,
+      scraping_type: 'full_site',
+      total_products: allProducts.length,
+      total_images: allImages.length,
+      total_links: allLinks.length,
+    });
     
   }, []);
 
@@ -1103,6 +1128,8 @@ const Scraping = () => {
   const [maxDepth, setMaxDepth] = useState(2);
   const [deepScraping, setDeepScraping] = useState(false);
   const [unlimitedScraping, setUnlimitedScraping] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const { saveScrapingSession } = useScrapingHistory();
   
   const {
     siteMap,
@@ -1142,6 +1169,18 @@ const Scraping = () => {
       setScrapedData(data);
       
       if (data) {
+        // Salvare automată în istoric
+        saveScrapingSession({
+          url: url,
+          title: data.title || 'Sesiune de scraping',
+          description: data.description,
+          scraping_data: data,
+          scraping_type: 'single',
+          total_products: data.products.length,
+          total_images: data.images.length,
+          total_links: data.links.length,
+        });
+
         toast({
           title: "Scraping finalizat!",
           description: `Găsite ${data.products.length} produse și ${data.links.length} link-uri`,
@@ -1192,9 +1231,21 @@ const Scraping = () => {
   return (
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center gap-2 mb-6">
-          <Globe className="w-8 h-8 text-primary" />
-          <h1 className="text-3xl font-bold text-foreground">Web Scraper Universal</h1>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Globe className="w-8 h-8 text-primary" />
+            <h1 className="text-3xl font-bold text-foreground">Web Scraper Universal</h1>
+          </div>
+          
+          {/* Buton istoric în colțul drept */}
+          <Button
+            onClick={() => setShowHistory(true)}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <History className="w-4 h-4" />
+            Istoric
+          </Button>
         </div>
 
         <Card className="liquid-glass">
@@ -1751,6 +1802,37 @@ const Scraping = () => {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Dialog pentru istoric */}
+        {showHistory && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-background border rounded-lg shadow-lg w-full max-w-4xl max-h-[80vh] flex flex-col">
+              <div className="flex items-center justify-between p-6 border-b">
+                <h2 className="text-2xl font-bold">Istoric Scraping</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowHistory(false)}
+                >
+                  ✕
+                </Button>
+              </div>
+              <div className="flex-1 overflow-hidden p-6">
+                <ScrapingHistory 
+                  onLoadSession={(session) => {
+                    setScrapedData(session.scraping_data);
+                    setUrl(session.url);
+                    setShowHistory(false);
+                    toast({
+                      title: "Sesiune încărcată",
+                      description: "Datele din istoric au fost încărcate cu succes.",
+                    });
+                  }}
+                />
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </DashboardLayout>
