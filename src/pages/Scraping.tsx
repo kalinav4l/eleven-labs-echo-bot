@@ -240,15 +240,15 @@ const extractSpecifications = (element: Element): Record<string, string> => {
   return specs;
 };
 
-// Funcție pentru extragerea descrierii de pe pagina produsului cu error handling îmbunătățit
+// Funcție pentru extragerea descrierii de pe pagina produsului cu extragere MAXIMĂ
 const extractProductDescription = async (productUrl: string): Promise<string> => {
   try {
     const cleanUrl = productUrl.startsWith('http') ? productUrl : `https://${productUrl}`;
-    console.log(`Încercare extragere descriere din: ${cleanUrl}`);
+    console.log(`Extragere COMPLETĂ descriere din: ${cleanUrl}`);
     
     // Timeout pentru a evita blocajele
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Timeout')), 10000);
+      setTimeout(() => reject(new Error('Timeout')), 15000); // Măresc timeout-ul
     });
     
     const productData = await Promise.race([
@@ -257,11 +257,12 @@ const extractProductDescription = async (productUrl: string): Promise<string> =>
     ]);
     
     if (productData && productData.text) {
-      // Caută descrieri pe pagina produsului cu selectori mai specifici
       const parser = new DOMParser();
       const productDoc = parser.parseFromString(productData.text, 'text/html');
       
+      // SELECTORI EXTREM DE COMPLETI pentru descrieri
       const descriptionSelectors = [
+        // Selectori specifici pentru produse
         '.product-description, .product-desc, .description',
         '.product-details, .product-info, .details',
         '.product-content, .content, .main-content',
@@ -271,39 +272,104 @@ const extractProductDescription = async (productUrl: string): Promise<string> =>
         '.product-overview, .overview',
         '.specifications, .specs, .features',
         'article, .article',
-        '.text-content, .rich-text'
+        '.text-content, .rich-text',
+        
+        // Selectori avansați
+        '.product-description-content, .desc-content',
+        '.product-detail-description, .detail-description',
+        '.product-full-description, .full-description',
+        '.product-long-description, .long-description',
+        '.product-info-description, .info-description',
+        '.caracteristici, .caracteristici-produs',
+        '.descriere, .descriere-produs',
+        '.informatii, .informatii-produs',
+        '.detalii, .detalii-produs',
+        
+        // Selectori pentru site-uri auto
+        '.vehicle-description, .auto-description',
+        '.car-description, .masina-description',
+        '.vehicle-details, .auto-details',
+        '.technical-data, .date-tehnice',
+        '.equipment, .echipament',
+        '.condition, .stare',
+        
+        // Selectori generici
+        '.main-desc, .main-description',
+        '.full-desc, .full-description',
+        '.long-desc, .long-description',
+        '.product-text, .item-text',
+        '.body-text, .content-text',
+        '.rich-content, .wysiwyg',
+        'section[class*="desc"]',
+        'div[class*="desc"]',
+        'p[class*="desc"]',
+        
+        // Pentru tab-uri
+        '#description, #descriere, #detalii',
+        '.tab-description, .tab-descriere',
+        '.tabcontent, .tab-content',
+        '.accordion-content',
+        
+        // Meta și structurale
+        'main, .main',
+        '.container .description',
+        '.row .description',
+        '.col .description'
       ];
 
+      let foundDescription = '';
+      
+      // Caută în toate selectorii
       for (const selector of descriptionSelectors) {
-        const descElement = productDoc.querySelector(selector);
-        if (descElement && descElement.textContent?.trim()) {
-          const descText = descElement.textContent.trim();
-          if (descText.length > 50 && descText.length < 5000) {
-            console.log(`Descriere găsită cu selectorul ${selector}: ${descText.substring(0, 100)}...`);
-            return descText;
+        const descElements = productDoc.querySelectorAll(selector);
+        for (const descElement of descElements) {
+          if (descElement && descElement.textContent?.trim()) {
+            const descText = descElement.textContent.trim();
+            // Verifică dacă textul este o descriere validă și nu prea scurtă
+            if (descText.length > 30 && descText.length < 10000 && 
+                !descText.match(/^[\d\s\.,\-€$£]+$/) && // Nu doar preturi
+                !descText.toLowerCase().includes('add to cart') &&
+                !descText.toLowerCase().includes('buy now') &&
+                !descText.toLowerCase().includes('cookie') &&
+                !descText.toLowerCase().includes('javascript')) {
+              
+              // Ia cea mai lungă descriere găsită
+              if (descText.length > foundDescription.length) {
+                foundDescription = descText;
+                console.log(`Descriere îmbunătățită găsită cu ${selector}: ${descText.length} caractere`);
+              }
+            }
           }
         }
       }
       
-      // Fallback: extrage din conținutul text general
-      if (productData.text.length > 100) {
-        const sentences = productData.text.split(/[.!?]+/).filter(s => s.trim().length > 50);
-        const validSentences = sentences.filter(s => 
-          !s.match(/^[\d\s\.,\-€$£]+$/) && 
-          !s.toLowerCase().includes('cookie') &&
-          !s.toLowerCase().includes('javascript') &&
-          s.length < 1000
-        );
-        if (validSentences.length > 0) {
-          const fallbackDesc = validSentences.slice(0, 3).join('. ').trim();
-          console.log(`Descriere fallback găsită: ${fallbackDesc.substring(0, 100)}...`);
-          return fallbackDesc;
+      if (foundDescription) {
+        return foundDescription;
+      }
+      
+      // Fallback EXTREM - extrage din paragrafe și divuri
+      const allParagraphs = productDoc.querySelectorAll('p, div');
+      let bestDescription = '';
+      
+      for (const element of allParagraphs) {
+        const text = element.textContent?.trim() || '';
+        if (text.length > 100 && text.length < 5000 && 
+            !text.match(/^[\d\s\.,\-€$£]+$/) && 
+            !text.toLowerCase().includes('cookie') &&
+            !text.toLowerCase().includes('price') &&
+            !text.toLowerCase().includes('buy') &&
+            text.length > bestDescription.length) {
+          bestDescription = text;
         }
+      }
+      
+      if (bestDescription.length > 50) {
+        console.log(`Descriere fallback găsită: ${bestDescription.length} caractere`);
+        return bestDescription;
       }
     }
   } catch (error) {
     console.warn(`Nu s-a putut extrage descrierea din ${productUrl}:`, error);
-    // Nu aruncăm eroarea, doar o logăm
   }
   
   return '';
@@ -414,8 +480,9 @@ const detectProducts = async (doc: Document, targetUrl: string, deepScraping: bo
         product.url = productUrl;
       }
 
-      // Extrage descrierea - versiune îmbunătățită
+      // Extrage descrierea - versiune MAXIMĂ
       const descSelectors = [
+        // Selectori de bază
         '.description, .desc, .summary, .content, .product-description',
         '[class*="description"], [class*="desc"], [class*="summary"]',
         '.product-desc, .item-desc, .product-summary',
@@ -424,31 +491,56 @@ const detectProducts = async (doc: Document, targetUrl: string, deepScraping: bo
         'p[class*="desc"], div[class*="desc"]',
         '.product-content, .item-content',
         '[data-description], [data-desc]',
-        '.text, .product-text, .item-text'
+        '.text, .product-text, .item-text',
+        
+        // Selectori avansați
+        '.caracteristici, .informatii, .detalii',
+        '.vehicle-info, .auto-info, .car-info',
+        '.masina-info, .vehicul-info',
+        '.technical-specs, .tech-specs',
+        '.equipment, .echipament',
+        '.condition, .stare',
+        '.features, .caracteristici-principale',
+        
+        // Selectori structurali
+        '.product-item-desc, .item-description',
+        '.listing-description, .listing-desc',
+        '.card-description, .card-desc',
+        '.tile-description, .tile-desc',
+        
+        // Meta și altele
+        'article p, section p',
+        '.main p, .content p',
+        'div[class*="text"] p'
       ];
 
+      let bestDescription = '';
+      
       // Caută descripții în toate elementele posibile
       for (const selector of descSelectors) {
         const descElements = productElement.querySelectorAll(selector);
         for (const descElement of descElements) {
           if (descElement && descElement.textContent?.trim()) {
             const descText = descElement.textContent.trim();
-            // Verifică dacă textul este o descriere validă
-            if (descText.length > 20 && descText.length < 2000 && 
+            // Verifică dacă textul este o descriere validă și ia cea mai lungă
+            if (descText.length > 20 && descText.length < 5000 && 
                 !descText.match(/^[\d\s\.,\-€$£]+$/) && // Nu doar preturi
                 !descText.toLowerCase().includes('add to cart') &&
-                !descText.toLowerCase().includes('buy now')) {
-              product.description = descText;
-              break;
+                !descText.toLowerCase().includes('buy now') &&
+                descText.length > bestDescription.length) {
+              bestDescription = descText;
             }
           }
         }
-        if (product.description) break;
+      }
+      
+      if (bestDescription) {
+        product.description = bestDescription;
       }
 
       // Dacă nu s-a găsit descriere și avem URL-ul produsului, încearcă să acceseze pagina pentru descriere
-      // Dar doar pentru primele 5 produse pentru a nu suprasolicita proxy-urile
-      if (!product.description && productUrl && deepScraping && index < 5) {
+      // FĂRĂ LIMITĂRI - pentru toate produsele
+      if (!product.description && productUrl && deepScraping) {
         try {
           console.log(`Încercare extragere descriere pentru produsul ${index + 1}: ${productUrl}`);
           const detailedDescription = await extractProductDescription(productUrl);
@@ -696,7 +788,7 @@ const useFullSiteScraper = () => {
     }
   };
 
-  const startFullSiteScraping = useCallback(async (baseUrl: string, maxDepth: number = 3, deepScraping: boolean = false) => {
+  const startFullSiteScraping = useCallback(async (baseUrl: string, maxDepth: number = 3, deepScraping: boolean = false, unlimitedScraping: boolean = false) => {
     const siteMapData: SiteMapData = {
       baseUrl,
       pages: [],
@@ -715,7 +807,7 @@ const useFullSiteScraper = () => {
       { url: baseUrl, depth: 0 }
     ];
 
-    while (urlsToVisit.length > 0 && visitedUrls.size < 50) {
+    while (urlsToVisit.length > 0 && (unlimitedScraping || visitedUrls.size < 500)) { // Folosește unlimited sau 500
       const { url, depth, parentUrl } = urlsToVisit.shift()!;
       
       if (visitedUrls.has(url) || depth > maxDepth) {
@@ -734,7 +826,7 @@ const useFullSiteScraper = () => {
             if (normalizedUrl && 
                 isSameDomain(normalizedUrl, baseUrl) && 
                 !visitedUrls.has(normalizedUrl) && 
-                urlsToVisit.length < 100) {
+                urlsToVisit.length < (unlimitedScraping ? 10000 : 1000)) { // Elimin limitele dacă e unlimited
               urlsToVisit.push({ url: normalizedUrl, depth: depth + 1, parentUrl: url });
             }
           });
@@ -867,6 +959,7 @@ const Scraping = () => {
   const [error, setError] = useState('');
   const [maxDepth, setMaxDepth] = useState(2);
   const [deepScraping, setDeepScraping] = useState(false);
+  const [unlimitedScraping, setUnlimitedScraping] = useState(false);
   
   const {
     siteMap,
@@ -950,7 +1043,7 @@ const Scraping = () => {
       description: `Se va scana site-ul la adâncimea ${maxDepth}`,
     });
 
-    await startFullSiteScraping(url, maxDepth, deepScraping);
+    await startFullSiteScraping(url, maxDepth, deepScraping, unlimitedScraping);
   };
 
   return (
@@ -989,7 +1082,20 @@ const Scraping = () => {
                   className="w-4 h-4"
                 />
                 <label htmlFor="deepScraping" className="text-sm text-muted-foreground">
-                  Scanare profundă (extrage descrieri din paginile produselor - mai lent)
+                  Scanare profundă (extrage descrieri din paginile produselor)
+                </label>
+              </div>
+              
+              <div className="flex items-center gap-2 mb-3">
+                <input
+                  type="checkbox"
+                  id="unlimitedScraping"
+                  checked={unlimitedScraping}
+                  onChange={(e) => setUnlimitedScraping(e.target.checked)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="unlimitedScraping" className="text-sm text-muted-foreground">
+                  Scanare nelimitată (continuă până extrage tot - poate dura mult)
                 </label>
               </div>
               
