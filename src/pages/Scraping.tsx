@@ -1312,10 +1312,10 @@ const Scraping = () => {
           <div className="flex items-center gap-2">
             <Button
               onClick={() => setShowHistory(true)}
-              className={`flex items-center gap-2 transition-all duration-200 ${
+              className={`flex items-center gap-2 transition-all duration-200 border border-gray-300 ${
                 showHistory
-                  ? 'bg-black text-white' 
-                  : 'bg-gray-500 hover:bg-black text-white'
+                  ? 'bg-black text-white border-black' 
+                  : 'bg-transparent text-gray-900 hover:bg-black hover:text-white hover:border-black'
               }`}
             >
               <History className="w-4 h-4" />
@@ -1384,10 +1384,10 @@ const Scraping = () => {
                   onClick={handleSubmit} 
                   disabled={isLoading}
                   size="sm"
-                  className={`h-8 text-xs transition-all duration-200 ${
+                  className={`h-8 text-xs transition-all duration-200 border border-gray-300 ${
                     isLoading 
-                      ? 'bg-black text-white' 
-                      : 'bg-gray-500 hover:bg-black text-white'
+                      ? 'bg-black text-white border-black' 
+                      : 'bg-transparent text-gray-900 hover:bg-black hover:text-white hover:border-black'
                   }`}
                 >
                   {isLoading ? (
@@ -1422,10 +1422,10 @@ const Scraping = () => {
                   onClick={handleFullSiteScraping}
                   disabled={isLoading}
                   size="sm"
-                  className={`h-8 text-xs transition-all duration-200 ${
+                  className={`h-8 text-xs transition-all duration-200 border border-gray-300 ${
                     isLoading 
-                      ? 'bg-black text-white' 
-                      : 'bg-gray-500 hover:bg-black text-white'
+                      ? 'bg-black text-white border-black' 
+                      : 'bg-transparent text-gray-900 hover:bg-black hover:text-white hover:border-black'
                   }`}
                 >
                   <Globe className="w-3 h-3 mr-1" />
@@ -1466,7 +1466,7 @@ const Scraping = () => {
                   <Button
                     size="sm"
                     onClick={() => exportToJSON(scrapedData)}
-                    className="bg-gray-500 hover:bg-black text-white transition-all duration-200"
+                    className="bg-transparent text-gray-900 hover:bg-black hover:text-white border border-gray-300 hover:border-black transition-all duration-200"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Export JSON
@@ -1474,7 +1474,7 @@ const Scraping = () => {
                   <Button
                     size="sm"
                     onClick={() => exportToCSV(scrapedData.products)}
-                    className="bg-gray-500 hover:bg-black text-white transition-all duration-200"
+                    className="bg-transparent text-gray-900 hover:bg-black hover:text-white border border-gray-300 hover:border-black transition-all duration-200"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Export CSV
@@ -1482,7 +1482,7 @@ const Scraping = () => {
                   <Button
                     size="sm"
                     onClick={() => exportToTXT(scrapedData.products)}
-                    className="bg-gray-500 hover:bg-black text-white transition-all duration-200"
+                    className="bg-transparent text-gray-900 hover:bg-black hover:text-white border border-gray-300 hover:border-black transition-all duration-200"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Export TXT
@@ -1490,7 +1490,7 @@ const Scraping = () => {
                   <Button
                     size="sm"
                     onClick={() => exportToExcel(scrapedData.products)}
-                    className="bg-gray-500 hover:bg-black text-white transition-all duration-200"
+                    className="bg-transparent text-gray-900 hover:bg-black hover:text-white border border-gray-300 hover:border-black transition-all duration-200"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Export XLS
@@ -1498,7 +1498,7 @@ const Scraping = () => {
                   <Button
                     size="sm"
                     onClick={() => exportToXML(scrapedData.products)}
-                    className="bg-gray-500 hover:bg-black text-white transition-all duration-200"
+                    className="bg-transparent text-gray-900 hover:bg-black hover:text-white border border-gray-300 hover:border-black transition-all duration-200"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Export XML
@@ -1506,7 +1506,7 @@ const Scraping = () => {
                   <Button
                     size="sm"
                     onClick={() => exportToJSONL(scrapedData.products)}
-                    className="bg-gray-500 hover:bg-black text-white transition-all duration-200"
+                    className="bg-transparent text-gray-900 hover:bg-black hover:text-white border border-gray-300 hover:border-black transition-all duration-200"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Export JSONL
