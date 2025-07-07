@@ -106,6 +106,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               <span>Scraping</span>
             </Link>
 
+
             <Link 
               to="/account/settings"
               className={`${location.pathname === '/account/settings' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`}
