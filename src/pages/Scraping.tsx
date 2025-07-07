@@ -903,6 +903,149 @@ const exportToCSV = (products: any[]) => {
   URL.revokeObjectURL(url);
 };
 
+const exportToTXT = (products: any[]) => {
+  let content = `PRODUSE EXTRASE - ${new Date().toLocaleDateString('ro-RO')}\n`;
+  content += `Total produse: ${products.length}\n\n`;
+  content += '='.repeat(80) + '\n\n';
+  
+  products.forEach((product, index) => {
+    content += `PRODUS ${index + 1}:\n`;
+    content += `-`.repeat(40) + '\n';
+    content += `ID: ${product.id}\n`;
+    content += `Nume: ${product.name}\n`;
+    content += `Preț: ${product.price} ${product.currency || ''}\n`;
+    content += `Categorie: ${product.category}\n`;
+    content += `Brand: ${product.brand || 'N/A'}\n`;
+    content += `Disponibilitate: ${product.availability}\n`;
+    content += `URL: ${product.url}\n`;
+    content += `Descriere: ${product.description || 'Fără descriere'}\n`;
+    if (product.specifications && Object.keys(product.specifications).length > 0) {
+      content += `Specificații:\n`;
+      Object.entries(product.specifications).forEach(([key, value]) => {
+        content += `  - ${key}: ${value}\n`;
+      });
+    }
+    content += '\n' + '='.repeat(80) + '\n\n';
+  });
+  
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `produse_${Date.now()}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+const exportToXML = (products: any[]) => {
+  let content = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  content += `<produse timestamp="${new Date().toISOString()}" total="${products.length}">\n`;
+  
+  products.forEach(product => {
+    content += '  <produs>\n';
+    content += `    <id>${escapeXml(product.id)}</id>\n`;
+    content += `    <nume>${escapeXml(product.name)}</nume>\n`;
+    content += `    <pret valuta="${escapeXml(product.currency || '')}">${escapeXml(product.price)}</pret>\n`;
+    content += `    <categorie>${escapeXml(product.category)}</categorie>\n`;
+    content += `    <brand>${escapeXml(product.brand || '')}</brand>\n`;
+    content += `    <disponibilitate>${escapeXml(product.availability)}</disponibilitate>\n`;
+    content += `    <url>${escapeXml(product.url)}</url>\n`;
+    content += `    <descriere>${escapeXml(product.description || '')}</descriere>\n`;
+    
+    if (product.specifications && Object.keys(product.specifications).length > 0) {
+      content += '    <specificatii>\n';
+      Object.entries(product.specifications).forEach(([key, value]) => {
+        content += `      <specificatie nume="${escapeXml(key)}">${escapeXml(value as string)}</specificatie>\n`;
+      });
+      content += '    </specificatii>\n';
+    }
+    
+    if (product.images && product.images.length > 0) {
+      content += '    <imagini>\n';
+      product.images.forEach((image: any) => {
+        content += `      <imagine src="${escapeXml(image.src)}" alt="${escapeXml(image.alt)}" tip="${escapeXml(image.type)}" />\n`;
+      });
+      content += '    </imagini>\n';
+    }
+    
+    content += '  </produs>\n';
+  });
+  
+  content += '</produse>';
+  
+  const blob = new Blob([content], { type: 'application/xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `produse_${Date.now()}.xml`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+const exportToJSONL = (products: any[]) => {
+  const content = products.map(product => JSON.stringify(product)).join('\n');
+  
+  const blob = new Blob([content], { type: 'application/jsonl;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `produse_${Date.now()}.jsonl`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+const exportToExcel = (products: any[]) => {
+  // Creăm un TSV (Tab Separated Values) care se deschide în Excel
+  let content = 'ID\tNume\tPreț\tMonedă\tCategorie\tBrand\tDisponibilitate\tDescriere\tSpecificații\tURL\n';
+  content += products.map(product => {
+    const specs = product.specifications ? 
+      Object.entries(product.specifications).map(([k, v]) => `${k}: ${v}`).join('; ') : '';
+    
+    return [
+      product.id,
+      product.name,
+      product.price,
+      product.currency || '',
+      product.category,
+      product.brand || '',
+      product.availability,
+      product.description || '',
+      specs,
+      product.url
+    ].map(field => `"${String(field).replace(/"/g, '""')}"`).join('\t');
+  }).join('\n');
+  
+  const blob = new Blob([content], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `produse_${Date.now()}.xls`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+// Funcție helper pentru escape XML
+const escapeXml = (unsafe: string): string => {
+  return String(unsafe || '').replace(/[<>&'"]/g, function (c) {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case '\'': return '&apos;';
+      case '"': return '&quot;';
+      default: return c;
+    }
+  });
+};
+
 const exportToHTML = (data: any) => {
   const htmlContent = `<!DOCTYPE html>
 <html lang="ro">
@@ -1173,22 +1316,56 @@ const Scraping = () => {
                 Rezultate Scraping
               </CardTitle>
               <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => exportToJSON(scrapedData)}
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Export JSON
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => exportToCSV(scrapedData.products)}
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Export CSV
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => exportToJSON(scrapedData)}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export JSON
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => exportToCSV(scrapedData.products)}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export CSV
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => exportToTXT(scrapedData.products)}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export TXT
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => exportToExcel(scrapedData.products)}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export XLS
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => exportToXML(scrapedData.products)}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export XML
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => exportToJSONL(scrapedData.products)}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export JSONL
+                  </Button>
+                </div>
                 <Button
                   size="sm"
                   variant="outline"
@@ -1285,16 +1462,49 @@ const Scraping = () => {
                 <TabsContent value="products">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">Produse Extrase - Vizualizare CSV</h3>
-                      <Button
-                        onClick={() => exportToCSV(scrapedData.products)}
-                        size="sm"
-                        variant="outline"
-                        className="elevenlabs-button-secondary"
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Descarcă CSV
-                      </Button>
+                      <h3 className="text-lg font-semibold">Produse Extrase</h3>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          onClick={() => exportToCSV(scrapedData.products)}
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          CSV
+                        </Button>
+                        <Button
+                          onClick={() => exportToTXT(scrapedData.products)}
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          TXT
+                        </Button>
+                        <Button
+                          onClick={() => exportToExcel(scrapedData.products)}
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          XLS
+                        </Button>
+                        <Button
+                          onClick={() => exportToXML(scrapedData.products)}
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          XML
+                        </Button>
+                        <Button
+                          onClick={() => exportToJSONL(scrapedData.products)}
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          JSONL
+                        </Button>
+                      </div>
                     </div>
                     
                     <div className="border border-border rounded-lg overflow-hidden">
@@ -1483,23 +1693,59 @@ const Scraping = () => {
                 </div>
 
                 {isScrapingComplete && (
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => exportToJSON(siteMap)}
-                      size="sm"
-                      variant="outline"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Export Site Map JSON
-                    </Button>
-                    <Button
-                      onClick={() => exportToCSV(siteMap.pages.flatMap(page => page.products))}
-                      size="sm"
-                      variant="outline"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Export Toate Produsele CSV
-                    </Button>
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        onClick={() => exportToJSON(siteMap)}
+                        size="sm"
+                        variant="outline"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Site Map JSON
+                      </Button>
+                      <Button
+                        onClick={() => exportToCSV(siteMap.pages.flatMap(page => page.products))}
+                        size="sm"
+                        variant="outline"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Produse CSV
+                      </Button>
+                      <Button
+                        onClick={() => exportToTXT(siteMap.pages.flatMap(page => page.products))}
+                        size="sm"
+                        variant="outline"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Produse TXT
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        onClick={() => exportToExcel(siteMap.pages.flatMap(page => page.products))}
+                        size="sm"
+                        variant="outline"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Produse XLS
+                      </Button>
+                      <Button
+                        onClick={() => exportToXML(siteMap.pages.flatMap(page => page.products))}
+                        size="sm"
+                        variant="outline"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Produse XML
+                      </Button>
+                      <Button
+                        onClick={() => exportToJSONL(siteMap.pages.flatMap(page => page.products))}
+                        size="sm"
+                        variant="outline"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Produse JSONL
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
