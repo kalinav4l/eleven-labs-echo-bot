@@ -8,9 +8,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/components/ui/use-toast';
-import { Search, Download, Globe, Package, Image, Link, FileText, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { Search, Download, Globe, Package, Image, Link, FileText, AlertCircle, CheckCircle, Loader2, HardDrive } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { generateAgentOptimizedDescription, generateAgentTags, calculateCompletenessScore, exportForAgent } from '@/utils/agentOptimization';
+import { 
+  createOptimizedJSONExport, 
+  createOptimizedCSVExport, 
+  createOptimizedHTMLExport, 
+  downloadOptimizedFile 
+} from '@/utils/exportOptimization';
 
 // Interfețe TypeScript
 interface Product {
@@ -873,83 +879,36 @@ const useFullSiteScraper = () => {
   };
 };
 
-// Funcții utilitare pentru export în diferite formate
+// Funcții utilitare pentru export în diferite formate cu optimizare
 const exportToJSON = (data: any) => {
-  const content = JSON.stringify(data, null, 2);
-  const blob = new Blob([content], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `scraped-data-${Date.now()}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const optimizedData = createOptimizedJSONExport(data);
+  const content = JSON.stringify(optimizedData, null, 2);
+  const sizeMB = downloadOptimizedFile(content, `scraped-data-${Date.now()}.json`, 'application/json');
+  
+  toast({
+    title: "Export JSON finalizat",
+    description: `Fișier descărcat: ${sizeMB.toFixed(2)} MB (max 21MB)`,
+  });
 };
 
 const exportToCSV = (products: any[]) => {
-  let content = `ID,Nume,Preț,Categorie,Brand,Disponibilitate,Descriere,URL\n`;
-  content += products.map(product => 
-    `"${product.id}","${product.name}","${product.price}","${product.category}","${product.brand || ''}","${product.availability}","${product.description}","${product.url}"`
-  ).join('\n');
+  const content = createOptimizedCSVExport(products);
+  const sizeMB = downloadOptimizedFile(content, `products-${Date.now()}.csv`, 'text/csv');
   
-  const blob = new Blob([content], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `products-${Date.now()}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  toast({
+    title: "Export CSV finalizat",
+    description: `Fișier descărcat: ${sizeMB.toFixed(2)} MB (max 21MB)`,
+  });
 };
 
 const exportToHTML = (data: any) => {
-  const htmlContent = `<!DOCTYPE html>
-<html lang="ro">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Date Extrase - ${data.title}</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .product { border: 1px solid #ddd; margin: 10px 0; padding: 15px; }
-        .product h3 { color: #333; }
-        .price { font-weight: bold; color: #e74c3c; }
-        .meta { color: #666; font-size: 0.9em; }
-    </style>
-</head>
-<body>
-    <h1>Date Extrase din: ${data.url}</h1>
-    <p><strong>Titlu:</strong> ${data.title}</p>
-    <p><strong>Descriere:</strong> ${data.description}</p>
-    <p><strong>Data extragerii:</strong> ${new Date(data.timestamp).toLocaleString('ro-RO')}</p>
-    
-    <h2>Produse Găsite (${data.products.length})</h2>
-    ${data.products.map((product: any) => `
-        <div class="product">
-            <h3>${product.name}</h3>
-            <div class="price">Preț: ${product.price} ${product.currency || ''}</div>
-            ${product.originalPrice ? `<div class="meta">Preț original: ${product.originalPrice}</div>` : ''}
-            <div class="meta">Categorie: ${product.category}</div>
-            ${product.brand ? `<div class="meta">Brand: ${product.brand}</div>` : ''}
-            <div class="meta">Disponibilitate: ${product.availability}</div>
-            ${product.description ? `<p>${product.description}</p>` : ''}
-            ${product.images.length > 0 ? `<div class="meta">Imagini: ${product.images.length}</div>` : ''}
-        </div>
-    `).join('')}
-</body>
-</html>`;
-
-  const blob = new Blob([htmlContent], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `scraped-data-${Date.now()}.html`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const content = createOptimizedHTMLExport(data);
+  const sizeMB = downloadOptimizedFile(content, `scraped-data-${Date.now()}.html`, 'text/html');
+  
+  toast({
+    title: "Export HTML finalizat",
+    description: `Fișier descărcat: ${sizeMB.toFixed(2)} MB (max 21MB)`,
+  });
 };
 
 // Componentă principală Scraping
@@ -1174,6 +1133,10 @@ const Scraping = () => {
         <div className="flex items-center gap-2 mb-6">
           <Globe className="w-8 h-8 text-primary" />
           <h1 className="text-3xl font-bold text-foreground">Web Scraper Universal</h1>
+          <div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
+            <HardDrive className="w-4 h-4" />
+            <span>Export limitat la 21MB</span>
+          </div>
         </div>
 
         <Card className="liquid-glass">
@@ -1370,26 +1333,44 @@ const Scraping = () => {
                   size="sm"
                   variant="outline"
                   onClick={() => exportToJSON(scrapedData)}
+                  className="flex items-center gap-2"
                 >
-                  <Download className="w-4 h-4 mr-2" />
+                  <Download className="w-4 h-4" />
                   Export JSON
+                  <span className="text-xs opacity-70">(≤21MB)</span>
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => exportToCSV(scrapedData.products)}
+                  className="flex items-center gap-2"
                 >
-                  <Download className="w-4 h-4 mr-2" />
+                  <Download className="w-4 h-4" />
                   Export CSV
+                  <span className="text-xs opacity-70">(≤21MB)</span>
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => exportToHTML(scrapedData)}
+                  className="flex items-center gap-2"
                 >
-                  <Download className="w-4 h-4 mr-2" />
+                  <Download className="w-4 h-4" />
                   Export HTML
+                  <span className="text-xs opacity-70">(≤21MB)</span>
                 </Button>
+              </div>
+              
+              {/* Informații despre dimensiune */}
+              <div className="bg-muted/30 p-3 rounded-lg border border-border/50 mt-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <HardDrive className="w-4 h-4 text-blue-500" />
+                  <span className="font-medium">Optimizare automată:</span>
+                  <span className="text-muted-foreground">
+                    Fișierele vor fi automat optimizate pentru a nu depăși 21MB.
+                    Dacă datele sunt prea multe, descrierile vor fi scurtate și va fi exportat un număr limitat de produse.
+                  </span>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
