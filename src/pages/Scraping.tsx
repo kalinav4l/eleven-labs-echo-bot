@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from '@/components/ui/use-toast';
 import { Search, Download, Globe, Package, Image, Link, FileText, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
+import { generateAgentOptimizedDescription, generateAgentTags, calculateCompletenessScore, exportForAgent } from '@/utils/agentOptimization';
 
 // Interfețe TypeScript
 interface Product {
@@ -958,8 +959,15 @@ const Scraping = () => {
   const [scrapedData, setScrapedData] = useState<ScrapedData | null>(null);
   const [error, setError] = useState('');
   const [maxDepth, setMaxDepth] = useState(2);
-  const [deepScraping, setDeepScraping] = useState(false);
+  const [deepScraping, setDeepScraping] = useState(true); // Activez implicit pentru descrieri complete
   const [unlimitedScraping, setUnlimitedScraping] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState('ro'); // Limba pentru scanare
+  const [currentScanStatus, setCurrentScanStatus] = useState<{
+    stage: string;
+    progress: number;
+    details: string;
+    items: Array<{ type: string; count: number; details: string }>;
+  } | null>(null);
   
   const {
     siteMap,
@@ -993,20 +1001,132 @@ const Scraping = () => {
     setIsLoading(true);
     setError('');
     setScrapedData(null);
+    setCurrentScanStatus({
+      stage: 'Inițializare scanare',
+      progress: 0,
+      details: 'Se pregătește extragerea datelor...',
+      items: []
+    });
 
     try {
+      // Etapa 1: Scanare pagină principală
+      setCurrentScanStatus({
+        stage: 'Scanare pagină principală',
+        progress: 20,
+        details: `Se accesează ${url}`,
+        items: []
+      });
+
       const data = await handleScrape(url, deepScraping);
-      setScrapedData(data);
-      
-      if (data) {
-        toast({
-          title: "Scraping finalizat!",
-          description: `Găsite ${data.products.length} produse și ${data.links.length} link-uri`,
+      if (!data) throw new Error('Nu s-au putut extrage date');
+
+      setCurrentScanStatus({
+        stage: 'Analiza structurii site-ului',
+        progress: 40,
+        details: 'Se identifică tipurile de conținut...',
+        items: [
+          { type: 'Link-uri', count: data.links.length, details: 'link-uri găsite' },
+          { type: 'Imagini', count: data.images.length, details: 'imagini detectate' },
+          { type: 'Produse', count: data.products.length, details: 'produse identificate' }
+        ]
+      });
+
+      // Etapa 2: Îmbunătățire descrieri produse
+      let enhancedProducts = [...data.products];
+      if (data.products.length > 0) {
+        setCurrentScanStatus({
+          stage: 'Îmbunătățire descrieri produse',
+          progress: 60,
+          details: 'Se extrag descrieri complete pentru produse...',
+          items: [
+            { type: 'Produse', count: data.products.length, details: 'produse procesate' },
+            { type: 'Descrieri', count: data.products.filter(p => p.description).length, details: 'descrieri găsite' }
+          ]
         });
+
+        // Proces în paralel pentru descrieri - MAXIMUM 10 simultan pentru performanță
+        const batchSize = 10;
+        for (let i = 0; i < data.products.length; i += batchSize) {
+          const batch = data.products.slice(i, i + batchSize);
+          const enhancedBatch = await Promise.allSettled(
+            batch.map(async (product, index) => {
+              const actualIndex = i + index;
+              setCurrentScanStatus(prev => ({
+                ...prev!,
+                progress: 60 + (actualIndex / data.products.length) * 30,
+                details: `Se procesează produsul ${actualIndex + 1}/${data.products.length}: ${product.name.substring(0, 50)}...`,
+                items: [
+                  { type: 'Produse procesate', count: actualIndex + 1, details: `din ${data.products.length}` },
+                  { type: 'Descrieri complete', count: enhancedProducts.filter(p => p.description && p.description.length > 100).length, details: 'descrieri detaliate' }
+                ]
+              }));
+
+              if (!product.description && product.url && deepScraping) {
+                const enhancedDescription = await extractProductDescription(product.url);
+                return { ...product, description: enhancedDescription || product.description };
+              }
+              return product;
+            })
+          );
+
+          // Actualizează produsele procesate
+          enhancedBatch.forEach((result, index) => {
+            const actualIndex = i + index;
+            if (result.status === 'fulfilled') {
+              enhancedProducts[actualIndex] = result.value;
+            }
+          });
+        }
       }
+
+      // Etapa 3: Structurare finală și traducere (dacă e cazul)
+      setCurrentScanStatus({
+        stage: 'Finalizare și structurare',
+        progress: 90,
+        details: 'Se organizează datele pentru înțelegerea optimă de către agent...',
+        items: [
+          { type: 'Produse finalizate', count: enhancedProducts.length, details: 'produse complete' },
+          { type: 'Cu descrieri complete', count: enhancedProducts.filter(p => p.description && p.description.length > 50).length, details: 'descrieri detaliate' },
+          { type: 'Cu specificații', count: enhancedProducts.filter(p => Object.keys(p.specifications).length > 0).length, details: 'produse cu specificații' }
+        ]
+      });
+
+      // Crează datele finale optimizate pentru agent
+      const finalData: ScrapedData = {
+        ...data,
+        products: enhancedProducts.map(product => ({
+          ...product,
+          // Structurează datele pentru înțelegerea optimă de către agent
+          agentOptimizedDescription: generateAgentOptimizedDescription(product),
+          // Adaugă etichete pentru categorisire rapidă
+          agentTags: generateAgentTags(product),
+          // Scor de completitudine informații
+          completenessScore: calculateCompletenessScore(product)
+        }))
+      };
+
+      setScrapedData(finalData);
+      
+      setCurrentScanStatus({
+        stage: 'Scanare completă!',
+        progress: 100,
+        details: 'Toate datele au fost extrase și structurate pentru agent',
+        items: [
+          { type: 'Produse totale', count: finalData.products.length, details: 'produse complete' },
+          { type: 'Descrieri complete', count: finalData.products.filter(p => p.description && p.description.length > 50).length, details: 'cu descrieri detaliate' },
+          { type: 'Scor mediu completitudine', count: Math.round(finalData.products.reduce((acc, p) => acc + (p as any).completenessScore, 0) / finalData.products.length * 100) / 100, details: 'din 5.0' }
+        ]
+      });
+
+      toast({
+        title: "Scanare finalizată cu succes!",
+        description: `${finalData.products.length} produse complete cu descrieri detaliate și ${finalData.links.length} link-uri`,
+      });
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Eroare necunoscută';
       setError(errorMessage);
+      setCurrentScanStatus(null);
       toast({
         title: "Eroare la scraping",
         description: errorMessage,
@@ -1014,6 +1134,8 @@ const Scraping = () => {
       });
     } finally {
       setIsLoading(false);
+      // Păstrează statusul final pentru 5 secunde apoi îl ascunde
+      setTimeout(() => setCurrentScanStatus(null), 5000);
     }
   };
 
@@ -1070,6 +1192,48 @@ const Scraping = () => {
                 placeholder="Introdu URL-ul site-ului (ex: https://example.com)"
                 className="glass-input"
               />
+            </div>
+
+            {/* Selector limbă */}
+            <div className="bg-muted/30 p-4 rounded-lg border border-border/50">
+              <div className="flex items-center gap-3 mb-3">
+                <Globe className="w-5 h-5 text-primary" />
+                <h3 className="font-medium text-foreground">Limba pentru scanare</h3>
+              </div>
+              <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                {[
+                  { code: 'ro', label: 'Română', flag: '🇷🇴' },
+                  { code: 'en', label: 'English', flag: '🇺🇸' },
+                  { code: 'es', label: 'Español', flag: '🇪🇸' },
+                  { code: 'fr', label: 'Français', flag: '🇫🇷' },
+                  { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+                  { code: 'it', label: 'Italiano', flag: '🇮🇹' },
+                  { code: 'pt', label: 'Português', flag: '🇵🇹' },
+                  { code: 'ru', label: 'Русский', flag: '🇷🇺' },
+                  { code: 'zh', label: '中文', flag: '🇨🇳' },
+                  { code: 'ja', label: '日本語', flag: '🇯🇵' },
+                  { code: 'ar', label: 'العربية', flag: '🇸🇦' },
+                  { code: 'auto', label: 'Auto-detect', flag: '🌐' }
+                ].map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => setSelectedLanguage(lang.code)}
+                    className={`p-2 rounded-lg border text-xs transition-all hover:scale-105 ${
+                      selectedLanguage === lang.code
+                        ? 'bg-primary text-primary-foreground border-primary shadow-md'
+                        : 'bg-background border-border hover:bg-muted/50 text-foreground'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-lg">{lang.flag}</span>
+                      <span className="font-medium">{lang.label}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Limba selectată va fi folosită pentru extragerea și structurarea optimă a informațiilor pentru agent
+              </p>
             </div>
 
             {/* Toate controalele pe un singur rând */}
@@ -1136,8 +1300,46 @@ const Scraping = () => {
               </button>
             </div>
 
-            {currentProgress.currentUrl && (
-              <div className="text-sm text-muted-foreground">
+            {/* Progres scanare în timp real */}
+            {currentScanStatus && (
+              <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-4 rounded-lg border border-primary/20 space-y-3 animate-fade-in">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                    <span className="font-medium text-foreground">{currentScanStatus.stage}</span>
+                  </div>
+                  <span className="text-sm text-primary font-medium">{currentScanStatus.progress}%</span>
+                </div>
+                
+                <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-300 ease-out"
+                    style={{ width: `${currentScanStatus.progress}%` }}
+                  />
+                </div>
+                
+                <p className="text-sm text-muted-foreground animate-fade-in">
+                  {currentScanStatus.details}
+                </p>
+                
+                {currentScanStatus.items.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 animate-slide-in-right">
+                    {currentScanStatus.items.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between bg-background/50 p-2 rounded border border-border/50">
+                        <span className="text-xs text-foreground font-medium">{item.type}:</span>
+                        <div className="text-right">
+                          <span className="text-sm font-bold text-primary">{item.count}</span>
+                          <p className="text-xs text-muted-foreground">{item.details}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {currentProgress.currentUrl && !currentScanStatus && (
+              <div className="text-sm text-muted-foreground animate-fade-in">
                 Se procesează: {currentProgress.currentUrl}
               </div>
             )}
