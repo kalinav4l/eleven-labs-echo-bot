@@ -868,71 +868,48 @@ const Scraping = () => {
               />
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-6 items-start">
-              <div className="elevenlabs-card hover:bg-muted/50 border border-border p-6 rounded-lg w-full lg:w-auto">
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Search className="w-5 h-5 text-primary" />
-                    <h3 className="font-semibold text-foreground">Extragere Rapidă</h3>
-                  </div>
-                  <p className="text-muted-foreground text-sm mb-4">
-                    Extrage produse și informații din pagina curentă
-                  </p>
-                  <Button 
-                    onClick={handleSubmit} 
-                    disabled={isLoading}
-                    size="lg"
-                    className="elevenlabs-button w-full justify-center py-3 font-medium"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Se procesează...
-                      </>
-                    ) : (
-                      <>
-                        <Search className="w-5 h-5 mr-2" />
-                        Extrage Date din Pagină
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button 
+                  onClick={handleSubmit} 
+                  disabled={isLoading}
+                  className="elevenlabs-button flex-1 sm:flex-none"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Se procesează...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="w-4 h-4 mr-2" />
+                      Extrage Date
+                    </>
+                  )}
+                </Button>
 
-              <div className="elevenlabs-card hover:bg-muted/50 border border-border p-6 rounded-lg w-full lg:w-auto">
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Globe className="w-5 h-5 text-primary" />
-                    <h3 className="font-semibold text-foreground">Scanare Completă</h3>
-                  </div>
-                  <p className="text-muted-foreground text-sm mb-4">
-                    Scanează întreg site-ul la adâncimea selectată
-                  </p>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex flex-col">
-                      <label className="text-sm font-medium text-foreground mb-1">
-                        Adâncimea scanării:
-                      </label>
-                      <Input
-                        type="number"
-                        value={maxDepth}
-                        onChange={(e) => setMaxDepth(Number(e.target.value))}
-                        min="1"
-                        max="5"
-                        className="elevenlabs-input w-20 text-center font-medium"
-                      />
-                      <span className="text-xs text-muted-foreground mt-1">niveluri</span>
-                    </div>
-                  </div>
+                <div className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-muted/30">
+                  <span className="text-sm text-muted-foreground">Adâncime:</span>
+                  <select
+                    value={maxDepth}
+                    onChange={(e) => setMaxDepth(Number(e.target.value))}
+                    className="elevenlabs-input w-16 p-1 text-center"
+                  >
+                    <option value={1}>1</option>
+                    <option value={2}>2</option>
+                    <option value={3}>3</option>
+                    <option value={4}>4</option>
+                    <option value={5}>5</option>
+                  </select>
                   <Button
                     onClick={handleFullSiteScraping}
                     disabled={isLoading}
-                    size="lg"
                     variant="secondary"
-                    className="w-full justify-center py-3 font-medium hover:bg-secondary/80"
+                    size="sm"
+                    className="elevenlabs-button-secondary"
                   >
-                    <Globe className="w-5 h-5 mr-2" />
-                    Scanează Întreg Site-ul
+                    <Globe className="w-4 h-4 mr-1" />
+                    Scanează Site
                   </Button>
                 </div>
               </div>
