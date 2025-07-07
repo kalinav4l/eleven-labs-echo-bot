@@ -1048,110 +1048,161 @@ const Scraping = () => {
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center gap-2 mb-6">
-          <Globe className="w-8 h-8 text-primary" />
-          <h1 className="text-3xl font-bold text-foreground">Web Scraper Universal</h1>
-        </div>
-
-        <Card className="liquid-glass">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Search className="w-5 h-5" />
-              Extragere Date Website
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Input
-                type="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="Introdu URL-ul site-ului (ex: https://example.com)"
-                className="glass-input"
-              />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+        <div className="container mx-auto p-6 space-y-8">
+          {/* Header cu efect elegant */}
+          <div className="text-center space-y-4">
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 backdrop-blur-sm border border-blue-200/20">
+                <Globe className="h-10 w-10 text-blue-600" />
+              </div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+                Web Scraper Universal
+              </h1>
             </div>
+            <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+              Extrage date complete de pe orice website cu tehnologie avansată de scanare
+            </p>
+          </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-3">
-                <input
-                  type="checkbox"
-                  id="deepScraping"
-                  checked={deepScraping}
-                  onChange={(e) => setDeepScraping(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="deepScraping" className="text-sm text-muted-foreground">
-                  Scanare profundă (extrage descrieri din paginile produselor)
-                </label>
-              </div>
+          {/* Card principal cu design îmbunătățit */}
+          <div className="max-w-4xl mx-auto">
+            <Card className="border-0 shadow-2xl bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden ring-1 ring-gray-200/50">
+              <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50/50 border-b border-gray-100/50 p-8">
+                <CardTitle className="flex items-center gap-4 text-2xl">
+                  <div className="p-3 rounded-2xl bg-blue-500/10 border border-blue-200/20">
+                    <Search className="h-6 w-6 text-blue-600" />
+                  </div>
+                  Extragere Date Website
+                </CardTitle>
+              </CardHeader>
               
-              <div className="flex items-center gap-2 mb-3">
-                <input
-                  type="checkbox"
-                  id="unlimitedScraping"
-                  checked={unlimitedScraping}
-                  onChange={(e) => setUnlimitedScraping(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="unlimitedScraping" className="text-sm text-muted-foreground">
-                  Scanare nelimitată (continuă până extrage tot - poate dura mult)
-                </label>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button 
-                  onClick={handleSubmit} 
-                  disabled={isLoading}
-                  className="elevenlabs-button flex-1 sm:flex-none"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Se procesează...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="w-4 h-4 mr-2" />
-                      Extrage Date
-                    </>
-                  )}
-                </Button>
+              <CardContent className="p-8 space-y-8">
+                {/* Input URL cu design elegant */}
+                <div className="space-y-4">
+                  <label className="block text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                    URL Website
+                  </label>
+                  <div className="relative group">
+                    <Input
+                      type="url"
+                      value={url}
+                      onChange={(e) => setUrl(e.target.value)}
+                      placeholder="Introdu URL-ul site-ului (ex: https://example.com)"
+                      className="w-full pl-6 pr-14 py-4 text-lg rounded-2xl border-2 border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 group-hover:border-gray-300"
+                    />
+                    <Globe className="absolute right-5 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-400 group-hover:text-blue-500 transition-colors duration-200" />
+                  </div>
+                </div>
+                
+                {/* Opțiuni de scanare cu design îmbunătățit */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="group p-6 rounded-2xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-100 hover:border-emerald-200 transition-all duration-200 hover:shadow-lg">
+                    <div className="flex items-start space-x-4">
+                      <input
+                        type="checkbox"
+                        id="deepScraping"
+                        checked={deepScraping}
+                        onChange={(e) => setDeepScraping(e.target.checked)}
+                        className="w-6 h-6 text-emerald-600 bg-white border-2 border-emerald-300 rounded-lg focus:ring-emerald-500 focus:ring-2 mt-1"
+                      />
+                      <div className="flex-1">
+                        <label htmlFor="deepScraping" className="text-base font-semibold text-emerald-800 cursor-pointer">
+                          Scanare Profundă
+                        </label>
+                        <p className="text-sm text-emerald-600 mt-2 leading-relaxed">
+                          Extrage descrieri complete și detaliate din paginile individuale ale produselor
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="group p-6 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-100 hover:border-amber-200 transition-all duration-200 hover:shadow-lg">
+                    <div className="flex items-start space-x-4">
+                      <input
+                        type="checkbox"
+                        id="unlimitedScraping"
+                        checked={unlimitedScraping}
+                        onChange={(e) => setUnlimitedScraping(e.target.checked)}
+                        className="w-6 h-6 text-amber-600 bg-white border-2 border-amber-300 rounded-lg focus:ring-amber-500 focus:ring-2 mt-1"
+                      />
+                      <div className="flex-1">
+                        <label htmlFor="unlimitedScraping" className="text-base font-semibold text-amber-800 cursor-pointer">
+                          Scanare Nelimitată
+                        </label>
+                        <p className="text-sm text-amber-600 mt-2 leading-relaxed">
+                          Continuă până extrage tot conținutul disponibil fără restricții de număr
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-                <div className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-muted/30">
-                  <span className="text-sm text-muted-foreground">Adâncime:</span>
-                  <select
-                    value={maxDepth}
-                    onChange={(e) => setMaxDepth(Number(e.target.value))}
-                    className="elevenlabs-input w-16 p-1 text-center"
+                {/* Controale cu design elegant */}
+                <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-6 pt-4">
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={isLoading || !url.trim()}
+                    className="flex-1 h-14 text-lg font-semibold rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 disabled:transform-none"
                   >
-                    <option value={1}>1</option>
-                    <option value={2}>2</option>
-                    <option value={3}>3</option>
-                    <option value={4}>4</option>
-                    <option value={5}>5</option>
-                  </select>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="h-6 w-6 animate-spin mr-3" />
+                        Se procesează...
+                      </>
+                    ) : (
+                      <>
+                        <Search className="h-6 w-6 mr-3" />
+                        Extrage Date
+                      </>
+                    )}
+                  </Button>
+
+                  <div className="flex items-center gap-4 px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border-2 border-gray-200">
+                    <label htmlFor="maxDepth" className="text-base font-semibold text-gray-700 whitespace-nowrap">
+                      Adâncime:
+                    </label>
+                    <select
+                      id="maxDepth"
+                      value={maxDepth}
+                      onChange={(e) => setMaxDepth(Number(e.target.value))}
+                      className="bg-white border-2 border-gray-300 rounded-xl px-4 py-2 text-base font-medium focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 min-w-[4rem]"
+                    >
+                      <option value={1}>1</option>
+                      <option value={2}>2</option>
+                      <option value={3}>3</option>
+                      <option value={4}>4</option>
+                      <option value={5}>5</option>
+                    </select>
+                  </div>
+
                   <Button
                     onClick={handleFullSiteScraping}
-                    disabled={isLoading}
-                    variant="secondary"
-                    size="sm"
-                    className="elevenlabs-button-secondary"
+                    disabled={isLoading || !url.trim()}
+                    variant="outline"
+                    className="h-14 px-8 text-lg font-semibold rounded-2xl border-2 border-gray-300 hover:border-blue-300 hover:bg-blue-50 transition-all duration-300 transform hover:-translate-y-1"
                   >
-                    <Globe className="w-4 h-4 mr-1" />
+                    <Globe className="h-6 w-6 mr-3" />
                     Scanează Site
                   </Button>
                 </div>
-              </div>
-            </div>
 
-            {currentProgress.currentUrl && (
-              <div className="text-sm text-muted-foreground">
-                Se procesează: {currentProgress.currentUrl}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                {/* Progress indicator elegant */}
+                {currentProgress.currentUrl && (
+                  <div className="mt-4 p-4 bg-blue-50/50 rounded-xl border border-blue-200/50">
+                    <div className="flex items-center gap-3">
+                      <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                      <div>
+                        <p className="text-sm font-medium text-blue-900">Se procesează:</p>
+                        <p className="text-sm text-blue-700 truncate max-w-md">{currentProgress.currentUrl}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
         {error && (
           <Card className="border-destructive">
