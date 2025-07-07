@@ -2,6 +2,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./components/AuthContext";
+import { SettingsPanel } from "./components/SettingsPanel";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Account from "./pages/Account";
@@ -49,6 +50,7 @@ function App() {
             <Route path="/account/settings" element={<AccountSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <SettingsPanel />
         </QueryClientProvider>
       </AuthProvider>
     </BrowserRouter>
