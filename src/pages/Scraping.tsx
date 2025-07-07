@@ -1243,6 +1243,173 @@ const scrapeProductDetails = async (productUrl: string): Promise<any> => {
   }
 };
 
+// Funcții auxiliare pentru crawling sistematic
+const extractAllDataFromPage = async (doc: Document, url: string): Promise<ScrapedData> => {
+  const htmlContent = doc.documentElement.outerHTML;
+  return await extractAllContent(htmlContent, url);
+};
+
+const isProductPage = (doc: Document, url: string): boolean => {
+  // Detectează dacă o pagină este pagină de produs bazat pe indicatori comuni
+  const productIndicators = [
+    'div[class*="product"]',
+    'div[class*="item"]',
+    '[itemtype*="Product"]',
+    '.product-details',
+    '.product-info',
+    '.add-to-cart',
+    '.buy-now',
+    '.price',
+    '[data-product-id]'
+  ];
+  
+  const urlIndicators = [
+    '/product/',
+    '/item/',
+    '/p/',
+    '/prod/',
+    '/products/',
+    '/shop/'
+  ];
+  
+  // Verifică indicatori în HTML
+  const hasProductElements = productIndicators.some(selector => {
+    try {
+      return doc.querySelector(selector) !== null;
+    } catch {
+      return false;
+    }
+  });
+  
+  // Verifică indicatori în URL
+  const hasProductUrl = urlIndicators.some(indicator => 
+    url.toLowerCase().includes(indicator)
+  );
+  
+  return hasProductElements || hasProductUrl;
+};
+
+const scrapeIndividualProductPage = async (doc: Document, url: string, baseUrl: URL): Promise<Product | null> => {
+  try {
+    // Extrage date basic de produs
+    const name = (
+      doc.querySelector('h1')?.textContent ||
+      doc.querySelector('[class*="product-title"]')?.textContent ||
+      doc.querySelector('[class*="product-name"]')?.textContent ||
+      doc.querySelector('.title')?.textContent ||
+      'Produs necunoscut'
+    ).trim();
+
+    const description = (
+      doc.querySelector('[class*="product-description"]')?.textContent ||
+      doc.querySelector('[class*="description"]')?.textContent ||
+      doc.querySelector('meta[name="description"]')?.getAttribute('content') ||
+      ''
+    ).trim();
+
+    const price = (
+      doc.querySelector('[class*="price"]')?.textContent ||
+      doc.querySelector('[class*="cost"]')?.textContent ||
+      doc.querySelector('[data-price]')?.textContent ||
+      'Preț nedisponibil'
+    ).trim();
+
+    // Extrage imagini
+    const images: Array<{ src: string; alt: string; title: string; type: 'main' | 'gallery' | 'thumbnail' | 'zoom' }> = [];
+    const imgElements = doc.querySelectorAll('img');
+    
+    imgElements.forEach((img, index) => {
+      const src = img.getAttribute('src') || img.getAttribute('data-src') || '';
+      if (src && (src.startsWith('http') || src.startsWith('/'))) {
+        let fullSrc = src;
+        if (src.startsWith('/')) {
+          fullSrc = `${baseUrl.protocol}//${baseUrl.host}${src}`;
+        }
+        
+        images.push({
+          src: fullSrc,
+          alt: img.getAttribute('alt') || '',
+          title: img.getAttribute('title') || '',
+          type: index === 0 ? 'main' : 'gallery'
+        });
+      }
+    });
+
+    // Extrage specificații
+    const specifications: Record<string, string> = {};
+    const specElements = doc.querySelectorAll('[class*="spec"], [class*="detail"], tr');
+    
+    specElements.forEach(element => {
+      const text = element.textContent?.trim();
+      if (text && text.includes(':')) {
+        const [key, ...valueParts] = text.split(':');
+        const value = valueParts.join(':').trim();
+        if (key && value && key.length < 100 && value.length < 500) {
+          specifications[key.trim()] = value;
+        }
+      }
+    });
+
+    const product: Product = {
+      id: `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      name,
+      description,
+      price,
+      category: 'General',
+      images,
+      specifications,
+      features: [],
+      availability: 'Necunoscut',
+      url
+    };
+
+    return product;
+    
+  } catch (error) {
+    console.error('❌ Eroare la extragerea produsului individual:', error);
+    return null;
+  }
+};
+
+const discoverAllInternalLinks = (doc: Document, currentUrl: string, baseUrl?: URL, domain?: string): string[] => {
+  const urlObj = baseUrl || new URL(currentUrl);
+  const targetDomain = domain || urlObj.hostname;
+  const links: string[] = [];
+  
+  const linkElements = doc.querySelectorAll('a[href]');
+  
+  linkElements.forEach(link => {
+    try {
+      const href = link.getAttribute('href');
+      if (!href) return;
+      
+      let fullUrl = '';
+      if (href.startsWith('//')) {
+        fullUrl = 'https:' + href;
+      } else if (href.startsWith('/')) {
+        fullUrl = `${urlObj.protocol}//${urlObj.host}${href}`;
+      } else if (href.startsWith('http')) {
+        fullUrl = href;
+      } else {
+        fullUrl = new URL(href, currentUrl).href;
+      }
+      
+      const linkUrl = new URL(fullUrl);
+      
+      // Filtrează doar link-urile interne
+      if (linkUrl.hostname === targetDomain && 
+          !fullUrl.includes('#') &&
+          !fullUrl.match(/\.(pdf|jpg|jpeg|png|gif|svg|css|js|ico|xml|zip|doc|docx)$/i)) {
+        links.push(fullUrl);
+      }
+    } catch (error) {
+      // Ignoră URL-urile invalide
+    }
+  });
+  
+  return [...new Set(links)]; // Elimină duplicatele
+};
+
 // Funcția principală de scraping cu LOGICA SISTEMATICĂ DE CRAWLING ȘI EXTRAGERE COMPLETĂ
 const handleScrape = async (url: string, onProgress?: (current: number, total: number) => void): Promise<ScrapedData | null> => {
   try {
@@ -1440,243 +1607,6 @@ const handleScrape = async (url: string, onProgress?: (current: number, total: n
     
     console.log(`✅ REZULTAT FINAL GENERAT CU SUCCES!`);
     return rezultatFinal;
-    
-  } catch (error) {
-    console.error('❌ EROARE CRITICĂ la crawling sistematic:', error);
-    throw error;
-  }
-};
-    
-    console.log('🚀 Încep crawling-ul profund pentru:', url);
-    
-    while (urlsToVisit.length > 0 && processedPages < maxPages) {
-      const currentUrl = urlsToVisit.shift()!;
-      
-      // Skip dacă am vizitat deja această pagină
-      if (visitedUrls.has(currentUrl)) continue;
-      
-      try {
-        console.log(`📄 Procesez pagina ${processedPages + 1}: ${currentUrl}`);
-        
-        // Scrape pagina curentă
-        const htmlContent = await scrapePageWithProxy(currentUrl);
-        if (!htmlContent || htmlContent.length < 100) {
-          console.log(`⚠️ Conținut invalid pentru: ${currentUrl}`);
-          continue;
-        }
-        
-        const pageData = await extractAllContent(htmlContent, currentUrl);
-        visitedUrls.add(currentUrl);
-        processedPages++;
-        
-        // Prima pagină devine pagina principală
-        if (!mainData) {
-          mainData = pageData;
-        }
-        
-        // Pentru fiecare produs găsit, fă scraping profund individual
-        const enhancedProducts: Product[] = [];
-        for (const product of pageData.products) {
-          let enhancedProduct = { ...product };
-          
-          // Dacă produsul are un link, fă scraping profund
-          if (product.url && product.url !== currentUrl) {
-            try {
-              console.log(`🔍 Analizez produsul: ${product.name}`);
-              const productDetails = await scrapeProductDetails(product.url);
-              
-              if (productDetails) {
-                // Combină informațiile existente cu cele noi
-                enhancedProduct = {
-                  ...enhancedProduct,
-                  name: productDetails.title || enhancedProduct.name,
-                  description: productDetails.description || enhancedProduct.description,
-                  price: productDetails.price || enhancedProduct.price,
-                  specifications: {
-                    ...enhancedProduct.specifications,
-                    ...productDetails.specifications
-                  },
-                  brand: productDetails.brand || enhancedProduct.brand,
-                  availability: productDetails.availability || enhancedProduct.availability,
-                  category: productDetails.category || enhancedProduct.category,
-                  rating: productDetails.rating || enhancedProduct.rating,
-                };
-                
-                // Adaugă imaginile noi
-                if (productDetails.images && productDetails.images.length > 0) {
-                  const existingImages = enhancedProduct.images.map(img => img.src);
-                  const newImages = productDetails.images
-                    .filter((img: any) => !existingImages.includes(img.src))
-                    .map((img: any) => ({
-                      src: img.src,
-                      alt: img.alt || '',
-                      title: img.title || '',
-                      type: 'gallery' as const
-                    }));
-                  enhancedProduct.images = [...enhancedProduct.images, ...newImages];
-                }
-                
-                // Adaugă informații suplimentare
-                if (productDetails.dimensions) {
-                  enhancedProduct.specifications = {
-                    ...enhancedProduct.specifications,
-                    'Dimensiuni': JSON.stringify(productDetails.dimensions)
-                  };
-                }
-                
-                if (productDetails.additionalInfo && productDetails.additionalInfo.length > 0) {
-                  enhancedProduct.features = [
-                    ...enhancedProduct.features,
-                    ...productDetails.additionalInfo.slice(0, 10)
-                  ];
-                }
-                
-                if (productDetails.fullPageContent) {
-                  enhancedProduct.specifications = {
-                    ...enhancedProduct.specifications,
-                    'Conținut complet pagină': productDetails.fullPageContent.substring(0, 1000)
-                  };
-                }
-              }
-              
-              // Pauză între cererile de produse
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              
-            } catch (productError) {
-              console.error(`❌ Eroare la scraping produs ${product.name}:`, productError);
-            }
-          }
-          
-          enhancedProducts.push(enhancedProduct);
-        }
-        
-        // Adaugă produsele îmbunătățite la lista globală
-        enhancedProducts.forEach(product => {
-          const exists = allProducts.some(existing => 
-            existing.name === product.name && existing.price === product.price
-          );
-          if (!exists) {
-            allProducts.push(product);
-          }
-        });
-        
-        // Adaugă link-urile unice
-        pageData.links.forEach(link => {
-          const exists = allLinks.some(existing => existing.url === link.url);
-          if (!exists) {
-            allLinks.push({
-              url: link.url,
-              text: link.text,
-              type: link.type,
-              target: link.target || '',
-              title: link.title || ''
-            });
-          }
-        });
-        
-        // Adaugă imaginile unice
-        pageData.images.forEach(image => {
-          const exists = allImages.some(existing => existing.src === image.src);
-          if (!exists) {
-            allImages.push({
-              src: image.src,
-              alt: image.alt,
-              title: image.title,
-              width: image.width || '',
-              height: image.height || '',
-              loading: image.loading || ''
-            });
-          }
-        });
-        
-        // Detectează toate link-urile interne de pe pagina curentă
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlContent, 'text/html');
-        const internalLinks = detectAllInternalLinks(doc, currentUrl);
-        
-        // Adaugă link-urile noi în coada de vizitat
-        internalLinks.forEach(link => {
-          if (!visitedUrls.has(link) && !urlsToVisit.includes(link)) {
-        // Extrage toate datele de pe pagina curentă
-        const scrapedPageData = await extractAllDataFromPage(doc, urlCurent);
-        dateleToatePaginilor.push(scrapedPageData);
-        
-        // Salvează prima pagină ca date principale
-        if (!mainData) {
-          mainData = scrapedPageData;
-        }
-        
-        // Adaugă produsele găsite
-        produseTotale.push(...scrapedPageData.products);
-        linkuriTotale.push(...scrapedPageData.links);
-        imaginiTotale.push(...scrapedPageData.images);
-
-        // Descoperă link-uri noi pentru crawling
-        const linkuriNoi = doc.querySelectorAll('a[href]');
-        let linkuriAdaugate = 0;
-        
-        linkuriNoi.forEach(link => {
-          try {
-            const href = link.getAttribute('href');
-            if (!href) return;
-            
-            let urlNou = '';
-            if (href.startsWith('//')) {
-              urlNou = 'https:' + href;
-            } else if (href.startsWith('/')) {
-              urlNou = `${baseUrl.protocol}//${baseUrl.host}${href}`;
-            } else if (href.startsWith('http')) {
-              urlNou = href;
-            } else {
-              urlNou = new URL(href, urlCurent).href;
-            }
-            
-            const urlNouObj = new URL(urlNou);
-            
-            // Filtrează link-urile
-            if (urlNouObj.hostname === domeniuPrincipal && 
-                !urlsVizitate.has(urlNou) && 
-                !urlsDeVizitat.includes(urlNou) &&
-                !urlNou.includes('#') &&
-                !urlNou.match(/\.(pdf|jpg|jpeg|png|gif|svg|css|js|ico|xml|zip|doc|docx)$/i)) {
-              
-              urlsDeVizitat.push(urlNou);
-              linkuriAdaugate++;
-            }
-          } catch (error) {
-            // Ignoră erorile de URL invalid
-          }
-        });
-        
-        console.log(`✅ PAGINĂ ${pagineProcesate} PROCESATĂ CU SUCCES!`);
-        console.log(`📈 Statistici pagină: ${scrapedPageData.products.length} produse găsite`);
-        console.log(`➕ Link-uri noi adăugate în coadă: ${linkuriAdaugate}`);
-        console.log(`📊 Total produse până acum: ${produseTotale.length}`);
-        console.log(`🔗 Total link-uri în coadă: ${urlsDeVizitat.length}`);
-        
-        // Pauză între cereri pentru a evita blocarea
-        await new Promise(resolve => setTimeout(resolve, delayIntreRequest));
-        
-      } catch (pageError) {
-        console.error(`❌ Eroare la procesarea paginii ${urlCurent}:`, pageError);
-        continue;
-      }
-    }
-    
-    if (!mainData) {
-      throw new Error('Nu s-a putut procesa pagina principală - verifică URL-ul');
-    }
-    
-    console.log(`🎉 Crawling sistematic finalizat! Procesate ${pagineProcesate} pagini, găsite ${produseTotale.length} produse cu detalii complete`);
-    
-    // Returnează datele combinate cu informații din toate paginile
-    return {
-      ...mainData,
-      products: produseTotale,
-      links: linkuriTotale,
-      images: imaginiTotale,
-      text: mainData.text + `\n\n[CRAWLING SISTEMATIC FINALIZAT - ${pagineProcesate} PAGINI PROCESATE - ${produseTotale.length} PRODUSE CU DETALII COMPLETE]`
-    };
     
   } catch (error) {
     console.error('❌ EROARE CRITICĂ la crawling sistematic:', error);
