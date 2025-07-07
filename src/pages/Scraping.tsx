@@ -240,13 +240,23 @@ const extractSpecifications = (element: Element): Record<string, string> => {
   return specs;
 };
 
-// Funcție pentru extragerea descrierii de pe pagina produsului
+// Funcție pentru extragerea descrierii de pe pagina produsului cu error handling îmbunătățit
 const extractProductDescription = async (productUrl: string): Promise<string> => {
   try {
     const cleanUrl = productUrl.startsWith('http') ? productUrl : `https://${productUrl}`;
-    const productData = await handleScrape(cleanUrl);
+    console.log(`Încercare extragere descriere din: ${cleanUrl}`);
     
-    if (productData) {
+    // Timeout pentru a evita blocajele
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Timeout')), 10000);
+    });
+    
+    const productData = await Promise.race([
+      handleScrape(cleanUrl, false),
+      timeoutPromise
+    ]);
+    
+    if (productData && productData.text) {
       // Caută descrieri pe pagina produsului cu selectori mai specifici
       const parser = new DOMParser();
       const productDoc = parser.parseFromString(productData.text, 'text/html');
@@ -269,13 +279,14 @@ const extractProductDescription = async (productUrl: string): Promise<string> =>
         if (descElement && descElement.textContent?.trim()) {
           const descText = descElement.textContent.trim();
           if (descText.length > 50 && descText.length < 5000) {
+            console.log(`Descriere găsită cu selectorul ${selector}: ${descText.substring(0, 100)}...`);
             return descText;
           }
         }
       }
       
       // Fallback: extrage din conținutul text general
-      if (productData.text && productData.text.length > 100) {
+      if (productData.text.length > 100) {
         const sentences = productData.text.split(/[.!?]+/).filter(s => s.trim().length > 50);
         const validSentences = sentences.filter(s => 
           !s.match(/^[\d\s\.,\-€$£]+$/) && 
@@ -284,12 +295,15 @@ const extractProductDescription = async (productUrl: string): Promise<string> =>
           s.length < 1000
         );
         if (validSentences.length > 0) {
-          return validSentences.slice(0, 3).join('. ').trim();
+          const fallbackDesc = validSentences.slice(0, 3).join('. ').trim();
+          console.log(`Descriere fallback găsită: ${fallbackDesc.substring(0, 100)}...`);
+          return fallbackDesc;
         }
       }
     }
   } catch (error) {
-    console.error('Eroare la extragerea descrierii din pagina produsului:', error);
+    console.warn(`Nu s-a putut extrage descrierea din ${productUrl}:`, error);
+    // Nu aruncăm eroarea, doar o logăm
   }
   
   return '';
@@ -432,15 +446,19 @@ const detectProducts = async (doc: Document, targetUrl: string, deepScraping: bo
         if (product.description) break;
       }
 
-      // Dacă nu s-a găsit descriere și avem URL-ul produsului, accesează pagina pentru descriere
-      if (!product.description && productUrl && deepScraping) {
+      // Dacă nu s-a găsit descriere și avem URL-ul produsului, încearcă să acceseze pagina pentru descriere
+      // Dar doar pentru primele 5 produse pentru a nu suprasolicita proxy-urile
+      if (!product.description && productUrl && deepScraping && index < 5) {
         try {
+          console.log(`Încercare extragere descriere pentru produsul ${index + 1}: ${productUrl}`);
           const detailedDescription = await extractProductDescription(productUrl);
           if (detailedDescription) {
             product.description = detailedDescription;
+            console.log(`Descriere extrasă cu succes pentru produsul ${index + 1}`);
           }
         } catch (error) {
-          console.error(`Eroare la extragerea descrierii din ${productUrl}:`, error);
+          console.warn(`Nu s-a putut extrage descrierea din ${productUrl}:`, error);
+          // Continuă fără a bloca procesul
         }
       }
 
@@ -519,7 +537,7 @@ const detectProducts = async (doc: Document, targetUrl: string, deepScraping: bo
 };
 
 // Funcția principală de extragere a conținutului
-const extractAllContent = async (htmlContent: string, targetUrl: string): Promise<ScrapedData> => {
+const extractAllContent = async (htmlContent: string, targetUrl: string, deepScraping: boolean = false): Promise<ScrapedData> => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(htmlContent, 'text/html');
 
@@ -571,7 +589,7 @@ const extractAllContent = async (htmlContent: string, targetUrl: string): Promis
     style.getAttribute('href') || style.textContent || ''
   ).filter(Boolean);
 
-  const products = await detectProducts(doc, targetUrl, true);
+  const products = await detectProducts(doc, targetUrl, deepScraping);
 
   return {
     url: targetUrl,
@@ -592,7 +610,7 @@ const extractAllContent = async (htmlContent: string, targetUrl: string): Promis
 };
 
 // Funcția principală de scraping
-const handleScrape = async (url: string): Promise<ScrapedData | null> => {
+const handleScrape = async (url: string, deepScraping: boolean = false): Promise<ScrapedData | null> => {
   const proxyServices = [
     `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
     `https://cors-anywhere.herokuapp.com/${url}`,
@@ -637,7 +655,7 @@ const handleScrape = async (url: string): Promise<ScrapedData | null> => {
         throw new Error('Conținut HTML prea mic sau invalid');
       }
 
-      return await extractAllContent(htmlContent, url);
+      return await extractAllContent(htmlContent, url, deepScraping);
       
     } catch (err) {
       console.error(`Eroare cu proxy ${i + 1}:`, err);
@@ -678,7 +696,7 @@ const useFullSiteScraper = () => {
     }
   };
 
-  const startFullSiteScraping = useCallback(async (baseUrl: string, maxDepth: number = 3) => {
+  const startFullSiteScraping = useCallback(async (baseUrl: string, maxDepth: number = 3, deepScraping: boolean = false) => {
     const siteMapData: SiteMapData = {
       baseUrl,
       pages: [],
@@ -708,7 +726,7 @@ const useFullSiteScraper = () => {
       setCurrentProgress(prev => ({ ...prev, currentUrl: url, current: visitedUrls.size }));
       
       try {
-        const pageData = await handleScrape(url);
+        const pageData = await handleScrape(url, false); // Nu folosim deep scraping în full site scan pentru performanță
         if (pageData) {
           // Procesează linkurile pentru a continua crawling-ul
           pageData.links.forEach(link => {
@@ -848,6 +866,7 @@ const Scraping = () => {
   const [scrapedData, setScrapedData] = useState<ScrapedData | null>(null);
   const [error, setError] = useState('');
   const [maxDepth, setMaxDepth] = useState(2);
+  const [deepScraping, setDeepScraping] = useState(false);
   
   const {
     siteMap,
@@ -883,7 +902,7 @@ const Scraping = () => {
     setScrapedData(null);
 
     try {
-      const data = await handleScrape(url);
+      const data = await handleScrape(url, deepScraping);
       setScrapedData(data);
       
       if (data) {
@@ -931,7 +950,7 @@ const Scraping = () => {
       description: `Se va scana site-ul la adâncimea ${maxDepth}`,
     });
 
-    await startFullSiteScraping(url, maxDepth);
+    await startFullSiteScraping(url, maxDepth, deepScraping);
   };
 
   return (
@@ -961,6 +980,19 @@ const Scraping = () => {
             </div>
 
             <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-3">
+                <input
+                  type="checkbox"
+                  id="deepScraping"
+                  checked={deepScraping}
+                  onChange={(e) => setDeepScraping(e.target.checked)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="deepScraping" className="text-sm text-muted-foreground">
+                  Scanare profundă (extrage descrieri din paginile produselor - mai lent)
+                </label>
+              </div>
+              
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button 
                   onClick={handleSubmit} 
