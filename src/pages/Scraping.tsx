@@ -1102,12 +1102,12 @@ const Scraping = () => {
                 </div>
               </div>
               
-              {/* Toate butoanele pe un singur rând */}
-              <div className="flex flex-wrap items-center gap-3">
+              {/* Butoane de acțiune - design compact */}
+              <div className="flex flex-col sm:flex-row gap-3">
                 <Button 
                   onClick={handleSubmit} 
                   disabled={isLoading}
-                  className="h-9 px-4 text-sm bg-primary hover:bg-primary/90 text-primary-foreground"
+                  className="flex-1 h-9 text-sm bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   {isLoading ? (
                     <>
@@ -1127,16 +1127,7 @@ const Scraping = () => {
                   <select
                     value={maxDepth}
                     onChange={(e) => setMaxDepth(Number(e.target.value))}
-                    className="w-12 h-6 px-1 text-xs text-center border border-border rounded bg-background text-foreground z-50 relative transition-all duration-300 hover:scale-105 focus:scale-105 focus:border-primary focus:ring-2 focus:ring-primary/20 animate-pulse-on-change"
-                    style={{
-                      animation: 'none'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.animation = 'pulse 0.5s ease-in-out';
-                      setTimeout(() => {
-                        e.target.style.animation = 'none';
-                      }, 500);
-                    }}
+                    className="w-12 h-6 px-1 text-xs text-center border border-border rounded bg-background"
                   >
                     <option value={1}>1</option>
                     <option value={2}>2</option>
@@ -1144,17 +1135,17 @@ const Scraping = () => {
                     <option value={4}>4</option>
                     <option value={5}>5</option>
                   </select>
+                  <Button
+                    onClick={handleFullSiteScraping}
+                    disabled={isLoading}
+                    variant="secondary"
+                    size="sm"
+                    className="h-6 px-2 text-xs"
+                  >
+                    <Globe className="w-3 h-3 mr-1" />
+                    Scanează Site
+                  </Button>
                 </div>
-                
-                <Button
-                  onClick={handleFullSiteScraping}
-                  disabled={isLoading}
-                  variant="secondary"
-                  className="h-9 px-3 text-sm bg-secondary hover:bg-secondary/80 text-secondary-foreground"
-                >
-                  <Globe className="w-4 h-4 mr-2" />
-                  Scanează Site
-                </Button>
               </div>
             </div>
 
