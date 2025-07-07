@@ -240,8 +240,63 @@ const extractSpecifications = (element: Element): Record<string, string> => {
   return specs;
 };
 
+// Funcție pentru extragerea descrierii de pe pagina produsului
+const extractProductDescription = async (productUrl: string): Promise<string> => {
+  try {
+    const cleanUrl = productUrl.startsWith('http') ? productUrl : `https://${productUrl}`;
+    const productData = await handleScrape(cleanUrl);
+    
+    if (productData) {
+      // Caută descrieri pe pagina produsului cu selectori mai specifici
+      const parser = new DOMParser();
+      const productDoc = parser.parseFromString(productData.text, 'text/html');
+      
+      const descriptionSelectors = [
+        '.product-description, .product-desc, .description',
+        '.product-details, .product-info, .details',
+        '.product-content, .content, .main-content',
+        '[data-description], [data-desc]',
+        '.tab-content, .tab-pane',
+        '.product-summary, .summary',
+        '.product-overview, .overview',
+        '.specifications, .specs, .features',
+        'article, .article',
+        '.text-content, .rich-text'
+      ];
+
+      for (const selector of descriptionSelectors) {
+        const descElement = productDoc.querySelector(selector);
+        if (descElement && descElement.textContent?.trim()) {
+          const descText = descElement.textContent.trim();
+          if (descText.length > 50 && descText.length < 5000) {
+            return descText;
+          }
+        }
+      }
+      
+      // Fallback: extrage din conținutul text general
+      if (productData.text && productData.text.length > 100) {
+        const sentences = productData.text.split(/[.!?]+/).filter(s => s.trim().length > 50);
+        const validSentences = sentences.filter(s => 
+          !s.match(/^[\d\s\.,\-€$£]+$/) && 
+          !s.toLowerCase().includes('cookie') &&
+          !s.toLowerCase().includes('javascript') &&
+          s.length < 1000
+        );
+        if (validSentences.length > 0) {
+          return validSentences.slice(0, 3).join('. ').trim();
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Eroare la extragerea descrierii din pagina produsului:', error);
+  }
+  
+  return '';
+};
+
 // Funcția principală de detectare a produselor
-const detectProducts = (doc: Document, targetUrl: string): Product[] => {
+const detectProducts = async (doc: Document, targetUrl: string, deepScraping: boolean = false): Promise<Product[]> => {
   const products: Product[] = [];
   
   const productSelectors = [
@@ -277,7 +332,8 @@ const detectProducts = (doc: Document, targetUrl: string): Product[] => {
     });
   }
 
-  foundProducts.forEach((productElement, index) => {
+  for (let index = 0; index < foundProducts.length; index++) {
+    const productElement = foundProducts[index];
     try {
       const product: Product = {
         id: `product_${Date.now()}_${index}`,
@@ -320,6 +376,30 @@ const detectProducts = (doc: Document, targetUrl: string): Product[] => {
       product.discountPercentage = priceInfo.discountPercentage;
       product.currency = priceInfo.currency;
 
+      // Extrage URL-ul produsului dacă există
+      let productUrl = '';
+      const linkSelectors = [
+        'a[href*="product"], a[href*="item"], a[href*="/p/"]',
+        'a[title], a.product-link, a.item-link',
+        'h1 a, h2 a, h3 a, h4 a',
+        '.title a, .name a, .product-title a'
+      ];
+      
+      for (const selector of linkSelectors) {
+        const linkElement = productElement.querySelector(selector);
+        if (linkElement) {
+          const href = linkElement.getAttribute('href');
+          if (href) {
+            productUrl = href.startsWith('http') ? href : new URL(href, targetUrl).href;
+            break;
+          }
+        }
+      }
+      
+      if (productUrl) {
+        product.url = productUrl;
+      }
+
       // Extrage descrierea - versiune îmbunătățită
       const descSelectors = [
         '.description, .desc, .summary, .content, .product-description',
@@ -352,7 +432,19 @@ const detectProducts = (doc: Document, targetUrl: string): Product[] => {
         if (product.description) break;
       }
 
-      // Dacă nu s-a găsit descriere, încearcă să extragă din textul general
+      // Dacă nu s-a găsit descriere și avem URL-ul produsului, accesează pagina pentru descriere
+      if (!product.description && productUrl && deepScraping) {
+        try {
+          const detailedDescription = await extractProductDescription(productUrl);
+          if (detailedDescription) {
+            product.description = detailedDescription;
+          }
+        } catch (error) {
+          console.error(`Eroare la extragerea descrierii din ${productUrl}:`, error);
+        }
+      }
+
+      // Dacă tot nu s-a găsit descriere, încearcă să extragă din textul general
       if (!product.description) {
         const allText = productElement.textContent || '';
         const sentences = allText.split(/[.!?]+/).filter(s => s.trim().length > 30);
@@ -421,7 +513,7 @@ const detectProducts = (doc: Document, targetUrl: string): Product[] => {
     } catch (error) {
       console.error(`Eroare la extragerea produsului ${index + 1}:`, error);
     }
-  });
+  }
 
   return products;
 };
@@ -479,7 +571,7 @@ const extractAllContent = async (htmlContent: string, targetUrl: string): Promis
     style.getAttribute('href') || style.textContent || ''
   ).filter(Boolean);
 
-  const products = detectProducts(doc, targetUrl);
+  const products = await detectProducts(doc, targetUrl, true);
 
   return {
     url: targetUrl,
@@ -1053,51 +1145,84 @@ const Scraping = () => {
                 </TabsContent>
 
                 <TabsContent value="products">
-                  <ScrollArea className="h-[600px]">
-                    <div className="space-y-4">
-                      {scrapedData.products.map((product, index) => (
-                        <Card key={product.id} className="p-4">
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-start">
-                              <h4 className="font-semibold text-lg">{product.name}</h4>
-                              {product.price && (
-                                <Badge variant="secondary" className="text-lg">
-                                  {product.price} {product.currency}
-                                </Badge>
-                              )}
-                            </div>
-                            
-                            {product.description && (
-                              <p className="text-sm text-muted-foreground">
-                                {product.description.substring(0, 200)}...
-                              </p>
-                            )}
-                            
-                            <div className="flex flex-wrap gap-2">
-                              <Badge variant="outline">{product.category}</Badge>
-                              <Badge variant="outline">{product.availability}</Badge>
-                              {product.images.length > 0 && (
-                                <Badge variant="outline">{product.images.length} imagini</Badge>
-                              )}
-                            </div>
-
-                            {Object.keys(product.specifications).length > 0 && (
-                              <div>
-                                <p className="font-medium text-sm">Specificații:</p>
-                                <div className="grid grid-cols-2 gap-2 text-xs">
-                                  {Object.entries(product.specifications).slice(0, 4).map(([key, value]) => (
-                                    <div key={key}>
-                                      <span className="font-medium">{key}:</span> {value}
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </Card>
-                      ))}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold">Produse Extrase - Vizualizare CSV</h3>
+                      <Button
+                        onClick={() => exportToCSV(scrapedData.products)}
+                        size="sm"
+                        variant="outline"
+                        className="elevenlabs-button-secondary"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Descarcă CSV
+                      </Button>
                     </div>
-                  </ScrollArea>
+                    
+                    <div className="border border-border rounded-lg overflow-hidden">
+                      <div className="bg-muted/50 max-h-[500px] overflow-auto">
+                        <table className="w-full text-sm">
+                          <thead className="sticky top-0 bg-muted border-b">
+                            <tr>
+                              <th className="text-left p-3 font-medium min-w-[200px]">Nume</th>
+                              <th className="text-left p-3 font-medium min-w-[100px]">Preț</th>
+                              <th className="text-left p-3 font-medium min-w-[120px]">Categorie</th>
+                              <th className="text-left p-3 font-medium min-w-[100px]">Brand</th>
+                              <th className="text-left p-3 font-medium min-w-[120px]">Disponibilitate</th>
+                              <th className="text-left p-3 font-medium min-w-[300px]">Descriere</th>
+                              <th className="text-left p-3 font-medium min-w-[80px]">URL</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {scrapedData.products.map((product: any, index: number) => (
+                              <tr key={index} className="border-b border-border/50 hover:bg-muted/30">
+                                <td className="p-3 font-medium">{product.name || '-'}</td>
+                                <td className="p-3">{product.price ? `${product.price} ${product.currency || ''}` : '-'}</td>
+                                <td className="p-3">{product.category || '-'}</td>
+                                <td className="p-3">{product.brand || '-'}</td>
+                                <td className="p-3">{product.availability || '-'}</td>
+                                <td className="p-3 max-w-[300px]">
+                                  {product.description ? (
+                                    <div className="space-y-1">
+                                      <p className="text-xs text-muted-foreground">
+                                        {product.description.length > 200 
+                                          ? `${product.description.substring(0, 200)}...` 
+                                          : product.description}
+                                      </p>
+                                      {product.description.length > 200 && (
+                                        <details className="cursor-pointer">
+                                          <summary className="text-xs text-primary hover:underline">Vezi tot</summary>
+                                          <p className="text-xs mt-1">{product.description}</p>
+                                        </details>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <span className="text-muted-foreground italic text-xs">
+                                      Fără descriere
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="p-3">
+                                  {product.url ? (
+                                    <a href={product.url} target="_blank" rel="noopener noreferrer" 
+                                       className="text-primary hover:underline text-xs">
+                                      Vezi
+                                    </a>
+                                  ) : '-'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    
+                    <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
+                      <strong>Total produse:</strong> {scrapedData.products.length} | 
+                      <strong> Cu descriere:</strong> {scrapedData.products.filter((p: any) => p.description).length} |
+                      <strong> Fără descriere:</strong> {scrapedData.products.filter((p: any) => !p.description).length}
+                    </div>
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="links">
