@@ -1383,8 +1383,8 @@ const Scraping = () => {
                 <Button 
                   onClick={handleSubmit} 
                   disabled={isLoading}
-                  size="default"
-                  className={`h-10 transition-all duration-200 ${
+                  size="sm"
+                  className={`h-8 text-xs transition-all duration-200 ${
                     isLoading 
                       ? 'bg-black text-white' 
                       : 'bg-gray-500 hover:bg-black text-white'
@@ -1392,23 +1392,23 @@ const Scraping = () => {
                 >
                   {isLoading ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
                       Se procesează...
                     </>
                   ) : (
                     <>
-                      <Search className="w-4 h-4 mr-2" />
+                      <Search className="w-3 h-3 mr-1" />
                       Extrage Date
                     </>
                   )}
                 </Button>
 
-                <div className="flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-lg bg-muted/30 h-10">
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">Adâncime:</span>
+                <div className="flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-lg bg-muted/30 h-8">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">Adâncime:</span>
                   <select
                     value={maxDepth}
                     onChange={(e) => setMaxDepth(Number(e.target.value))}
-                    className="elevenlabs-input w-16 p-1 text-center h-7"
+                    className="elevenlabs-input w-12 p-1 text-center h-6 text-xs"
                   >
                     <option value={1}>1</option>
                     <option value={2}>2</option>
@@ -1421,61 +1421,16 @@ const Scraping = () => {
                 <Button
                   onClick={handleFullSiteScraping}
                   disabled={isLoading}
-                  size="default"
-                  className={`h-10 transition-all duration-200 ${
+                  size="sm"
+                  className={`h-8 text-xs transition-all duration-200 ${
                     isLoading 
                       ? 'bg-black text-white' 
                       : 'bg-gray-500 hover:bg-black text-white'
                   }`}
                 >
-                  <Globe className="w-4 h-4 mr-2" />
+                  <Globe className="w-3 h-3 mr-1" />
                   Scanează Site
                 </Button>
-              </div>
-
-              {/* Opțiuni avansate de scanare */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                <div 
-                  onClick={() => setDeepScraping(!deepScraping)}
-                  className={`cursor-pointer p-4 rounded-lg border transition-all duration-200 ${
-                    deepScraping 
-                      ? 'bg-black text-white border-black' 
-                      : 'bg-gray-100 hover:bg-black hover:text-white border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                      deepScraping ? 'border-white bg-white' : 'border-gray-400'
-                    }`}>
-                      {deepScraping && <div className="w-3 h-3 bg-black rounded"></div>}
-                    </div>
-                    <div>
-                      <div className="font-medium">Scanare profundă</div>
-                      <div className="text-sm opacity-75">(extrage descrieri din paginile produselor)</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div 
-                  onClick={() => setUnlimitedScraping(!unlimitedScraping)}
-                  className={`cursor-pointer p-4 rounded-lg border transition-all duration-200 ${
-                    unlimitedScraping 
-                      ? 'bg-black text-white border-black' 
-                      : 'bg-gray-100 hover:bg-black hover:text-white border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                      unlimitedScraping ? 'border-white bg-white' : 'border-gray-400'
-                    }`}>
-                      {unlimitedScraping && <div className="w-3 h-3 bg-black rounded"></div>}
-                    </div>
-                    <div>
-                      <div className="font-medium">Scanare nelimitată</div>
-                      <div className="text-sm opacity-75">(continuă până extrage tot - poate dura mult)</div>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
 
