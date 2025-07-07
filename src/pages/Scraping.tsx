@@ -8,15 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/components/ui/use-toast';
-import { Search, Download, Globe, Package, Image, Link, FileText, AlertCircle, CheckCircle, Loader2, HardDrive } from 'lucide-react';
+import { Search, Download, Globe, Package, Image, Link, FileText, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { generateAgentOptimizedDescription, generateAgentTags, calculateCompletenessScore, exportForAgent } from '@/utils/agentOptimization';
-import { 
-  createOptimizedJSONExport, 
-  createOptimizedCSVExport, 
-  createOptimizedHTMLExport, 
-  downloadOptimizedFile 
-} from '@/utils/exportOptimization';
 
 // Interfețe TypeScript
 interface Product {
@@ -247,143 +240,409 @@ const extractSpecifications = (element: Element): Record<string, string> => {
   return specs;
 };
 
-// Funcție pentru extragerea descrierii de pe pagina produsului cu extragere MAXIMĂ
+// Proxy-uri noi și funcționale
+const proxyList = [
+  'https://cors.bridged.cc/', // Proxy nou, foarte rapid
+  'https://proxy.cors.sh/', // Proxy specialized pentru scraping
+  'https://corsproxy.org/?', // Proxy stabil
+  'https://api.allorigins.win/raw?url=', // Backup cunoscut
+  'https://yacdn.org/proxy/', // Proxy avansat
+  'https://cors-anywhere.herokuapp.com/', // Ultimul fallback
+];
+
+// Sistem inteligent de cache pentru optimizare
+const urlCache = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minute
+
+// Funcția îmbunătățită handleScrape cu sistem avansat de retry și fallback
+const handleScrape = async (targetUrl: string, useProxy: boolean = true): Promise<any> => {
+  console.log(`🔍 Scraping avansat pentru: ${targetUrl}`);
+  
+  // Verifică cache-ul mai întâi
+  const cacheKey = targetUrl;
+  const cached = urlCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    console.log(`📦 Folosind date din cache pentru ${targetUrl}`);
+    return cached.data;
+  }
+
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => reject(new Error('Timeout după 15 secunde')), 15000);
+  });
+
+  const tryProxyRequest = async (proxy: string, index: number): Promise<any> => {
+    try {
+      const proxiedUrl = proxy.includes('allorigins') 
+        ? proxy + encodeURIComponent(targetUrl)
+        : proxy + targetUrl;
+      
+      console.log(`🚀 Proxy ${index + 1}/${proxyList.length}: ${proxy.split('/')[2]}...`);
+      
+      const response = await fetch(proxiedUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept-Language': 'ro-RO,ro;q=0.9,en-US;q=0.8,en;q=0.7',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'none',
+          'Upgrade-Insecure-Requests': '1',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      let responseData;
+      const contentType = response.headers.get('content-type') || '';
+      
+      if (contentType.includes('application/json')) {
+        const jsonData = await response.json();
+        responseData = { text: jsonData.contents || jsonData.data || jsonData.text || '' };
+      } else {
+        const htmlText = await response.text();
+        responseData = { text: htmlText };
+      }
+
+      // Salvează în cache dacă succesul
+      urlCache.set(cacheKey, {
+        data: responseData,
+        timestamp: Date.now()
+      });
+
+      console.log(`✅ Proxy ${index + 1} a funcționat! Dimensiune: ${responseData.text?.length || 0} caractere`);
+      return responseData;
+      
+    } catch (error) {
+      console.warn(`❌ Proxy ${index + 1} eșuat:`, error.message);
+      throw error;
+    }
+  };
+
+  if (!useProxy) {
+    try {
+      console.log(`🌐 Încercare directă fără proxy...`);
+      const response = await Promise.race([
+        fetch(targetUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          }
+        }),
+        timeoutPromise
+      ]);
+      const data = { text: await response.text() };
+      
+      // Salvează în cache
+      urlCache.set(cacheKey, {
+        data: data,
+        timestamp: Date.now()
+      });
+      
+      return data;
+    } catch (error) {
+      console.error('❌ Conexiune directă eșuată:', error);
+      throw error;
+    }
+  }
+
+  // Încearcă proxy-urile unul câte unul, în paralel pentru primele 3
+  const promises = proxyList.slice(0, 3).map((proxy, index) => 
+    tryProxyRequest(proxy, index)
+  );
+
+  try {
+    // Încearcă primele 3 proxy-uri în paralel
+    return await Promise.race([
+      Promise.race(promises),
+      timeoutPromise
+    ]);
+  } catch (error) {
+    console.warn('🔄 Primele proxy-uri au eșuat, încearcă backup-urile...');
+    
+    // Încearcă proxy-urile de backup unul câte unul
+    for (let i = 3; i < proxyList.length; i++) {
+      try {
+        return await Promise.race([
+          tryProxyRequest(proxyList[i], i),
+          timeoutPromise
+        ]);
+      } catch (backupError) {
+        console.warn(`Proxy backup ${i + 1} eșuat`);
+        continue;
+      }
+    }
+    
+    throw new Error('🚫 Toate proxy-urile au eșuat - site-ul poate fi blocat sau indisponibil');
+  }
+};
+
+// Funcție ULTRA-AVANSATĂ pentru extragerea descrierii de pe pagina produsului
 const extractProductDescription = async (productUrl: string): Promise<string> => {
   try {
     const cleanUrl = productUrl.startsWith('http') ? productUrl : `https://${productUrl}`;
-    console.log(`Extragere COMPLETĂ descriere din: ${cleanUrl}`);
+    console.log(`🔍 Extragere ULTRA-COMPLETĂ descriere din: ${cleanUrl}`);
     
-    // Timeout pentru a evita blocajele
+    // Timeout mărit pentru site-uri complexe
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Timeout')), 15000); // Măresc timeout-ul
+      setTimeout(() => reject(new Error('Timeout după 20 secunde')), 20000);
     });
     
-    const productData = await Promise.race([
-      handleScrape(cleanUrl, false),
-      timeoutPromise
-    ]);
+    // Încearcă mai multe strategii în paralel
+    const strategies = [
+      () => handleScrape(cleanUrl, true),  // Cu proxy
+      () => handleScrape(cleanUrl, false), // Fără proxy
+    ];
+    
+    let productData;
+    for (const strategy of strategies) {
+      try {
+        productData = await Promise.race([strategy(), timeoutPromise]);
+        if (productData?.text) break;
+      } catch (error) {
+        console.warn('Strategie eșuată, încearcă următoarea...');
+        continue;
+      }
+    }
     
     if (productData && productData.text) {
       const parser = new DOMParser();
       const productDoc = parser.parseFromString(productData.text, 'text/html');
       
-      // SELECTORI EXTREM DE COMPLETI pentru descrieri
+      // SELECTORI ULTRA-COMPLETI pentru descrieri (peste 100 de variante)
       const descriptionSelectors = [
-        // Selectori specifici pentru produse
-        '.product-description, .product-desc, .description',
-        '.product-details, .product-info, .details',
+        // Selectori directi pentru descrieri
+        '.product-description, .product-desc, .description, .desc',
+        '.product-details, .product-info, .details, .info',
         '.product-content, .content, .main-content',
-        '[data-description], [data-desc]',
-        '.tab-content, .tab-pane',
-        '.product-summary, .summary',
-        '.product-overview, .overview',
-        '.specifications, .specs, .features',
-        'article, .article',
-        '.text-content, .rich-text',
+        '.product-summary, .summary, .overview',
+        '.product-overview, .product-about',
         
-        // Selectori avansați
-        '.product-description-content, .desc-content',
-        '.product-detail-description, .detail-description',
-        '.product-full-description, .full-description',
-        '.product-long-description, .long-description',
-        '.product-info-description, .info-description',
+        // Selectori cu atribute data
+        '[data-description], [data-desc], [data-content]',
+        '[data-product-description], [data-product-info]',
+        '[data-details], [data-summary]',
+        
+        // Selectori pentru tab-uri și acordeonuri
+        '.tab-content, .tab-pane, .tabcontent',
+        '.tab-description, .tab-descriere, .tab-detalii',
+        '.accordion-content, .collapse-content',
+        '.panel-body, .panel-content',
+        
+        // ID-uri comune
+        '#description, #descriere, #detalii, #informatii',
+        '#product-description, #product-details',
+        '#content, #main-content, #product-content',
+        '#overview, #summary, #about',
+        
+        // Selectori pentru magazine românești
         '.caracteristici, .caracteristici-produs',
-        '.descriere, .descriere-produs',
-        '.informatii, .informatii-produs',
-        '.detalii, .detalii-produs',
+        '.descriere, .descriere-produs, .descriere-completa',
+        '.informatii, .informatii-produs, .informatii-complete',
+        '.detalii, .detalii-produs, .detalii-complete',
+        '.specificatii, .specificatii-tehnice',
+        '.prezentare, .prezentare-produs',
         
         // Selectori pentru site-uri auto
-        '.vehicle-description, .auto-description',
-        '.car-description, .masina-description',
-        '.vehicle-details, .auto-details',
-        '.technical-data, .date-tehnice',
-        '.equipment, .echipament',
-        '.condition, .stare',
+        '.vehicle-description, .auto-description, .car-description',
+        '.masina-description, .vehicul-description',
+        '.vehicle-details, .auto-details, .car-details',
+        '.masina-details, .vehicul-details',
+        '.technical-data, .date-tehnice, .specificatii-tehnice',
+        '.equipment, .echipament, .dotari',
+        '.condition, .stare, .conditie',
+        '.history, .istoric, .istoricul',
         
-        // Selectori generici
-        '.main-desc, .main-description',
-        '.full-desc, .full-description',
-        '.long-desc, .long-description',
-        '.product-text, .item-text',
-        '.body-text, .content-text',
-        '.rich-content, .wysiwyg',
-        'section[class*="desc"]',
-        'div[class*="desc"]',
-        'p[class*="desc"]',
+        // Selectori pentru magazine de haine
+        '.product-composition, .composition',
+        '.care-instructions, .instructiuni-ingrijire',
+        '.size-guide, .ghid-marimi',
+        '.material, .material-info',
         
-        // Pentru tab-uri
-        '#description, #descriere, #detalii',
-        '.tab-description, .tab-descriere',
-        '.tabcontent, .tab-content',
-        '.accordion-content',
+        // Selectori pentru electronice
+        '.tech-specs, .technical-specifications',
+        '.features, .feature-list, .caracteristici-tehnice',
+        '.compatibility, .compatibilitate',
+        '.warranty, .garantie',
         
-        // Meta și structurale
-        'main, .main',
-        '.container .description',
-        '.row .description',
-        '.col .description'
+        // Selectori generici avansați
+        '.main-desc, .main-description, .primary-description',
+        '.full-desc, .full-description, .complete-description',
+        '.long-desc, .long-description, .detailed-description',
+        '.product-text, .item-text, .listing-text',
+        '.body-text, .content-text, .main-text',
+        '.rich-content, .wysiwyg, .editor-content',
+        '.user-content, .custom-content',
+        
+        // Selectori structurali
+        'main .description, main .content',
+        'article .description, article .content',
+        'section .description, section .content',
+        '.container .description, .container .content',
+        '.row .description, .col .description',
+        '.product-page .description',
+        '.item-page .description',
+        
+        // Selectori cu clase parțiale
+        '[class*="description"], [class*="desc"]',
+        '[class*="details"], [class*="info"]',
+        '[class*="content"], [class*="summary"]',
+        '[class*="features"], [class*="specs"]',
+        '[class*="caracteristici"], [class*="informatii"]',
+        
+        // Selectori pentru paragrafe și diviziuni
+        'div[class*="desc"], p[class*="desc"]',
+        'div[class*="details"], p[class*="details"]',
+        'div[class*="info"], p[class*="info"]',
+        'section[class*="desc"], section[class*="details"]',
+        
+        // Selectori pentru structuri complexe
+        '.product-info-tabs .description',
+        '.product-details-tabs .content',
+        '.product-accordion .description',
+        '.specification-table ~ .description',
+        '.price-box ~ .description',
+        
+        // Fallback-uri finale
+        'main, .main, article, .article',
+        '.primary-content, .secondary-content',
+        '.product-wrapper .content',
+        '.item-wrapper .content'
       ];
 
       let foundDescription = '';
+      let bestScore = 0;
       
-      // Caută în toate selectorii
+      console.log(`🔍 Căutare în ${descriptionSelectors.length} selectori...`);
+      
+      // Caută în toate selectorii cu sistem de scoring
       for (const selector of descriptionSelectors) {
-        const descElements = productDoc.querySelectorAll(selector);
-        for (const descElement of descElements) {
-          if (descElement && descElement.textContent?.trim()) {
-            const descText = descElement.textContent.trim();
-            // Verifică dacă textul este o descriere validă și nu prea scurtă
-            if (descText.length > 30 && descText.length < 10000 && 
-                !descText.match(/^[\d\s\.,\-€$£]+$/) && // Nu doar preturi
-                !descText.toLowerCase().includes('add to cart') &&
-                !descText.toLowerCase().includes('buy now') &&
-                !descText.toLowerCase().includes('cookie') &&
-                !descText.toLowerCase().includes('javascript')) {
+        try {
+          const descElements = productDoc.querySelectorAll(selector);
+          for (const descElement of descElements) {
+            if (descElement && descElement.textContent?.trim()) {
+              const descText = descElement.textContent.trim();
               
-              // Ia cea mai lungă descriere găsită
-              if (descText.length > foundDescription.length) {
+              // Sistem avansat de scoring pentru descrieri
+              let score = 0;
+              
+              // Punctaj pentru lungime (optim între 100-3000 caractere)
+              if (descText.length >= 100 && descText.length <= 3000) {
+                score += Math.min(descText.length / 10, 100);
+              } else if (descText.length > 50 && descText.length < 100) {
+                score += 20; // Descripții scurte, dar utile
+              }
+              
+              // Punctaj pentru cuvinte cheie relevante
+              const keywords = [
+                'caracteristici', 'specificații', 'descriere', 'detalii',
+                'features', 'specifications', 'description', 'details',
+                'produs', 'product', 'item', 'vehicul', 'mașină',
+                'material', 'dimensiuni', 'greutate', 'culoare'
+              ];
+              
+              keywords.forEach(keyword => {
+                if (descText.toLowerCase().includes(keyword)) {
+                  score += 10;
+                }
+              });
+              
+              // Penalizare pentru conținut neutil
+              const badWords = [
+                'add to cart', 'buy now', 'cumpără acum', 'adaugă în coș',
+                'cookies', 'javascript', 'loading', 'error',
+                'subscribe', 'newsletter', 'follow us'
+              ];
+              
+              badWords.forEach(badWord => {
+                if (descText.toLowerCase().includes(badWord)) {
+                  score -= 20;
+                }
+              });
+              
+              // Penalizare pentru texte care sunt doar numere/prețuri
+              if (/^[\d\s\.,\-€$£lei]+$/.test(descText)) {
+                score -= 50;
+              }
+              
+              // Bonificație pentru selectori mai specifici
+              if (selector.includes('description') || selector.includes('desc')) {
+                score += 15;
+              }
+              if (selector.includes('product')) {
+                score += 10;
+              }
+              if (selector.includes('caracteristici') || selector.includes('informatii')) {
+                score += 20; // Bonus pentru română
+              }
+              
+              // Actualizează dacă este cea mai bună descriere până acum
+              if (score > bestScore && score > 30) { // Minim 30 puncte pentru a fi considerată
+                bestScore = score;
                 foundDescription = descText;
-                console.log(`Descriere îmbunătățită găsită cu ${selector}: ${descText.length} caractere`);
+                console.log(`🎯 Descriere nouă găsită cu ${selector}: ${descText.length} chars, scor: ${score}`);
               }
             }
+          }
+        } catch (selectorError) {
+          // Ignore erori de selectori
+        }
+      }
+      
+      if (foundDescription && bestScore > 30) {
+        console.log(`✅ Descriere finală găsită: ${foundDescription.length} caractere, scor: ${bestScore}`);
+        return foundDescription;
+      }
+      
+      // Fallback EXTREM - extragere inteligentă din toate elementele
+      console.log(`🔄 Fallback: căutare în toate elementele...`);
+      const allElements = productDoc.querySelectorAll('p, div, span, li, td, th');
+      let bestFallbackDescription = '';
+      let bestFallbackScore = 0;
+      
+      for (const element of allElements) {
+        const text = element.textContent?.trim() || '';
+        if (text.length >= 80 && text.length <= 5000) {
+          let score = 0;
+          
+          // Scoring pentru fallback
+          score += Math.min(text.length / 15, 50);
+          
+          // Verifică dacă conține cuvinte relevante
+          if (/\b(caracteristici|specificații|descriere|features|specs|produs|product)\b/i.test(text)) {
+            score += 25;
+          }
+          
+          // Penalizare pentru conținut de navigare/UI
+          if (/\b(menu|navigation|header|footer|sidebar|cookie|login|register)\b/i.test(text)) {
+            score -= 30;
+          }
+          
+          if (score > bestFallbackScore && score > 20) {
+            bestFallbackScore = score;
+            bestFallbackDescription = text;
           }
         }
       }
       
-      if (foundDescription) {
-        return foundDescription;
-      }
-      
-      // Fallback EXTREM - extrage din paragrafe și divuri
-      const allParagraphs = productDoc.querySelectorAll('p, div');
-      let bestDescription = '';
-      
-      for (const element of allParagraphs) {
-        const text = element.textContent?.trim() || '';
-        if (text.length > 100 && text.length < 5000 && 
-            !text.match(/^[\d\s\.,\-€$£]+$/) && 
-            !text.toLowerCase().includes('cookie') &&
-            !text.toLowerCase().includes('price') &&
-            !text.toLowerCase().includes('buy') &&
-            text.length > bestDescription.length) {
-          bestDescription = text;
-        }
-      }
-      
-      if (bestDescription.length > 50) {
-        console.log(`Descriere fallback găsită: ${bestDescription.length} caractere`);
-        return bestDescription;
+      if (bestFallbackDescription.length > 60) {
+        console.log(`🆘 Descriere fallback găsită: ${bestFallbackDescription.length} caractere, scor: ${bestFallbackScore}`);
+        return bestFallbackDescription;
       }
     }
   } catch (error) {
-    console.warn(`Nu s-a putut extrage descrierea din ${productUrl}:`, error);
+    console.error(`❌ Eroare la extragerea descrierii din ${productUrl}:`, error);
   }
   
   return '';
 };
 
-// Funcția principală de detectare a produselor
-const detectProducts = async (doc: Document, targetUrl: string, deepScraping: boolean = false): Promise<Product[]> => {
+// Funcția principală de detectare a produselor ULTRA-AVANSATĂ
+const detectProducts = async (doc: Document, targetUrl: string, deepScraping: boolean = false, updateProgress?: (message: string) => void): Promise<Product[]> => {
   const products: Product[] = [];
   
   const productSelectors = [
@@ -419,6 +678,8 @@ const detectProducts = async (doc: Document, targetUrl: string, deepScraping: bo
     });
   }
 
+  console.log(`🛍️ Găsite ${foundProducts.length} produse potențiale în ${targetUrl}`);
+
   for (let index = 0; index < foundProducts.length; index++) {
     const productElement = foundProducts[index];
     try {
@@ -435,12 +696,14 @@ const detectProducts = async (doc: Document, targetUrl: string, deepScraping: bo
         url: targetUrl
       };
 
-      // Extrage numele produsului
+      // Extrage numele produsului cu selectori îmbunătățiți
       const titleSelectors = [
         'h1, h2, h3, h4, h5, h6',
         '.title, .name, .product-title, .product-name',
         '[class*="title"], [class*="name"]',
-        'a[title]'
+        'a[title]',
+        '.item-title, .listing-title',
+        '[data-title], [data-name]'
       ];
 
       for (const selector of titleSelectors) {
@@ -455,7 +718,7 @@ const detectProducts = async (doc: Document, targetUrl: string, deepScraping: bo
         }
       }
 
-      // Extrage informațiile despre preț
+      // Extrage informațiile despre preț cu algoritm îmbunătățit
       const priceInfo = extractPriceInfo(productElement);
       product.price = priceInfo.price;
       product.originalPrice = priceInfo.originalPrice;
@@ -463,13 +726,14 @@ const detectProducts = async (doc: Document, targetUrl: string, deepScraping: bo
       product.discountPercentage = priceInfo.discountPercentage;
       product.currency = priceInfo.currency;
 
-      // Extrage URL-ul produsului dacă există
+      // Extrage URL-ul produsului cu selectori îmbunătățiți
       let productUrl = '';
       const linkSelectors = [
         'a[href*="product"], a[href*="item"], a[href*="/p/"]',
         'a[title], a.product-link, a.item-link',
         'h1 a, h2 a, h3 a, h4 a',
-        '.title a, .name a, .product-title a'
+        '.title a, .name a, .product-title a',
+        '[data-url], [data-link]'
       ];
       
       for (const selector of linkSelectors) {
@@ -487,7 +751,7 @@ const detectProducts = async (doc: Document, targetUrl: string, deepScraping: bo
         product.url = productUrl;
       }
 
-      // Extrage descrierea - versiune MAXIMĂ
+      // Extrage descrierea cu selectori ULTRA-AVANSAȚI
       const descSelectors = [
         // Selectori de bază
         '.description, .desc, .summary, .content, .product-description',
@@ -505,1323 +769,868 @@ const detectProducts = async (doc: Document, targetUrl: string, deepScraping: bo
         '.vehicle-info, .auto-info, .car-info',
         '.masina-info, .vehicul-info',
         '.technical-specs, .tech-specs',
-        '.equipment, .echipament',
-        '.condition, .stare',
-        '.features, .caracteristici-principale',
-        
-        // Selectori structurali
-        '.product-item-desc, .item-description',
-        '.listing-description, .listing-desc',
-        '.card-description, .card-desc',
-        '.tile-description, .tile-desc',
-        
-        // Meta și altele
-        'article p, section p',
-        '.main p, .content p',
-        'div[class*="text"] p'
+        '.specifications, .specs, .features'
       ];
 
       let bestDescription = '';
-      
-      // Caută descripții în toate elementele posibile
       for (const selector of descSelectors) {
-        const descElements = productElement.querySelectorAll(selector);
-        for (const descElement of descElements) {
-          if (descElement && descElement.textContent?.trim()) {
-            const descText = descElement.textContent.trim();
-            // Verifică dacă textul este o descriere validă și ia cea mai lungă
-            if (descText.length > 20 && descText.length < 5000 && 
-                !descText.match(/^[\d\s\.,\-€$£]+$/) && // Nu doar preturi
-                !descText.toLowerCase().includes('add to cart') &&
-                !descText.toLowerCase().includes('buy now') &&
-                descText.length > bestDescription.length) {
-              bestDescription = descText;
-            }
+        const descElement = productElement.querySelector(selector);
+        if (descElement && descElement.textContent?.trim()) {
+          const descText = descElement.textContent.trim();
+          if (descText.length > 20 && descText.length < 2000 && 
+              !descText.match(/^[\d\s\.,\-€$£]+$/) &&
+              descText.length > bestDescription.length) {
+            bestDescription = descText;
           }
         }
       }
-      
-      if (bestDescription) {
-        product.description = bestDescription;
-      }
+      product.description = bestDescription;
 
-      // Dacă nu s-a găsit descriere și avem URL-ul produsului, încearcă să acceseze pagina pentru descriere
-      // FĂRĂ LIMITĂRI - pentru toate produsele
-      if (!product.description && productUrl && deepScraping) {
-        try {
-          console.log(`Încercare extragere descriere pentru produsul ${index + 1}: ${productUrl}`);
-          const detailedDescription = await extractProductDescription(productUrl);
-          if (detailedDescription) {
-            product.description = detailedDescription;
-            console.log(`Descriere extrasă cu succes pentru produsul ${index + 1}`);
-          }
-        } catch (error) {
-          console.warn(`Nu s-a putut extrage descrierea din ${productUrl}:`, error);
-          // Continuă fără a bloca procesul
-        }
-      }
-
-      // Dacă tot nu s-a găsit descriere, încearcă să extragă din textul general
-      if (!product.description) {
-        const allText = productElement.textContent || '';
-        const sentences = allText.split(/[.!?]+/).filter(s => s.trim().length > 30);
-        const validSentences = sentences.filter(s => 
-          !s.match(/^[\d\s\.,\-€$£]+$/) && 
-          !s.toLowerCase().includes('price') &&
-          !s.toLowerCase().includes('buy') &&
-          s.length < 500
-        );
-        if (validSentences.length > 0) {
-          product.description = validSentences[0].trim();
-        }
-      }
-
-      // Extrage imaginile
+      // Extrage imaginile cu algoritm avansat
       product.images = extractAllImages(productElement, targetUrl);
 
-      // Extrage categoria
-      const categorySelectors = [
-        '.breadcrumb, .breadcrumbs, .category, .categories',
-        '[class*="breadcrumb"], [class*="category"]',
-        'nav a, .nav a'
-      ];
-
-      const breadcrumbs: string[] = [];
-      for (const selector of categorySelectors) {
-        const categoryElements = productElement.querySelectorAll(selector);
-        categoryElements.forEach(el => {
-          const text = el.textContent?.trim();
-          if (text && text.length < 100 && !breadcrumbs.includes(text)) {
-            breadcrumbs.push(text);
-          }
-        });
-        if (breadcrumbs.length > 0) break;
-      }
-      
-      product.breadcrumbs = breadcrumbs;
-      product.category = breadcrumbs.join(' > ') || 'Necategorizat';
-
-      // Extrage specificațiile
+      // Extrage specificațiile cu algoritm îmbunătățit
       product.specifications = extractSpecifications(productElement);
 
-      // Extrage disponibilitatea
-      const availabilitySelectors = [
-        '.availability, .stock, .in-stock, .out-of-stock',
-        '[class*="availability"], [class*="stock"]'
-      ];
-
-      for (const selector of availabilitySelectors) {
-        const availElement = productElement.querySelector(selector);
-        if (availElement && availElement.textContent?.trim()) {
-          product.availability = availElement.textContent.trim();
-          break;
+      // Deep scraping ULTRA-AVANSAT pentru descrieri complete
+      if (deepScraping && productUrl && productUrl !== targetUrl) {
+        console.log(`🚀 Deep scraping ULTRA pentru produs: ${product.name}`);
+        
+        try {
+          // Timeout pentru fiecare produs individual
+          const descriptionPromise = extractProductDescription(productUrl);
+          const timeoutPromise = new Promise<string>((_, reject) => {
+            setTimeout(() => reject(new Error('Timeout per produs')), 25000);
+          });
+          
+          const detailedDescription = await Promise.race([
+            descriptionPromise,
+            timeoutPromise
+          ]);
+          
+          if (detailedDescription && detailedDescription.length > Math.max(product.description.length, 50)) {
+            product.description = detailedDescription;
+            console.log(`✅ Descriere ULTRA îmbunătățită pentru: ${product.name} (${detailedDescription.length} caractere)`);
+            
+            // Actualizează progresul în timp real
+            if (updateProgress) {
+              updateProgress(`Descriere extrasă pentru: ${product.name.substring(0, 40)}...`);
+            }
+          } else {
+            console.log(`⚠️ Descriere insuficientă pentru: ${product.name}`);
+          }
+        } catch (error) {
+          console.warn(`❌ Deep scraping eșuat pentru ${product.name}:`, error.message);
+          // Continuă cu următorul produs, nu se oprește
         }
       }
 
-      if (!product.availability) {
-        product.availability = 'Informații indisponibile';
-      }
-
-      // Adaugă produsul doar dacă are informații esențiale
-      if (product.name && (product.price || product.description || product.images.length > 0)) {
+      // Adaugă produsul dacă are informații de bază
+      if (product.name || product.price || product.images.length > 0) {
         products.push(product);
+        if (updateProgress) {
+          updateProgress(`Produs găsit: ${product.name || 'Produs fără nume'}`);
+        }
       }
 
     } catch (error) {
-      console.error(`Eroare la extragerea produsului ${index + 1}:`, error);
+      console.error(`Eroare la procesarea produsului ${index}:`, error);
     }
   }
 
+  console.log(`✅ Extragere finalizată: ${products.length} produse procesate din ${foundProducts.length} potențiale`);
   return products;
 };
 
-// Funcția principală de extragere a conținutului
-const extractAllContent = async (htmlContent: string, targetUrl: string, deepScraping: boolean = false): Promise<ScrapedData> => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(htmlContent, 'text/html');
-
-  const title = doc.querySelector('title')?.textContent || '';
-  const description = doc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
-  const keywords = doc.querySelector('meta[name="keywords"]')?.getAttribute('content') || '';
-  const textContent = doc.body?.textContent || '';
-
-  const links = Array.from(doc.querySelectorAll('a')).map(link => ({
-    url: link.href || link.getAttribute('href') || '',
-    text: link.textContent?.trim() || '',
-    type: link.getAttribute('rel') || 'link'
-  }));
-
-  const images = Array.from(doc.querySelectorAll('img')).map(img => ({
-    src: img.src || img.getAttribute('src') || '',
-    alt: img.alt || '',
-    title: img.title || ''
-  }));
-
-  const metadata: Record<string, string> = {};
-  Array.from(doc.querySelectorAll('meta')).forEach(meta => {
-    const name = meta.getAttribute('name') || meta.getAttribute('property') || meta.getAttribute('http-equiv');
-    const content = meta.getAttribute('content');
-    if (name && content) {
-      metadata[name] = content;
-    }
-  });
-
-  const headings = Array.from(doc.querySelectorAll('h1, h2, h3, h4, h5, h6')).map(heading => ({
-    level: parseInt(heading.tagName.replace('H', '')),
-    text: heading.textContent?.trim() || ''
-  }));
-
-  const forms = Array.from(doc.querySelectorAll('form')).map(form => ({
-    action: form.action || '',
-    method: form.method || 'GET',
-    inputs: Array.from(form.querySelectorAll('input, textarea, select')).map(input => ({
-      name: input.getAttribute('name') || '',
-      type: input.getAttribute('type') || input.tagName.toLowerCase()
-    }))
-  }));
-
-  const scripts = Array.from(doc.querySelectorAll('script')).map(script => 
-    script.src || script.textContent || ''
-  ).filter(Boolean);
-
-  const styles = Array.from(doc.querySelectorAll('link[rel="stylesheet"], style')).map(style => 
-    style.getAttribute('href') || style.textContent || ''
-  ).filter(Boolean);
-
-  const products = await detectProducts(doc, targetUrl, deepScraping);
-
-  return {
-    url: targetUrl,
-    title,
-    description,
-    keywords,
-    text: textContent,
-    links,
-    images,
-    metadata,
-    headings,
-    forms,
-    scripts,
-    styles,
-    products,
-    timestamp: new Date().toISOString()
-  };
-};
-
-// Funcția principală de scraping
-const handleScrape = async (url: string, deepScraping: boolean = false): Promise<ScrapedData | null> => {
-  const proxyServices = [
-    `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-    `https://cors-anywhere.herokuapp.com/${url}`,
-    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-    url
-  ];
-
-  for (let i = 0; i < proxyServices.length; i++) {
-    const proxyUrl = proxyServices[i];
-    
-    try {
-      const headers: any = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      };
-
-      if (proxyUrl.includes('cors-anywhere')) {
-        headers['X-Requested-With'] = 'XMLHttpRequest';
-      }
-
-      const response = await fetch(proxyUrl, {
-        method: 'GET',
-        headers: headers,
-        mode: 'cors',
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      let htmlContent = '';
-      
-      if (proxyUrl.includes('allorigins.win')) {
-        const data = await response.json();
-        htmlContent = data.contents;
-      } else if (proxyUrl.includes('codetabs.com')) {
-        htmlContent = await response.text();
-      } else {
-        htmlContent = await response.text();
-      }
-
-      if (!htmlContent || htmlContent.trim().length < 100) {
-        throw new Error('Conținut HTML prea mic sau invalid');
-      }
-
-      return await extractAllContent(htmlContent, url, deepScraping);
-      
-    } catch (err) {
-      console.error(`Eroare cu proxy ${i + 1}:`, err);
-      if (i === proxyServices.length - 1) {
-        throw err;
-      }
-    }
-  }
-  
-  return null;
-};
-
-// Hook personalizat pentru scraping complet al site-ului
-const useFullSiteScraper = () => {
-  const [siteMap, setSiteMap] = useState<SiteMapData | null>(null);
-  const [isScrapingComplete, setIsScrapingComplete] = useState(false);
-  const [currentProgress, setCurrentProgress] = useState({ current: 0, total: 0, currentUrl: '' });
-
-  const normalizeUrl = (url: string, baseUrl: string): string => {
-    try {
-      if (url.startsWith('//')) return 'https:' + url;
-      if (url.startsWith('/')) return new URL(baseUrl).origin + url;
-      if (url.startsWith('#') || url.startsWith('javascript:') || url.startsWith('mailto:') || url.startsWith('tel:')) return '';
-      if (!url.startsWith('http')) return new URL(url, baseUrl).href;
-      return url;
-    } catch {
-      return '';
-    }
-  };
-
-  const isSameDomain = (url: string, baseUrl: string): boolean => {
-    try {
-      const urlDomain = new URL(url).hostname;
-      const baseDomain = new URL(baseUrl).hostname;
-      return urlDomain === baseDomain;
-    } catch {
-      return false;
-    }
-  };
-
-  const startFullSiteScraping = useCallback(async (baseUrl: string, maxDepth: number = 3, deepScraping: boolean = false, unlimitedScraping: boolean = false) => {
-    const siteMapData: SiteMapData = {
-      baseUrl,
-      pages: [],
-      totalPages: 0,
-      scrapedPages: 0,
-      errorPages: 0,
-      startTime: new Date().toISOString(),
-      maxDepth
-    };
-
-    setSiteMap(siteMapData);
-    setIsScrapingComplete(false);
-
-    const visitedUrls = new Set<string>();
-    const urlsToVisit: Array<{ url: string; depth: number; parentUrl?: string }> = [
-      { url: baseUrl, depth: 0 }
-    ];
-
-    while (urlsToVisit.length > 0 && (unlimitedScraping || visitedUrls.size < 500)) { // Folosește unlimited sau 500
-      const { url, depth, parentUrl } = urlsToVisit.shift()!;
-      
-      if (visitedUrls.has(url) || depth > maxDepth) {
-        continue;
-      }
-
-      visitedUrls.add(url);
-      setCurrentProgress(prev => ({ ...prev, currentUrl: url, current: visitedUrls.size }));
-      
-      try {
-        const pageData = await handleScrape(url, false); // Nu folosim deep scraping în full site scan pentru performanță
-        if (pageData) {
-          // Procesează linkurile pentru a continua crawling-ul
-          pageData.links.forEach(link => {
-            const normalizedUrl = normalizeUrl(link.url, baseUrl);
-            if (normalizedUrl && 
-                isSameDomain(normalizedUrl, baseUrl) && 
-                !visitedUrls.has(normalizedUrl) && 
-                urlsToVisit.length < (unlimitedScraping ? 10000 : 1000)) { // Elimin limitele dacă e unlimited
-              urlsToVisit.push({ url: normalizedUrl, depth: depth + 1, parentUrl: url });
-            }
-          });
-
-          setSiteMap(prev => ({
-            ...prev!,
-            pages: [...prev!.pages, {
-              ...pageData,
-              id: `page_${Date.now()}_${visitedUrls.size}`,
-              depth,
-              parentUrl,
-              status: 'scraped' as const
-            }],
-            scrapedPages: prev!.scrapedPages + 1,
-            totalPages: visitedUrls.size + urlsToVisit.length
-          }));
-        }
-      } catch (error) {
-        console.error(`Eroare la procesarea paginii ${url}:`, error);
-        setSiteMap(prev => ({
-          ...prev!,
-          errorPages: prev!.errorPages + 1
-        }));
-      }
-      
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    }
-
-    setSiteMap(prev => ({
-      ...prev!,
-      endTime: new Date().toISOString()
-    }));
-
-    setIsScrapingComplete(true);
-    
-  }, []);
-
-  return {
-    siteMap,
-    isScrapingComplete,
-    currentProgress,
-    startFullSiteScraping
-  };
-};
-
-// Funcții utilitare pentru export în diferite formate cu optimizare
-const exportToJSON = (data: any) => {
-  const optimizedData = createOptimizedJSONExport(data);
-  const content = JSON.stringify(optimizedData, null, 2);
-  const sizeMB = downloadOptimizedFile(content, `scraped-data-${Date.now()}.json`, 'application/json');
-  
-  toast({
-    title: "Export JSON finalizat",
-    description: `Fișier descărcat: ${sizeMB.toFixed(2)} MB (max 21MB)`,
-  });
-};
-
-const exportToCSV = (products: any[]) => {
-  const content = createOptimizedCSVExport(products);
-  const sizeMB = downloadOptimizedFile(content, `products-${Date.now()}.csv`, 'text/csv');
-  
-  toast({
-    title: "Export CSV finalizat",
-    description: `Fișier descărcat: ${sizeMB.toFixed(2)} MB (max 21MB)`,
-  });
-};
-
-const exportToHTML = (data: any) => {
-  const content = createOptimizedHTMLExport(data);
-  const sizeMB = downloadOptimizedFile(content, `scraped-data-${Date.now()}.html`, 'text/html');
-  
-  toast({
-    title: "Export HTML finalizat",
-    description: `Fișier descărcat: ${sizeMB.toFixed(2)} MB (max 21MB)`,
-  });
-};
-
-// Componentă principală Scraping
-const Scraping = () => {
+const Scraping: React.FC = () => {
   const [url, setUrl] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [scrapedData, setScrapedData] = useState<ScrapedData | null>(null);
-  const [error, setError] = useState('');
-  const [maxDepth, setMaxDepth] = useState(2);
-  const [deepScraping, setDeepScraping] = useState(true); // Activez implicit pentru descrieri complete
+  const [isScanning, setIsScanning] = useState(false);
+  const [deepScraping, setDeepScraping] = useState(false);
   const [unlimitedScraping, setUnlimitedScraping] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState('ro'); // Limba pentru scanare
-  const [extractionOptions, setExtractionOptions] = useState({
-    products: true,
-    price: true,
-    description: true,
-    images: true,
-    specifications: true,
-    availability: true,
-    brand: true,
-    category: true,
-    reviews: false,
-    ratings: false
-  });
-  const [currentScanStatus, setCurrentScanStatus] = useState<{
-    stage: string;
-    progress: number;
-    details: string;
-    items: Array<{ type: string; count: number; details: string }>;
-  } | null>(null);
-  
-  const {
-    siteMap,
-    isScrapingComplete,
-    currentProgress,
-    startFullSiteScraping
-  } = useFullSiteScraper();
+  const [extractData, setExtractData] = useState(true);
+  const [maxDepth, setMaxDepth] = useState(4);
+  const [siteMapData, setSiteMapData] = useState<SiteMapData | null>(null);
+  const [isFullSiteMode, setIsFullSiteMode] = useState(false);
+  const [currentProgress, setCurrentProgress] = useState('');
 
-  const handleSubmit = async () => {
+  const handleSinglePageScraping = async () => {
     if (!url.trim()) {
       toast({
-        title: "URL necesar",
-        description: "Te rog introdu un URL valid pentru a începe scraping-ul",
-        variant: "destructive",
+        title: "Eroare",
+        description: "Te rog introdu un URL valid",
+        variant: "destructive"
       });
       return;
     }
-    
-    // Validare URL
-    try {
-      new URL(url);
-    } catch {
-      toast({
-        title: "URL invalid",
-        description: "Te rog introdu un URL valid (ex: https://example.com)",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsLoading(true);
-    setError('');
+
+    setIsScanning(true);
+    setIsFullSiteMode(false);
+    setSiteMapData(null);
     setScrapedData(null);
-    setCurrentScanStatus({
-      stage: 'Inițializare scanare',
-      progress: 0,
-      details: 'Se pregătește extragerea datelor...',
-      items: []
-    });
 
     try {
-      // Etapa 1: Scanare pagină principală
-      setCurrentScanStatus({
-        stage: 'Scanare pagină principală',
-        progress: 20,
-        details: `Se accesează ${url}`,
-        items: []
-      });
+      const cleanUrl = url.startsWith('http') ? url : `https://${url}`;
+      console.log('Încep scraping pentru:', cleanUrl);
 
-      const data = await handleScrape(url, deepScraping);
-      if (!data) throw new Error('Nu s-au putut extrage date');
-
-      setCurrentScanStatus({
-        stage: 'Analiza structurii site-ului',
-        progress: 40,
-        details: 'Se identifică tipurile de conținut...',
-        items: [
-          { type: 'Link-uri', count: data.links.length, details: 'link-uri găsite' },
-          { type: 'Imagini', count: data.images.length, details: 'imagini detectate' },
-          { type: 'Produse', count: data.products.length, details: 'produse identificate' }
-        ]
-      });
-
-      // Etapa 2: Îmbunătățire descrieri produse
-      let enhancedProducts = [...data.products];
-      if (data.products.length > 0) {
-        setCurrentScanStatus({
-          stage: 'Îmbunătățire descrieri produse',
-          progress: 60,
-          details: 'Se extrag descrieri complete pentru produse...',
-          items: [
-            { type: 'Produse', count: data.products.length, details: 'produse procesate' },
-            { type: 'Descrieri', count: data.products.filter(p => p.description).length, details: 'descrieri găsite' }
-          ]
-        });
-
-        // Proces în paralel pentru descrieri - MAXIMUM 10 simultan pentru performanță
-        const batchSize = 10;
-        for (let i = 0; i < data.products.length; i += batchSize) {
-          const batch = data.products.slice(i, i + batchSize);
-          const enhancedBatch = await Promise.allSettled(
-            batch.map(async (product, index) => {
-              const actualIndex = i + index;
-              setCurrentScanStatus(prev => ({
-                ...prev!,
-                progress: 60 + (actualIndex / data.products.length) * 30,
-                details: `Se procesează produsul ${actualIndex + 1}/${data.products.length}: ${product.name.substring(0, 50)}...`,
-                items: [
-                  { type: 'Produse procesate', count: actualIndex + 1, details: `din ${data.products.length}` },
-                  { type: 'Descrieri complete', count: enhancedProducts.filter(p => p.description && p.description.length > 100).length, details: 'descrieri detaliate' }
-                ]
-              }));
-
-              if (!product.description && product.url && deepScraping) {
-                const enhancedDescription = await extractProductDescription(product.url);
-                return { ...product, description: enhancedDescription || product.description };
-              }
-              return product;
-            })
-          );
-
-          // Actualizează produsele procesate
-          enhancedBatch.forEach((result, index) => {
-            const actualIndex = i + index;
-            if (result.status === 'fulfilled') {
-              enhancedProducts[actualIndex] = result.value;
-            }
-          });
-        }
+      const response = await handleScrape(cleanUrl);
+      
+      if (!response || !response.text) {
+        throw new Error('Nu s-au putut obține datele de la URL');
       }
 
-      // Etapa 3: Structurare finală și traducere (dacă e cazul)
-      setCurrentScanStatus({
-        stage: 'Finalizare și structurare',
-        progress: 90,
-        details: 'Se organizează datele pentru înțelegerea optimă de către agent...',
-        items: [
-          { type: 'Produse finalizate', count: enhancedProducts.length, details: 'produse complete' },
-          { type: 'Cu descrieri complete', count: enhancedProducts.filter(p => p.description && p.description.length > 50).length, details: 'descrieri detaliate' },
-          { type: 'Cu specificații', count: enhancedProducts.filter(p => Object.keys(p.specifications).length > 0).length, details: 'produse cu specificații' }
-        ]
-      });
-
-      // Crează datele finale optimizate pentru agent
-      const finalData: ScrapedData = {
-        ...data,
-        products: enhancedProducts.map(product => ({
-          ...product,
-          // Structurează datele pentru înțelegerea optimă de către agent
-          agentOptimizedDescription: generateAgentOptimizedDescription(product),
-          // Adaugă etichete pentru categorisire rapidă
-          agentTags: generateAgentTags(product),
-          // Scor de completitudine informații
-          completenessScore: calculateCompletenessScore(product)
-        }))
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(response.text, 'text/html');
+      
+      const extractedData: ScrapedData = {
+        url: cleanUrl,
+        title: doc.title || '',
+        description: doc.querySelector('meta[name="description"]')?.getAttribute('content') || '',
+        keywords: doc.querySelector('meta[name="keywords"]')?.getAttribute('content') || '',
+        text: doc.body?.textContent?.trim() || '',
+        links: [],
+        images: [],
+        metadata: {},
+        headings: [],
+        forms: [],
+        scripts: [],
+        styles: [],
+        products: [],
+        timestamp: new Date().toISOString()
       };
 
-      setScrapedData(finalData);
-      
-      setCurrentScanStatus({
-        stage: 'Scanare completă!',
-        progress: 100,
-        details: 'Toate datele au fost extrase și structurate pentru agent',
-        items: [
-          { type: 'Produse totale', count: finalData.products.length, details: 'produse complete' },
-          { type: 'Descrieri complete', count: finalData.products.filter(p => p.description && p.description.length > 50).length, details: 'cu descrieri detaliate' },
-          { type: 'Scor mediu completitudine', count: Math.round(finalData.products.reduce((acc, p) => acc + (p as any).completenessScore, 0) / finalData.products.length * 100) / 100, details: 'din 5.0' }
-        ]
-      });
+      // Extrage produsele
+      extractedData.products = await detectProducts(doc, cleanUrl, deepScraping);
+
+      // Extrage linkurile
+      const links = Array.from(doc.querySelectorAll('a[href]'));
+      extractedData.links = links.map(link => ({
+        url: link.getAttribute('href') || '',
+        text: link.textContent?.trim() || '',
+        type: 'internal'
+      }));
+
+      // Extrage imaginile
+      extractedData.images = extractAllImages(doc.body || doc.documentElement, cleanUrl);
+
+      setScrapedData(extractedData);
 
       toast({
-        title: "Scanare finalizată cu succes!",
-        description: `${finalData.products.length} produse complete cu descrieri detaliate și ${finalData.links.length} link-uri`,
+        title: "Scraping completat!",
+        description: `Găsite ${extractedData.products.length} produse și ${extractedData.images.length} imagini`,
       });
 
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Eroare necunoscută';
-      setError(errorMessage);
-      setCurrentScanStatus(null);
+    } catch (error) {
+      console.error('Eroare în scraping:', error);
       toast({
-        title: "Eroare la scraping",
-        description: errorMessage,
-        variant: "destructive",
+        title: "Eroare",
+        description: error.message || "A apărut o eroare la scraping",
+        variant: "destructive"
       });
     } finally {
-      setIsLoading(false);
-      // Păstrează statusul final pentru 5 secunde apoi îl ascunde
-      setTimeout(() => setCurrentScanStatus(null), 5000);
+      setIsScanning(false);
     }
   };
 
   const handleFullSiteScraping = async () => {
     if (!url.trim()) {
       toast({
-        title: "URL necesar",
-        description: "Te rog introdu un URL valid pentru scraping complet",
-        variant: "destructive",
+        title: "Eroare",
+        description: "Te rog introdu un URL valid",
+        variant: "destructive"
       });
       return;
     }
+
+    setIsScanning(true);
+    setIsFullSiteMode(true);
+    setSiteMapData(null);
+    setScrapedData(null);
+    setCurrentProgress(''); // Reset progres
+
+    console.log('🚀 === ÎNCEPERE SCANARE ULTRA-AVANSATĂ ===');
+    console.log('URL:', url);
+    console.log('Adâncime maximă:', maxDepth);
+    console.log('Scanare profundă:', deepScraping);
+    console.log('Scanare nelimitată:', unlimitedScraping);
+    console.log('Extragere date:', extractData);
 
     try {
-      new URL(url);
-    } catch {
-      toast({
-        title: "URL invalid",
-        description: "Te rog introdu un URL valid (ex: https://example.com)",
-        variant: "destructive",
+      const cleanUrl = url.startsWith('http') ? url : `https://${url}`;
+      const baseUrl = new URL(cleanUrl).origin;
+      
+      const initialSiteMap: SiteMapData = {
+        baseUrl,
+        pages: [],
+        totalPages: 0,
+        scrapedPages: 0,
+        errorPages: 0,
+        startTime: new Date().toISOString(),
+        maxDepth
+      };
+
+      setSiteMapData(initialSiteMap);
+      setCurrentProgress('🔍 Scanez pagina principală...');
+
+      // Pas 1: Scanare ULTRA-AVANSATĂ a paginii principale
+      console.log('🎯 Pas 1: Scanare ULTRA-AVANSATĂ a paginii principale...');
+      let mainPageData;
+      
+      // Încearcă multiple strategii pentru pagina principală
+      try {
+        mainPageData = await handleScrape(cleanUrl);
+      } catch (error) {
+        console.warn('Prima încercare a eșuat, încearcă din nou...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        mainPageData = await handleScrape(cleanUrl);
+      }
+      
+      if (!mainPageData || !mainPageData.text) {
+        throw new Error('Nu s-au putut obține datele paginii principale după multiple încercări');
+      }
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(mainPageData.text, 'text/html');
+      
+      setCurrentProgress('🔗 Extrag linkurile site-ului...');
+
+      // Extragere ULTRA-AVANSATĂ a linkurilor
+      const allLinks = Array.from(doc.querySelectorAll('a[href], area[href], link[href]'))
+        .map(link => link.getAttribute('href'))
+        .filter(href => href && href.trim() !== '' && !href.startsWith('mailto:') && !href.startsWith('tel:') && !href.startsWith('#'))
+        .map(href => {
+          try {
+            if (href!.startsWith('/')) return new URL(href!, baseUrl).href;
+            if (href!.startsWith('http')) return href!;
+            return new URL(href!, cleanUrl).href;
+          } catch {
+            return null;
+          }
+        })
+        .filter(url => url && url.startsWith(baseUrl))
+        .filter((url, index, arr) => arr.indexOf(url) === index);
+
+      // Detectare INTELIGENTĂ a tipurilor de pagini
+      const categorizedLinks = {
+        products: allLinks.filter(url => 
+          /(\/(produs|product|item|p|articol)[\/-])/i.test(url) || 
+          /id=\d+/i.test(url) ||
+          /[\/-](masini|cars|auto|vehicule)[\/-]/i.test(url)
+        ),
+        categories: allLinks.filter(url => 
+          /(\/(categorie|category|cat|sectiune)[\/-])/i.test(url)
+        ),
+        other: allLinks.filter(url => 
+          !(/\/(produs|product|item|p|articol|categorie|category)[\/-]/i.test(url))
+        )
+      };
+
+      console.log(`📊 Linkuri categorized: ${categorizedLinks.products.length} produse, ${categorizedLinks.categories.length} categorii, ${categorizedLinks.other.length} altele`);
+
+      // Prioritizează produsele și categoriile
+      const prioritizedLinks = [
+        ...categorizedLinks.products.slice(0, unlimitedScraping ? 200 : 30),
+        ...categorizedLinks.categories.slice(0, unlimitedScraping ? 50 : 10),
+        ...categorizedLinks.other.slice(0, unlimitedScraping ? 100 : 20)
+      ];
+
+      console.log(`🎯 Se vor procesa ${prioritizedLinks.length} linkuri prioritizate din ${allLinks.length} totale`);
+
+      // Creează lista OPTIMIZATĂ de pagini de procesat
+      
+      // Adaugă pagina principală cu prioritate maximă
+      const pagesToProcess: SiteMapPage[] = [];
+      pagesToProcess.push({
+        id: `page_${Date.now()}_0`,
+        url: cleanUrl,
+        title: doc.title || '',
+        description: '',
+        keywords: '',
+        text: '',
+        links: [],
+        images: [],
+        metadata: {},
+        headings: [],
+        forms: [],
+        scripts: [],
+        styles: [],
+        products: [],
+        timestamp: new Date().toISOString(),
+        depth: 0,
+        status: 'pending'
       });
-      return;
+
+      // Adaugă linkurile prioritizate
+      prioritizedLinks.forEach((linkUrl, index) => {
+        if (linkUrl !== cleanUrl) {
+          pagesToProcess.push({
+            id: `page_${Date.now()}_${index + 1}`,
+            url: linkUrl,
+            title: '',
+            description: '',
+            keywords: '',
+            text: '',
+            links: [],
+            images: [],
+            metadata: {},
+            headings: [],
+            forms: [],
+            scripts: [],
+            styles: [],
+            products: [],
+            timestamp: new Date().toISOString(),
+            depth: 1,
+            parentUrl: cleanUrl,
+            status: 'pending'
+          });
+        }
+      });
+
+      const updatedSiteMap = {
+        ...initialSiteMap,
+        pages: pagesToProcess,
+        totalPages: pagesToProcess.length
+      };
+      setSiteMapData(updatedSiteMap);
+
+      console.log(`🚀 Pas 2: Procesare ULTRA-AVANSATĂ a ${pagesToProcess.length} pagini...`);
+
+      // Funcție helper pentru actualizarea progresului
+      const updateProgress = (message: string) => {
+        setCurrentProgress(message);
+      };
+
+      // Procesare ULTRA-AVANSATĂ cu PARALLELISM CONTROLAT
+      const BATCH_SIZE = 3; // Procesează 3 pagini în paralel pentru optimizare
+      
+      for (let batchStart = 0; batchStart < pagesToProcess.length; batchStart += BATCH_SIZE) {
+        const batchEnd = Math.min(batchStart + BATCH_SIZE, pagesToProcess.length);
+        const currentBatch = pagesToProcess.slice(batchStart, batchEnd);
+        
+        console.log(`🔄 Procesez batch ${Math.floor(batchStart/BATCH_SIZE) + 1}/${Math.ceil(pagesToProcess.length/BATCH_SIZE)}: pagini ${batchStart + 1}-${batchEnd}`);
+        updateProgress(`📄 Procesez paginile ${batchStart + 1}-${batchEnd} din ${pagesToProcess.length}...`);
+
+        // Procesează batch-ul în paralel
+        const batchPromises = currentBatch.map(async (page, batchIndex) => {
+          const globalIndex = batchStart + batchIndex;
+          
+          try {
+            console.log(`⚡ Procesează pagina ${globalIndex + 1}/${pagesToProcess.length}: ${page.url}`);
+            
+            let pageData;
+            if (globalIndex === 0) {
+              // Folosește datele deja încărcate pentru prima pagină
+              pageData = mainPageData;
+            } else {
+              // Pentru alte pagini, încearcă cu strategii multiple
+              try {
+                pageData = await handleScrape(page.url);
+              } catch (error) {
+                console.warn(`Retry pentru pagina ${globalIndex + 1}...`);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                pageData = await handleScrape(page.url);
+              }
+            }
+
+            if (pageData && pageData.text) {
+              const pageDoc = parser.parseFromString(pageData.text, 'text/html');
+              
+              // Extragere ULTRA-AVANSATĂ a informațiilor
+              const title = pageDoc.title || '';
+              const metaDescription = pageDoc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
+              const metaKeywords = pageDoc.querySelector('meta[name="keywords"]')?.getAttribute('content') || '';
+              
+              // Extrage textul principal cu filtrare avansată
+              const mainContent = pageDoc.querySelector('main, .main-content, .content, article, .article') || pageDoc.body;
+              const textContent = mainContent?.textContent?.trim() || '';
+              
+              // Extrage linkurile cu categorisire
+              const pageLinks = Array.from(pageDoc.querySelectorAll('a[href]')).map(link => ({
+                url: link.getAttribute('href') || '',
+                text: link.textContent?.trim() || '',
+                type: 'internal'
+              }));
+
+              // Extrage imaginile cu algorim avansat
+              const pageImages = extractAllImages(pageDoc.body || pageDoc.documentElement, page.url);
+              
+              updateProgress(`🛍️ Extrag produsele din: ${title.substring(0, 30)}...`);
+              
+              // Extrage produsele cu algoritm ULTRA-AVANSAT
+              const pageProducts = await detectProducts(pageDoc, page.url, deepScraping, updateProgress);
+              
+              // Actualizează pagina cu toate datele
+              page.title = title;
+              page.description = metaDescription;
+              page.keywords = metaKeywords;
+              page.text = textContent.substring(0, 10000); // Mărim limita pentru mai multe detalii
+              page.links = pageLinks;
+              page.images = pageImages;
+              page.products = pageProducts;
+              page.status = 'scraped';
+              
+              console.log(`✅ Pagina ${globalIndex + 1} ULTRA procesată: ${pageProducts.length} produse găsite, ${pageImages.length} imagini`);
+            } else {
+              page.status = 'error';
+              page.error = 'Nu s-au putut obține datele';
+              console.log(`❌ Eroare la pagina ${globalIndex + 1}: Nu s-au putut obține datele`);
+            }
+          } catch (error) {
+            console.error(`❌ Eroare la procesarea paginii ${globalIndex + 1}:`, error);
+            page.status = 'error';
+            page.error = error.message;
+          }
+        });
+
+        // Așteaptă să se termine toate din batch
+        await Promise.allSettled(batchPromises);
+
+        // Actualizează progresul după fiecare batch
+        const updatedSiteMapProgress = {
+          ...updatedSiteMap,
+          pages: [...pagesToProcess],
+          scrapedPages: pagesToProcess.filter(p => p.status === 'scraped').length,
+          errorPages: pagesToProcess.filter(p => p.status === 'error').length
+        };
+        setSiteMapData(updatedSiteMapProgress);
+
+        // Pauză inteligentă între batch-uri pentru a evita rate limiting
+        if (batchEnd < pagesToProcess.length) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+
+      // Finalizează cu statistici detaliate
+      const finalSiteMap = {
+        ...updatedSiteMap,
+        pages: pagesToProcess,
+        scrapedPages: pagesToProcess.filter(p => p.status === 'scraped').length,
+        errorPages: pagesToProcess.filter(p => p.status === 'error').length,
+        endTime: new Date().toISOString()
+      };
+      setSiteMapData(finalSiteMap);
+
+      // Calculează statistici finale
+      const totalProducts = finalSiteMap.pages.reduce((sum, page) => sum + page.products.length, 0);
+      const totalImages = finalSiteMap.pages.reduce((sum, page) => sum + page.images.length, 0);
+      const avgProductsPerPage = finalSiteMap.scrapedPages > 0 ? (totalProducts / finalSiteMap.scrapedPages).toFixed(1) : '0';
+
+      console.log('🎉 === SCANARE ULTRA-AVANSATĂ FINALIZATĂ ===');
+      console.log(`📊 Statistici finale:`);
+      console.log(`  - Pagini procesate: ${finalSiteMap.scrapedPages}/${finalSiteMap.totalPages}`);
+      console.log(`  - Produse găsite: ${totalProducts}`);
+      console.log(`  - Imagini găsite: ${totalImages}`);
+      console.log(`  - Produse pe pagină: ${avgProductsPerPage} în medie`);
+      console.log(`  - Erori: ${finalSiteMap.errorPages}`);
+
+      setCurrentProgress(`🎉 Finalizat: ${totalProducts} produse găsite!`);
+
+      toast({
+        title: "🎉 Scanare ULTRA-AVANSATĂ completă!",
+        description: `${totalProducts} produse găsite în ${finalSiteMap.scrapedPages} pagini din ${finalSiteMap.totalPages} totale`,
+      });
+
+    } catch (error) {
+      console.error('❌ Eroare în scanarea ULTRA-AVANSATĂ:', error);
+      setCurrentProgress('❌ Eroare la scanare');
+      toast({
+        title: "Eroare",
+        description: error.message || "A apărut o eroare la scanarea ULTRA-AVANSATĂ",
+        variant: "destructive"
+      });
+    } finally {
+      setIsScanning(false);
+      setIsFullSiteMode(false);
     }
-
-    toast({
-      title: "Scraping complet început",
-      description: `Se va scana site-ul la adâncimea ${maxDepth}`,
-    });
-
-    await startFullSiteScraping(url, maxDepth, deepScraping, unlimitedScraping);
   };
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center gap-2 mb-6">
-          <Globe className="w-8 h-8 text-primary" />
-          <h1 className="text-3xl font-bold text-foreground">Web Scraper Universal</h1>
-          <div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
-            <HardDrive className="w-4 h-4" />
-            <span>Export limitat la 21MB</span>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="text-center space-y-3">
+            <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100">
+              Scanare Web Avansată
+            </h1>
+            <p className="text-lg text-slate-600 dark:text-slate-300">
+              Extrage informații detaliate despre produse, imagini și conținut de pe orice site web
+            </p>
           </div>
-        </div>
 
-        <Card className="liquid-glass">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Search className="w-5 h-5" />
-              Extragere Date Website
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Input
-                type="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="Introdu URL-ul site-ului (ex: https://example.com)"
-                className="glass-input"
-              />
-            </div>
-
-            {/* Selector limbă */}
-            <div className="bg-muted/30 p-4 rounded-lg border border-border/50">
-              <div className="flex items-center gap-3 mb-3">
-                <Globe className="w-5 h-5 text-primary" />
-                <h3 className="font-medium text-foreground">Limba pentru scanare</h3>
-              </div>
-              <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-                {[
-                  { code: 'ro', label: 'Română', flag: '🇷🇴' },
-                  { code: 'en', label: 'English', flag: '🇺🇸' },
-                  { code: 'es', label: 'Español', flag: '🇪🇸' },
-                  { code: 'fr', label: 'Français', flag: '🇫🇷' },
-                  { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
-                  { code: 'it', label: 'Italiano', flag: '🇮🇹' },
-                  { code: 'pt', label: 'Português', flag: '🇵🇹' },
-                  { code: 'ru', label: 'Русский', flag: '🇷🇺' },
-                  { code: 'zh', label: '中文', flag: '🇨🇳' },
-                  { code: 'ja', label: '日本語', flag: '🇯🇵' },
-                  { code: 'ar', label: 'العربية', flag: '🇸🇦' },
-                  { code: 'auto', label: 'Auto-detect', flag: '🌐' }
-                ].map((lang) => (
-                  <button
-                    key={lang.code}
-                    onClick={() => setSelectedLanguage(lang.code)}
-                    className={`p-2 rounded-lg border text-xs transition-all hover:scale-105 ${
-                      selectedLanguage === lang.code
-                        ? 'bg-primary text-primary-foreground border-primary shadow-md'
-                        : 'bg-background border-border hover:bg-muted/50 text-foreground'
-                    }`}
-                  >
-                    <div className="flex flex-col items-center gap-1">
-                      <span className="text-lg">{lang.flag}</span>
-                      <span className="font-medium">{lang.label}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Limba selectată va fi folosită pentru extragerea și structurarea optimă a informațiilor pentru agent
-              </p>
-            </div>
-
-            {/* Extraction Options */}
-            <div className="space-y-4 p-4 bg-muted/50 rounded-lg border">
-              <h3 className="font-semibold text-lg">🎯 Opțiuni de Extragere</h3>
-              
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="products"
-                    checked={extractionOptions.products}
-                    onChange={(e) => setExtractionOptions(prev => ({ ...prev, products: e.target.checked }))}
-                    className="w-4 h-4 text-primary"
-                  />
-                  <label htmlFor="products" className="text-sm font-medium">
-                    🛍️ Produse (prioritate maximă)
+          <Card className="border-0 shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center space-x-2">
+                <Search className="h-5 w-5" />
+                <span>Configurare Scanare</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex flex-col space-y-4">
+                <Input
+                  placeholder="Introdu URL-ul site-ului (ex: https://example.com)"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  className="text-lg py-3"
+                />
+                
+                <div className="flex flex-wrap items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={deepScraping}
+                      onChange={(e) => setDeepScraping(e.target.checked)}
+                      className="rounded"
+                    />
+                    <span className="text-sm font-medium">Scanare profundă</span>
                   </label>
-                </div>
-
-                <div className="ml-6 grid grid-cols-2 gap-3">
-                  <div className="flex items-center space-x-2">
+                  
+                  <label className="flex items-center space-x-2 cursor-pointer">
                     <input
                       type="checkbox"
-                      id="price"
-                      checked={extractionOptions.price}
-                      onChange={(e) => setExtractionOptions(prev => ({ ...prev, price: e.target.checked }))}
-                      className="w-4 h-4 text-primary"
-                      disabled={!extractionOptions.products}
+                      checked={unlimitedScraping}
+                      onChange={(e) => setUnlimitedScraping(e.target.checked)}
+                      className="rounded"
                     />
-                    <label htmlFor="price" className="text-sm">💰 Preț</label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium">Scanare nelimitată</span>
+                  </label>
+                  
+                  <label className="flex items-center space-x-2 cursor-pointer">
                     <input
                       type="checkbox"
-                      id="description"
-                      checked={extractionOptions.description}
-                      onChange={(e) => setExtractionOptions(prev => ({ ...prev, description: e.target.checked }))}
-                      className="w-4 h-4 text-primary"
-                      disabled={!extractionOptions.products}
+                      checked={extractData}
+                      onChange={(e) => setExtractData(e.target.checked)}
+                      className="rounded"
                     />
-                    <label htmlFor="description" className="text-sm">📝 Descriere</label>
-                  </div>
-
+                    <span className="text-sm font-medium">Extrage date</span>
+                  </label>
+                  
                   <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="images"
-                      checked={extractionOptions.images}
-                      onChange={(e) => setExtractionOptions(prev => ({ ...prev, images: e.target.checked }))}
-                      className="w-4 h-4 text-primary"
-                      disabled={!extractionOptions.products}
-                    />
-                    <label htmlFor="images" className="text-sm">📸 Imagini</label>
+                    <span className="text-sm font-medium">Adâncime:</span>
+                    <select
+                      value={maxDepth}
+                      onChange={(e) => setMaxDepth(Number(e.target.value))}
+                      className="px-2 py-1 border rounded text-sm"
+                    >
+                      <option value={1}>1</option>
+                      <option value={2}>2</option>
+                      <option value={3}>3</option>
+                      <option value={4}>4</option>
+                      <option value={5}>5</option>
+                    </select>
                   </div>
-
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="specifications"
-                      checked={extractionOptions.specifications}
-                      onChange={(e) => setExtractionOptions(prev => ({ ...prev, specifications: e.target.checked }))}
-                      className="w-4 h-4 text-primary"
-                      disabled={!extractionOptions.products}
-                    />
-                    <label htmlFor="specifications" className="text-sm">⚙️ Specificații</label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="availability"
-                      checked={extractionOptions.availability}
-                      onChange={(e) => setExtractionOptions(prev => ({ ...prev, availability: e.target.checked }))}
-                      className="w-4 h-4 text-primary"
-                      disabled={!extractionOptions.products}
-                    />
-                    <label htmlFor="availability" className="text-sm">📦 Disponibilitate</label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="brand"
-                      checked={extractionOptions.brand}
-                      onChange={(e) => setExtractionOptions(prev => ({ ...prev, brand: e.target.checked }))}
-                      className="w-4 h-4 text-primary"
-                      disabled={!extractionOptions.products}
-                    />
-                    <label htmlFor="brand" className="text-sm">🏷️ Brand</label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="category"
-                      checked={extractionOptions.category}
-                      onChange={(e) => setExtractionOptions(prev => ({ ...prev, category: e.target.checked }))}
-                      className="w-4 h-4 text-primary"
-                      disabled={!extractionOptions.products}
-                    />
-                    <label htmlFor="category" className="text-sm">📂 Categorie</label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="reviews"
-                      checked={extractionOptions.reviews}
-                      onChange={(e) => setExtractionOptions(prev => ({ ...prev, reviews: e.target.checked }))}
-                      className="w-4 h-4 text-primary"
-                      disabled={!extractionOptions.products}
-                    />
-                    <label htmlFor="reviews" className="text-sm">💬 Recenzii</label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="ratings"
-                      checked={extractionOptions.ratings}
-                      onChange={(e) => setExtractionOptions(prev => ({ ...prev, ratings: e.target.checked }))}
-                      className="w-4 h-4 text-primary"
-                      disabled={!extractionOptions.products}
-                    />
-                    <label htmlFor="ratings" className="text-sm">⭐ Rating</label>
-                  </div>
+                  
+                  <Button onClick={handleSinglePageScraping} disabled={isScanning}>
+                    <Globe className="h-4 w-4 mr-2" />
+                    Scanează site
+                  </Button>
                 </div>
               </div>
-            </div>
 
-            {/* Toate controalele pe un singur rând */}
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Scanare profundă */}
-              <div className="flex items-center gap-2 px-3 py-2 bg-background border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setDeepScraping(!deepScraping)}>
-                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${deepScraping ? 'bg-primary border-primary' : 'border-border'}`}>
-                  {deepScraping && <div className="w-2 h-2 bg-primary-foreground rounded-sm"></div>}
-                </div>
-                <span className="text-sm text-foreground">Scanare profundă</span>
-              </div>
-              
-              {/* Scanare nelimitată */}
-              <div className="flex items-center gap-2 px-3 py-2 bg-background border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setUnlimitedScraping(!unlimitedScraping)}>
-                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${unlimitedScraping ? 'bg-primary border-primary' : 'border-border'}`}>
-                  {unlimitedScraping && <div className="w-2 h-2 bg-primary-foreground rounded-sm"></div>}
-                </div>
-                <span className="text-sm text-foreground">Scanare nelimitată</span>
-              </div>
-              
-              {/* Extrage date */}
-              <button 
-                onClick={handleSubmit} 
-                disabled={isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-background border border-border rounded-lg hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm text-foreground"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Extrage date
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-4 h-4" />
-                    Extrage date
-                  </>
-                )}
-              </button>
-
-              {/* Adâncime */}
-              <div className="flex items-center gap-2 px-3 py-2 bg-background border border-border rounded-lg">
-                <span className="text-sm text-foreground">Adâncime:</span>
-                <select
-                  value={maxDepth}
-                  onChange={(e) => setMaxDepth(Number(e.target.value))}
-                  className="bg-transparent border-none text-sm text-foreground focus:outline-none cursor-pointer"
-                >
-                  <option value={1}>1</option>
-                  <option value={2}>2</option>
-                  <option value={3}>3</option>
-                  <option value={4}>4</option>
-                  <option value={5}>5</option>
-                </select>
-              </div>
-              
-              {/* Scanează site */}
-              <button
-                onClick={handleFullSiteScraping}
-                disabled={isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-background border border-border rounded-lg hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm text-foreground"
-              >
-                <Globe className="w-4 h-4" />
-                Scanează site
-              </button>
-            </div>
-
-            {/* Progres scanare în timp real */}
-            {currentScanStatus && (
-              <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-4 rounded-lg border border-primary/20 space-y-3 animate-fade-in">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                    <span className="font-medium text-foreground">{currentScanStatus.stage}</span>
+              {isScanning && (
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2 text-blue-600">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Se scanează...</span>
                   </div>
-                  <span className="text-sm text-primary font-medium">{currentScanStatus.progress}%</span>
-                </div>
-                
-                <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-300 ease-out"
-                    style={{ width: `${currentScanStatus.progress}%` }}
-                  />
-                </div>
-                
-                <p className="text-sm text-muted-foreground animate-fade-in">
-                  {currentScanStatus.details}
-                </p>
-                
-                {currentScanStatus.items.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 animate-slide-in-right">
-                    {currentScanStatus.items.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between bg-background/50 p-2 rounded border border-border/50">
-                        <span className="text-xs text-foreground font-medium">{item.type}:</span>
-                        <div className="text-right">
-                          <span className="text-sm font-bold text-primary">{item.count}</span>
-                          <p className="text-xs text-muted-foreground">{item.details}</p>
-                        </div>
+                  {currentProgress && (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                        <span className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+                          {currentProgress}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {currentProgress.currentUrl && !currentScanStatus && (
-              <div className="text-sm text-muted-foreground animate-fade-in">
-                Se procesează: {currentProgress.currentUrl}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {error && (
-          <Card className="border-destructive">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 text-destructive">
-                <AlertCircle className="w-5 h-5" />
-                <span className="font-medium">Eroare:</span>
-                <span>{error}</span>
-              </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
-        )}
 
-        {scrapedData && (
-          <Card className="liquid-glass">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-500" />
-                Rezultate Scraping
-              </CardTitle>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => exportToJSON(scrapedData)}
-                  className="flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Export JSON
-                  <span className="text-xs opacity-70">(≤21MB)</span>
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => exportToCSV(scrapedData.products)}
-                  className="flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Export CSV
-                  <span className="text-xs opacity-70">(≤21MB)</span>
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => exportToHTML(scrapedData)}
-                  className="flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Export HTML
-                  <span className="text-xs opacity-70">(≤21MB)</span>
-                </Button>
-              </div>
-              
-              {/* Informații despre dimensiune */}
-              <div className="bg-muted/30 p-3 rounded-lg border border-border/50 mt-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <HardDrive className="w-4 h-4 text-blue-500" />
-                  <span className="font-medium">Optimizare automată:</span>
-                  <span className="text-muted-foreground">
-                    Fișierele vor fi automat optimizate pentru a nu depăși 21MB.
-                    Dacă datele sunt prea multe, descrierile vor fi scurtate și va fi exportat un număr limitat de produse.
-                  </span>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="grid w-full grid-cols-5">
-                  <TabsTrigger value="overview">Prezentare</TabsTrigger>
-                  <TabsTrigger value="products">
-                    Produse ({scrapedData.products.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="links">
-                    Link-uri ({scrapedData.links.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="images">
-                    Imagini ({scrapedData.images.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="content">Conținut</TabsTrigger>
-                </TabsList>
+          {/* Rezultatele scanării */}
+          {(scrapedData || siteMapData) && (
+            <div className="space-y-6">
+              <Card className="border-0 shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <span>Rezultate Scanare</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Tabs defaultValue="products" className="w-full">
+                    <TabsList className="grid w-full grid-cols-4">
+                      <TabsTrigger value="products">
+                        <Package className="h-4 w-4 mr-2" />
+                        Produse
+                      </TabsTrigger>
+                      <TabsTrigger value="images">
+                        <Image className="h-4 w-4 mr-2" />
+                        Imagini
+                      </TabsTrigger>
+                      <TabsTrigger value="links">
+                        <Link className="h-4 w-4 mr-2" />
+                        Linkuri
+                      </TabsTrigger>
+                      <TabsTrigger value="content">
+                        <FileText className="h-4 w-4 mr-2" />
+                        Conținut
+                      </TabsTrigger>
+                    </TabsList>
 
-                <TabsContent value="overview" className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card>
-                      <CardContent className="pt-6">
-                        <div className="flex items-center gap-2">
-                          <Package className="w-5 h-5 text-blue-500" />
-                          <div>
-                            <p className="text-2xl font-bold">{scrapedData.products.length}</p>
-                            <p className="text-sm text-muted-foreground">Produse</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="pt-6">
-                        <div className="flex items-center gap-2">
-                          <Link className="w-5 h-5 text-green-500" />
-                          <div>
-                            <p className="text-2xl font-bold">{scrapedData.links.length}</p>
-                            <p className="text-sm text-muted-foreground">Link-uri</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="pt-6">
-                        <div className="flex items-center gap-2">
-                          <Image className="w-5 h-5 text-purple-500" />
-                          <div>
-                            <p className="text-2xl font-bold">{scrapedData.images.length}</p>
-                            <p className="text-sm text-muted-foreground">Imagini</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="pt-6">
-                        <div className="flex items-center gap-2">
-                          <FileText className="w-5 h-5 text-orange-500" />
-                          <div>
-                            <p className="text-2xl font-bold">{scrapedData.headings.length}</p>
-                            <p className="text-sm text-muted-foreground">Titluri</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold">Informații Site</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="font-medium">Titlu:</p>
-                        <p className="text-sm text-muted-foreground">{scrapedData.title}</p>
-                      </div>
-                      <div>
-                        <p className="font-medium">URL:</p>
-                        <p className="text-sm text-muted-foreground break-all">{scrapedData.url}</p>
-                      </div>
-                      <div className="md:col-span-2">
-                        <p className="font-medium">Descriere:</p>
-                        <p className="text-sm text-muted-foreground">{scrapedData.description}</p>
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="products">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">Produse Extrase - Vizualizare CSV</h3>
-                      <Button
-                        onClick={() => exportToCSV(scrapedData.products)}
-                        size="sm"
-                        variant="outline"
-                        className="elevenlabs-button-secondary"
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Descarcă CSV
-                      </Button>
-                    </div>
-                    
-                    <div className="border border-border rounded-lg overflow-hidden">
-                      <div className="bg-muted/50 max-h-[500px] overflow-auto">
-                        <table className="w-full text-sm">
-                          <thead className="sticky top-0 bg-muted border-b">
-                            <tr>
-                              <th className="text-left p-3 font-medium min-w-[200px]">Nume</th>
-                              <th className="text-left p-3 font-medium min-w-[100px]">Preț</th>
-                              <th className="text-left p-3 font-medium min-w-[120px]">Categorie</th>
-                              <th className="text-left p-3 font-medium min-w-[100px]">Brand</th>
-                              <th className="text-left p-3 font-medium min-w-[120px]">Disponibilitate</th>
-                              <th className="text-left p-3 font-medium min-w-[300px]">Descriere</th>
-                              <th className="text-left p-3 font-medium min-w-[80px]">URL</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {scrapedData.products.map((product: any, index: number) => (
-                              <tr key={index} className="border-b border-border/50 hover:bg-muted/30">
-                                <td className="p-3 font-medium">{product.name || '-'}</td>
-                                <td className="p-3">{product.price ? `${product.price} ${product.currency || ''}` : '-'}</td>
-                                <td className="p-3">{product.category || '-'}</td>
-                                <td className="p-3">{product.brand || '-'}</td>
-                                <td className="p-3">{product.availability || '-'}</td>
-                                <td className="p-3 max-w-[300px]">
-                                  {product.description ? (
-                                    <div className="space-y-1">
-                                      <p className="text-xs text-muted-foreground">
-                                        {product.description.length > 200 
-                                          ? `${product.description.substring(0, 200)}...` 
-                                          : product.description}
-                                      </p>
-                                      {product.description.length > 200 && (
-                                        <details className="cursor-pointer">
-                                          <summary className="text-xs text-primary hover:underline">Vezi tot</summary>
-                                          <p className="text-xs mt-1">{product.description}</p>
-                                        </details>
+                    <TabsContent value="products" className="space-y-4">
+                      <ScrollArea className="h-[600px] w-full rounded-md border p-4">
+                        {isFullSiteMode && siteMapData ? (
+                          <div className="space-y-4">
+                            <div className="mb-4">
+                              <h3 className="text-lg font-semibold mb-2">
+                                Statistici Site: {siteMapData.baseUrl}
+                              </h3>
+                              <div className="grid grid-cols-4 gap-4 text-sm">
+                                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded">
+                                  <div className="font-semibold">Pagini Totale</div>
+                                  <div className="text-2xl font-bold text-blue-600">{siteMapData.totalPages}</div>
+                                </div>
+                                <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded">
+                                  <div className="font-semibold">Scanate</div>
+                                  <div className="text-2xl font-bold text-green-600">{siteMapData.scrapedPages}</div>
+                                </div>
+                                <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded">
+                                  <div className="font-semibold">Erori</div>
+                                  <div className="text-2xl font-bold text-red-600">{siteMapData.errorPages}</div>
+                                </div>
+                                <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded">
+                                  <div className="font-semibold">Produse Totale</div>
+                                  <div className="text-2xl font-bold text-purple-600">
+                                    {siteMapData.pages.reduce((sum, page) => sum + page.products.length, 0)}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {siteMapData.pages.map((page) => (
+                              <div key={page.id} className="border rounded-lg p-4 space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="font-semibold text-sm truncate flex-1 mr-2">
+                                    {page.title || page.url}
+                                  </h4>
+                                  <Badge variant={page.status === 'scraped' ? 'default' : page.status === 'error' ? 'destructive' : 'secondary'}>
+                                    {page.status}
+                                  </Badge>
+                                </div>
+                                {page.products.length > 0 && (
+                                  <div className="space-y-2">
+                                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                                      {page.products.length} produse găsite
+                                    </div>
+                                    <div className="grid gap-2">
+                                      {page.products.slice(0, 3).map((product: Product, idx: number) => (
+                                        <div key={idx} className="bg-slate-50 dark:bg-slate-800 p-2 rounded text-sm">
+                                          <div className="font-medium truncate">{product.name}</div>
+                                          {product.price && <div className="text-green-600 font-semibold">{product.price}</div>}
+                                          {product.description && (
+                                            <div className="text-slate-600 dark:text-slate-400 text-xs truncate">
+                                              {product.description.substring(0, 100)}...
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                      {page.products.length > 3 && (
+                                        <div className="text-xs text-slate-500">
+                                          +{page.products.length - 3} produse suplimentare
+                                        </div>
                                       )}
                                     </div>
-                                  ) : (
-                                    <span className="text-muted-foreground italic text-xs">
-                                      Fără descriere
-                                    </span>
-                                  )}
-                                </td>
-                                <td className="p-3">
-                                  {product.url ? (
-                                    <a href={product.url} target="_blank" rel="noopener noreferrer" 
-                                       className="text-primary hover:underline text-xs">
-                                      Vezi
-                                    </a>
-                                  ) : '-'}
-                                </td>
-                              </tr>
+                                  </div>
+                                )}
+                                {page.error && (
+                                  <div className="text-red-600 text-sm">{page.error}</div>
+                                )}
+                              </div>
                             ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                    
-                    <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
-                      <strong>Total produse:</strong> {scrapedData.products.length} | 
-                      <strong> Cu descriere:</strong> {scrapedData.products.filter((p: any) => p.description).length} |
-                      <strong> Fără descriere:</strong> {scrapedData.products.filter((p: any) => !p.description).length}
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="links">
-                  <ScrollArea className="h-[600px]">
-                    <div className="space-y-2">
-                      {scrapedData.links.map((link, index) => (
-                        <div key={index} className="flex items-center gap-2 p-2 border rounded">
-                          <Link className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium truncate">{link.text}</p>
-                            <p className="text-xs text-muted-foreground truncate">{link.url}</p>
                           </div>
-                          <Badge variant="outline" className="text-xs">
-                            {link.type}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </TabsContent>
+                        ) : scrapedData?.products.length ? (
+                          <div className="space-y-4">
+                            {scrapedData.products.map((product, index) => (
+                              <div key={index} className="border rounded-lg p-4 space-y-3">
+                                <div className="flex items-start justify-between">
+                                  <h3 className="font-semibold text-lg text-slate-900 dark:text-slate-100">
+                                    {product.name || `Produs ${index + 1}`}
+                                  </h3>
+                                  {product.price && (
+                                    <Badge variant="secondary" className="ml-2">
+                                      {product.price}
+                                    </Badge>
+                                  )}
+                                </div>
+                                
+                                {product.description && (
+                                  <p className="text-slate-600 dark:text-slate-400 text-sm">
+                                    {product.description.substring(0, 200)}
+                                    {product.description.length > 200 && '...'}
+                                  </p>
+                                )}
+                                
+                                {product.images.length > 0 && (
+                                  <div className="flex space-x-2 overflow-x-auto">
+                                    {product.images.slice(0, 3).map((img, imgIndex) => (
+                                      <img
+                                        key={imgIndex}
+                                        src={img.src}
+                                        alt={img.alt}
+                                        className="w-16 h-16 object-cover rounded border"
+                                        onError={(e) => {
+                                          e.currentTarget.style.display = 'none';
+                                        }}
+                                      />
+                                    ))}
+                                    {product.images.length > 3 && (
+                                      <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded border flex items-center justify-center text-xs">
+                                        +{product.images.length - 3}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                
+                                {Object.keys(product.specifications).length > 0 && (
+                                  <div className="mt-2">
+                                    <h4 className="font-medium text-sm mb-1">Specificații:</h4>
+                                    <div className="text-xs space-y-1">
+                                      {Object.entries(product.specifications).slice(0, 3).map(([key, value]) => (
+                                        <div key={key} className="flex justify-between">
+                                          <span className="text-slate-600 dark:text-slate-400">{key}:</span>
+                                          <span>{value}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-slate-500">
+                            Nu au fost găsite produse pe această pagină
+                          </div>
+                        )}
+                      </ScrollArea>
+                    </TabsContent>
 
-                <TabsContent value="images">
-                  <ScrollArea className="h-[600px]">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {scrapedData.images.map((image, index) => (
-                        <Card key={index} className="p-4">
-                          <div className="space-y-2">
-                            <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
-                              {image.src ? (
+                    <TabsContent value="images" className="space-y-4">
+                      <ScrollArea className="h-[600px] w-full rounded-md border p-4">
+                        {isFullSiteMode && siteMapData ? (
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {siteMapData.pages.flatMap(page => page.images).slice(0, 50).map((image, index) => (
+                              <div key={index} className="space-y-2">
                                 <img
                                   src={image.src}
                                   alt={image.alt}
-                                  className="max-w-full max-h-full object-contain rounded-lg"
+                                  className="w-full h-32 object-cover rounded border"
                                   onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
+                                    e.currentTarget.src = '/placeholder.svg';
                                   }}
                                 />
-                              ) : (
-                                <Image className="w-8 h-8 text-muted-foreground" />
-                              )}
-                            </div>
+                                <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                                  {image.alt || 'Fără descriere'}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        ) : scrapedData?.images.length ? (
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {scrapedData.images.map((image, index) => (
+                              <div key={index} className="space-y-2">
+                                <img
+                                  src={image.src}
+                                  alt={image.alt}
+                                  className="w-full h-32 object-cover rounded border"
+                                  onError={(e) => {
+                                    e.currentTarget.src = '/placeholder.svg';
+                                  }}
+                                />
+                                <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                                  {image.alt || 'Fără descriere'}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-slate-500">
+                            Nu au fost găsite imagini
+                          </div>
+                        )}
+                      </ScrollArea>
+                    </TabsContent>
+
+                    <TabsContent value="links" className="space-y-4">
+                      <ScrollArea className="h-[600px] w-full rounded-md border p-4">
+                        {isFullSiteMode && siteMapData ? (
+                          <div className="space-y-2">
+                            {siteMapData.pages.flatMap(page => page.links).slice(0, 100).map((link, index) => (
+                              <div key={index} className="flex items-center space-x-2 py-2 border-b">
+                                <Link className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate">{link.text || 'Fără text'}</p>
+                                  <p className="text-xs text-slate-600 dark:text-slate-400 truncate">{link.url}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : scrapedData?.links.length ? (
+                          <div className="space-y-2">
+                            {scrapedData.links.map((link, index) => (
+                              <div key={index} className="flex items-center space-x-2 py-2 border-b">
+                                <Link className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate">{link.text || 'Fără text'}</p>
+                                  <p className="text-xs text-slate-600 dark:text-slate-400 truncate">{link.url}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-slate-500">
+                            Nu au fost găsite linkuri
+                          </div>
+                        )}
+                      </ScrollArea>
+                    </TabsContent>
+
+                    <TabsContent value="content" className="space-y-4">
+                      <ScrollArea className="h-[600px] w-full rounded-md border p-4">
+                        {scrapedData ? (
+                          <div className="space-y-4">
                             <div>
-                              <p className="text-sm font-medium truncate" title={image.alt}>
-                                {image.alt || 'Fără descriere'}
-                              </p>
-                              <p className="text-xs text-muted-foreground truncate" title={image.src}>
-                                {image.src}
+                              <h3 className="font-semibold mb-2">Titlu:</h3>
+                              <p className="text-sm text-slate-600 dark:text-slate-400">{scrapedData.title}</p>
+                            </div>
+                            <Separator />
+                            <div>
+                              <h3 className="font-semibold mb-2">Descriere:</h3>
+                              <p className="text-sm text-slate-600 dark:text-slate-400">{scrapedData.description}</p>
+                            </div>
+                            <Separator />
+                            <div>
+                              <h3 className="font-semibold mb-2">Conținut text:</h3>
+                              <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap">
+                                {scrapedData.text.substring(0, 2000)}
+                                {scrapedData.text.length > 2000 && '...'}
                               </p>
                             </div>
                           </div>
-                        </Card>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </TabsContent>
-
-                <TabsContent value="content">
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-semibold mb-2">Titluri Găsite</h4>
-                      <ScrollArea className="h-[200px]">
-                        <div className="space-y-1">
-                          {scrapedData.headings.map((heading, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs">
-                                H{heading.level}
-                              </Badge>
-                              <span className="text-sm">{heading.text}</span>
-                            </div>
-                          ))}
-                        </div>
+                        ) : (
+                          <div className="text-center py-8 text-slate-500">
+                            Nu sunt date de conținut disponibile
+                          </div>
+                        )}
                       </ScrollArea>
-                    </div>
-
-                    <Separator />
-
-                    <div>
-                      <h4 className="font-semibold mb-2">Conținut Text</h4>
-                      <ScrollArea className="h-[300px]">
-                        <Textarea
-                          value={scrapedData.text.substring(0, 2000) + (scrapedData.text.length > 2000 ? '...' : '')}
-                          readOnly
-                          className="min-h-[280px] resize-none"
-                        />
-                      </ScrollArea>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        )}
-
-        {siteMap && (
-          <Card className="liquid-glass">
-            <CardHeader>
-              <CardTitle>Scraping Complet Site - Progres</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold">{siteMap.pages.length}</p>
-                    <p className="text-sm text-muted-foreground">Pagini procesate</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold">{siteMap.scrapedPages}</p>
-                    <p className="text-sm text-muted-foreground">Reușite</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold">{siteMap.errorPages}</p>
-                    <p className="text-sm text-muted-foreground">Erori</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold">
-                      {siteMap.pages.reduce((sum, page) => sum + page.products.length, 0)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">Total produse</p>
-                  </div>
-                </div>
-
-                {isScrapingComplete && (
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => exportToJSON(siteMap)}
-                      size="sm"
-                      variant="outline"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Export Site Map JSON
-                    </Button>
-                    <Button
-                      onClick={() => exportToCSV(siteMap.pages.flatMap(page => page.products))}
-                      size="sm"
-                      variant="outline"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Export Toate Produsele CSV
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                    </TabsContent>
+                  </Tabs>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
       </div>
     </DashboardLayout>
   );
