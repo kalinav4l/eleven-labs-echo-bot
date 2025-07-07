@@ -2,7 +2,6 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./components/AuthContext";
-import { SettingsPanel } from "./components/SettingsPanel";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Account from "./pages/Account";
@@ -22,6 +21,7 @@ import { Toaster } from "@/components/ui/toaster";
 import AgentConsultant from "./pages/AgentConsultant";
 import Landing from "./pages/Landing";
 import Scraping from "./pages/Scraping";
+import SettingsPanel from "./components/SettingsPanel";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +31,7 @@ function App() {
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
           <Toaster />
+          <SettingsPanel />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/landing" element={<Landing />} />
@@ -50,7 +51,6 @@ function App() {
             <Route path="/account/settings" element={<AccountSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-          <SettingsPanel />
         </QueryClientProvider>
       </AuthProvider>
     </BrowserRouter>
