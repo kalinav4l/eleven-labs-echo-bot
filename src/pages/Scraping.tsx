@@ -1072,73 +1072,118 @@ const Scraping = () => {
               />
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-3">
-                <input
-                  type="checkbox"
-                  id="deepScraping"
-                  checked={deepScraping}
-                  onChange={(e) => setDeepScraping(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="deepScraping" className="text-sm text-muted-foreground">
-                  Scanare profundă (extrage descrieri din paginile produselor)
-                </label>
+            <div className="space-y-6">
+              {/* Opțiuni de scanare - design structural îmbunătățit */}
+              <div className="bg-muted/20 rounded-xl border border-border/40 p-4">
+                <h3 className="text-sm font-semibold mb-4 text-foreground flex items-center gap-2">
+                  <Package className="w-4 h-4" />
+                  Opțiuni de Extragere
+                </h3>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Scanare profundă */}
+                  <div className="group relative">
+                    <div className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-background/50 transition-all duration-200 hover:border-primary/20 hover:bg-muted/30">
+                      <div className="relative mt-0.5">
+                        <input
+                          type="checkbox"
+                          id="deepScraping"
+                          checked={deepScraping}
+                          onChange={(e) => setDeepScraping(e.target.checked)}
+                          className="w-4 h-4 rounded border-2 border-border bg-background checked:bg-primary checked:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+                        />
+                        {deepScraping && (
+                          <CheckCircle className="w-3 h-3 text-primary-foreground absolute top-0.5 left-0.5 pointer-events-none" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <label htmlFor="deepScraping" className="text-sm font-medium text-foreground cursor-pointer block">
+                          Scanare Profundă
+                        </label>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Extrage descrieri din paginile produselor
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Scanare nelimitată */}
+                  <div className="group relative">
+                    <div className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-background/50 transition-all duration-200 hover:border-primary/20 hover:bg-muted/30">
+                      <div className="relative mt-0.5">
+                        <input
+                          type="checkbox"
+                          id="unlimitedScraping"
+                          checked={unlimitedScraping}
+                          onChange={(e) => setUnlimitedScraping(e.target.checked)}
+                          className="w-4 h-4 rounded border-2 border-border bg-background checked:bg-primary checked:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+                        />
+                        {unlimitedScraping && (
+                          <CheckCircle className="w-3 h-3 text-primary-foreground absolute top-0.5 left-0.5 pointer-events-none" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <label htmlFor="unlimitedScraping" className="text-sm font-medium text-foreground cursor-pointer block">
+                          Scanare Nelimitată
+                        </label>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Continuă până extrage tot - poate dura mult
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
               
-              <div className="flex items-center gap-2 mb-3">
-                <input
-                  type="checkbox"
-                  id="unlimitedScraping"
-                  checked={unlimitedScraping}
-                  onChange={(e) => setUnlimitedScraping(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="unlimitedScraping" className="text-sm text-muted-foreground">
-                  Scanare nelimitată (continuă până extrage tot - poate dura mult)
-                </label>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button 
-                  onClick={handleSubmit} 
-                  disabled={isLoading}
-                  className="elevenlabs-button flex-1 sm:flex-none"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Se procesează...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="w-4 h-4 mr-2" />
-                      Extrage Date
-                    </>
-                  )}
-                </Button>
-
-                <div className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-muted/30">
-                  <span className="text-sm text-muted-foreground">Adâncime:</span>
-                  <select
-                    value={maxDepth}
-                    onChange={(e) => setMaxDepth(Number(e.target.value))}
-                    className="elevenlabs-input w-16 p-1 text-center"
+              {/* Butoane de acțiune - design îmbunătățit */}
+              <div className="flex flex-col lg:flex-row gap-4">
+                {/* Buton principal */}
+                <div className="flex-1">
+                  <Button 
+                    onClick={handleSubmit} 
+                    disabled={isLoading}
+                    className="w-full h-12 text-base font-medium bg-primary hover:bg-primary/90 text-primary-foreground border-0 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
                   >
-                    <option value={1}>1</option>
-                    <option value={2}>2</option>
-                    <option value={3}>3</option>
-                    <option value={4}>4</option>
-                    <option value={5}>5</option>
-                  </select>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-3 animate-spin" />
+                        Se procesează...
+                      </>
+                    ) : (
+                      <>
+                        <Search className="w-5 h-5 mr-3" />
+                        Extrage Date
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Control adâncime și scanare site */}
+                <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-xl border border-border/40">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-foreground whitespace-nowrap">Adâncime:</span>
+                    <select
+                      value={maxDepth}
+                      onChange={(e) => setMaxDepth(Number(e.target.value))}
+                      className="w-16 h-8 px-2 text-center text-sm border border-border rounded-lg bg-background text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+                    >
+                      <option value={1}>1</option>
+                      <option value={2}>2</option>
+                      <option value={3}>3</option>
+                      <option value={4}>4</option>
+                      <option value={5}>5</option>
+                    </select>
+                  </div>
+                  
+                  <Separator orientation="vertical" className="h-8" />
+                  
                   <Button
                     onClick={handleFullSiteScraping}
                     disabled={isLoading}
                     variant="secondary"
-                    size="sm"
-                    className="elevenlabs-button-secondary"
+                    className="h-8 px-4 text-sm font-medium bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-lg transition-all duration-200 hover:scale-105"
                   >
-                    <Globe className="w-4 h-4 mr-1" />
+                    <Globe className="w-4 h-4 mr-2" />
                     Scanează Site
                   </Button>
                 </div>
