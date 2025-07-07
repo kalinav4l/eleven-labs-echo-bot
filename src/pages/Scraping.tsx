@@ -1073,49 +1073,70 @@ const Scraping = () => {
             </div>
 
             <div className="space-y-4">
-              {/* Opțiuni de scanare - stil clean */}
-              <div className="flex gap-3">
-                <div className="flex items-center gap-2 px-3 py-2 bg-background border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setDeepScraping(!deepScraping)}>
-                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${deepScraping ? 'bg-primary border-primary' : 'border-border'}`}>
-                    {deepScraping && <div className="w-2 h-2 bg-primary-foreground rounded-sm"></div>}
-                  </div>
-                  <span className="text-sm text-foreground">Scanare profundă</span>
+              {/* Opțiuni de scanare - design minimalist */}
+              <div className="flex flex-wrap gap-3">
+                <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-lg border border-border/30 hover:border-primary/30 transition-colors">
+                  <input
+                    type="checkbox"
+                    id="deepScraping"
+                    checked={deepScraping}
+                    onChange={(e) => setDeepScraping(e.target.checked)}
+                    className="w-3.5 h-3.5 rounded border border-border"
+                  />
+                  <label htmlFor="deepScraping" className="text-sm text-foreground cursor-pointer">
+                    Scanare Profundă
+                  </label>
                 </div>
                 
-                <div className="flex items-center gap-2 px-3 py-2 bg-background border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setUnlimitedScraping(!unlimitedScraping)}>
-                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${unlimitedScraping ? 'bg-primary border-primary' : 'border-border'}`}>
-                    {unlimitedScraping && <div className="w-2 h-2 bg-primary-foreground rounded-sm"></div>}
-                  </div>
-                  <span className="text-sm text-foreground">Scanare nelimitată</span>
+                <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-lg border border-border/30 hover:border-primary/30 transition-colors">
+                  <input
+                    type="checkbox"
+                    id="unlimitedScraping"
+                    checked={unlimitedScraping}
+                    onChange={(e) => setUnlimitedScraping(e.target.checked)}
+                    className="w-3.5 h-3.5 rounded border border-border"
+                  />
+                  <label htmlFor="unlimitedScraping" className="text-sm text-foreground cursor-pointer">
+                    Scanare Nelimitată
+                  </label>
                 </div>
               </div>
               
-              {/* Butoane principale - stil clean */}
-              <div className="flex gap-3">
-                <button 
+              {/* Toate butoanele pe un singur rând */}
+              <div className="flex flex-wrap items-center gap-3">
+                <Button 
                   onClick={handleSubmit} 
                   disabled={isLoading}
-                  className="flex items-center gap-2 px-4 py-2 bg-background border border-border rounded-lg hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm text-foreground"
+                  className="h-9 px-4 text-sm bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   {isLoading ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Extrage date
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Se procesează...
                     </>
                   ) : (
                     <>
-                      <Search className="w-4 h-4" />
-                      Extrage date
+                      <Search className="w-4 h-4 mr-2" />
+                      Extrage Date
                     </>
                   )}
-                </button>
+                </Button>
 
-                <div className="flex items-center gap-2 px-3 py-2 bg-background border border-border rounded-lg">
-                  <span className="text-sm text-foreground">Adâncime:</span>
+                <div className="flex items-center gap-2 px-3 py-2 bg-muted/30 rounded-lg border border-border/30">
+                  <span className="text-xs text-muted-foreground">Adâncime:</span>
                   <select
                     value={maxDepth}
                     onChange={(e) => setMaxDepth(Number(e.target.value))}
-                    className="bg-transparent border-none text-sm text-foreground focus:outline-none cursor-pointer"
+                    className="w-12 h-6 px-1 text-xs text-center border border-border rounded bg-background text-foreground z-50 relative transition-all duration-300 hover:scale-105 focus:scale-105 focus:border-primary focus:ring-2 focus:ring-primary/20 animate-pulse-on-change"
+                    style={{
+                      animation: 'none'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.animation = 'pulse 0.5s ease-in-out';
+                      setTimeout(() => {
+                        e.target.style.animation = 'none';
+                      }, 500);
+                    }}
                   >
                     <option value={1}>1</option>
                     <option value={2}>2</option>
@@ -1125,14 +1146,15 @@ const Scraping = () => {
                   </select>
                 </div>
                 
-                <button
+                <Button
                   onClick={handleFullSiteScraping}
                   disabled={isLoading}
-                  className="flex items-center gap-2 px-4 py-2 bg-background border border-border rounded-lg hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm text-foreground"
+                  variant="secondary"
+                  className="h-9 px-3 text-sm bg-secondary hover:bg-secondary/80 text-secondary-foreground"
                 >
-                  <Globe className="w-4 h-4" />
-                  Scanează site
-                </button>
+                  <Globe className="w-4 h-4 mr-2" />
+                  Scanează Site
+                </Button>
               </div>
             </div>
 
