@@ -921,6 +921,18 @@ const Scraping = () => {
   const [deepScraping, setDeepScraping] = useState(true); // Activez implicit pentru descrieri complete
   const [unlimitedScraping, setUnlimitedScraping] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('ro'); // Limba pentru scanare
+  const [extractionOptions, setExtractionOptions] = useState({
+    products: true,
+    price: true,
+    description: true,
+    images: true,
+    specifications: true,
+    availability: true,
+    brand: true,
+    category: true,
+    reviews: false,
+    ratings: false
+  });
   const [currentScanStatus, setCurrentScanStatus] = useState<{
     stage: string;
     progress: number;
@@ -1197,6 +1209,136 @@ const Scraping = () => {
               <p className="text-xs text-muted-foreground mt-2">
                 Limba selectată va fi folosită pentru extragerea și structurarea optimă a informațiilor pentru agent
               </p>
+            </div>
+
+            {/* Extraction Options */}
+            <div className="space-y-4 p-4 bg-muted/50 rounded-lg border">
+              <h3 className="font-semibold text-lg">🎯 Opțiuni de Extragere</h3>
+              
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="products"
+                    checked={extractionOptions.products}
+                    onChange={(e) => setExtractionOptions(prev => ({ ...prev, products: e.target.checked }))}
+                    className="w-4 h-4 text-primary"
+                  />
+                  <label htmlFor="products" className="text-sm font-medium">
+                    🛍️ Produse (prioritate maximă)
+                  </label>
+                </div>
+
+                <div className="ml-6 grid grid-cols-2 gap-3">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="price"
+                      checked={extractionOptions.price}
+                      onChange={(e) => setExtractionOptions(prev => ({ ...prev, price: e.target.checked }))}
+                      className="w-4 h-4 text-primary"
+                      disabled={!extractionOptions.products}
+                    />
+                    <label htmlFor="price" className="text-sm">💰 Preț</label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="description"
+                      checked={extractionOptions.description}
+                      onChange={(e) => setExtractionOptions(prev => ({ ...prev, description: e.target.checked }))}
+                      className="w-4 h-4 text-primary"
+                      disabled={!extractionOptions.products}
+                    />
+                    <label htmlFor="description" className="text-sm">📝 Descriere</label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="images"
+                      checked={extractionOptions.images}
+                      onChange={(e) => setExtractionOptions(prev => ({ ...prev, images: e.target.checked }))}
+                      className="w-4 h-4 text-primary"
+                      disabled={!extractionOptions.products}
+                    />
+                    <label htmlFor="images" className="text-sm">📸 Imagini</label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="specifications"
+                      checked={extractionOptions.specifications}
+                      onChange={(e) => setExtractionOptions(prev => ({ ...prev, specifications: e.target.checked }))}
+                      className="w-4 h-4 text-primary"
+                      disabled={!extractionOptions.products}
+                    />
+                    <label htmlFor="specifications" className="text-sm">⚙️ Specificații</label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="availability"
+                      checked={extractionOptions.availability}
+                      onChange={(e) => setExtractionOptions(prev => ({ ...prev, availability: e.target.checked }))}
+                      className="w-4 h-4 text-primary"
+                      disabled={!extractionOptions.products}
+                    />
+                    <label htmlFor="availability" className="text-sm">📦 Disponibilitate</label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="brand"
+                      checked={extractionOptions.brand}
+                      onChange={(e) => setExtractionOptions(prev => ({ ...prev, brand: e.target.checked }))}
+                      className="w-4 h-4 text-primary"
+                      disabled={!extractionOptions.products}
+                    />
+                    <label htmlFor="brand" className="text-sm">🏷️ Brand</label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="category"
+                      checked={extractionOptions.category}
+                      onChange={(e) => setExtractionOptions(prev => ({ ...prev, category: e.target.checked }))}
+                      className="w-4 h-4 text-primary"
+                      disabled={!extractionOptions.products}
+                    />
+                    <label htmlFor="category" className="text-sm">📂 Categorie</label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="reviews"
+                      checked={extractionOptions.reviews}
+                      onChange={(e) => setExtractionOptions(prev => ({ ...prev, reviews: e.target.checked }))}
+                      className="w-4 h-4 text-primary"
+                      disabled={!extractionOptions.products}
+                    />
+                    <label htmlFor="reviews" className="text-sm">💬 Recenzii</label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="ratings"
+                      checked={extractionOptions.ratings}
+                      onChange={(e) => setExtractionOptions(prev => ({ ...prev, ratings: e.target.checked }))}
+                      className="w-4 h-4 text-primary"
+                      disabled={!extractionOptions.products}
+                    />
+                    <label htmlFor="ratings" className="text-sm">⭐ Rating</label>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Toate controalele pe un singur rând */}

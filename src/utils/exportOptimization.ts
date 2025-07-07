@@ -48,7 +48,7 @@ export const optimizeProductsForExport = (products: any[]): OptimizedProduct[] =
         })) : [],
       specifications: product.specifications ? 
         Object.fromEntries(
-          Object.entries(product.specifications).slice(0, 10)
+          Object.entries(product.specifications).slice(0, 10).map(([key, value]) => [key, String(value || '')])
         ) : {},
       url: product.url || '',
       completenessScore: product.completenessScore || undefined
