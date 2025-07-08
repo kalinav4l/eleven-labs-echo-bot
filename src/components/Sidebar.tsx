@@ -40,87 +40,76 @@ const Sidebar = ({
             </Link>
           </div>
 
-          {/* Main Navigation */}
-          <div className="space-y-1 mb-6">
-            <Link to="/account" className={`${location.pathname === '/account' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
-              <User className="mr-3 h-4 w-4" />
-              <span>Home</span>
-            </Link>
+          {/* AI & Analytics */}
+          <div className="mb-6">
+            <p className="px-3 font-semibold text-gray-400 uppercase tracking-wider mb-3 text-[10px]">
+              AI & Analytics
+            </p>
+            <div className="space-y-1">
+              <Link to="/account/kalina-agents" className={`${location.pathname === '/account/kalina-agents' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
+                <Bot className="mr-3 h-4 w-4" />
+                <span>Agents</span>
+              </Link>
 
-            <Link to="/account/conversation-analytics" className={`${location.pathname === '/account/conversation-analytics' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
-              <BarChart3 className="mr-3 h-4 w-4" />
-              <span>Analytics</span>
-            </Link>
+              <Link to="/account/conversation-analytics" className={`${location.pathname === '/account/conversation-analytics' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
+                <BarChart3 className="mr-3 h-4 w-4" />
+                <span>Analytics</span>
+              </Link>
+            </div>
+          </div>
 
-            <Link to="/account/call-logs" className={`${location.pathname === '/account/call-logs' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
-              <FileText className="mr-3 h-4 w-4" />
-              <span>Call Logs</span>
-            </Link>
+          {/* Communications */}
+          <div className="mb-6">
+            <p className="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-3">
+              Communications
+            </p>
+            <div className="space-y-1">
+              <Link to="/account/outbound" className={`${location.pathname === '/account/outbound' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
+                <PhoneCall className="mr-3 h-4 w-4" />
+                <span>Calls</span>
+              </Link>
 
-            <Link to="/account/outbound" className={`${location.pathname === '/account/outbound' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
-              <PhoneCall className="mr-3 h-4 w-4" />
-              <span>Send Call</span>
-            </Link>
+              <Link to="/account/calendar" className={`${location.pathname === '/account/calendar' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
+                <Calendar className="mr-3 h-4 w-4" />
+                <span>Calendar</span>
+              </Link>
+            </div>
+          </div>
 
-            <Link to="/account/construction" className={`${location.pathname === '/account/construction' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
-              <Workflow className="mr-3 h-4 w-4" />
-              <span>Conversational Pathways</span>
-            </Link>
+          {/* Workflow & Automation */}
+          <div className="mb-6">
+            <p className="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-3">
+              Workflow & Automation
+            </p>
+            <div className="space-y-1">
+              <Link to="/account/construction" className={`${location.pathname === '/account/construction' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
+                <Workflow className="mr-3 h-4 w-4" />
+                <span>Construction</span>
+              </Link>
+            </div>
+          </div>
 
-            <Link to="/account/batches" className={`${location.pathname === '/account/batches' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
-              <Bot className="mr-3 h-4 w-4" />
-              <span>Batches</span>
-            </Link>
+          {/* Data & Tools */}
+          <div className="mb-6">
+            <p className="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-3">
+              Data & Tools
+            </p>
+            <div className="space-y-1">
+              <Link to="/account/transcript" className={`${location.pathname === '/account/transcript' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
+                <FileText className="mr-3 h-4 w-4" />
+                <span>Transcripts</span>
+              </Link>
 
-            <Link to="/account/tools" className={`${location.pathname === '/account/tools' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
-              <Settings className="mr-3 h-4 w-4" />
-              <span>Tools</span>
-            </Link>
+              <Link to="/account/scraping" className={`${location.pathname === '/account/scraping' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
+                <Globe className="mr-3 h-4 w-4" />
+                <span>Scraping</span>
+              </Link>
 
-            <Link to="/account/billing" className={`${location.pathname === '/account/billing' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
-              <User className="mr-3 h-4 w-4" />
-              <span>Billing & Credits</span>
-            </Link>
-
-            <Link to="/account/phone-numbers" className={`${location.pathname === '/account/phone-numbers' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
-              <PhoneCall className="mr-3 h-4 w-4" />
-              <span>Phone Numbers</span>
-            </Link>
-
-            <Link to="/account/voices" className={`${location.pathname === '/account/voices' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
-              <Bot className="mr-3 h-4 w-4" />
-              <span>Voices</span>
-            </Link>
-
-            <Link to="/account/knowledge-bases" className={`${location.pathname === '/account/knowledge-bases' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
-              <FileText className="mr-3 h-4 w-4" />
-              <span>Knowledge Bases</span>
-            </Link>
-
-            <Link to="/account/web-widget" className={`${location.pathname === '/account/web-widget' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
-              <Globe className="mr-3 h-4 w-4" />
-              <span>Web Widget</span>
-            </Link>
-
-            <Link to="/account/sms" className={`${location.pathname === '/account/sms' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
-              <Mail className="mr-3 h-4 w-4" />
-              <span>SMS</span>
-            </Link>
-
-            <Link to="/account/infrastructure" className={`${location.pathname === '/account/infrastructure' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
-              <Settings className="mr-3 h-4 w-4" />
-              <span>Infrastructure</span>
-            </Link>
-
-            <Link to="/account/add-ons" className={`${location.pathname === '/account/add-ons' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
-              <Bot className="mr-3 h-4 w-4" />
-              <span>Add Ons</span>
-            </Link>
-
-            <Link to="/account/documentation" className={`${location.pathname === '/account/documentation' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
-              <FileText className="mr-3 h-4 w-4" />
-              <span>Documentation</span>
-            </Link>
+              <Link to="/account/gmail" className={`${location.pathname === '/account/gmail' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
+                <Mail className="mr-3 h-4 w-4" />
+                <span>Gmail</span>
+              </Link>
+            </div>
           </div>
           
           {/* Settings in bottom corner */}
