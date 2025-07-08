@@ -1,5 +1,8 @@
 import React from 'react';
-import { Bot, Phone, Database, Globe, FileText, Mail, GitBranch, Play } from 'lucide-react';
+import { 
+  Play, MessageCircle, GitBranch, Globe, Database, Mail, 
+  PhoneForwarded, Clock, RotateCcw, PhoneOff, BarChart3 
+} from 'lucide-react';
 
 interface SidebarProps {
   onAddNode: (type: string) => void;
@@ -7,36 +10,39 @@ interface SidebarProps {
 
 const nodeCategories = [
   {
-    title: 'Triggers',
+    title: 'Call Flow',
     nodes: [
-      { type: 'trigger', icon: Play, label: 'Start', description: 'Workflow trigger' },
+      { type: 'start', icon: Play, label: 'Start Call', description: 'Begin workflow' },
+      { type: 'conversation', icon: MessageCircle, label: 'Conversation', description: 'AI dialog handler' },
+      { type: 'endCall', icon: PhoneOff, label: 'End Call', description: 'Terminate call' },
     ]
   },
   {
-    title: 'AI & Communication',
+    title: 'Logic & Routing',
     nodes: [
-      { type: 'agent', icon: Bot, label: 'AI Agent', description: 'AI conversation handler' },
-      { type: 'phone', icon: Phone, label: 'Phone', description: 'Call management' },
-      { type: 'gmail', icon: Mail, label: 'Email', description: 'Send notifications' },
+      { type: 'decision', icon: GitBranch, label: 'Decision', description: 'Conditional logic' },
+      { type: 'transferCall', icon: PhoneForwarded, label: 'Transfer', description: 'Human handoff' },
+      { type: 'wait', icon: Clock, label: 'Wait', description: 'Smart pause' },
+      { type: 'loop', icon: RotateCcw, label: 'Loop', description: 'Iteration control' },
     ]
   },
   {
-    title: 'Data',
+    title: 'Data & Integration',
     nodes: [
-      { type: 'database', icon: Database, label: 'Database', description: 'Data operations' },
-      { type: 'scraping', icon: Globe, label: 'Scraping', description: 'Web data extraction' },
-      { type: 'transcript', icon: FileText, label: 'Transcript', description: 'Process recordings' },
+      { type: 'dataCollection', icon: Database, label: 'Collect Data', description: 'Form gathering' },
+      { type: 'apiRequest', icon: Globe, label: 'API Request', description: 'External integration' },
+      { type: 'emailSms', icon: Mail, label: 'Email/SMS', description: 'Send messages' },
     ]
   },
   {
-    title: 'Logic',
+    title: 'Analytics',
     nodes: [
-      { type: 'condition', icon: GitBranch, label: 'Condition', description: 'If/else logic' },
+      { type: 'analytics', icon: BarChart3, label: 'Analytics', description: 'Event tracking' },
     ]
   },
 ];
 
-export const Sidebar: React.FC<SidebarProps> = ({ onAddNode }) => {
+export const WorkflowSidebar: React.FC<SidebarProps> = ({ onAddNode }) => {
   return (
     <div className="w-64 bg-white border-r border-gray-200 overflow-y-auto">
       <div className="p-3">

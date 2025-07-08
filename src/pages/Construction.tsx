@@ -16,37 +16,51 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
-import { Sidebar } from '@/components/construction/WorkflowSidebar';
+import { StartNode } from '@/components/construction/nodes/StartNode';
+import { ConversationNode } from '@/components/construction/nodes/ConversationNode';
+import { DecisionNode } from '@/components/construction/nodes/DecisionNode';
+import { ApiRequestNode } from '@/components/construction/nodes/ApiRequestNode';
+import { DataCollectionNode } from '@/components/construction/nodes/DataCollectionNode';
+import { EmailSmsNode } from '@/components/construction/nodes/EmailSmsNode';
+import { TransferCallNode } from '@/components/construction/nodes/TransferCallNode';
+import { WaitNode } from '@/components/construction/nodes/WaitNode';
+import { LoopNode } from '@/components/construction/nodes/LoopNode';
+import { EndCallNode } from '@/components/construction/nodes/EndCallNode';
+import { AnalyticsNode } from '@/components/construction/nodes/AnalyticsNode';
+import { WorkflowSidebar } from '@/components/construction/WorkflowSidebar';
 import { WorkflowToolbar } from '@/components/construction/WorkflowToolbar';
 import { NodeConfigPanel } from '@/components/construction/NodeConfigPanel';
-import { AgentNode } from '@/components/construction/nodes/AgentNode';
-import { PhoneNode } from '@/components/construction/nodes/PhoneNode';
-import { DatabaseNode } from '@/components/construction/nodes/DatabaseNode';
-import { ScrapingNode } from '@/components/construction/nodes/ScrapingNode';
-import { TranscriptNode } from '@/components/construction/nodes/TranscriptNode';
-import { GmailNode } from '@/components/construction/nodes/GmailNode';
-import { ConditionNode } from '@/components/construction/nodes/ConditionNode';
-import { TriggerNode } from '@/components/construction/nodes/TriggerNode';
-import { ArrowLeft } from 'lucide-react';
+import { GlobalSettingsPanel } from '@/components/construction/GlobalSettingsPanel';
+import { VariableManager } from '@/components/construction/VariableManager';
+import { ArrowLeft, Settings, Play, Variable } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const nodeTypes = {
-  agent: AgentNode,
-  phone: PhoneNode,
-  database: DatabaseNode,
-  scraping: ScrapingNode,
-  transcript: TranscriptNode,
-  gmail: GmailNode,
-  condition: ConditionNode,
-  trigger: TriggerNode,
+  start: StartNode,
+  conversation: ConversationNode,
+  decision: DecisionNode,
+  apiRequest: ApiRequestNode,
+  dataCollection: DataCollectionNode,
+  emailSms: EmailSmsNode,
+  transferCall: TransferCallNode,
+  wait: WaitNode,
+  loop: LoopNode,
+  endCall: EndCallNode,
+  analytics: AnalyticsNode,
 };
 
 const initialNodes: Node[] = [
   {
-    id: 'start',
-    type: 'trigger',
+    id: 'start-1',
+    type: 'start',
     position: { x: 100, y: 100 },
-    data: { label: 'Start Workflow' },
+    data: { 
+      label: 'Start Call',
+      firstMessage: 'Hello! How can I help you today?',
+      voiceModel: 'Sarah',
+      maxDuration: 30,
+      recording: true
+    },
   },
 ];
 
@@ -56,11 +70,19 @@ const Construction = () => {
   const { user } = useAuth();
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [selectedNodeType, setSelectedNodeType] = useState<string | null>(null);
-  const [workflowName, setWorkflowName] = useState('Untitled Workflow');
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [workflowName, setWorkflowName] = useState('AI Call Workflow');
   const [isWorkflowActive, setIsWorkflowActive] = useState(false);
   const [workflowData, setWorkflowData] = useState<any[]>([]);
+  const [showGlobalSettings, setShowGlobalSettings] = useState(false);
+  const [showVariableManager, setShowVariableManager] = useState(false);
+  const [globalSettings, setGlobalSettings] = useState({
+    globalPrompt: 'You are a helpful AI assistant for customer service calls.',
+    globalVoice: 'sarah',
+    company: 'Kalina AI',
+    timezone: 'EET'
+  });
+  const [variables, setVariables] = useState<any[]>([]);
 
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -148,10 +170,29 @@ const Construction = () => {
     }
   };
 
+  const handleRun = () => {
+    console.log('Running workflow:', workflowName, 'with nodes:', nodes, 'and edges:', edges);
+    
+    // Simulate workflow execution
+    const executionData = {
+      workflowId: `workflow_${Date.now()}`,
+      startTime: new Date().toISOString(),
+      nodes: nodes.length,
+      connections: edges.length,
+      status: 'running'
+    };
+    
+    console.log('Execution started:', executionData);
+    toast({
+      title: "Test Started",
+      description: `Running workflow "${workflowName}" with ${nodes.length} nodes`,
+    });
+  };
+
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
-      {/* Minimal Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between h-12">
+      {/* Enhanced Header */}
+      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <Button 
             variant="ghost" 
@@ -166,23 +207,59 @@ const Construction = () => {
             type="text"
             value={workflowName}
             onChange={(e) => setWorkflowName(e.target.value)}
-            className="px-2 py-1 border-none bg-transparent text-lg font-medium text-gray-900 focus:outline-none focus:bg-white focus:border focus:border-gray-300 focus:rounded"
-            placeholder="Untitled Workflow"
+            className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-lg font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="AI Call Workflow"
           />
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="sm" onClick={loadWorkflow}>
-            Load
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowGlobalSettings(true)}
+            className="flex items-center space-x-1"
+          >
+            <Settings className="h-4 w-4" />
+            <span>Global Settings</span>
           </Button>
-          <Button size="sm" onClick={saveWorkflow} className="bg-gray-900 hover:bg-gray-800 text-white">
-            Save
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowVariableManager(true)}
+            className="flex items-center space-x-1"
+          >
+            <Variable className="h-4 w-4" />
+            <span>Variables</span>
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={loadWorkflow}
+            className="flex items-center space-x-1"
+          >
+            <span>Load</span>
+          </Button>
+          <Button 
+            size="sm" 
+            onClick={saveWorkflow} 
+            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-1"
+          >
+            <span>Save</span>
+          </Button>
+          <Button 
+            size="sm" 
+            onClick={handleRun}
+            disabled={nodes.length === 0}
+            className="bg-green-600 hover:bg-green-700 text-white flex items-center space-x-1"
+          >
+            <Play className="h-4 w-4" />
+            <span>Test</span>
           </Button>
         </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Minimal Sidebar */}
-        <Sidebar onAddNode={addNode} />
+        {/* AI Workflow Sidebar */}
+        <WorkflowSidebar onAddNode={addNode} />
 
         {/* Full Canvas */}
           <div className="flex-1 relative bg-gray-50">
@@ -250,6 +327,22 @@ const Construction = () => {
             />
           )}
       </div>
+
+      {/* Global Settings Panel */}
+      <GlobalSettingsPanel
+        isOpen={showGlobalSettings}
+        onClose={() => setShowGlobalSettings(false)}
+        settings={globalSettings}
+        onUpdateSettings={setGlobalSettings}
+      />
+
+      {/* Variable Manager */}
+      <VariableManager
+        isOpen={showVariableManager}
+        onClose={() => setShowVariableManager(false)}
+        variables={variables}
+        onUpdateVariables={setVariables}
+      />
     </div>
   );
 };
