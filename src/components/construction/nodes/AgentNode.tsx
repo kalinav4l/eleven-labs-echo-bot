@@ -1,0 +1,51 @@
+import React from 'react';
+import { Handle, Position } from '@xyflow/react';
+import { Bot, Settings } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+
+interface AgentNodeProps {
+  data: {
+    label: string;
+    agentId?: string;
+    agentName?: string;
+  };
+}
+
+export const AgentNode: React.FC<AgentNodeProps> = ({ data }) => {
+  return (
+    <Card className="min-w-[200px] shadow-md border-2 border-blue-200 bg-blue-50">
+      <CardContent className="p-4">
+        <div className="flex items-center space-x-2 mb-3">
+          <div className="bg-blue-600 p-2 rounded-lg">
+            <Bot className="h-4 w-4 text-white" />
+          </div>
+          <div>
+            <h3 className="font-medium text-gray-900">AI Agent</h3>
+            <p className="text-xs text-gray-500">
+              {data.agentName || 'No agent selected'}
+            </p>
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Button size="sm" variant="outline" className="w-full">
+            <Settings className="h-3 w-3 mr-1" />
+            Configure Agent
+          </Button>
+        </div>
+        
+        <Handle 
+          type="target" 
+          position={Position.Left} 
+          className="w-3 h-3 bg-blue-600" 
+        />
+        <Handle 
+          type="source" 
+          position={Position.Right} 
+          className="w-3 h-3 bg-blue-600" 
+        />
+      </CardContent>
+    </Card>
+  );
+};

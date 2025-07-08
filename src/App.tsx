@@ -22,6 +22,7 @@ import AgentConsultant from "./pages/AgentConsultant";
 import Landing from "./pages/Landing";
 import Scraping from "./pages/Scraping";
 import Gmail from "./pages/Gmail";
+import Construction from "./pages/Construction";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ function App() {
             <Route path="/account/transcript" element={<Transcript />} />
             <Route path="/account/outbound" element={<Outbound />} />
             <Route path="/account/calendar" element={<Calendar />} />
+            <Route path="/account/construction" element={<Construction />} />
             <Route path="/account/scraping" element={<Scraping />} />
             <Route path="/account/gmail" element={<Gmail />} />
             <Route path="/account/settings" element={<AccountSettings />} />
