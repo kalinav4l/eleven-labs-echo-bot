@@ -175,31 +175,60 @@ const Outbound = () => {
   return <DashboardLayout>
       <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto px-6 py-8">
-          <OutboundHeader />
+          <div className="space-y-8">
+            <OutboundHeader />
 
-          <AgentIdInput agentId={agentId} setAgentId={setAgentId} />
+            {/* Agent Configuration Card */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Configurare Agent</h2>
+              <AgentIdInput agentId={agentId} setAgentId={setAgentId} />
+            </div>
 
-          <Tabs defaultValue="single" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 mx-[22px] my-0 py-0 px-[17px]">
-              <TabsTrigger value="single">Apel Individual</TabsTrigger>
-              <TabsTrigger value="batch">Apeluri Batch</TabsTrigger>
-              <TabsTrigger value="history">Istoric</TabsTrigger>
-            </TabsList>
+            {/* Call Management Section */}
+            <div className="bg-white border border-gray-200 rounded-lg">
+              <div className="border-b border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900">Management Apeluri</h2>
+                <p className="text-sm text-gray-600 mt-1">Inițiați apeluri individuale sau în batch și monitorizați istoricul</p>
+              </div>
+              
+              <Tabs defaultValue="single" className="w-full">
+                <TabsList className="grid w-full grid-cols-3 rounded-none border-b border-gray-200 bg-transparent h-auto p-0">
+                  <TabsTrigger 
+                    value="single" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:bg-transparent bg-transparent px-6 py-4"
+                  >
+                    Apel Individual
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="batch" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:bg-transparent bg-transparent px-6 py-4"
+                  >
+                    Apeluri Batch
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="history" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:bg-transparent bg-transparent px-6 py-4"
+                  >
+                    Istoric Apeluri
+                  </TabsTrigger>
+                </TabsList>
 
-            <TabsContent value="single">
-              <SingleCallTab contactName={contactName} setContactName={setContactName} phoneNumber={phoneNumber} setPhoneNumber={setPhoneNumber} handleSingleCall={handleSingleCall} agentId={agentId} isInitiating={isInitiating} />
-            </TabsContent>
+                <TabsContent value="single" className="p-6">
+                  <SingleCallTab contactName={contactName} setContactName={setContactName} phoneNumber={phoneNumber} setPhoneNumber={setPhoneNumber} handleSingleCall={handleSingleCall} agentId={agentId} isInitiating={isInitiating} />
+                </TabsContent>
 
-            <TabsContent value="batch">
-              <BatchTab contacts={contacts} selectedContacts={selectedContacts} onContactSelect={handleContactSelect} onSelectAll={handleSelectAll} onFileSelect={() => fileInputRef.current?.click()} onDownloadTemplate={downloadTemplate} onBatchProcess={handleBatchProcess} agentId={agentId} isProcessingBatch={isProcessingBatch} currentProgress={currentProgress} totalCalls={totalCalls} currentCallStatus={currentCallStatus} callStatuses={callStatuses} />
-            </TabsContent>
+                <TabsContent value="batch" className="p-6">
+                  <BatchTab contacts={contacts} selectedContacts={selectedContacts} onContactSelect={handleContactSelect} onSelectAll={handleSelectAll} onFileSelect={() => fileInputRef.current?.click()} onDownloadTemplate={downloadTemplate} onBatchProcess={handleBatchProcess} agentId={agentId} isProcessingBatch={isProcessingBatch} currentProgress={currentProgress} totalCalls={totalCalls} currentCallStatus={currentCallStatus} callStatuses={callStatuses} />
+                </TabsContent>
 
-            <TabsContent value="history">
-              <CallHistoryTab callHistory={callHistory} isLoading={historyLoading} />
-            </TabsContent>
-          </Tabs>
+                <TabsContent value="history" className="p-6">
+                  <CallHistoryTab callHistory={callHistory} isLoading={historyLoading} />
+                </TabsContent>
+              </Tabs>
+            </div>
 
-          <input ref={fileInputRef} type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" />
+            <input ref={fileInputRef} type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" />
+          </div>
         </div>
       </div>
     </DashboardLayout>;

@@ -9,12 +9,12 @@ export const AgentIdInput: React.FC<AgentIdInputProps> = ({
   agentId,
   setAgentId
 }) => {
-  return <div className="mb-6 mx-[24px]">
+  return <div className="space-y-3">
       <Label htmlFor="agent-id" className="text-gray-900 font-medium">
         Agent ID ElevenLabs *
       </Label>
-      <Input id="agent-id" value={agentId} onChange={e => setAgentId(e.target.value)} placeholder="agent_xxxxxxxxx" className="bg-white border-gray-300 text-gray-900 font-mono mt-1" />
-      <p className="text-xs text-gray-500 mt-1">
+      <Input id="agent-id" value={agentId} onChange={e => setAgentId(e.target.value)} placeholder="agent_xxxxxxxxx" className="bg-white border-gray-300 text-gray-900 font-mono" />
+      <p className="text-xs text-gray-500">
         ID-ul agentului vostru din ElevenLabs care va efectua apelurile
       </p>
     </div>;
