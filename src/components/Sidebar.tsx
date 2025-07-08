@@ -42,7 +42,8 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         </div>
         
         <nav className="px-4 pb-6 flex flex-col h-full">
-          <div className="space-y-1">
+          {/* Dashboard Section */}
+          <div className="space-y-1 mb-6">
             <Link 
               to="/account" 
               className={`${location.pathname === '/account' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`}
@@ -51,69 +52,93 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               <User className="mr-3 h-4 w-4" />
               <span>Home</span>
             </Link>
-            
-            <Link 
-              to="/account/kalina-agents" 
-              className={`${location.pathname === '/account/kalina-agents' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`}
-              onClick={isMobile ? onClose : undefined}
-            >
-              <Bot className="mr-3 h-4 w-4" />
-              <span>Agents</span>
-            </Link>
+          </div>
 
-            <Link 
-              to="/account/conversation-analytics" 
-              className={`${location.pathname === '/account/conversation-analytics' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`}
-              onClick={isMobile ? onClose : undefined}
-            >
-              <BarChart3 className="mr-3 h-4 w-4" />
-              <span>Analytics</span>
-            </Link>
+          {/* AI & Analytics */}
+          <div className="mb-6">
+            <p className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+              AI & Analytics
+            </p>
+            <div className="space-y-1">
+              <Link 
+                to="/account/kalina-agents" 
+                className={`${location.pathname === '/account/kalina-agents' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`}
+                onClick={isMobile ? onClose : undefined}
+              >
+                <Bot className="mr-3 h-4 w-4" />
+                <span>Agents</span>
+              </Link>
 
-            <Link 
-              to="/account/transcript" 
-              className={`${location.pathname === '/account/transcript' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`}
-              onClick={isMobile ? onClose : undefined}
-            >
-              <FileText className="mr-3 h-4 w-4" />
-              <span>Transcripts</span>
-            </Link>
+              <Link 
+                to="/account/conversation-analytics" 
+                className={`${location.pathname === '/account/conversation-analytics' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`}
+                onClick={isMobile ? onClose : undefined}
+              >
+                <BarChart3 className="mr-3 h-4 w-4" />
+                <span>Analytics</span>
+              </Link>
+            </div>
+          </div>
 
-            <Link 
-              to="/account/outbound" 
-              className={`${location.pathname === '/account/outbound' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`}
-              onClick={isMobile ? onClose : undefined}
-            >
-              <PhoneCall className="mr-3 h-4 w-4" />
-              <span>Calls</span>
-            </Link>
+          {/* Communications */}
+          <div className="mb-6">
+            <p className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+              Communications
+            </p>
+            <div className="space-y-1">
+              <Link 
+                to="/account/outbound" 
+                className={`${location.pathname === '/account/outbound' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`}
+                onClick={isMobile ? onClose : undefined}
+              >
+                <PhoneCall className="mr-3 h-4 w-4" />
+                <span>Calls</span>
+              </Link>
 
-            <Link 
-              to="/account/calendar" 
-              className={`${location.pathname === '/account/calendar' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`}
-              onClick={isMobile ? onClose : undefined}
-            >
-              <Calendar className="mr-3 h-4 w-4" />
-              <span>Calendar</span>
-            </Link>
+              <Link 
+                to="/account/calendar" 
+                className={`${location.pathname === '/account/calendar' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`}
+                onClick={isMobile ? onClose : undefined}
+              >
+                <Calendar className="mr-3 h-4 w-4" />
+                <span>Calendar</span>
+              </Link>
+            </div>
+          </div>
 
-            <Link 
-              to="/account/scraping" 
-              className={`${location.pathname === '/account/scraping' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`}
-              onClick={isMobile ? onClose : undefined}
-            >
-              <Globe className="mr-3 h-4 w-4" />
-              <span>Scraping</span>
-            </Link>
+          {/* Data & Tools */}
+          <div className="mb-6">
+            <p className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+              Data & Tools
+            </p>
+            <div className="space-y-1">
+              <Link 
+                to="/account/transcript" 
+                className={`${location.pathname === '/account/transcript' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`}
+                onClick={isMobile ? onClose : undefined}
+              >
+                <FileText className="mr-3 h-4 w-4" />
+                <span>Transcripts</span>
+              </Link>
 
-            <Link 
-              to="/account/gmail" 
-              className={`${location.pathname === '/account/gmail' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`}
-              onClick={isMobile ? onClose : undefined}
-            >
-              <Mail className="mr-3 h-4 w-4" />
-              <span>Gmail</span>
-            </Link>
+              <Link 
+                to="/account/scraping" 
+                className={`${location.pathname === '/account/scraping' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`}
+                onClick={isMobile ? onClose : undefined}
+              >
+                <Globe className="mr-3 h-4 w-4" />
+                <span>Scraping</span>
+              </Link>
+
+              <Link 
+                to="/account/gmail" 
+                className={`${location.pathname === '/account/gmail' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`}
+                onClick={isMobile ? onClose : undefined}
+              >
+                <Mail className="mr-3 h-4 w-4" />
+                <span>Gmail</span>
+              </Link>
+            </div>
           </div>
           
           {/* Settings in bottom corner */}
