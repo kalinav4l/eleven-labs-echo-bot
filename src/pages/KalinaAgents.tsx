@@ -124,7 +124,11 @@ const KalinaAgents = () => {
       {/* Agents List - Vertical Layout like ElevenLabs */}
       <div className="space-y-3">
         {filteredAgents && filteredAgents.length > 0 ? filteredAgents.map(agent =>
-            <div key={agent.id} className="bg-white rounded-lg p-4 transition-all duration-200 hover:bg-gray-50/50">
+            <div 
+              key={agent.id} 
+              className="bg-white rounded-lg p-4 transition-all duration-200 hover:bg-gray-50/50 cursor-pointer"
+              onClick={() => handleEditAgent(agent.agent_id)}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4 flex-1">
                   <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -165,7 +169,10 @@ const KalinaAgents = () => {
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleCopyAgentId(agent.agent_id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopyAgentId(agent.agent_id);
+                            }}
                             className="h-5 w-5 p-0 hover:bg-gray-100"
                         >
                           <Copy className="w-3 h-3 text-gray-400" />
@@ -180,7 +187,10 @@ const KalinaAgents = () => {
                     size="sm" 
                     className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 px-3" 
                     disabled={!agent.is_active}
-                    onClick={() => setVoiceTestAgent(agent)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setVoiceTestAgent(agent);
+                    }}
                   >
                     <Mic className="w-3 h-3 mr-1" />
                     Test Audio
@@ -190,56 +200,14 @@ const KalinaAgents = () => {
                     size="sm" 
                     className="bg-black hover:bg-gray-800 text-white text-xs h-8 px-3" 
                     disabled={!agent.is_active}
-                    onClick={() => handleTestCall(agent)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleTestCall(agent);
+                    }}
                   >
                     <Phone className="w-3 h-3 mr-1" />
                     Test Apel
                   </Button>
-                  
-                  <Button
-                      variant="outline"
-                      size="sm"
-                      className="bg-white border-gray-200 hover:bg-gray-50 text-gray-700 text-xs h-8 px-3"
-                      onClick={() => handleEditAgent(agent.agent_id)}
-                  >
-                    Editează
-                  </Button>
-                  
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-100">
-                        <Settings className="w-4 h-4 text-gray-500" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-48 bg-white border-gray-200">
-                      <DropdownMenuItem onClick={() => handleDuplicateAgent(agent)} disabled={isDuplicating}>
-                        <Files className="w-4 h-4 mr-2" />
-                        {isDuplicating ? 'Se duplică...' : 'Duplică'}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleToggleAgentStatus(agent)}>
-                        {agent.is_active ? (
-                            <>
-                              <PowerOff className="w-4 h-4 mr-2" />
-                              Dezactivează
-                            </>
-                        ) : (
-                            <>
-                              <Power className="w-4 h-4 mr-2" />
-                              Activează
-                            </>
-                        )}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                          className="text-red-600 focus:text-red-600"
-                          onClick={() => setSelectedAgentForDeletion(agent)}
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Șterge
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                 </div>
               </div>
             </div>
