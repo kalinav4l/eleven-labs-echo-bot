@@ -1,8 +1,6 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { Play, Settings } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Play } from 'lucide-react';
 
 interface TriggerNodeProps {
   data: {
@@ -13,33 +11,26 @@ interface TriggerNodeProps {
 
 export const TriggerNode: React.FC<TriggerNodeProps> = ({ data }) => {
   return (
-    <Card className="min-w-[200px] shadow-md border-2 border-gray-300 bg-gray-50">
-      <CardContent className="p-4">
-        <div className="flex items-center space-x-2 mb-3">
-          <div className="bg-gray-700 p-2 rounded-lg">
-            <Play className="h-4 w-4 text-white" />
+    <div className="bg-white border-2 border-gray-300 rounded-lg shadow-sm min-w-[160px] hover:shadow-md transition-shadow">
+      <div className="p-3">
+        <div className="flex items-center space-x-2 mb-2">
+          <div className="bg-gray-100 p-1.5 rounded">
+            <Play className="h-3 w-3 text-gray-700" />
           </div>
           <div>
-            <h3 className="font-medium text-gray-900">Workflow Trigger</h3>
-            <p className="text-xs text-gray-500">
+            <h3 className="text-xs font-medium text-gray-900">Start</h3>
+            <p className="text-[10px] text-gray-500">
               {data.triggerType ? data.triggerType.replace('_', ' ') : 'Manual trigger'}
             </p>
           </div>
         </div>
-        
-        <div className="space-y-2">
-          <Button size="sm" variant="outline" className="w-full">
-            <Settings className="h-3 w-3 mr-1" />
-            Setup Trigger
-          </Button>
-        </div>
-        
-        <Handle 
-          type="source" 
-          position={Position.Right} 
-          className="w-3 h-3 bg-gray-700" 
-        />
-      </CardContent>
-    </Card>
+      </div>
+      
+      <Handle 
+        type="source" 
+        position={Position.Right} 
+        className="w-2 h-2 bg-gray-700 border-none" 
+      />
+    </div>
   );
 };

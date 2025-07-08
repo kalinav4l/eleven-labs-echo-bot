@@ -1,8 +1,6 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { Phone, Settings } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Phone } from 'lucide-react';
 
 interface PhoneNodeProps {
   data: {
@@ -14,38 +12,31 @@ interface PhoneNodeProps {
 
 export const PhoneNode: React.FC<PhoneNodeProps> = ({ data }) => {
   return (
-    <Card className="min-w-[200px] shadow-md border-2 border-green-200 bg-green-50">
-      <CardContent className="p-4">
-        <div className="flex items-center space-x-2 mb-3">
-          <div className="bg-green-600 p-2 rounded-lg">
-            <Phone className="h-4 w-4 text-white" />
+    <div className="bg-white border-2 border-gray-200 rounded-lg shadow-sm min-w-[160px] hover:shadow-md transition-shadow">
+      <div className="p-3">
+        <div className="flex items-center space-x-2 mb-2">
+          <div className="bg-green-100 p-1.5 rounded">
+            <Phone className="h-3 w-3 text-green-600" />
           </div>
           <div>
-            <h3 className="font-medium text-gray-900">Phone Handler</h3>
-            <p className="text-xs text-gray-500">
-              {data.phoneNumber || 'No number configured'}
+            <h3 className="text-xs font-medium text-gray-900">Phone</h3>
+            <p className="text-[10px] text-gray-500">
+              {data.phoneNumber || 'Not configured'}
             </p>
           </div>
         </div>
-        
-        <div className="space-y-2">
-          <Button size="sm" variant="outline" className="w-full">
-            <Settings className="h-3 w-3 mr-1" />
-            Setup Phone
-          </Button>
-        </div>
-        
-        <Handle 
-          type="target" 
-          position={Position.Left} 
-          className="w-3 h-3 bg-green-600" 
-        />
-        <Handle 
-          type="source" 
-          position={Position.Right} 
-          className="w-3 h-3 bg-green-600" 
-        />
-      </CardContent>
-    </Card>
+      </div>
+      
+      <Handle 
+        type="target" 
+        position={Position.Left} 
+        className="w-2 h-2 bg-green-600 border-none" 
+      />
+      <Handle 
+        type="source" 
+        position={Position.Right} 
+        className="w-2 h-2 bg-green-600 border-none" 
+      />
+    </div>
   );
 };

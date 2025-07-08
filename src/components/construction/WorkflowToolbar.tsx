@@ -1,7 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Play, Square, RotateCcw, Download, Upload } from 'lucide-react';
+import { Play, RotateCcw, Download } from 'lucide-react';
 import { Node, Edge } from '@xyflow/react';
 
 interface WorkflowToolbarProps {
@@ -17,7 +16,6 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
 }) => {
   const handleRun = () => {
     console.log('Running workflow with nodes:', nodes, 'and edges:', edges);
-    // TODO: Implement workflow execution
   };
 
   const handleExport = () => {
@@ -34,35 +32,37 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
   };
 
   return (
-    <Card className="absolute top-4 right-4 z-10 bg-white border border-gray-200 shadow-lg">
-      <div className="p-3 flex items-center space-x-2">
+    <div className="absolute top-3 right-3 z-10 bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg shadow-sm">
+      <div className="p-2 flex items-center space-x-1">
         <Button 
           size="sm" 
           onClick={handleRun}
-          className="bg-green-600 hover:bg-green-700 text-white"
+          className="bg-gray-900 hover:bg-gray-800 text-white h-7 px-2"
         >
-          <Play className="h-4 w-4 mr-1" />
+          <Play className="h-3 w-3 mr-1" />
           Run
         </Button>
         
         <Button 
           size="sm" 
-          variant="outline"
+          variant="ghost"
           onClick={onClear}
+          className="h-7 px-2"
         >
-          <RotateCcw className="h-4 w-4 mr-1" />
+          <RotateCcw className="h-3 w-3 mr-1" />
           Clear
         </Button>
         
         <Button 
           size="sm" 
-          variant="outline"
+          variant="ghost"
           onClick={handleExport}
+          className="h-7 px-2"
         >
-          <Download className="h-4 w-4 mr-1" />
+          <Download className="h-3 w-3 mr-1" />
           Export
         </Button>
       </div>
-    </Card>
+    </div>
   );
 };

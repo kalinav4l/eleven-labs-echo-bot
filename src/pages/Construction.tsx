@@ -15,9 +15,7 @@ import {
   BackgroundVariant,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sidebar } from '@/components/construction/WorkflowSidebar';
 import { WorkflowToolbar } from '@/components/construction/WorkflowToolbar';
 import { AgentNode } from '@/components/construction/nodes/AgentNode';
@@ -28,6 +26,7 @@ import { TranscriptNode } from '@/components/construction/nodes/TranscriptNode';
 import { GmailNode } from '@/components/construction/nodes/GmailNode';
 import { ConditionNode } from '@/components/construction/nodes/ConditionNode';
 import { TriggerNode } from '@/components/construction/nodes/TriggerNode';
+import { ArrowLeft } from 'lucide-react';
 
 const nodeTypes = {
   agent: AgentNode,
@@ -88,79 +87,90 @@ const Construction = () => {
   };
 
   return (
-    <DashboardLayout>
-      <div className="h-screen bg-gray-50 flex flex-col">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-gray-900">Workflow Constructor</h1>
-            <input
-              type="text"
-              value={workflowName}
-              onChange={(e) => setWorkflowName(e.target.value)}
-              className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-            />
-          </div>
-          <div className="flex items-center space-x-3">
-            <Button variant="outline" onClick={loadWorkflow}>
-              Load
-            </Button>
-            <Button onClick={saveWorkflow} className="bg-gray-900 hover:bg-gray-800">
-              Save Workflow
-            </Button>
-          </div>
+    <div className="h-screen bg-gray-50 flex flex-col">
+      {/* Minimal Header */}
+      <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between h-12">
+        <div className="flex items-center space-x-4">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => window.history.back()}
+            className="text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back
+          </Button>
+          <input
+            type="text"
+            value={workflowName}
+            onChange={(e) => setWorkflowName(e.target.value)}
+            className="px-2 py-1 border-none bg-transparent text-lg font-medium text-gray-900 focus:outline-none focus:bg-white focus:border focus:border-gray-300 focus:rounded"
+            placeholder="Untitled Workflow"
+          />
         </div>
-
-        <div className="flex flex-1 overflow-hidden">
-          {/* Sidebar with node palette */}
-          <Sidebar onAddNode={addNode} />
-
-          {/* Main canvas */}
-          <div className="flex-1 relative">
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              nodeTypes={nodeTypes}
-              fitView
-              className="bg-gray-50"
-              attributionPosition="bottom-left"
-            >
-              <Controls 
-                className="bg-white border border-gray-200 rounded-lg shadow-sm"
-                showZoom={true}
-                showFitView={true}
-                showInteractive={true}
-              />
-              <MiniMap 
-                className="bg-white border border-gray-200 rounded-lg"
-                nodeStrokeColor="#374151"
-                nodeColor="#f3f4f6"
-                nodeBorderRadius={8}
-              />
-              <Background 
-                variant={BackgroundVariant.Dots} 
-                gap={20} 
-                size={1} 
-                color="#e5e7eb"
-              />
-            </ReactFlow>
-
-            {/* Floating toolbar */}
-            <WorkflowToolbar 
-              nodes={nodes} 
-              edges={edges} 
-              onClear={() => {
-                setNodes(initialNodes);
-                setEdges([]);
-              }}
-            />
-          </div>
+        <div className="flex items-center space-x-2">
+          <Button variant="ghost" size="sm" onClick={loadWorkflow}>
+            Load
+          </Button>
+          <Button size="sm" onClick={saveWorkflow} className="bg-gray-900 hover:bg-gray-800 text-white">
+            Save
+          </Button>
         </div>
       </div>
-    </DashboardLayout>
+
+      <div className="flex flex-1 overflow-hidden">
+        {/* Minimal Sidebar */}
+        <Sidebar onAddNode={addNode} />
+
+        {/* Full Canvas */}
+        <div className="flex-1 relative bg-gray-50">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            nodeTypes={nodeTypes}
+            fitView
+            className="bg-gray-50"
+            attributionPosition="bottom-left"
+            minZoom={0.1}
+            maxZoom={2}
+          >
+            <Controls 
+              className="bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg shadow-sm"
+              showZoom={true}
+              showFitView={true}
+              showInteractive={false}
+            />
+            <MiniMap 
+              className="bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg"
+              nodeStrokeColor="#6B7280"
+              nodeColor="#F3F4F6"
+              nodeBorderRadius={6}
+              pannable
+              zoomable
+            />
+            <Background 
+              variant={BackgroundVariant.Dots} 
+              gap={24} 
+              size={1} 
+              color="#D1D5DB"
+            />
+          </ReactFlow>
+
+          {/* Minimal Floating Toolbar */}
+          <WorkflowToolbar 
+            nodes={nodes} 
+            edges={edges} 
+            onClear={() => {
+              setNodes(initialNodes);
+              setEdges([]);
+            }}
+          />
+        </div>
+      </div>
+    </div>
   );
 };
 
