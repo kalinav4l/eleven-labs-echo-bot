@@ -24,7 +24,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         />
       )}
       
-      <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-white transition-transform duration-300 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:z-auto`}>
+      <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-white transition-transform duration-300 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:z-auto flex flex-col`}>
         <div className="flex items-center justify-between px-6 py-6">
           <Link to="/account" className="flex items-center text-lg font-semibold text-gray-900 hover:text-gray-700 transition-colors" onClick={isMobile ? onClose : undefined}>
             <Avatar className="mr-3 w-8 h-8">
@@ -41,7 +41,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           </button>
         </div>
         
-        <nav className="px-4 pb-6">
+        <nav className="px-4 pb-6 flex flex-col h-full">
           <div className="space-y-1">
             <Link 
               to="/account" 
@@ -107,8 +107,8 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             </Link>
           </div>
           
-          {/* Settings section at bottom */}
-          <div className="mt-auto pt-4 border-t border-gray-100">
+          {/* Settings in bottom corner */}
+          <div className="mt-auto">
             <Link 
               to="/account/settings"
               className={`${location.pathname === '/account/settings' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`}
