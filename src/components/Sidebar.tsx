@@ -42,7 +42,7 @@ const Sidebar = ({
 
           {/* AI & Analytics */}
           <div className="mb-6">
-            <p className="px-3 font-semibold text-gray-400 uppercase tracking-wider mb-3 text-xs">
+            <p className="px-3 font-semibold text-gray-400 uppercase tracking-wider mb-3 text-[10px]">
               AI & Analytics
             </p>
             <div className="space-y-1">
@@ -60,7 +60,7 @@ const Sidebar = ({
 
           {/* Communications */}
           <div className="mb-6">
-            <p className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+            <p className="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-3">
               Communications
             </p>
             <div className="space-y-1">
@@ -78,7 +78,7 @@ const Sidebar = ({
 
           {/* Data & Tools */}
           <div className="mb-6">
-            <p className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+            <p className="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-3">
               Data & Tools
             </p>
             <div className="space-y-1">
