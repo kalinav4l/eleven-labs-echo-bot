@@ -105,8 +105,10 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               <Globe className="mr-3 h-4 w-4" />
               <span>Scraping</span>
             </Link>
-
-
+          </div>
+          
+          {/* Settings section at bottom */}
+          <div className="mt-auto pt-4 border-t border-gray-100">
             <Link 
               to="/account/settings"
               className={`${location.pathname === '/account/settings' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`}
