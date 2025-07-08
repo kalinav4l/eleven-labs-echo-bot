@@ -9,16 +9,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Mail, Upload, Send, Database, Clock, Sparkles } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
-
 const Gmail = () => {
-  const { user } = useAuth();
-
+  const {
+    user
+  } = useAuth();
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
-
-  return (
-    <DashboardLayout>
+  return <DashboardLayout>
       <div className="min-h-screen bg-white">
         <div className="max-w-6xl mx-auto px-6 py-8">
           {/* Header */}
@@ -39,24 +37,7 @@ const Gmail = () => {
           </div>
 
           {/* Coming Soon Banner */}
-          <Card className="mb-8 border-2 border-dashed border-blue-200 bg-blue-50/50">
-            <CardContent className="p-8 text-center">
-              <div className="flex flex-col items-center space-y-4">
-                <div className="p-4 bg-blue-100 rounded-full">
-                  <Sparkles className="w-8 h-8 text-blue-600" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                    Funcționalitate Gmail Marketing În Dezvoltare
-                  </h2>
-                  <p className="text-gray-600 max-w-2xl">
-                    Platforma noastră de marketing prin email va permite încărcarea bazelor de date cu companii 
-                    și trimiterea automată de campanii personalizate. Această funcționalitate va fi disponibilă în curând.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          
 
           {/* Preview of Features */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -96,19 +77,11 @@ const Gmail = () => {
                 <div className="space-y-3">
                   <div>
                     <Label className="text-sm text-gray-600">Subiect</Label>
-                    <Input 
-                      placeholder="Propunere de colaborare pentru {company_name}"
-                      className="mt-1 bg-gray-50"
-                      disabled
-                    />
+                    <Input placeholder="Propunere de colaborare pentru {company_name}" className="mt-1 bg-gray-50" disabled />
                   </div>
                   <div>
                     <Label className="text-sm text-gray-600">Conținut</Label>
-                    <Textarea 
-                      placeholder="Bună ziua,&#10;&#10;Sunt interesat de o colaborare cu {company_name} în domeniul {industry}..."
-                      className="mt-1 bg-gray-50 h-24"
-                      disabled
-                    />
+                    <Textarea placeholder="Bună ziua,&#10;&#10;Sunt interesat de o colaborare cu {company_name} în domeniul {industry}..." className="mt-1 bg-gray-50 h-24" disabled />
                   </div>
                 </div>
               </CardContent>
@@ -126,20 +99,11 @@ const Gmail = () => {
                 <div className="space-y-3">
                   <div>
                     <Label className="text-sm text-gray-600">Email-uri per oră</Label>
-                    <Input 
-                      type="number" 
-                      placeholder="50"
-                      className="mt-1 bg-gray-50"
-                      disabled
-                    />
+                    <Input type="number" placeholder="50" className="mt-1 bg-gray-50" disabled />
                   </div>
                   <div>
                     <Label className="text-sm text-gray-600">Interval între email-uri</Label>
-                    <Input 
-                      placeholder="1-3 minute"
-                      className="mt-1 bg-gray-50"
-                      disabled
-                    />
+                    <Input placeholder="1-3 minute" className="mt-1 bg-gray-50" disabled />
                   </div>
                   <Button className="w-full" disabled>
                     <Send className="w-4 h-4 mr-2" />
@@ -223,8 +187,6 @@ const Gmail = () => {
           </div>
         </div>
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
-
 export default Gmail;
