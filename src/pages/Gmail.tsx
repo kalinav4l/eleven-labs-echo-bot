@@ -172,19 +172,7 @@ const Gmail = () => {
           </Card>
 
           {/* Notification */}
-          <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center space-x-3">
-              <Mail className="w-5 h-5 text-blue-600" />
-              <div>
-                <p className="text-sm font-medium text-blue-900">
-                  Vrei să fii notificat când această funcționalitate devine disponibilă?
-                </p>
-                <p className="text-sm text-blue-700">
-                  Ne vom asigura că ești primul care află când platforma de Gmail Marketing va fi lansată.
-                </p>
-              </div>
-            </div>
-          </div>
+          
         </div>
       </div>
     </DashboardLayout>;
