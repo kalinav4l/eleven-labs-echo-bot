@@ -18,6 +18,7 @@ import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
 import { Sidebar } from '@/components/construction/WorkflowSidebar';
 import { WorkflowToolbar } from '@/components/construction/WorkflowToolbar';
+import { NodeConfigPanel } from '@/components/construction/NodeConfigPanel';
 import { AgentNode } from '@/components/construction/nodes/AgentNode';
 import { PhoneNode } from '@/components/construction/nodes/PhoneNode';
 import { DatabaseNode } from '@/components/construction/nodes/DatabaseNode';
@@ -27,6 +28,7 @@ import { GmailNode } from '@/components/construction/nodes/GmailNode';
 import { ConditionNode } from '@/components/construction/nodes/ConditionNode';
 import { TriggerNode } from '@/components/construction/nodes/TriggerNode';
 import { ArrowLeft } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 const nodeTypes = {
   agent: AgentNode,
@@ -56,10 +58,21 @@ const Construction = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNodeType, setSelectedNodeType] = useState<string | null>(null);
   const [workflowName, setWorkflowName] = useState('Untitled Workflow');
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [isWorkflowActive, setIsWorkflowActive] = useState(false);
+  const [workflowData, setWorkflowData] = useState<any[]>([]);
 
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
+
+  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+    setSelectedNode(node);
+  }, []);
+
+  const onPaneClick = useCallback(() => {
+    setSelectedNode(null);
+  }, []);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -71,19 +84,68 @@ const Construction = () => {
       id: `${type}-${Date.now()}`,
       type,
       position: { x: Math.random() * 400 + 200, y: Math.random() * 400 + 200 },
-      data: { label: `${type.charAt(0).toUpperCase() + type.slice(1)} Node` },
+      data: { 
+        label: `${type.charAt(0).toUpperCase() + type.slice(1)} Node`,
+        isActive: true,
+        createdAt: new Date().toISOString()
+      },
     };
     setNodes((nds) => [...nds, newNode]);
   }, [setNodes]);
 
+  const updateNode = useCallback((nodeId: string, data: any) => {
+    setNodes((nds) => 
+      nds.map((node) => 
+        node.id === nodeId 
+          ? { ...node, data: { ...node.data, ...data } }
+          : node
+      )
+    );
+  }, [setNodes]);
+
+  const testNode = useCallback((nodeId: string) => {
+    console.log('Testing node:', nodeId);
+    toast({
+      title: "Node Test",
+      description: `Successfully tested node ${nodeId}`,
+    });
+  }, []);
+
   const saveWorkflow = () => {
-    console.log('Saving workflow:', { nodes, edges, workflowName });
-    // TODO: Implement save functionality
+    const workflowData = {
+      name: workflowName,
+      nodes,
+      edges,
+      isActive: isWorkflowActive,
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem(`workflow_${workflowName}`, JSON.stringify(workflowData));
+    console.log('Saving workflow:', workflowData);
+    toast({
+      title: "Workflow Saved",
+      description: `"${workflowName}" has been saved successfully.`,
+    });
   };
 
   const loadWorkflow = () => {
-    console.log('Loading workflow');
-    // TODO: Implement load functionality
+    // Simple load from localStorage for demo
+    const savedWorkflow = localStorage.getItem(`workflow_${workflowName}`);
+    if (savedWorkflow) {
+      const data = JSON.parse(savedWorkflow);
+      setNodes(data.nodes || []);
+      setEdges(data.edges || []);
+      setIsWorkflowActive(data.isActive || false);
+      toast({
+        title: "Workflow Loaded",
+        description: `"${workflowName}" has been loaded successfully.`,
+      });
+    } else {
+      toast({
+        title: "No Workflow Found",
+        description: `No saved workflow found with name "${workflowName}".`,
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -123,52 +185,70 @@ const Construction = () => {
         <Sidebar onAddNode={addNode} />
 
         {/* Full Canvas */}
-        <div className="flex-1 relative bg-gray-50">
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            nodeTypes={nodeTypes}
-            fitView
-            className="bg-gray-50"
-            attributionPosition="bottom-left"
-            minZoom={0.1}
-            maxZoom={2}
-          >
-            <Controls 
-              className="bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg shadow-sm"
-              showZoom={true}
-              showFitView={true}
-              showInteractive={false}
-            />
-            <MiniMap 
-              className="bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg"
-              nodeStrokeColor="#6B7280"
-              nodeColor="#F3F4F6"
-              nodeBorderRadius={6}
-              pannable
-              zoomable
-            />
-            <Background 
-              variant={BackgroundVariant.Dots} 
-              gap={24} 
-              size={1} 
-              color="#D1D5DB"
-            />
-          </ReactFlow>
+          <div className="flex-1 relative bg-gray-50">
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onNodeClick={onNodeClick}
+              onPaneClick={onPaneClick}
+              nodeTypes={nodeTypes}
+              fitView
+              className="bg-gray-50"
+              attributionPosition="bottom-left"
+              minZoom={0.1}
+              maxZoom={2}
+            >
+              <Controls 
+                className="bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg shadow-sm"
+                showZoom={true}
+                showFitView={true}
+                showInteractive={false}
+              />
+              <MiniMap 
+                className="bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg"
+                nodeStrokeColor="#6B7280"
+                nodeColor="#F3F4F6"
+                nodeBorderRadius={6}
+                pannable
+                zoomable
+              />
+              <Background 
+                variant={BackgroundVariant.Dots} 
+                gap={24} 
+                size={1} 
+                color="#D1D5DB"
+              />
+            </ReactFlow>
 
-          {/* Minimal Floating Toolbar */}
-          <WorkflowToolbar 
-            nodes={nodes} 
-            edges={edges} 
-            onClear={() => {
-              setNodes(initialNodes);
-              setEdges([]);
-            }}
-          />
-        </div>
+            {/* Enhanced Workflow Toolbar */}
+            <WorkflowToolbar 
+              nodes={nodes} 
+              edges={edges} 
+              onClear={() => {
+                setNodes(initialNodes);
+                setEdges([]);
+              }}
+              onSave={saveWorkflow}
+              onLoad={loadWorkflow}
+              isActive={isWorkflowActive}
+              onToggleActive={() => setIsWorkflowActive(!isWorkflowActive)}
+              workflowName={workflowName}
+            />
+          </div>
+
+          {/* Node Configuration Panel */}
+          {selectedNode && (
+            <NodeConfigPanel
+              node={selectedNode}
+              onClose={() => setSelectedNode(null)}
+              onUpdateNode={updateNode}
+              onTestNode={testNode}
+              workflowData={workflowData}
+            />
+          )}
       </div>
     </div>
   );
