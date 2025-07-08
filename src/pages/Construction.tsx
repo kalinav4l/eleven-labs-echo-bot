@@ -32,7 +32,7 @@ import { WorkflowToolbar } from '@/components/construction/WorkflowToolbar';
 import { NodeConfigPanel } from '@/components/construction/NodeConfigPanel';
 import { GlobalSettingsPanel } from '@/components/construction/GlobalSettingsPanel';
 import { VariableManager } from '@/components/construction/VariableManager';
-import { ArrowLeft, Settings, Play, Variable } from 'lucide-react';
+import { ArrowLeft, Settings, Play, Variable, Menu, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const nodeTypes = {
@@ -83,6 +83,7 @@ const Construction = () => {
     timezone: 'EET'
   });
   const [variables, setVariables] = useState<any[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -191,9 +192,17 @@ const Construction = () => {
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
-      {/* Enhanced Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      {/* Minimal Header */}
+      <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between h-14">
+        <div className="flex items-center space-x-3">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="text-gray-600 hover:text-gray-900"
+          >
+            {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </Button>
           <Button 
             variant="ghost" 
             size="sm"
@@ -207,7 +216,7 @@ const Construction = () => {
             type="text"
             value={workflowName}
             onChange={(e) => setWorkflowName(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-lg font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="px-2 py-1 border-none bg-transparent text-base font-medium text-gray-900 focus:outline-none focus:bg-white focus:border focus:border-gray-300 focus:rounded min-w-[200px]"
             placeholder="AI Call Workflow"
           />
         </div>
@@ -216,50 +225,38 @@ const Construction = () => {
             variant="outline" 
             size="sm" 
             onClick={() => setShowGlobalSettings(true)}
-            className="flex items-center space-x-1"
           >
             <Settings className="h-4 w-4" />
-            <span>Global Settings</span>
           </Button>
           <Button 
             variant="outline" 
             size="sm" 
             onClick={() => setShowVariableManager(true)}
-            className="flex items-center space-x-1"
           >
             <Variable className="h-4 w-4" />
-            <span>Variables</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={loadWorkflow}
-            className="flex items-center space-x-1"
-          >
-            <span>Load</span>
           </Button>
           <Button 
             size="sm" 
             onClick={saveWorkflow} 
-            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-1"
+            className="bg-gray-900 hover:bg-gray-800 text-white"
           >
-            <span>Save</span>
+            Save
           </Button>
           <Button 
             size="sm" 
             onClick={handleRun}
             disabled={nodes.length === 0}
-            className="bg-green-600 hover:bg-green-700 text-white flex items-center space-x-1"
+            className="bg-green-600 hover:bg-green-700 text-white"
           >
-            <Play className="h-4 w-4" />
-            <span>Test</span>
+            <Play className="h-4 w-4 mr-1" />
+            Test
           </Button>
         </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* AI Workflow Sidebar */}
-        <WorkflowSidebar onAddNode={addNode} />
+        {/* Collapsible AI Workflow Sidebar */}
+        {sidebarOpen && <WorkflowSidebar onAddNode={addNode} />}
 
         {/* Full Canvas */}
           <div className="flex-1 relative bg-gray-50">
