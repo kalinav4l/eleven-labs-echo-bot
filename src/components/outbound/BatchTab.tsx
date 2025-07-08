@@ -86,7 +86,7 @@ export const BatchTab: React.FC<BatchTabProps> = ({
           <Button
             onClick={onBatchProcess}
             disabled={!agentId.trim() || selectedContacts.size === 0 || isProcessingBatch}
-            className="w-full bg-green-600 hover:bg-green-700 text-white"
+            className="w-full bg-gray-900 hover:bg-gray-800 text-white"
           >
             {isProcessingBatch ? (
               <>
