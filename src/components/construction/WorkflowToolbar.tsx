@@ -69,16 +69,16 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
   const statusInfo = getWorkflowStatus();
 
   return (
-    <Card className="absolute top-3 right-3 z-10 bg-white/95 backdrop-blur-sm border border-gray-200/50 shadow-lg">
-      <div className="p-3">
+    <Card className="absolute top-2 right-2 z-10 bg-white/90 backdrop-blur-sm border border-gray-200/30 shadow-sm">
+      <div className="p-2">
         {/* Workflow Status */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-2">
-            <Badge className={statusInfo.color}>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center space-x-1">
+            <Badge className={`${statusInfo.color} text-xs px-1.5 py-0.5`}>
               {statusInfo.status}
             </Badge>
-            <span className="text-xs text-gray-500">
-              {nodes.length} nodes, {edges.length} connections
+            <span className="text-xs text-gray-400">
+              {nodes.length}n, {edges.length}c
             </span>
           </div>
         </div>

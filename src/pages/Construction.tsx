@@ -126,6 +126,19 @@ const Construction = () => {
     );
   }, [setNodes]);
 
+  const deleteNode = useCallback((nodeId: string) => {
+    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+    toast({
+      title: "Node Deleted",
+      description: `Node ${nodeId} has been removed`,
+    });
+  }, [setNodes, setEdges]);
+
+  const deleteEdge = useCallback((edgeId: string) => {
+    setEdges((eds) => eds.filter((edge) => edge.id !== edgeId));
+  }, [setEdges]);
+
   const testNode = useCallback((nodeId: string) => {
     console.log('Testing node:', nodeId);
     toast({
@@ -274,6 +287,13 @@ const Construction = () => {
               attributionPosition="bottom-left"
               minZoom={0.1}
               maxZoom={2}
+              deleteKeyCode={['Backspace', 'Delete']}
+              onNodesDelete={(nodesToDelete) => {
+                nodesToDelete.forEach(node => deleteNode(node.id));
+              }}
+              onEdgesDelete={(edgesToDelete) => {
+                edgesToDelete.forEach(edge => deleteEdge(edge.id));
+              }}
             >
               <Controls 
                 className="bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg shadow-sm"
