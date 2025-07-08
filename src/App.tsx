@@ -23,6 +23,7 @@ import Landing from "./pages/Landing";
 import Scraping from "./pages/Scraping";
 import Gmail from "./pages/Gmail";
 import Construction from "./pages/Construction";
+import Documentation from "./pages/Documentation";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ function App() {
             <Route path="/account/construction" element={<Construction />} />
             <Route path="/account/scraping" element={<Scraping />} />
             <Route path="/account/gmail" element={<Gmail />} />
+            <Route path="/account/documentation" element={<Documentation />} />
             <Route path="/account/settings" element={<AccountSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
