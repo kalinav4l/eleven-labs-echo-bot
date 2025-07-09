@@ -763,11 +763,18 @@ const handleScrape = async (url: string, deepScraping: boolean = false): Promise
   return null;
 };
 
-// Hook personalizat pentru scraping complet al site-ului
+// Hook personalizat pentru scraping complet al site-ului cu procesare paralela
 const useFullSiteScraper = () => {
   const [siteMap, setSiteMap] = useState<SiteMapData | null>(null);
   const [isScrapingComplete, setIsScrapingComplete] = useState(false);
-  const [currentProgress, setCurrentProgress] = useState({ current: 0, total: 0, currentUrl: '' });
+  const [currentProgress, setCurrentProgress] = useState({ 
+    current: 0, 
+    total: 0, 
+    currentUrl: '', 
+    activeBatches: 0,
+    completedBatches: 0,
+    failedUrls: 0
+  });
   const { saveScrapingSession } = useScrapingHistory();
 
   const normalizeUrl = (url: string, baseUrl: string): string => {
@@ -1128,6 +1135,7 @@ const Scraping = () => {
   const [maxDepth, setMaxDepth] = useState(2);
   const [deepScraping, setDeepScraping] = useState(false);
   const [unlimitedScraping, setUnlimitedScraping] = useState(false);
+  const [parallelWorkers, setParallelWorkers] = useState(100);
   const [showHistory, setShowHistory] = useState(false);
   const [fullSiteData, setFullSiteData] = useState<SiteMapData | null>(null);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
@@ -1292,11 +1300,11 @@ const Scraping = () => {
     }
 
     toast({
-      title: "Scraping complet început",
-      description: `Se va scana site-ul la adâncimea ${maxDepth}`,
+      title: "Scraping paralel început",
+      description: `Se vor procesa ${parallelWorkers} pagini simultan la adâncimea ${maxDepth}`,
     });
 
-    await startFullSiteScraping(url, maxDepth, deepScraping, unlimitedScraping);
+    await startFullSiteScraping(url, maxDepth, deepScraping, unlimitedScraping, parallelWorkers);
   };
 
   return (
@@ -1379,6 +1387,22 @@ const Scraping = () => {
                 </label>
               </div>
               
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-sm text-muted-foreground">Procesare paralel:</span>
+                <select
+                  value={parallelWorkers}
+                  onChange={(e) => setParallelWorkers(Number(e.target.value))}
+                  className="elevenlabs-input w-20 p-1 text-center h-8 text-sm"
+                >
+                  <option value={25}>25 pagini</option>
+                  <option value={50}>50 pagini</option>
+                  <option value={100}>100 pagini</option>
+                  <option value={200}>200 pagini</option>
+                  <option value={300}>300 pagini</option>
+                </select>
+                <span className="text-xs text-muted-foreground">simultan</span>
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
                 <Button 
                   onClick={handleSubmit} 
@@ -1429,14 +1453,26 @@ const Scraping = () => {
                   }`}
                 >
                   <Globe className="w-3 h-3 mr-1" />
-                  Scanează Site
+                  Scanare Paralel
                 </Button>
               </div>
             </div>
 
             {currentProgress.currentUrl && (
-              <div className="text-sm text-muted-foreground">
-                Se procesează: {currentProgress.currentUrl}
+              <div className="space-y-2">
+                <div className="text-sm text-muted-foreground">
+                  Status: {currentProgress.currentUrl}
+                </div>
+                {currentProgress.activeBatches > 0 && (
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span>Batch-uri active: {currentProgress.activeBatches}</span>
+                    <span>Finalizate: {currentProgress.completedBatches}</span>
+                    <span>Procesate: {currentProgress.current}</span>
+                    {currentProgress.failedUrls > 0 && (
+                      <span className="text-red-500">Eșuate: {currentProgress.failedUrls}</span>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
