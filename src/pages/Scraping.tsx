@@ -763,18 +763,11 @@ const handleScrape = async (url: string, deepScraping: boolean = false): Promise
   return null;
 };
 
-// Hook personalizat pentru scraping complet al site-ului cu procesare paralela
-const useFullSiteScraper = (parallelWorkers: number = 100) => {
+// Hook personalizat pentru scraping complet al site-ului
+const useFullSiteScraper = () => {
   const [siteMap, setSiteMap] = useState<SiteMapData | null>(null);
   const [isScrapingComplete, setIsScrapingComplete] = useState(false);
-  const [currentProgress, setCurrentProgress] = useState({ 
-    current: 0, 
-    total: 0, 
-    currentUrl: '', 
-    activeBatches: 0,
-    completedBatches: 0,
-    failedUrls: 0
-  });
+  const [currentProgress, setCurrentProgress] = useState({ current: 0, total: 0, currentUrl: '' });
   const { saveScrapingSession } = useScrapingHistory();
 
   const normalizeUrl = (url: string, baseUrl: string): string => {
@@ -800,8 +793,6 @@ const useFullSiteScraper = (parallelWorkers: number = 100) => {
   };
 
   const startFullSiteScraping = useCallback(async (baseUrl: string, maxDepth: number = 3, deepScraping: boolean = false, unlimitedScraping: boolean = false) => {
-    console.log(`🚀 Starting PIPELINE scraping for: ${baseUrl} with ${parallelWorkers} parallel workers`);
-    
     const siteMapData: SiteMapData = {
       baseUrl,
       pages: [],
@@ -814,118 +805,60 @@ const useFullSiteScraper = (parallelWorkers: number = 100) => {
 
     setSiteMap(siteMapData);
     setIsScrapingComplete(false);
-    
+
     const visitedUrls = new Set<string>();
-    const allScrapedData: any[] = [];
-    
-    // Pipeline approach: each depth level processes URLs in parallel
-    let currentLevelUrls = [baseUrl];
-    
-    for (let depth = 0; depth <= maxDepth && currentLevelUrls.length > 0; depth++) {
-      console.log(`📊 Pipeline Level ${depth}: Processing ${currentLevelUrls.length} URLs in parallel`);
+    const urlsToVisit: Array<{ url: string; depth: number; parentUrl?: string }> = [
+      { url: baseUrl, depth: 0 }
+    ];
+
+    while (urlsToVisit.length > 0 && (unlimitedScraping || visitedUrls.size < 500)) { // Folosește unlimited sau 500
+      const { url, depth, parentUrl } = urlsToVisit.shift()!;
       
-      // Collect URLs for next level
-      const nextLevelUrls: string[] = [];
-      const batchSize = Math.min(parallelWorkers, currentLevelUrls.length);
+      if (visitedUrls.has(url) || depth > maxDepth) {
+        continue;
+      }
+
+      visitedUrls.add(url);
+      setCurrentProgress(prev => ({ ...prev, currentUrl: url, current: visitedUrls.size }));
       
-      // Process current level URLs in parallel batches
-      for (let i = 0; i < currentLevelUrls.length; i += batchSize) {
-        const batch = currentLevelUrls.slice(i, i + batchSize);
-        console.log(`⚡ Processing batch of ${batch.length} URLs at depth ${depth}`);
-        
-        // Process batch in parallel - this is the key improvement!
-        const batchPromises = batch.map(async (url) => {
-          if (visitedUrls.has(url)) return { pageData: null, newUrls: [] };
-          
-          try {
-            visitedUrls.add(url);
-            
-            // Update progress
-            const progress = Math.round((visitedUrls.size / Math.max(visitedUrls.size + currentLevelUrls.length - i, 1)) * 100);
-            setCurrentProgress(prev => ({ 
-              ...prev, 
-              currentUrl: url, 
-              current: visitedUrls.size,
-              total: visitedUrls.size + currentLevelUrls.length - i
-            }));
-            
-            // Scrape this URL
-            const pageData = await handleScrape(url, deepScraping);
-            
-            if (pageData) {
-              // Extract new URLs for next depth level
-              const newUrls = depth < maxDepth ? 
-                pageData.links
-                  .map(link => normalizeUrl(link.url, baseUrl))
-                  .filter(normalizedUrl => 
-                    normalizedUrl && 
-                    isSameDomain(normalizedUrl, baseUrl) && 
-                    !visitedUrls.has(normalizedUrl)
-                  ) : [];
-              
-              return { pageData, newUrls };
+      try {
+        const pageData = await handleScrape(url, false); // Nu folosim deep scraping în full site scan pentru performanță
+        if (pageData) {
+          // Procesează linkurile pentru a continua crawling-ul
+          pageData.links.forEach(link => {
+            const normalizedUrl = normalizeUrl(link.url, baseUrl);
+            if (normalizedUrl && 
+                isSameDomain(normalizedUrl, baseUrl) && 
+                !visitedUrls.has(normalizedUrl) && 
+                urlsToVisit.length < (unlimitedScraping ? 10000 : 1000)) { // Elimin limitele dacă e unlimited
+              urlsToVisit.push({ url: normalizedUrl, depth: depth + 1, parentUrl: url });
             }
-            
-            return { pageData: null, newUrls: [] };
-            
-          } catch (error) {
-            console.error(`❌ Error processing ${url}:`, error);
-            setSiteMap(prev => ({
-              ...prev!,
-              errorPages: prev!.errorPages + 1
-            }));
-            return { pageData: null, newUrls: [] };
-          }
-        });
-        
-        // Wait for entire batch to complete - parallel processing magic!
-        const batchResults = await Promise.all(batchPromises);
-        
-        // Collect results from this batch
-        batchResults.forEach(result => {
-          if (result.pageData) {
-            allScrapedData.push({
-              ...result.pageData,
+          });
+
+          setSiteMap(prev => ({
+            ...prev!,
+            pages: [...prev!.pages, {
+              ...pageData,
               id: `page_${Date.now()}_${visitedUrls.size}`,
               depth,
+              parentUrl,
               status: 'scraped' as const
-            });
-            
-            // Update site map with new page
-            setSiteMap(prev => ({
-              ...prev!,
-              pages: [...prev!.pages, {
-                ...result.pageData,
-                id: `page_${Date.now()}_${visitedUrls.size}`,
-                depth,
-                status: 'scraped' as const
-              }],
-              scrapedPages: prev!.scrapedPages + 1,
-              totalPages: visitedUrls.size
-            }));
-          }
-          nextLevelUrls.push(...result.newUrls);
-        });
-        
-        // Short pause between batches to prevent overwhelming
-        if (i + batchSize < currentLevelUrls.length) {
-          await new Promise(resolve => setTimeout(resolve, 200));
+            }],
+            scrapedPages: prev!.scrapedPages + 1,
+            totalPages: visitedUrls.size + urlsToVisit.length
+          }));
         }
+      } catch (error) {
+        console.error(`Eroare la procesarea paginii ${url}:`, error);
+        setSiteMap(prev => ({
+          ...prev!,
+          errorPages: prev!.errorPages + 1
+        }));
       }
       
-      // Remove duplicates and prepare for next depth level
-      currentLevelUrls = [...new Set(nextLevelUrls)];
-      
-      console.log(`✅ Level ${depth} complete. Found ${nextLevelUrls.length} new URLs for next level`);
-      
-      // Check limits
-      if (!unlimitedScraping && visitedUrls.size >= 500) {
-        console.log(`🛑 Reached limit of 500 pages`);
-        break;
-      }
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
-    
-    // Finalize scraping
+
     setSiteMap(prev => ({
       ...prev!,
       endTime: new Date().toISOString()
@@ -933,21 +866,20 @@ const useFullSiteScraper = (parallelWorkers: number = 100) => {
 
     setIsScrapingComplete(true);
     
-    // Save final results
+    // Salvare automată în istoric pentru scraping complet
     const finalSiteMap = {
       ...siteMapData,
-      pages: allScrapedData,
       endTime: new Date().toISOString()
     };
     
-    const allProducts = allScrapedData.flatMap(page => page.products || []);
-    const allImages = allScrapedData.flatMap(page => page.images || []);
-    const allLinks = allScrapedData.flatMap(page => page.links || []);
+    const allProducts = finalSiteMap.pages.flatMap(page => page.products);
+    const allImages = finalSiteMap.pages.flatMap(page => page.images);
+    const allLinks = finalSiteMap.pages.flatMap(page => page.links);
     
     saveScrapingSession({
       url: baseUrl,
-      title: `Pipeline Scraping - ${new URL(baseUrl).hostname}`,
-      description: `${allScrapedData.length} pagini procesate în paralel cu ${parallelWorkers} workers`,
+      title: `Scraping complet - ${new URL(baseUrl).hostname}`,
+      description: `Site scanat complet cu ${finalSiteMap.pages.length} pagini`,
       scraping_data: finalSiteMap,
       scraping_type: 'full_site',
       total_products: allProducts.length,
@@ -955,13 +887,7 @@ const useFullSiteScraper = (parallelWorkers: number = 100) => {
       total_links: allLinks.length,
     });
     
-    console.log(`🎉 Pipeline scraping completed! Total pages: ${allScrapedData.length}, Products: ${allProducts.length}`);
-    toast({
-      title: "Scraping Pipeline Complet",
-      description: `${allScrapedData.length} pagini procesate, ${allProducts.length} produse găsite`,
-    });
-    
-  }, [parallelWorkers]);
+  }, []);
 
   return {
     siteMap,
@@ -1202,7 +1128,6 @@ const Scraping = () => {
   const [maxDepth, setMaxDepth] = useState(2);
   const [deepScraping, setDeepScraping] = useState(false);
   const [unlimitedScraping, setUnlimitedScraping] = useState(false);
-  const [parallelWorkers, setParallelWorkers] = useState(100);
   const [showHistory, setShowHistory] = useState(false);
   const [fullSiteData, setFullSiteData] = useState<SiteMapData | null>(null);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
@@ -1282,7 +1207,7 @@ const Scraping = () => {
     isScrapingComplete,
     currentProgress,
     startFullSiteScraping
-  } = useFullSiteScraper(parallelWorkers);
+  } = useFullSiteScraper();
 
   const handleSubmit = async () => {
     if (!url.trim()) {
@@ -1367,8 +1292,8 @@ const Scraping = () => {
     }
 
     toast({
-      title: "Scraping paralel început",
-      description: `Se vor procesa ${parallelWorkers} pagini simultan la adâncimea ${maxDepth}`,
+      title: "Scraping complet început",
+      description: `Se va scana site-ul la adâncimea ${maxDepth}`,
     });
 
     await startFullSiteScraping(url, maxDepth, deepScraping, unlimitedScraping);
@@ -1454,22 +1379,6 @@ const Scraping = () => {
                 </label>
               </div>
               
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-sm text-muted-foreground">Procesare paralel:</span>
-                <select
-                  value={parallelWorkers}
-                  onChange={(e) => setParallelWorkers(Number(e.target.value))}
-                  className="elevenlabs-input w-20 p-1 text-center h-8 text-sm"
-                >
-                  <option value={25}>25 pagini</option>
-                  <option value={50}>50 pagini</option>
-                  <option value={100}>100 pagini</option>
-                  <option value={200}>200 pagini</option>
-                  <option value={300}>300 pagini</option>
-                </select>
-                <span className="text-xs text-muted-foreground">simultan</span>
-              </div>
-              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
                 <Button 
                   onClick={handleSubmit} 
@@ -1520,26 +1429,14 @@ const Scraping = () => {
                   }`}
                 >
                   <Globe className="w-3 h-3 mr-1" />
-                  Scanare Paralel
+                  Scanează Site
                 </Button>
               </div>
             </div>
 
             {currentProgress.currentUrl && (
-              <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">
-                  Status: {currentProgress.currentUrl}
-                </div>
-                {currentProgress.activeBatches > 0 && (
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span>Batch-uri active: {currentProgress.activeBatches}</span>
-                    <span>Finalizate: {currentProgress.completedBatches}</span>
-                    <span>Procesate: {currentProgress.current}</span>
-                    {currentProgress.failedUrls > 0 && (
-                      <span className="text-red-500">Eșuate: {currentProgress.failedUrls}</span>
-                    )}
-                  </div>
-                )}
+              <div className="text-sm text-muted-foreground">
+                Se procesează: {currentProgress.currentUrl}
               </div>
             )}
           </CardContent>
