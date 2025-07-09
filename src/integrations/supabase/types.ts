@@ -356,6 +356,42 @@ export type Database = {
           },
         ]
       }
+      document_embeddings: {
+        Row: {
+          agent_id: string | null
+          chunk_index: number
+          chunk_text: string
+          created_at: string
+          document_id: string
+          document_name: string
+          embedding: Json
+          id: string
+          user_id: string
+        }
+        Insert: {
+          agent_id?: string | null
+          chunk_index: number
+          chunk_text: string
+          created_at?: string
+          document_id: string
+          document_name: string
+          embedding: Json
+          id?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string | null
+          chunk_index?: number
+          chunk_text?: string
+          created_at?: string
+          document_id?: string
+          document_name?: string
+          embedding?: Json
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       kalina_agents: {
         Row: {
           agent_id: string
@@ -870,6 +906,10 @@ export type Database = {
           created_at: string
         }[]
       }
+      cosine_similarity: {
+        Args: { vec1: Json; vec2: Json }
+        Returns: number
+      }
       deduct_balance: {
         Args: {
           p_user_id: string
@@ -887,6 +927,19 @@ export type Database = {
           p_conversation_id?: string
         }
         Returns: boolean
+      }
+      match_document_embeddings: {
+        Args: {
+          query_embedding: Json
+          agent_id_param: string
+          match_threshold?: number
+          match_count?: number
+        }
+        Returns: {
+          chunk_text: string
+          document_name: string
+          similarity: number
+        }[]
       }
       search_relevant_chunks: {
         Args: {

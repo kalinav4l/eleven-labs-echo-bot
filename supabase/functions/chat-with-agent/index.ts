@@ -31,36 +31,71 @@ serve(async (req) => {
 
     let contextText = '';
     
-    // Dacă avem un agent ID, căutăm în documentele sale
+    // Dacă avem un agent ID, căutăm în documentele sale folosind embedding-uri
     if (agentId) {
       try {
-        // Folosim funcția de căutare din PostgreSQL pentru a găsi fragmentele relevante
+        // Creăm embedding pentru întrebarea utilizatorului
+        const embeddingResponse = await fetch('https://api.openai.com/v1/embeddings', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'text-embedding-3-small',
+            input: message,
+          }),
+        });
+
+        if (!embeddingResponse.ok) {
+          throw new Error('Failed to create embedding for query');
+        }
+
+        const embeddingData = await embeddingResponse.json();
+        const queryEmbedding = embeddingData.data[0].embedding;
+
+        // Căutăm documentele similare folosind funcția de căutare vectorială
         const { data: relevantChunks, error: searchError } = await supabase
-          .rpc('search_relevant_chunks', {
-            query_text: message,
+          .rpc('match_document_embeddings', {
+            query_embedding: JSON.stringify(queryEmbedding),
             agent_id_param: agentId,
-            match_count: 8 // Mărită numărul de fragmente pentru căutări mai bune
+            match_threshold: 0.7,
+            match_count: 5
           });
 
         if (searchError) {
-          console.error('Search error:', searchError);
+          console.error('Vector search error:', searchError);
         } else if (relevantChunks && relevantChunks.length > 0) {
-          // Filtrăm doar fragmentele cu scor relevant (peste 0.1)
-          const filteredChunks = relevantChunks.filter((chunk: any) => chunk.rank > 0.1);
-          
-          if (filteredChunks.length > 0) {
-            contextText = filteredChunks
-              .map((chunk: any) => `[Document: ${chunk.document_name}]\n${chunk.chunk_text}`)
-              .join('\n\n---\n\n');
-            console.log(`Found ${filteredChunks.length} relevant chunks (filtered from ${relevantChunks.length})`);
-          } else {
-            console.log('No chunks with sufficient relevance score found');
-          }
+          contextText = relevantChunks
+            .map((chunk: any) => `[Document: ${chunk.document_name}] (Similitudine: ${(chunk.similarity * 100).toFixed(1)}%)\n${chunk.chunk_text}`)
+            .join('\n\n---\n\n');
+          console.log(`Found ${relevantChunks.length} relevant chunks using vector search`);
         } else {
-          console.log('No relevant chunks found for query');
+          console.log('No relevant chunks found using vector search');
         }
       } catch (error) {
-        console.error('Error searching for relevant chunks:', error);
+        console.error('Error in vector search:', error);
+        // Fallback la căutarea text simplă dacă embedding-urile nu funcționează
+        try {
+          const { data: textChunks, error: textError } = await supabase
+            .rpc('search_relevant_chunks', {
+              query_text: message,
+              agent_id_param: agentId,
+              match_count: 5
+            });
+
+          if (!textError && textChunks && textChunks.length > 0) {
+            const filteredChunks = textChunks.filter((chunk: any) => chunk.rank > 0.1);
+            if (filteredChunks.length > 0) {
+              contextText = filteredChunks
+                .map((chunk: any) => `[Document: ${chunk.document_name}]\n${chunk.chunk_text}`)
+                .join('\n\n---\n\n');
+              console.log(`Fallback to text search: Found ${filteredChunks.length} chunks`);
+            }
+          }
+        } catch (fallbackError) {
+          console.error('Fallback search also failed:', fallbackError);
+        }
       }
     }
 

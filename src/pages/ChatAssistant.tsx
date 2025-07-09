@@ -81,6 +81,7 @@ const ChatAssistant = () => {
   const [textDocumentName, setTextDocumentName] = useState('');
   const [textDocumentContent, setTextDocumentContent] = useState('');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [isProcessingDocument, setIsProcessingDocument] = useState(false);
   
   // Local knowledge base hook
   const {
@@ -321,15 +322,67 @@ const ChatAssistant = () => {
       return;
     }
 
-    const success = await addFileDocument(uploadFile);
-    if (success) {
+    if (!selectedAgent) {
+      toast({
+        title: "Eroare",
+        description: "Te rog selectează un agent înainte de a încărca un document.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user) return;
+
+    setIsProcessingDocument(true);
+    toast({
+      title: "Procesare în curs...",
+      description: "Fișierul tău este procesat cu AI. Acest proces poate dura câteva minute.",
+    });
+
+    try {
+      // 1. Încarcă fișierul în Supabase Storage
+      const filePath = `${user.id}/${Date.now()}-${uploadFile.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('document-uploads')
+        .upload(filePath, uploadFile);
+
+      if (uploadError) throw uploadError;
+
+      // 2. Apelează funcția de backend pentru procesare (chunking, embedding, salvare)
+      const { data, error: invokeError } = await supabase.functions.invoke('process-document', {
+        body: {
+          fileUrl: filePath,
+          fileName: uploadFile.name,
+          userId: user.id,
+          agentId: selectedAgent.id,
+        }
+      });
+
+      if (invokeError) throw invokeError;
+
+      toast({
+        title: "Succes!",
+        description: `Fișierul "${uploadFile.name}" a fost procesat și legat de agentul ${selectedAgent.name}. Au fost create ${data.chunksCreated} fragmente de informație.`,
+      });
+
       setUploadFile(null);
       
-      // Link document to selected agent if available
-      if (selectedAgent && documents.length > 0) {
-        const newDocument = documents[documents.length - 1];
-        await linkDocumentToAgent(selectedAgent.id, newDocument.id);
-      }
+      // Reîncarcă lista de documente pentru a afișa noul fișier
+      await loadUserDocuments();
+
+      // Resetează inputul de fișier
+      const fileInput = document.getElementById('file-upload-input') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+
+    } catch (error) {
+      console.error("Eroare la procesarea fișierului:", error);
+      toast({
+        title: "Eroare la procesare",
+        description: error.message || "A apărut o eroare în timpul procesării.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessingDocument(false);
     }
   };
 
@@ -552,6 +605,7 @@ const ChatAssistant = () => {
                 <div className="space-y-2">
                   <Label className="text-xs">Upload Fișier</Label>
                   <Input
+                    id="file-upload-input"
                     type="file"
                     onChange={handleFileChange}
                     accept=".pdf,.txt,.docx"
@@ -564,10 +618,14 @@ const ChatAssistant = () => {
                       <Button
                         size="sm"
                         onClick={handleFileUpload}
-                        disabled={isKnowledgeLoading}
+                        disabled={isProcessingDocument || !selectedAgent}
                       >
-                        <Upload className="h-3 w-3 mr-1" />
-                        Upload
+                        {isProcessingDocument ? (
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        ) : (
+                          <Upload className="h-3 w-3 mr-1" />
+                        )}
+                        {isProcessingDocument ? 'Procesez...' : 'Upload'}
                       </Button>
                     </div>
                   )}
@@ -631,7 +689,7 @@ const ChatAssistant = () => {
                       <CardTitle>Asistent AI - Chat cu RAG</CardTitle>
                       <p className="text-sm text-muted-foreground">
                         {selectedAgent 
-                          ? `Conversație RAG cu ${selectedAgent.name} - răspunsuri bazate pe documentele încărcate` 
+                          ? `Conversație RAG cu ${selectedAgent.name} - răspunsuri bazate pe documentele procesate cu AI` 
                           : 'Creează un agent și încarcă documente pentru răspunsuri specifice bazate pe conținutul tău'
                         }
                       </p>
