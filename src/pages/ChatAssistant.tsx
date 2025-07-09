@@ -294,9 +294,19 @@ const ChatAssistant = () => {
       setTextDocumentContent('');
       
       // Link document to selected agent if available
-      if (selectedAgent && documents.length > 0) {
-        const newDocument = documents[documents.length - 1];
-        await linkDocumentToAgent(selectedAgent.id, newDocument.id);
+      if (selectedAgent) {
+        // Refresh documents și leagă ultimul document la agent
+        setTimeout(async () => {
+          await loadUserDocuments();
+          const latestDoc = documents[0]; // Cel mai recent document
+          if (latestDoc) {
+            await linkDocumentToAgent(selectedAgent.id, latestDoc.id);
+            toast({
+              title: "Document legat",
+              description: `Documentul a fost legat la agentul ${selectedAgent.name}`,
+            });
+          }
+        }, 1000);
       }
     }
   };
@@ -570,18 +580,36 @@ const ChatAssistant = () => {
                   <Label className="text-xs">Documente Curente</Label>
                   <ScrollArea className="max-h-40">
                     <div className="space-y-1">
-                      {documents.map((doc) => (
-                        <div key={doc.id} className="flex items-center justify-between p-2 bg-muted rounded text-xs">
-                          <span className="truncate">{doc.name}</span>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => removeDocument(doc.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ))}
+                       {documents.map((doc) => (
+                         <div key={doc.id} className="flex items-center justify-between p-2 bg-muted rounded text-xs">
+                           <span className="truncate">{doc.name}</span>
+                           <div className="flex gap-1">
+                             {selectedAgent && (
+                               <Button
+                                 size="sm"
+                                 variant="ghost"
+                                 onClick={async () => {
+                                   await linkDocumentToAgent(selectedAgent.id, doc.id);
+                                   toast({
+                                     title: "Document legat",
+                                     description: `Documentul "${doc.name}" a fost legat la agentul ${selectedAgent.name}`,
+                                   });
+                                 }}
+                                 title="Leagă la agent"
+                               >
+                                 <Plus className="h-3 w-3" />
+                               </Button>
+                             )}
+                             <Button
+                               size="sm"
+                               variant="ghost"
+                               onClick={() => removeDocument(doc.id)}
+                             >
+                               <Trash2 className="h-3 w-3" />
+                             </Button>
+                           </div>
+                         </div>
+                       ))}
                       {documents.length === 0 && (
                         <p className="text-xs text-muted-foreground">Nu sunt documente încărcate</p>
                       )}
