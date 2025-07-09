@@ -153,10 +153,19 @@ const ChatAssistant = () => {
         throw error;
       }
 
+      let responseContent = data.response || 'Îmi pare rău, nu am putut procesa cererea ta.';
+      
+      // Adaugă informații despre sursa răspunsului pentru transparență
+      if (data.contextFound && data.chunksUsed > 0) {
+        responseContent += `\n\n_Răspuns bazat pe ${data.chunksUsed} fragmente din documentele tale încărcate._`;
+      } else if (selectedAgent && !data.contextFound) {
+        responseContent += `\n\n_Nu am găsit informații relevante în documentele încărcate pentru această întrebare._`;
+      }
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
-        content: data.response || 'Îmi pare rău, nu am putut procesa cererea ta.',
+        content: responseContent,
         timestamp: new Date()
       };
 
@@ -583,8 +592,8 @@ const ChatAssistant = () => {
                       <CardTitle>Asistent AI - Chat cu RAG</CardTitle>
                       <p className="text-sm text-muted-foreground">
                         {selectedAgent 
-                          ? `Conversație cu ${selectedAgent.name}` 
-                          : 'Pune întrebări și voi răspunde bazându-mă pe informațiile din baza ta de cunoștințe'
+                          ? `Conversație RAG cu ${selectedAgent.name} - răspunsuri bazate pe documentele încărcate` 
+                          : 'Creează un agent și încarcă documente pentru răspunsuri specifice bazate pe conținutul tău'
                         }
                       </p>
                     </div>

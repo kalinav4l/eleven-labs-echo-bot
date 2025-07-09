@@ -39,16 +39,23 @@ serve(async (req) => {
           .rpc('search_relevant_chunks', {
             query_text: message,
             agent_id_param: agentId,
-            match_count: 5
+            match_count: 8 // Mărită numărul de fragmente pentru căutări mai bune
           });
 
         if (searchError) {
           console.error('Search error:', searchError);
         } else if (relevantChunks && relevantChunks.length > 0) {
-          contextText = relevantChunks
-            .map((chunk: any) => `[${chunk.document_name}]: ${chunk.chunk_text}`)
-            .join('\n\n');
-          console.log('Found relevant chunks:', relevantChunks.length);
+          // Filtrăm doar fragmentele cu scor relevant (peste 0.1)
+          const filteredChunks = relevantChunks.filter((chunk: any) => chunk.rank > 0.1);
+          
+          if (filteredChunks.length > 0) {
+            contextText = filteredChunks
+              .map((chunk: any) => `[Document: ${chunk.document_name}]\n${chunk.chunk_text}`)
+              .join('\n\n---\n\n');
+            console.log(`Found ${filteredChunks.length} relevant chunks (filtered from ${relevantChunks.length})`);
+          } else {
+            console.log('No chunks with sufficient relevance score found');
+          }
         } else {
           console.log('No relevant chunks found for query');
         }
@@ -58,19 +65,21 @@ serve(async (req) => {
     }
 
     // Pas 3: Creează prompt-ul pentru OpenAI cu context și restricții RAG
-    const finalSystemPrompt = systemPrompt || `Ești un asistent AI care răspunde DOAR pe baza informațiilor din baza de cunoștințe furnizată.
+    const finalSystemPrompt = systemPrompt || `Ești un asistent AI specializat care răspunde EXCLUSIV pe baza informațiilor din baza de cunoștințe furnizată.
 
-REGULI IMPORTANTE:
+REGULI CRITICE:
 1. Folosește DOAR informațiile din contextul furnizat pentru a răspunde
-2. Dacă informația nu se află în context, răspunde: "Îmi pare rău, nu am găsit informații specifice despre acest subiect în baza mea de cunoștințe."
-3. Nu inventa răspunsuri sau nu folosi cunoștințe generale
-4. Fii prietenos și util, dar respectă strict limitările contextului
-5. Răspunde în română
+2. Dacă informația nu se află în context, răspunde explicit: "Nu am găsit informații specifice despre acest subiect în documentele încărcate."
+3. NU improviza, NU inventa răspunsuri și NU folosi cunoștințe generale
+4. Când ai informații relevante, citează sursa documentului în răspuns
+5. Fii precis și specific - referă-te direct la informațiile din context
+6. Răspunde în română într-un mod profesional și util
+7. Dacă întrebarea este parțial acoperită de context, specifică ce informații ai și ce lipsește
 
-CONTEXT DIN BAZA DE CUNOȘTINȚE:
+${contextText ? `INFORMAȚII DISPONIBILE DIN DOCUMENTE:
 ${contextText}
 
-Dacă contextul este limitat, explică că ai nevoie de mai multe informații în baza de cunoștințe pentru a răspunde complet.`;
+Bazează-ți răspunsul EXCLUSIV pe informațiile de mai sus.` : 'Nu există informații relevante în baza de cunoștințe pentru această întrebare.'}`;`;
 
     const messages = [
       { role: 'system', content: finalSystemPrompt },
