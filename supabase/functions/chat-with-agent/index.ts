@@ -27,13 +27,13 @@ serve(async (req) => {
   }
 
   try {
-    const { message, userId } = await req.json();
+    const { message, userId, model = 'gpt-4o-mini', agentId, systemPrompt } = await req.json();
 
     if (!message) {
       throw new Error('Message is required');
     }
 
-    console.log('Processing chat message:', { message, userId });
+    console.log('Processing chat message:', { message, userId, model, agentId });
 
     // Pas 1: Obține lista documentelor din knowledge base
     const documentsResponse = await fetch('https://api.elevenlabs.io/v1/knowledge-base', {
@@ -65,7 +65,7 @@ serve(async (req) => {
     }
 
     // Pas 3: Creează prompt-ul pentru OpenAI cu context și restricții RAG
-    const systemPrompt = `Ești un asistent AI care răspunde DOAR pe baza informațiilor din baza de cunoștințe furnizată.
+    const finalSystemPrompt = systemPrompt || `Ești un asistent AI care răspunde DOAR pe baza informațiilor din baza de cunoștințe furnizată.
 
 REGULI IMPORTANTE:
 1. Folosește DOAR informațiile din contextul furnizat pentru a răspunde
@@ -80,7 +80,7 @@ ${contextText}
 Dacă contextul este limitat, explică că ai nevoie de mai multe informații în baza de cunoștințe pentru a răspunde complet.`;
 
     const messages = [
-      { role: 'system', content: systemPrompt },
+      { role: 'system', content: finalSystemPrompt },
       { role: 'user', content: message }
     ];
 
@@ -92,9 +92,9 @@ Dacă contextul este limitat, explică că ai nevoie de mai multe informații î
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: model,
         messages: messages,
-        max_tokens: 500,
+        max_tokens: 1000,
         temperature: 0.3, // Temperatură mai mică pentru răspunsuri mai consistente
       }),
     });
