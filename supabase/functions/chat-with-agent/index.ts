@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,18 +8,11 @@ const corsHeaders = {
 };
 
 // Configurații
-const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-interface KnowledgeDocument {
-  id: string;
-  name: string;
-  type: string;
-}
-
-interface KnowledgeBaseResponse {
-  documents: KnowledgeDocument[];
-}
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -35,33 +29,32 @@ serve(async (req) => {
 
     console.log('Processing chat message:', { message, userId, model, agentId });
 
-    // Pas 1: Obține lista documentelor din knowledge base
-    const documentsResponse = await fetch('https://api.elevenlabs.io/v1/knowledge-base', {
-      method: 'GET',
-      headers: {
-        'xi-api-key': ELEVENLABS_API_KEY!,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!documentsResponse.ok) {
-      console.error('Failed to fetch knowledge base documents');
-      throw new Error('Failed to access knowledge base');
-    }
-
-    const documentsData: KnowledgeBaseResponse = await documentsResponse.json();
-    console.log('Available documents:', documentsData.documents);
-
-    // Pas 2: Căutare prin documentele disponibile folosind OpenAI pentru relevanta
-    // Pentru început, vom folosi toate documentele disponibile ca context
     let contextText = '';
     
-    // Selectează primele 3 documente pentru context (într-o implementare reală, 
-    // ai face o căutare vectorială aici)
-    const relevantDocs = documentsData.documents.slice(0, 3);
-    
-    if (relevantDocs.length > 0) {
-      contextText = `Documentele disponibile în baza de cunoștințe: ${relevantDocs.map(doc => doc.name).join(', ')}`;
+    // Dacă avem un agent ID, căutăm în documentele sale
+    if (agentId) {
+      try {
+        // Folosim funcția de căutare din PostgreSQL pentru a găsi fragmentele relevante
+        const { data: relevantChunks, error: searchError } = await supabase
+          .rpc('search_relevant_chunks', {
+            query_text: message,
+            agent_id_param: agentId,
+            match_count: 5
+          });
+
+        if (searchError) {
+          console.error('Search error:', searchError);
+        } else if (relevantChunks && relevantChunks.length > 0) {
+          contextText = relevantChunks
+            .map((chunk: any) => `[${chunk.document_name}]: ${chunk.chunk_text}`)
+            .join('\n\n');
+          console.log('Found relevant chunks:', relevantChunks.length);
+        } else {
+          console.log('No relevant chunks found for query');
+        }
+      } catch (error) {
+        console.error('Error searching for relevant chunks:', error);
+      }
     }
 
     // Pas 3: Creează prompt-ul pentru OpenAI cu context și restricții RAG
@@ -117,8 +110,8 @@ Dacă contextul este limitat, explică că ai nevoie de mai multe informații î
     return new Response(
       JSON.stringify({ 
         response: aiResponse,
-        documentsUsed: relevantDocs.length,
-        availableDocuments: documentsData.documents.length
+        contextFound: contextText.length > 0,
+        chunksUsed: contextText ? contextText.split('\n\n').length : 0
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -26,7 +26,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { useEnhancedKnowledgeBase } from '@/hooks/useEnhancedKnowledgeBase';
+import { useLocalKnowledgeBase, LocalAgent, LocalDocument } from '@/hooks/useLocalKnowledgeBase';
 
 interface Message {
   id: string;
@@ -82,38 +82,34 @@ const ChatAssistant = () => {
   const [textDocumentContent, setTextDocumentContent] = useState('');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   
-  // Sample agents for demonstration
-  const [agents, setAgents] = useState<Agent[]>([
-    {
-      id: '1',
-      name: 'Agent de Support',
-      description: 'Asistent pentru suport clienti',
-      systemPrompt: 'Ești un asistent de suport clienti prietenos și util.'
-    },
-    {
-      id: '2', 
-      name: 'Expert Marketing',
-      description: 'Specialist în strategii de marketing',
-      systemPrompt: 'Ești un expert în marketing digital cu experiență vastă.'
-    }
-  ]);
-
-  // Knowledge base hook
+  // Local knowledge base hook
   const {
     documents,
-    existingDocuments,
-    isUpdating,
-    isLoadingExisting,
-    loadExistingDocuments,
-    addExistingDocument,
+    agents: localAgents,
+    isLoading: isKnowledgeLoading,
     addTextDocument,
     addFileDocument,
     removeDocument,
-    updateAgentKnowledgeBase
-  } = useEnhancedKnowledgeBase({
-    agentId: selectedAgent?.id || '',
-    onAgentRefresh: () => {}
-  });
+    loadUserDocuments,
+    createAgent,
+    updateAgent,
+    deleteAgent,
+    loadUserAgents,
+    linkDocumentToAgent,
+    unlinkDocumentFromAgent,
+    getAgentDocuments
+  } = useLocalKnowledgeBase();
+
+  // Convert LocalAgent to Agent for compatibility
+  const agents = localAgents.map(agent => ({
+    id: agent.id,
+    name: agent.name,
+    description: agent.description || '',
+    systemPrompt: agent.system_prompt || ''
+  }));
+  
+  // Convert selectedAgent to LocalAgent when needed
+  const selectedLocalAgent = selectedAgent ? localAgents.find(a => a.id === selectedAgent.id) : null;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -124,8 +120,9 @@ const ChatAssistant = () => {
   }, [messages]);
 
   useEffect(() => {
-    loadExistingDocuments();
-  }, [loadExistingDocuments]);
+    loadUserDocuments();
+    loadUserAgents();
+  }, [loadUserDocuments, loadUserAgents]);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -200,7 +197,7 @@ const ChatAssistant = () => {
   };
 
   // Agent management functions
-  const handleCreateAgent = () => {
+  const handleCreateAgent = async () => {
     if (!agentName.trim()) {
       toast({
         title: "Eroare",
@@ -210,26 +207,21 @@ const ChatAssistant = () => {
       return;
     }
 
-    const newAgent: Agent = {
-      id: Date.now().toString(),
-      name: agentName,
-      description: agentDescription,
-      systemPrompt: agentSystemPrompt || 'Ești un asistent AI util și prietenos.'
-    };
-
-    setAgents(prev => [...prev, newAgent]);
-    setSelectedAgent(newAgent);
-    
-    // Reset form
-    setAgentName('');
-    setAgentDescription('');
-    setAgentSystemPrompt('');
-    setShowAgentConfig(false);
-
-    toast({
-      title: "Succes!",
-      description: `Agentul "${newAgent.name}" a fost creat.`,
-    });
+    const newAgent = await createAgent(agentName, agentDescription, agentSystemPrompt || 'Ești un asistent AI util și prietenos.');
+    if (newAgent) {
+      setSelectedAgent({
+        id: newAgent.id,
+        name: newAgent.name,
+        description: newAgent.description || '',
+        systemPrompt: newAgent.system_prompt || ''
+      });
+      
+      // Reset form
+      setAgentName('');
+      setAgentDescription('');
+      setAgentSystemPrompt('');
+      setShowAgentConfig(false);
+    }
   };
 
   const handleEditAgent = (agent: Agent) => {
@@ -240,46 +232,36 @@ const ChatAssistant = () => {
     setShowAgentConfig(true);
   };
 
-  const handleUpdateAgent = () => {
+  const handleUpdateAgent = async () => {
     if (!editingAgent || !agentName.trim()) return;
 
-    const updatedAgent: Agent = {
-      ...editingAgent,
-      name: agentName,
-      description: agentDescription,
-      systemPrompt: agentSystemPrompt
-    };
+    const success = await updateAgent(editingAgent.id, agentName, agentDescription, agentSystemPrompt);
+    if (success) {
+      const updatedAgent: Agent = {
+        ...editingAgent,
+        name: agentName,
+        description: agentDescription,
+        systemPrompt: agentSystemPrompt
+      };
+      
+      if (selectedAgent?.id === editingAgent.id) {
+        setSelectedAgent(updatedAgent);
+      }
 
-    setAgents(prev => prev.map(a => a.id === editingAgent.id ? updatedAgent : a));
-    
-    if (selectedAgent?.id === editingAgent.id) {
-      setSelectedAgent(updatedAgent);
+      // Reset form
+      setEditingAgent(null);
+      setAgentName('');
+      setAgentDescription('');
+      setAgentSystemPrompt('');
+      setShowAgentConfig(false);
     }
-
-    // Reset form
-    setEditingAgent(null);
-    setAgentName('');
-    setAgentDescription('');
-    setAgentSystemPrompt('');
-    setShowAgentConfig(false);
-
-    toast({
-      title: "Succes!",
-      description: `Agentul "${updatedAgent.name}" a fost actualizat.`,
-    });
   };
 
-  const handleDeleteAgent = (agentId: string) => {
-    setAgents(prev => prev.filter(a => a.id !== agentId));
-    
-    if (selectedAgent?.id === agentId) {
+  const handleDeleteAgent = async (agentId: string) => {
+    const success = await deleteAgent(agentId);
+    if (success && selectedAgent?.id === agentId) {
       setSelectedAgent(null);
     }
-
-    toast({
-      title: "Succes!",
-      description: "Agentul a fost șters.",
-    });
   };
 
   // Knowledge base functions
@@ -297,6 +279,12 @@ const ChatAssistant = () => {
     if (success) {
       setTextDocumentName('');
       setTextDocumentContent('');
+      
+      // Link document to selected agent if available
+      if (selectedAgent && documents.length > 0) {
+        const newDocument = documents[documents.length - 1];
+        await linkDocumentToAgent(selectedAgent.id, newDocument.id);
+      }
     }
   };
 
@@ -313,6 +301,12 @@ const ChatAssistant = () => {
     const success = await addFileDocument(uploadFile);
     if (success) {
       setUploadFile(null);
+      
+      // Link document to selected agent if available
+      if (selectedAgent && documents.length > 0) {
+        const newDocument = documents[documents.length - 1];
+        await linkDocumentToAgent(selectedAgent.id, newDocument.id);
+      }
     }
   };
 
@@ -540,7 +534,7 @@ const ChatAssistant = () => {
                       <Button
                         size="sm"
                         onClick={handleFileUpload}
-                        disabled={isUpdating}
+                        disabled={isKnowledgeLoading}
                       >
                         <Upload className="h-3 w-3 mr-1" />
                         Upload
@@ -574,22 +568,6 @@ const ChatAssistant = () => {
                     </div>
                   </ScrollArea>
                 </div>
-
-                {selectedAgent && documents.length > 0 && (
-                  <Button
-                    size="sm"
-                    onClick={() => updateAgentKnowledgeBase(true)}
-                    disabled={isUpdating}
-                    className="w-full"
-                  >
-                    {isUpdating ? (
-                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                    ) : (
-                      <Save className="h-3 w-3 mr-1" />
-                    )}
-                    Actualizează Knowledge Base
-                  </Button>
-                )}
               </CardContent>
             </Card>
           </div>
