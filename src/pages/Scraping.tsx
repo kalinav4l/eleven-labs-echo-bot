@@ -1933,7 +1933,48 @@ const Scraping = () => {
     await startFullSiteScraping(url, maxDepth, deepScraping, unlimitedScraping);
   };
 
-  return (
+  // Funcție pentru oprirea scraping-ului în background
+  const stopBackgroundScraping = async () => {
+    if (backgroundScrapingId) {
+      try {
+        await fetch('/api/stop-scraping', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scrapingId: backgroundScrapingId })
+        });
+        setIsBackgroundScraping(false);
+        setBackgroundScrapingId(null);
+        toast({
+          title: "Scraping oprit",
+          description: "Procesul de scraping a fost oprit cu succes."
+        });
+      } catch (error) {
+        console.error('Eroare la oprirea scraping-ului:', error);
+      }
+    }
+  };
+
+  // Funcție pentru pornirea scraping-ului în background
+  const startBackgroundScraping = async (url: string, maxDepth: number) => {
+    try {
+      const response = await fetch('/api/background-scraping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, maxDepth, userId: 'current-user' })
+      });
+      
+      const data = await response.json();
+      setIsBackgroundScraping(true);
+      setBackgroundScrapingId(data.scrapingId);
+      
+      toast({
+        title: "Scraping pornit în background",
+        description: "Scraping-ul continuă chiar dacă închizi pagina. Verifică istoricul pentru progres."
+      });
+    } catch (error) {
+      console.error('Eroare la pornirea scraping-ului:', error);
+    }
+  };
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
         <div className="flex items-center justify-between mb-6">
@@ -2240,7 +2281,15 @@ const Scraping = () => {
                 </TabsContent>
 
                 <TabsContent value="products">
-                  <div className="space-y-4">
+          <Button
+            onClick={stopBackgroundScraping}
+            disabled={!isBackgroundScraping}
+            variant="destructive"
+            className="mb-4"
+          >
+            <AlertCircle className="h-4 w-4 mr-2" />
+            {isBackgroundScraping ? 'Oprește Scraping' : 'Scraping Oprit'}
+          </Button>
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-semibold">Produse Extrase</h3>
                       <div className="flex flex-wrap gap-2">
