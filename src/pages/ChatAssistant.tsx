@@ -1,32 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Send, 
-  Bot, 
-  User, 
-  Loader2, 
-  Settings, 
-  Upload, 
-  FileText, 
-  Trash2, 
-  Plus, 
-  Save,
-  ChevronDown,
-  Brain
-} from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { useLocalKnowledgeBase, LocalAgent, LocalDocument } from '@/hooks/useLocalKnowledgeBase';
+import { toast } from '@/hooks/use-toast';
+import { useLocalKnowledgeBase } from '@/hooks/useLocalKnowledgeBase';
+import { AgentConfiguration } from '@/components/chat/AgentConfiguration';
+import { KnowledgeBaseManagement } from '@/components/chat/KnowledgeBaseManagement';
+import { ChatInterface } from '@/components/chat/ChatInterface';
+import { ModelSelection } from '@/components/chat/ModelSelection';
 
 interface Message {
   id: string;
@@ -42,14 +23,6 @@ interface Agent {
   systemPrompt: string;
 }
 
-// Modelele GPT disponibile
-const GPT_MODELS = [
-  { value: 'gpt-4o', label: 'GPT-4o (Recomandată)' },
-  { value: 'gpt-4o-mini', label: 'GPT-4o Mini (Rapidă)' },
-  { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
-  { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
-];
-
 const ChatAssistant = () => {
   const { user } = useAuth();
   
@@ -64,32 +37,17 @@ const ChatAssistant = () => {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Configuration state
   const [selectedModel, setSelectedModel] = useState('gpt-4o');
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
-  const [showAgentConfig, setShowAgentConfig] = useState(false);
-  
-  // Agent creation/editing state
-  const [agentName, setAgentName] = useState('');
-  const [agentDescription, setAgentDescription] = useState('');
-  const [agentSystemPrompt, setAgentSystemPrompt] = useState('');
-  const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
-  
-  // Knowledge base state
-  const [textDocumentName, setTextDocumentName] = useState('');
-  const [textDocumentContent, setTextDocumentContent] = useState('');
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isProcessingDocument, setIsProcessingDocument] = useState(false);
   
   // Local knowledge base hook
   const {
     documents,
     agents: localAgents,
-    isLoading: isKnowledgeLoading,
     addTextDocument,
-    addFileDocument,
     removeDocument,
     loadUserDocuments,
     createAgent,
@@ -97,8 +55,6 @@ const ChatAssistant = () => {
     deleteAgent,
     loadUserAgents,
     linkDocumentToAgent,
-    unlinkDocumentFromAgent,
-    getAgentDocuments
   } = useLocalKnowledgeBase();
 
   // Convert LocalAgent to Agent for compatibility
@@ -108,21 +64,6 @@ const ChatAssistant = () => {
     description: agent.description || '',
     systemPrompt: agent.system_prompt || ''
   }));
-  
-  // Debug logging
-  console.log('Agents loaded:', agents);
-  console.log('Selected agent:', selectedAgent);
-  
-  // Convert selectedAgent to LocalAgent when needed
-  const selectedLocalAgent = selectedAgent ? localAgents.find(a => a.id === selectedAgent.id) : null;
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   useEffect(() => {
     loadUserDocuments();
@@ -203,75 +144,37 @@ const ChatAssistant = () => {
     }
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('ro-RO', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   // Agent management functions
-  const handleCreateAgent = async () => {
-    if (!agentName.trim()) {
-      toast({
-        title: "Eroare",
-        description: "Te rog introdu un nume pentru agent.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const newAgent = await createAgent(agentName, agentDescription, agentSystemPrompt || 'Ești un asistent AI util și prietenos.');
+  const handleAgentCreate = async (name: string, description: string, systemPrompt: string) => {
+    const newAgent = await createAgent(name, description, systemPrompt || 'Ești un asistent AI util și prietenos.');
     if (newAgent) {
-      setSelectedAgent({
+      const agentData = {
         id: newAgent.id,
         name: newAgent.name,
         description: newAgent.description || '',
         systemPrompt: newAgent.system_prompt || ''
-      });
-      
-      // Reset form
-      setAgentName('');
-      setAgentDescription('');
-      setAgentSystemPrompt('');
-      setShowAgentConfig(false);
+      };
+      setSelectedAgent(agentData);
     }
   };
 
-  const handleEditAgent = (agent: Agent) => {
-    setEditingAgent(agent);
-    setAgentName(agent.name);
-    setAgentDescription(agent.description);
-    setAgentSystemPrompt(agent.systemPrompt);
-    setShowAgentConfig(true);
-  };
-
-  const handleUpdateAgent = async () => {
-    if (!editingAgent || !agentName.trim()) return;
-
-    const success = await updateAgent(editingAgent.id, agentName, agentDescription, agentSystemPrompt);
+  const handleAgentUpdate = async (id: string, name: string, description: string, systemPrompt: string) => {
+    const success = await updateAgent(id, name, description, systemPrompt);
     if (success) {
       const updatedAgent: Agent = {
-        ...editingAgent,
-        name: agentName,
-        description: agentDescription,
-        systemPrompt: agentSystemPrompt
+        id,
+        name,
+        description,
+        systemPrompt
       };
       
-      if (selectedAgent?.id === editingAgent.id) {
+      if (selectedAgent?.id === id) {
         setSelectedAgent(updatedAgent);
       }
-
-      // Reset form
-      setEditingAgent(null);
-      setAgentName('');
-      setAgentDescription('');
-      setAgentSystemPrompt('');
-      setShowAgentConfig(false);
     }
   };
 
-  const handleDeleteAgent = async (agentId: string) => {
+  const handleAgentDelete = async (agentId: string) => {
     const success = await deleteAgent(agentId);
     if (success && selectedAgent?.id === agentId) {
       setSelectedAgent(null);
@@ -279,49 +182,25 @@ const ChatAssistant = () => {
   };
 
   // Knowledge base functions
-  const handleAddTextDocument = async () => {
-    if (!textDocumentName.trim() || !textDocumentContent.trim()) {
-      toast({
-        title: "Eroare",
-        description: "Te rog completează numele și conținutul documentului.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const success = await addTextDocument(textDocumentName, textDocumentContent);
-    if (success) {
-      setTextDocumentName('');
-      setTextDocumentContent('');
-      
+  const handleTextDocumentAdd = async (name: string, content: string) => {
+    const success = await addTextDocument(name, content);
+    if (success && selectedAgent) {
       // Link document to selected agent if available
-      if (selectedAgent) {
-        // Refresh documents și leagă ultimul document la agent
-        setTimeout(async () => {
-          await loadUserDocuments();
-          const latestDoc = documents[0]; // Cel mai recent document
-          if (latestDoc) {
-            await linkDocumentToAgent(selectedAgent.id, latestDoc.id);
-            toast({
-              title: "Document legat",
-              description: `Documentul a fost legat la agentul ${selectedAgent.name}`,
-            });
-          }
-        }, 1000);
-      }
+      setTimeout(async () => {
+        await loadUserDocuments();
+        const latestDoc = documents[0]; // Cel mai recent document
+        if (latestDoc) {
+          await linkDocumentToAgent(selectedAgent.id, latestDoc.id);
+          toast({
+            title: "Document legat",
+            description: `Documentul a fost legat la agentul ${selectedAgent.name}`,
+          });
+        }
+      }, 1000);
     }
   };
 
-  const handleFileUpload = async () => {
-    if (!uploadFile) {
-      toast({
-        title: "Eroare",
-        description: "Te rog selectează un fișier.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleFileUpload = async (file: File) => {
     if (!selectedAgent) {
       toast({
         title: "Eroare",
@@ -341,10 +220,10 @@ const ChatAssistant = () => {
 
     try {
       // 1. Încarcă fișierul în Supabase Storage
-      const filePath = `${user.id}/${Date.now()}-${uploadFile.name}`;
+      const filePath = `${user.id}/${Date.now()}-${file.name}`;
       const { error: uploadError } = await supabase.storage
         .from('document-uploads')
-        .upload(filePath, uploadFile);
+        .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
@@ -352,7 +231,7 @@ const ChatAssistant = () => {
       const { data, error: invokeError } = await supabase.functions.invoke('process-document', {
         body: {
           fileUrl: filePath,
-          fileName: uploadFile.name,
+          fileName: file.name,
           userId: user.id,
           agentId: selectedAgent.id,
         }
@@ -362,17 +241,11 @@ const ChatAssistant = () => {
 
       toast({
         title: "Succes!",
-        description: `Fișierul "${uploadFile.name}" a fost procesat și legat de agentul ${selectedAgent.name}. Au fost create ${data.chunksCreated} fragmente de informație.`,
+        description: `Fișierul "${file.name}" a fost procesat și legat de agentul ${selectedAgent.name}. Au fost create ${data.chunksCreated} fragmente de informație.`,
       });
-
-      setUploadFile(null);
       
       // Reîncarcă lista de documente pentru a afișa noul fișier
       await loadUserDocuments();
-
-      // Resetează inputul de fișier
-      const fileInput = document.getElementById('file-upload-input') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
 
     } catch (error) {
       console.error("Eroare la procesarea fișierului:", error);
@@ -386,11 +259,13 @@ const ChatAssistant = () => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setUploadFile(file);
-    }
+  // Wrapper functions to handle boolean returns
+  const handleDocumentRemove = async (id: string) => {
+    await removeDocument(id);
+  };
+
+  const handleDocumentLinkToAgent = async (agentId: string, documentId: string) => {
+    await linkDocumentToAgent(agentId, documentId);
   };
 
   return (
@@ -401,381 +276,43 @@ const ChatAssistant = () => {
           {/* Configuration Sidebar */}
           <div className="lg:col-span-1 space-y-4">
             
-            {/* Model Selection */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Brain className="h-4 w-4" />
-                  Model GPT
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Select value={selectedModel} onValueChange={setSelectedModel}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selectează modelul" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {GPT_MODELS.map((model) => (
-                      <SelectItem key={model.value} value={model.value}>
-                        {model.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
+            <ModelSelection
+              selectedModel={selectedModel}
+              onModelChange={setSelectedModel}
+            />
 
-            {/* Agent Selection */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Bot className="h-4 w-4" />
-                  Agent
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Select 
-                  value={selectedAgent?.id || ''} 
-                  onValueChange={(value) => {
-                    console.log('Agent selected:', value);
-                    const agent = agents.find(a => a.id === value);
-                    setSelectedAgent(agent || null);
-                  }}
-                >
-                  <SelectTrigger className="bg-background">
-                    <SelectValue placeholder="Selectează agent" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border shadow-lg z-50">
-                    {agents.length === 0 ? (
-                      <SelectItem value="no-agents" disabled>
-                        Nu există agenți - creează unul
-                      </SelectItem>
-                    ) : (
-                      agents.map((agent) => (
-                        <SelectItem key={agent.id} value={agent.id}>
-                          {agent.name}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-                
-                {selectedAgent && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">Agent selectat:</span>
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEditAgent(selectedAgent)}
-                        >
-                          <Settings className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDeleteAgent(selectedAgent.id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground">{selectedAgent.description}</p>
-                  </div>
-                )}
-                
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowAgentConfig(true)}
-                  className="w-full"
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  {editingAgent ? 'Editează Agent' : 'Creează Agent'}
-                </Button>
-              </CardContent>
-            </Card>
+            <AgentConfiguration
+              agents={agents}
+              selectedAgent={selectedAgent}
+              onAgentSelect={setSelectedAgent}
+              onAgentCreate={handleAgentCreate}
+              onAgentUpdate={handleAgentUpdate}
+              onAgentDelete={handleAgentDelete}
+            />
 
-            {/* Agent Configuration */}
-            {showAgentConfig && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm">
-                    {editingAgent ? 'Editează Agent' : 'Creează Agent Nou'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div>
-                    <Label htmlFor="agentName">Nume Agent</Label>
-                    <Input
-                      id="agentName"
-                      value={agentName}
-                      onChange={(e) => setAgentName(e.target.value)}
-                      placeholder="Numele agentului"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="agentDescription">Descriere</Label>
-                    <Input
-                      id="agentDescription"
-                      value={agentDescription}
-                      onChange={(e) => setAgentDescription(e.target.value)}
-                      placeholder="Descrierea agentului"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="agentPrompt">System Prompt</Label>
-                    <Textarea
-                      id="agentPrompt"
-                      value={agentSystemPrompt}
-                      onChange={(e) => setAgentSystemPrompt(e.target.value)}
-                      placeholder="Instrucțiuni pentru agent..."
-                      rows={3}
-                    />
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={editingAgent ? handleUpdateAgent : handleCreateAgent}
-                      className="flex-1"
-                    >
-                      <Save className="h-3 w-3 mr-1" />
-                      {editingAgent ? 'Actualizează' : 'Creează'}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setShowAgentConfig(false);
-                        setEditingAgent(null);
-                        setAgentName('');
-                        setAgentDescription('');
-                        setAgentSystemPrompt('');
-                      }}
-                    >
-                      Anulează
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Knowledge Base Management */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Knowledge Base
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                
-                {/* Add Text Document */}
-                <div className="space-y-2">
-                  <Label className="text-xs">Adaugă Document Text</Label>
-                  <Input
-                    value={textDocumentName}
-                    onChange={(e) => setTextDocumentName(e.target.value)}
-                    placeholder="Numele documentului"
-                  />
-                  <Textarea
-                    value={textDocumentContent}
-                    onChange={(e) => setTextDocumentContent(e.target.value)}
-                    placeholder="Conținutul documentului..."
-                    rows={3}
-                  />
-                  <Button
-                    size="sm"
-                    onClick={handleAddTextDocument}
-                    disabled={!textDocumentName.trim() || !textDocumentContent.trim()}
-                    className="w-full"
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Adaugă Text
-                  </Button>
-                </div>
-
-                <Separator />
-
-                {/* File Upload */}
-                <div className="space-y-2">
-                  <Label className="text-xs">Upload Fișier</Label>
-                  <Input
-                    id="file-upload-input"
-                    type="file"
-                    onChange={handleFileChange}
-                    accept=".pdf,.txt,.docx"
-                  />
-                  {uploadFile && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground truncate">
-                        {uploadFile.name}
-                      </span>
-                      <Button
-                        size="sm"
-                        onClick={handleFileUpload}
-                        disabled={isProcessingDocument || !selectedAgent}
-                      >
-                        {isProcessingDocument ? (
-                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                        ) : (
-                          <Upload className="h-3 w-3 mr-1" />
-                        )}
-                        {isProcessingDocument ? 'Procesez...' : 'Upload'}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                <Separator />
-
-                {/* Documents List */}
-                <div className="space-y-2">
-                  <Label className="text-xs">Documente Curente</Label>
-                  <ScrollArea className="max-h-40">
-                    <div className="space-y-1">
-                       {documents.map((doc) => (
-                         <div key={doc.id} className="flex items-center justify-between p-2 bg-muted rounded text-xs">
-                           <span className="truncate">{doc.name}</span>
-                           <div className="flex gap-1">
-                             {selectedAgent && (
-                               <Button
-                                 size="sm"
-                                 variant="ghost"
-                                 onClick={async () => {
-                                   await linkDocumentToAgent(selectedAgent.id, doc.id);
-                                   toast({
-                                     title: "Document legat",
-                                     description: `Documentul "${doc.name}" a fost legat la agentul ${selectedAgent.name}`,
-                                   });
-                                 }}
-                                 title="Leagă la agent"
-                               >
-                                 <Plus className="h-3 w-3" />
-                               </Button>
-                             )}
-                             <Button
-                               size="sm"
-                               variant="ghost"
-                               onClick={() => removeDocument(doc.id)}
-                             >
-                               <Trash2 className="h-3 w-3" />
-                             </Button>
-                           </div>
-                         </div>
-                       ))}
-                      {documents.length === 0 && (
-                        <p className="text-xs text-muted-foreground">Nu sunt documente încărcate</p>
-                      )}
-                    </div>
-                  </ScrollArea>
-                </div>
-              </CardContent>
-            </Card>
+            <KnowledgeBaseManagement
+              documents={documents}
+              selectedAgent={selectedAgent}
+              onTextDocumentAdd={handleTextDocumentAdd}
+              onFileUpload={handleFileUpload}
+              onDocumentRemove={handleDocumentRemove}
+              onDocumentLinkToAgent={handleDocumentLinkToAgent}
+              isProcessingDocument={isProcessingDocument}
+            />
           </div>
 
           {/* Chat Area */}
           <div className="lg:col-span-3">
-            <Card className="h-full">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Bot className="h-6 w-6 text-primary" />
-                    <div>
-                      <CardTitle>Asistent AI - Chat cu RAG</CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        {selectedAgent 
-                          ? `Conversație RAG cu ${selectedAgent.name} - răspunsuri bazate pe documentele procesate cu AI` 
-                          : 'Creează un agent și încarcă documente pentru răspunsuri specifice bazate pe conținutul tău'
-                        }
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary">{selectedModel}</Badge>
-                    {selectedAgent && (
-                      <Badge variant="outline">{selectedAgent.name}</Badge>
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="flex flex-col h-[calc(100%-120px)]">
-                <ScrollArea className="flex-1 pr-4">
-                  <div className="space-y-4">
-                    {messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`flex items-start gap-3 ${
-                          message.type === 'user' ? 'flex-row-reverse' : ''
-                        }`}
-                      >
-                        <div className={`p-2 rounded-full ${
-                          message.type === 'user' 
-                            ? 'bg-primary text-primary-foreground' 
-                            : 'bg-muted'
-                        }`}>
-                          {message.type === 'user' ? (
-                            <User className="h-4 w-4" />
-                          ) : (
-                            <Bot className="h-4 w-4" />
-                          )}
-                        </div>
-                        <div className={`flex flex-col max-w-[70%] ${
-                          message.type === 'user' ? 'items-end' : 'items-start'
-                        }`}>
-                          <div className={`p-3 rounded-lg ${
-                            message.type === 'user'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted'
-                          }`}>
-                            <p className="text-sm whitespace-pre-wrap">
-                              {message.content}
-                            </p>
-                          </div>
-                          <span className="text-xs text-muted-foreground mt-1">
-                            {formatTime(message.timestamp)}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                    {isLoading && (
-                      <div className="flex items-start gap-3">
-                        <div className="p-2 rounded-full bg-muted">
-                          <Bot className="h-4 w-4" />
-                        </div>
-                        <div className="flex items-center gap-2 p-3 rounded-lg bg-muted">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span className="text-sm">Gândesc...</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div ref={messagesEndRef} />
-                </ScrollArea>
-
-                <div className="flex gap-2 mt-4">
-                  <Input
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder={selectedAgent ? `Scrie un mesaj pentru ${selectedAgent.name}...` : "Scrie mesajul tău aici..."}
-                    disabled={isLoading}
-                    className="flex-1"
-                  />
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={isLoading || !inputMessage.trim()}
-                    size="icon"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <ChatInterface
+              messages={messages}
+              inputMessage={inputMessage}
+              isLoading={isLoading}
+              selectedModel={selectedModel}
+              selectedAgent={selectedAgent}
+              onInputChange={setInputMessage}
+              onSendMessage={handleSendMessage}
+              onKeyPress={handleKeyPress}
+            />
           </div>
         </div>
       </div>
