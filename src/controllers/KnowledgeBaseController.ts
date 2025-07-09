@@ -4,11 +4,12 @@ import { API_CONFIG } from '../constants/constants';
 
 export class KnowledgeBaseController {
   static async createTextDocument(request: CreateTextDocumentRequest): Promise<CreateDocumentResponse> {
-    const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/knowledge-base/documents/text`, {
+    const response = await fetch(`${API_CONFIG.BACKEND_URL}/knowledge-base-operations`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-API-KEY': API_CONFIG.BACKEND_API_KEY,
+        'Authorization': `Bearer ${API_CONFIG.BACKEND_API_KEY}`,
       },
       body: JSON.stringify({
         ...request,
@@ -17,7 +18,9 @@ export class KnowledgeBaseController {
       }),
     });
     if (!response.ok) {
-      throw new Error('Create text document failed');
+      const errorText = await response.text();
+      console.error('Create text document error:', errorText);
+      throw new Error(`Create text document failed: ${response.status} ${response.statusText}`);
     }
     return response.json();
   }
@@ -29,10 +32,11 @@ export class KnowledgeBaseController {
     // Adăugăm un identificator în numele fișierului pentru a-l putea identifica ca aparținând utilizatorului
     const userFileName = `${name} (User Document)`;
     
-    const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/knowledge-base/documents/file?name=${encodeURIComponent(userFileName)}`, {
+    const response = await fetch(`${API_CONFIG.BACKEND_URL}/knowledge-base-operations?name=${encodeURIComponent(userFileName)}`, {
       method: 'POST',
       headers: {
         'X-API-KEY': API_CONFIG.BACKEND_API_KEY,
+        'Authorization': `Bearer ${API_CONFIG.BACKEND_API_KEY}`,
       },
       body: formData,
     });
@@ -46,14 +50,17 @@ export class KnowledgeBaseController {
   }
 
   static async getExistingDocuments(): Promise<KnowledgeBaseResponse> {
-    const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/knowledge-base/documents`, {
+    const response = await fetch(`${API_CONFIG.BACKEND_URL}/knowledge-base-operations`, {
       method: 'GET',
       headers: {
-          'X-API-KEY': API_CONFIG.BACKEND_API_KEY,
+        'X-API-KEY': API_CONFIG.BACKEND_API_KEY,
+        'Authorization': `Bearer ${API_CONFIG.BACKEND_API_KEY}`,
       },
     });
     if (!response.ok) {
-      throw new Error('Get existing documents failed');
+      const errorText = await response.text();
+      console.error('Get existing documents error:', errorText);
+      throw new Error(`Get existing documents failed: ${response.status} ${response.statusText}`);
     }
     return response.json();
   }
