@@ -764,7 +764,7 @@ const handleScrape = async (url: string, deepScraping: boolean = false): Promise
 };
 
 // Hook personalizat pentru scraping complet al site-ului cu procesare paralela
-const useFullSiteScraper = () => {
+const useFullSiteScraper = (parallelWorkers: number = 100) => {
   const [siteMap, setSiteMap] = useState<SiteMapData | null>(null);
   const [isScrapingComplete, setIsScrapingComplete] = useState(false);
   const [currentProgress, setCurrentProgress] = useState({ 
@@ -800,6 +800,8 @@ const useFullSiteScraper = () => {
   };
 
   const startFullSiteScraping = useCallback(async (baseUrl: string, maxDepth: number = 3, deepScraping: boolean = false, unlimitedScraping: boolean = false) => {
+    console.log(`🚀 Starting PIPELINE scraping for: ${baseUrl} with ${parallelWorkers} parallel workers`);
+    
     const siteMapData: SiteMapData = {
       baseUrl,
       pages: [],
@@ -812,60 +814,118 @@ const useFullSiteScraper = () => {
 
     setSiteMap(siteMapData);
     setIsScrapingComplete(false);
-
+    
     const visitedUrls = new Set<string>();
-    const urlsToVisit: Array<{ url: string; depth: number; parentUrl?: string }> = [
-      { url: baseUrl, depth: 0 }
-    ];
-
-    while (urlsToVisit.length > 0 && (unlimitedScraping || visitedUrls.size < 500)) { // Folosește unlimited sau 500
-      const { url, depth, parentUrl } = urlsToVisit.shift()!;
+    const allScrapedData: any[] = [];
+    
+    // Pipeline approach: each depth level processes URLs in parallel
+    let currentLevelUrls = [baseUrl];
+    
+    for (let depth = 0; depth <= maxDepth && currentLevelUrls.length > 0; depth++) {
+      console.log(`📊 Pipeline Level ${depth}: Processing ${currentLevelUrls.length} URLs in parallel`);
       
-      if (visitedUrls.has(url) || depth > maxDepth) {
-        continue;
-      }
-
-      visitedUrls.add(url);
-      setCurrentProgress(prev => ({ ...prev, currentUrl: url, current: visitedUrls.size }));
+      // Collect URLs for next level
+      const nextLevelUrls: string[] = [];
+      const batchSize = Math.min(parallelWorkers, currentLevelUrls.length);
       
-      try {
-        const pageData = await handleScrape(url, false); // Nu folosim deep scraping în full site scan pentru performanță
-        if (pageData) {
-          // Procesează linkurile pentru a continua crawling-ul
-          pageData.links.forEach(link => {
-            const normalizedUrl = normalizeUrl(link.url, baseUrl);
-            if (normalizedUrl && 
-                isSameDomain(normalizedUrl, baseUrl) && 
-                !visitedUrls.has(normalizedUrl) && 
-                urlsToVisit.length < (unlimitedScraping ? 10000 : 1000)) { // Elimin limitele dacă e unlimited
-              urlsToVisit.push({ url: normalizedUrl, depth: depth + 1, parentUrl: url });
+      // Process current level URLs in parallel batches
+      for (let i = 0; i < currentLevelUrls.length; i += batchSize) {
+        const batch = currentLevelUrls.slice(i, i + batchSize);
+        console.log(`⚡ Processing batch of ${batch.length} URLs at depth ${depth}`);
+        
+        // Process batch in parallel - this is the key improvement!
+        const batchPromises = batch.map(async (url) => {
+          if (visitedUrls.has(url)) return { pageData: null, newUrls: [] };
+          
+          try {
+            visitedUrls.add(url);
+            
+            // Update progress
+            const progress = Math.round((visitedUrls.size / Math.max(visitedUrls.size + currentLevelUrls.length - i, 1)) * 100);
+            setCurrentProgress(prev => ({ 
+              ...prev, 
+              currentUrl: url, 
+              current: visitedUrls.size,
+              total: visitedUrls.size + currentLevelUrls.length - i
+            }));
+            
+            // Scrape this URL
+            const pageData = await handleScrape(url, deepScraping);
+            
+            if (pageData) {
+              // Extract new URLs for next depth level
+              const newUrls = depth < maxDepth ? 
+                pageData.links
+                  .map(link => normalizeUrl(link.url, baseUrl))
+                  .filter(normalizedUrl => 
+                    normalizedUrl && 
+                    isSameDomain(normalizedUrl, baseUrl) && 
+                    !visitedUrls.has(normalizedUrl)
+                  ) : [];
+              
+              return { pageData, newUrls };
             }
-          });
-
-          setSiteMap(prev => ({
-            ...prev!,
-            pages: [...prev!.pages, {
-              ...pageData,
+            
+            return { pageData: null, newUrls: [] };
+            
+          } catch (error) {
+            console.error(`❌ Error processing ${url}:`, error);
+            setSiteMap(prev => ({
+              ...prev!,
+              errorPages: prev!.errorPages + 1
+            }));
+            return { pageData: null, newUrls: [] };
+          }
+        });
+        
+        // Wait for entire batch to complete - parallel processing magic!
+        const batchResults = await Promise.all(batchPromises);
+        
+        // Collect results from this batch
+        batchResults.forEach(result => {
+          if (result.pageData) {
+            allScrapedData.push({
+              ...result.pageData,
               id: `page_${Date.now()}_${visitedUrls.size}`,
               depth,
-              parentUrl,
               status: 'scraped' as const
-            }],
-            scrapedPages: prev!.scrapedPages + 1,
-            totalPages: visitedUrls.size + urlsToVisit.length
-          }));
+            });
+            
+            // Update site map with new page
+            setSiteMap(prev => ({
+              ...prev!,
+              pages: [...prev!.pages, {
+                ...result.pageData,
+                id: `page_${Date.now()}_${visitedUrls.size}`,
+                depth,
+                status: 'scraped' as const
+              }],
+              scrapedPages: prev!.scrapedPages + 1,
+              totalPages: visitedUrls.size
+            }));
+          }
+          nextLevelUrls.push(...result.newUrls);
+        });
+        
+        // Short pause between batches to prevent overwhelming
+        if (i + batchSize < currentLevelUrls.length) {
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
-      } catch (error) {
-        console.error(`Eroare la procesarea paginii ${url}:`, error);
-        setSiteMap(prev => ({
-          ...prev!,
-          errorPages: prev!.errorPages + 1
-        }));
       }
       
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Remove duplicates and prepare for next depth level
+      currentLevelUrls = [...new Set(nextLevelUrls)];
+      
+      console.log(`✅ Level ${depth} complete. Found ${nextLevelUrls.length} new URLs for next level`);
+      
+      // Check limits
+      if (!unlimitedScraping && visitedUrls.size >= 500) {
+        console.log(`🛑 Reached limit of 500 pages`);
+        break;
+      }
     }
-
+    
+    // Finalize scraping
     setSiteMap(prev => ({
       ...prev!,
       endTime: new Date().toISOString()
@@ -873,20 +933,21 @@ const useFullSiteScraper = () => {
 
     setIsScrapingComplete(true);
     
-    // Salvare automată în istoric pentru scraping complet
+    // Save final results
     const finalSiteMap = {
       ...siteMapData,
+      pages: allScrapedData,
       endTime: new Date().toISOString()
     };
     
-    const allProducts = finalSiteMap.pages.flatMap(page => page.products);
-    const allImages = finalSiteMap.pages.flatMap(page => page.images);
-    const allLinks = finalSiteMap.pages.flatMap(page => page.links);
+    const allProducts = allScrapedData.flatMap(page => page.products || []);
+    const allImages = allScrapedData.flatMap(page => page.images || []);
+    const allLinks = allScrapedData.flatMap(page => page.links || []);
     
     saveScrapingSession({
       url: baseUrl,
-      title: `Scraping complet - ${new URL(baseUrl).hostname}`,
-      description: `Site scanat complet cu ${finalSiteMap.pages.length} pagini`,
+      title: `Pipeline Scraping - ${new URL(baseUrl).hostname}`,
+      description: `${allScrapedData.length} pagini procesate în paralel cu ${parallelWorkers} workers`,
       scraping_data: finalSiteMap,
       scraping_type: 'full_site',
       total_products: allProducts.length,
@@ -894,7 +955,13 @@ const useFullSiteScraper = () => {
       total_links: allLinks.length,
     });
     
-  }, []);
+    console.log(`🎉 Pipeline scraping completed! Total pages: ${allScrapedData.length}, Products: ${allProducts.length}`);
+    toast({
+      title: "Scraping Pipeline Complet",
+      description: `${allScrapedData.length} pagini procesate, ${allProducts.length} produse găsite`,
+    });
+    
+  }, [parallelWorkers]);
 
   return {
     siteMap,
@@ -1215,7 +1282,7 @@ const Scraping = () => {
     isScrapingComplete,
     currentProgress,
     startFullSiteScraping
-  } = useFullSiteScraper();
+  } = useFullSiteScraper(parallelWorkers);
 
   const handleSubmit = async () => {
     if (!url.trim()) {
