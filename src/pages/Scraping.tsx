@@ -119,9 +119,276 @@ interface SiteMapData {
   maxDepth: number;
 }
 
-// Funcții de utilitate pentru extragerea imaginilor
-const extractAllImages = (element: Element, baseUrl: string): Array<{src: string; alt: string; title: string; type: 'main' | 'gallery' | 'thumbnail' | 'zoom'}> => {
-  const images: Array<{src: string; alt: string; title: string; type: 'main' | 'gallery' | 'thumbnail' | 'zoom'}> = [];
+// 🚀 FUNCȚII AI ULTRA-AVANSATE PENTRU ANALIZA CONȚINUTULUI 🚀
+
+// Funcție AI pentru clasificarea tipului de conținut
+const classifyContentWithAI = (doc: Document, url: string): {
+  type: 'ecommerce' | 'blog' | 'news' | 'corporate' | 'portfolio' | 'forum' | 'wiki' | 'social' | 'automotive' | 'real-estate' | 'unknown',
+  confidence: number,
+  indicators: string[]
+} => {
+  const indicators: string[] = [];
+  let scores = {
+    ecommerce: 0,
+    blog: 0,
+    news: 0,
+    corporate: 0,
+    portfolio: 0,
+    forum: 0,
+    wiki: 0,
+    social: 0,
+    automotive: 0,
+    'real-estate': 0
+  };
+
+  // Analiza URL-ului
+  const urlLower = url.toLowerCase();
+  if (urlLower.includes('shop') || urlLower.includes('store') || urlLower.includes('buy')) {
+    scores.ecommerce += 20;
+    indicators.push('🛒 URL e-commerce detectat');
+  }
+  if (urlLower.includes('blog') || urlLower.includes('article')) {
+    scores.blog += 20;
+    indicators.push('📝 URL blog detectat');
+  }
+  if (urlLower.includes('news') || urlLower.includes('press')) {
+    scores.news += 20;
+    indicators.push('📰 URL știri detectat');
+  }
+  if (urlLower.includes('auto') || urlLower.includes('car') || urlLower.includes('vehicle')) {
+    scores.automotive += 25;
+    indicators.push('🚗 URL automotive detectat');
+  }
+
+  // Analiza conținutului HTML
+  const bodyText = doc.body?.textContent?.toLowerCase() || '';
+  
+  // E-commerce indicators
+  const ecommerceKeywords = ['add to cart', 'buy now', 'price', 'shopping cart', 'checkout', 'product', 'lei', 'eur', 'usd'];
+  ecommerceKeywords.forEach(keyword => {
+    if (bodyText.includes(keyword)) {
+      scores.ecommerce += 5;
+      indicators.push(`💰 Cuvânt cheie e-commerce: ${keyword}`);
+    }
+  });
+
+  // Automotive indicators (pentru Moldova/România)
+  const autoKeywords = ['km', 'motor', 'diesel', 'benzina', 'automat', 'manual', 'cilindree', 'rulaj', 'masina', 'automobil'];
+  autoKeywords.forEach(keyword => {
+    if (bodyText.includes(keyword)) {
+      scores.automotive += 8;
+      indicators.push(`🚗 Cuvânt automotive: ${keyword}`);
+    }
+  });
+
+  // Structura HTML
+  if (doc.querySelector('.product, .product-item, [data-product]')) {
+    scores.ecommerce += 30;
+    indicators.push('🏪 Structură produs detectată');
+  }
+  if (doc.querySelector('article, .article, .post, .blog-post')) {
+    scores.blog += 25;
+    indicators.push('📄 Structură articol detectată');
+  }
+  if (doc.querySelector('.news, .article, .story')) {
+    scores.news += 25;
+    indicators.push('📺 Structură știri detectată');
+  }
+
+  // Schema.org detection
+  const schemas = doc.querySelectorAll('[typeof], [itemtype]');
+  schemas.forEach(schema => {
+    const type = schema.getAttribute('typeof') || schema.getAttribute('itemtype') || '';
+    if (type.includes('Product')) {
+      scores.ecommerce += 20;
+      indicators.push('📋 Schema.org Product detectat');
+    }
+    if (type.includes('Article')) {
+      scores.blog += 15;
+      indicators.push('📋 Schema.org Article detectat');
+    }
+    if (type.includes('Vehicle') || type.includes('Car')) {
+      scores.automotive += 25;
+      indicators.push('📋 Schema.org Vehicle detectat');
+    }
+  });
+
+  // Găsește tipul cu cel mai mare scor
+  const maxScore = Math.max(...Object.values(scores));
+  const bestType = Object.keys(scores).find(key => scores[key as keyof typeof scores] === maxScore) || 'unknown';
+  
+  return {
+    type: bestType as any,
+    confidence: Math.min(maxScore / 100, 1),
+    indicators
+  };
+};
+
+// Funcție AI pentru extragerea datelor structurate (JSON-LD, Microdata, etc.)
+const extractStructuredData = (doc: Document): Record<string, any> => {
+  const structuredData: Record<string, any> = {};
+
+  // JSON-LD extraction
+  const jsonLdScripts = doc.querySelectorAll('script[type="application/ld+json"]');
+  const jsonLdData: any[] = [];
+  
+  jsonLdScripts.forEach((script, index) => {
+    try {
+      const data = JSON.parse(script.textContent || '');
+      jsonLdData.push(data);
+      console.log(`🎯 JSON-LD ${index + 1} găsit:`, Object.keys(data));
+    } catch (e) {
+      console.warn(`JSON-LD parsing error:`, e);
+    }
+  });
+  
+  if (jsonLdData.length > 0) {
+    structuredData.jsonLd = jsonLdData;
+  }
+
+  // Microdata extraction
+  const microdataItems = doc.querySelectorAll('[itemtype]');
+  const microdataData: any[] = [];
+  
+  microdataItems.forEach(item => {
+    const itemType = item.getAttribute('itemtype');
+    const props: Record<string, any> = { '@type': itemType };
+    
+    const propElements = item.querySelectorAll('[itemprop]');
+    propElements.forEach(prop => {
+      const propName = prop.getAttribute('itemprop');
+      const propValue = prop.getAttribute('content') || prop.textContent?.trim();
+      if (propName && propValue) {
+        props[propName] = propValue;
+      }
+    });
+    
+    if (Object.keys(props).length > 1) {
+      microdataData.push(props);
+    }
+  });
+  
+  if (microdataData.length > 0) {
+    structuredData.microdata = microdataData;
+  }
+
+  // Open Graph data
+  const ogData: Record<string, string> = {};
+  const ogMetas = doc.querySelectorAll('meta[property^="og:"]');
+  ogMetas.forEach(meta => {
+    const property = meta.getAttribute('property')?.replace('og:', '');
+    const content = meta.getAttribute('content');
+    if (property && content) {
+      ogData[property] = content;
+    }
+  });
+  
+  if (Object.keys(ogData).length > 0) {
+    structuredData.openGraph = ogData;
+  }
+
+  // Twitter Card data
+  const twitterData: Record<string, string> = {};
+  const twitterMetas = doc.querySelectorAll('meta[name^="twitter:"]');
+  twitterMetas.forEach(meta => {
+    const name = meta.getAttribute('name')?.replace('twitter:', '');
+    const content = meta.getAttribute('content');
+    if (name && content) {
+      twitterData[name] = content;
+    }
+  });
+  
+  if (Object.keys(twitterData).length > 0) {
+    structuredData.twitterCard = twitterData;
+  }
+
+  return structuredData;
+};
+
+// Funcție AI pentru analiza SEO avansată
+const extractAdvancedSEO = (doc: Document): Record<string, any> => {
+  const seoData: Record<string, any> = {};
+
+  // Meta tags
+  const metaTags: Record<string, string> = {};
+  const metas = doc.querySelectorAll('meta');
+  metas.forEach(meta => {
+    const name = meta.getAttribute('name') || meta.getAttribute('property');
+    const content = meta.getAttribute('content');
+    if (name && content) {
+      metaTags[name] = content;
+    }
+  });
+  seoData.metaTags = metaTags;
+
+  // Headings structure
+  const headings: Array<{level: number, text: string, hasKeywords: boolean}> = [];
+  for (let i = 1; i <= 6; i++) {
+    const headingElements = doc.querySelectorAll(`h${i}`);
+    headingElements.forEach(h => {
+      const text = h.textContent?.trim() || '';
+      if (text) {
+        headings.push({
+          level: i,
+          text,
+          hasKeywords: /produs|serviciu|vânzare|cumpără|preț|ofertă|nou|second|hand/i.test(text)
+        });
+      }
+    });
+  }
+  seoData.headings = headings;
+
+  // Internal/External links analysis
+  const links = doc.querySelectorAll('a[href]');
+  const linkAnalysis = {
+    total: links.length,
+    internal: 0,
+    external: 0,
+    nofollow: 0,
+    anchors: [] as string[]
+  };
+
+  const currentDomain = new URL(doc.location?.href || 'https://example.com').hostname;
+  
+  links.forEach(link => {
+    const href = link.getAttribute('href') || '';
+    const text = link.textContent?.trim() || '';
+    
+    if (text) linkAnalysis.anchors.push(text);
+    
+    if (href.startsWith('http')) {
+      const linkDomain = new URL(href).hostname;
+      if (linkDomain === currentDomain) {
+        linkAnalysis.internal++;
+      } else {
+        linkAnalysis.external++;
+      }
+    } else if (href.startsWith('/') || href.startsWith('./')) {
+      linkAnalysis.internal++;
+    }
+    
+    if (link.getAttribute('rel')?.includes('nofollow')) {
+      linkAnalysis.nofollow++;
+    }
+  });
+  
+  seoData.linkAnalysis = linkAnalysis;
+
+  // Content analysis
+  const bodyText = doc.body?.textContent || '';
+  seoData.contentAnalysis = {
+    wordCount: bodyText.split(/\s+/).length,
+    readingTime: Math.ceil(bodyText.split(/\s+/).length / 200), // minutes
+    hasContactInfo: /telefon|email|contact|adresa/i.test(bodyText),
+    hasBusinessInfo: /orar|program|locatie|adresa/i.test(bodyText)
+  };
+
+  return seoData;
+};
+
+// Funcții de utilitate pentru extragerea imaginilor ULTRA-AVANSATE
+const extractAllImages = (element: Element, baseUrl: string): Array<{src: string; alt: string; title: string; type: 'main' | 'gallery' | 'thumbnail' | 'zoom'; format?: string; isLazy?: boolean; priority?: 'high' | 'medium' | 'low'}> => {
+  const images: Array<{src: string; alt: string; title: string; type: 'main' | 'gallery' | 'thumbnail' | 'zoom'; format?: string; isLazy?: boolean; priority?: 'high' | 'medium' | 'low'}> = [];
   
   const imageSelectors = [
     'img', 'source', '[data-src]', '[data-lazy-src]', '[data-original]',
@@ -159,11 +426,25 @@ const extractAllImages = (element: Element, baseUrl: string): Array<{src: string
         else if (className.includes('thumb') || className.includes('small') || id.includes('thumb')) type = 'thumbnail';
         else if (className.includes('zoom') || className.includes('large') || id.includes('zoom')) type = 'zoom';
 
+        // Detectează formatul imaginii
+        const format = src.split('.').pop()?.toLowerCase() || 'unknown';
+        
+        // Detectează lazy loading
+        const isLazy = img.hasAttribute('loading') || img.hasAttribute('data-src') || img.hasAttribute('data-lazy-src');
+        
+        // Determină prioritatea
+        let priority: 'high' | 'medium' | 'low' = 'medium';
+        if (type === 'main' || className.includes('hero') || className.includes('featured')) priority = 'high';
+        else if (type === 'thumbnail') priority = 'low';
+
         images.push({
           src,
           alt: img.getAttribute('alt') || '',
           title: img.getAttribute('title') || '',
-          type
+          type,
+          format,
+          isLazy,
+          priority
         });
       }
     });
@@ -766,13 +1047,13 @@ const handleScrape = async (url: string, deepScraping: boolean = false): Promise
       console.log('🎯 Începe ULTRA MEGA SCRAPING...');
       scrapedData = await applyUltraMegaScraping(scrapedData, url);
       
-      // ETAPA 3: Analiză avansată și optimizări
-      console.log('🧠 Analiză avansată în progres...');
-      // TODO: Implementare AI în versiuni viitoare
+      // ETAPA 3: Analiză avansată și optimizări cu AI
+      console.log('🧠 Analiză AI avansată în progres...');
+      scrapedData = await applyAIAnalysis(scrapedData, url);
       
-      // ETAPA 4: Optimizări finale
-      console.log('📊 Optimizări finale...');
-      // TODO: Extragere date structurate în versiuni viitoare
+      // ETAPA 4: Optimizări finale cu date structurate
+      console.log('📊 Extragere date structurate...');
+      scrapedData = await applyStructuredDataExtraction(scrapedData, url);
       
       console.log('✅ ULTRA MEGA SCRAPING COMPLET!', scrapedData);
       return scrapedData;
@@ -816,7 +1097,418 @@ const applyUltraMegaScraping = async (baseData: ScrapedData, targetUrl: string):
   }
 };
 
-// 🔗 EXTRAGERE AVANSATĂ DE LINKURI
+// 🧠 APLICARE ANALIZĂ AI AVANSATĂ
+const applyAIAnalysis = async (baseData: ScrapedData, targetUrl: string): Promise<ScrapedData> => {
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(baseData.text || '', 'text/html');
+    
+    // 🎯 CLASIFICARE CONȚINUT CU AI
+    const contentClassification = classifyContentWithAI(doc, targetUrl);
+    console.log(`🔍 AI detectat: ${contentClassification.type} (${Math.round(contentClassification.confidence * 100)}%)`);
+    
+    // 🧠 EXTRAGERE CONȚINUT INTELIGENT
+    const intelligentContent = extractIntelligentContent(doc, contentClassification.type);
+    
+    // Îmbunătățește metadata cu analiză AI
+        baseData.metadata = {
+          ...baseData.metadata,
+          aiClassification: contentClassification,
+          intelligentContent,
+          aiProcessed: true,
+          aiVersion: 'ULTRA-AI-v2.0'
+        };
+    
+    console.log('✅ Analiză AI completată cu succes!');
+    return baseData;
+  } catch (error) {
+    console.error('Eroare în analiza AI:', error);
+    return baseData;
+  }
+};
+
+// 📊 APLICARE EXTRAGERE DATE STRUCTURATE
+const applyStructuredDataExtraction = async (baseData: ScrapedData, targetUrl: string): Promise<ScrapedData> => {
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(baseData.text || '', 'text/html');
+    
+    // 📋 EXTRAGERE DATE STRUCTURATE
+    const structuredData = extractStructuredData(doc);
+    console.log(`📋 Date structurate găsite: ${Object.keys(structuredData).length} tipuri`);
+    
+    // 🔍 ANALIZĂ SEO AVANSATĂ
+    const seoData = extractAdvancedSEO(doc);
+    console.log(`📈 SEO: ${seoData.contentAnalysis.wordCount} cuvinte, ${seoData.linkAnalysis.total} link-uri`);
+    
+    // Îmbunătățește metadata cu date structurate
+      baseData.metadata = {
+        ...baseData.metadata,
+        structuredData,
+        seoAnalysis: seoData,
+        enhancedData: true,
+        processingDate: new Date().toISOString()
+      };
+    
+    console.log('✅ Extragere date structurate completată!');
+    return baseData;
+  } catch (error) {
+    console.error('Eroare în extragera datelor structurate:', error);
+    return baseData;
+  }
+};
+
+// 🧠 FUNCȚIE AI PENTRU CLASIFICAREA TIPULUI DE CONȚINUT
+const classifyContentWithAI = (doc: Document, url: string): {
+  type: 'ecommerce' | 'blog' | 'news' | 'corporate' | 'portfolio' | 'forum' | 'wiki' | 'social' | 'automotive' | 'real-estate' | 'unknown',
+  confidence: number,
+  indicators: string[]
+} => {
+  const indicators: string[] = [];
+  let scores = {
+    ecommerce: 0,
+    blog: 0,
+    news: 0,
+    corporate: 0,
+    portfolio: 0,
+    forum: 0,
+    wiki: 0,
+    social: 0,
+    automotive: 0,
+    'real-estate': 0
+  };
+
+  // Analiza URL-ului
+  const urlLower = url.toLowerCase();
+  if (urlLower.includes('shop') || urlLower.includes('store') || urlLower.includes('buy')) {
+    scores.ecommerce += 20;
+    indicators.push('🛒 URL e-commerce detectat');
+  }
+  if (urlLower.includes('blog') || urlLower.includes('article')) {
+    scores.blog += 20;
+    indicators.push('📝 URL blog detectat');
+  }
+  if (urlLower.includes('news') || urlLower.includes('press')) {
+    scores.news += 20;
+    indicators.push('📰 URL știri detectat');
+  }
+  if (urlLower.includes('auto') || urlLower.includes('car') || urlLower.includes('vehicle')) {
+    scores.automotive += 25;
+    indicators.push('🚗 URL automotive detectat');
+  }
+
+  // Analiza conținutului HTML
+  const bodyText = doc.body?.textContent?.toLowerCase() || '';
+  
+  // E-commerce indicators
+  const ecommerceKeywords = ['add to cart', 'buy now', 'price', 'shopping cart', 'checkout', 'product', 'lei', 'eur', 'usd'];
+  ecommerceKeywords.forEach(keyword => {
+    if (bodyText.includes(keyword)) {
+      scores.ecommerce += 5;
+      indicators.push(`💰 Cuvânt cheie e-commerce: ${keyword}`);
+    }
+  });
+
+  // Automotive indicators (pentru Moldova/România)
+  const autoKeywords = ['km', 'motor', 'diesel', 'benzina', 'automat', 'manual', 'cilindree', 'rulaj', 'masina', 'automobil'];
+  autoKeywords.forEach(keyword => {
+    if (bodyText.includes(keyword)) {
+      scores.automotive += 8;
+      indicators.push(`🚗 Cuvânt automotive: ${keyword}`);
+    }
+  });
+
+  // Structura HTML
+  if (doc.querySelector('.product, .product-item, [data-product]')) {
+    scores.ecommerce += 30;
+    indicators.push('🏪 Structură produs detectată');
+  }
+  if (doc.querySelector('article, .article, .post, .blog-post')) {
+    scores.blog += 25;
+    indicators.push('📄 Structură articol detectată');
+  }
+  if (doc.querySelector('.news, .article, .story')) {
+    scores.news += 25;
+    indicators.push('📺 Structură știri detectată');
+  }
+
+  // Schema.org detection
+  const schemas = doc.querySelectorAll('[typeof], [itemtype]');
+  schemas.forEach(schema => {
+    const type = schema.getAttribute('typeof') || schema.getAttribute('itemtype') || '';
+    if (type.includes('Product')) {
+      scores.ecommerce += 20;
+      indicators.push('📋 Schema.org Product detectat');
+    }
+    if (type.includes('Article')) {
+      scores.blog += 15;
+      indicators.push('📋 Schema.org Article detectat');
+    }
+    if (type.includes('Vehicle') || type.includes('Car')) {
+      scores.automotive += 25;
+      indicators.push('📋 Schema.org Vehicle detectat');
+    }
+  });
+
+  // Găsește tipul cu cel mai mare scor
+  const maxScore = Math.max(...Object.values(scores));
+  const bestType = Object.keys(scores).find(key => scores[key as keyof typeof scores] === maxScore) || 'unknown';
+  
+  return {
+    type: bestType as any,
+    confidence: Math.min(maxScore / 100, 1),
+    indicators
+  };
+};
+
+// 📊 FUNCȚIE AI PENTRU EXTRAGEREA DATELOR STRUCTURATE
+const extractStructuredData = (doc: Document): Record<string, any> => {
+  const structuredData: Record<string, any> = {};
+
+  // JSON-LD extraction
+  const jsonLdScripts = doc.querySelectorAll('script[type="application/ld+json"]');
+  const jsonLdData: any[] = [];
+  
+  jsonLdScripts.forEach((script, index) => {
+    try {
+      const data = JSON.parse(script.textContent || '');
+      jsonLdData.push(data);
+      console.log(`🎯 JSON-LD ${index + 1} găsit:`, Object.keys(data));
+    } catch (e) {
+      console.warn(`JSON-LD parsing error:`, e);
+    }
+  });
+  
+  if (jsonLdData.length > 0) {
+    structuredData.jsonLd = jsonLdData;
+  }
+
+  // Microdata extraction
+  const microdataItems = doc.querySelectorAll('[itemtype]');
+  const microdataData: any[] = [];
+  
+  microdataItems.forEach(item => {
+    const itemType = item.getAttribute('itemtype');
+    const props: Record<string, any> = { '@type': itemType };
+    
+    const propElements = item.querySelectorAll('[itemprop]');
+    propElements.forEach(prop => {
+      const propName = prop.getAttribute('itemprop');
+      const propValue = prop.getAttribute('content') || prop.textContent?.trim();
+      if (propName && propValue) {
+        props[propName] = propValue;
+      }
+    });
+    
+    if (Object.keys(props).length > 1) {
+      microdataData.push(props);
+    }
+  });
+  
+  if (microdataData.length > 0) {
+    structuredData.microdata = microdataData;
+  }
+
+  // Open Graph data
+  const ogData: Record<string, string> = {};
+  const ogMetas = doc.querySelectorAll('meta[property^="og:"]');
+  ogMetas.forEach(meta => {
+    const property = meta.getAttribute('property')?.replace('og:', '');
+    const content = meta.getAttribute('content');
+    if (property && content) {
+      ogData[property] = content;
+    }
+  });
+  
+  if (Object.keys(ogData).length > 0) {
+    structuredData.openGraph = ogData;
+  }
+
+  // Twitter Card data
+  const twitterData: Record<string, string> = {};
+  const twitterMetas = doc.querySelectorAll('meta[name^="twitter:"]');
+  twitterMetas.forEach(meta => {
+    const name = meta.getAttribute('name')?.replace('twitter:', '');
+    const content = meta.getAttribute('content');
+    if (name && content) {
+      twitterData[name] = content;
+    }
+  });
+  
+  if (Object.keys(twitterData).length > 0) {
+    structuredData.twitterCard = twitterData;
+  }
+
+  return structuredData;
+};
+
+// 🔍 FUNCȚIE AI PENTRU ANALIZA SEO AVANSATĂ
+const extractAdvancedSEO = (doc: Document): Record<string, any> => {
+  const seoData: Record<string, any> = {};
+
+  // Meta tags
+  const metaTags: Record<string, string> = {};
+  const metas = doc.querySelectorAll('meta');
+  metas.forEach(meta => {
+    const name = meta.getAttribute('name') || meta.getAttribute('property');
+    const content = meta.getAttribute('content');
+    if (name && content) {
+      metaTags[name] = content;
+    }
+  });
+  seoData.metaTags = metaTags;
+
+  // Headings structure
+  const headings: Array<{level: number, text: string, hasKeywords: boolean}> = [];
+  for (let i = 1; i <= 6; i++) {
+    const headingElements = doc.querySelectorAll(`h${i}`);
+    headingElements.forEach(h => {
+      const text = h.textContent?.trim() || '';
+      if (text) {
+        headings.push({
+          level: i,
+          text,
+          hasKeywords: /produs|serviciu|vânzare|cumpără|preț|ofertă|nou|second|hand/i.test(text)
+        });
+      }
+    });
+  }
+  seoData.headings = headings;
+
+  // Internal/External links analysis
+  const links = doc.querySelectorAll('a[href]');
+  const linkAnalysis = {
+    total: links.length,
+    internal: 0,
+    external: 0,
+    nofollow: 0,
+    anchors: [] as string[]
+  };
+
+  const currentDomain = new URL(doc.location?.href || 'https://example.com').hostname;
+  
+  links.forEach(link => {
+    const href = link.getAttribute('href') || '';
+    const text = link.textContent?.trim() || '';
+    
+    if (text) linkAnalysis.anchors.push(text);
+    
+    if (href.startsWith('http')) {
+      const linkDomain = new URL(href).hostname;
+      if (linkDomain === currentDomain) {
+        linkAnalysis.internal++;
+      } else {
+        linkAnalysis.external++;
+      }
+    } else if (href.startsWith('/') || href.startsWith('./')) {
+      linkAnalysis.internal++;
+    }
+    
+    if (link.getAttribute('rel')?.includes('nofollow')) {
+      linkAnalysis.nofollow++;
+    }
+  });
+  
+  seoData.linkAnalysis = linkAnalysis;
+
+  // Content analysis
+  const bodyText = doc.body?.textContent || '';
+  seoData.contentAnalysis = {
+    wordCount: bodyText.split(/\s+/).length,
+    readingTime: Math.ceil(bodyText.split(/\s+/).length / 200), // minutes
+    hasContactInfo: /telefon|email|contact|adresa/i.test(bodyText),
+    hasBusinessInfo: /orar|program|locatie|adresa/i.test(bodyText)
+  };
+
+  return seoData;
+};
+
+// 🧠 FUNCȚIE AI PENTRU EXTRAGEREA CONȚINUTULUI INTELIGENT
+const extractIntelligentContent = (doc: Document, contentType: string): Record<string, any> => {
+  const intelligentData: Record<string, any> = {};
+
+  if (contentType === 'automotive') {
+    // Extrage date specifice auto
+    const autoData = {
+      make: '',
+      model: '',
+      year: '',
+      mileage: '',
+      engine: '',
+      fuel: '',
+      transmission: '',
+      price: '',
+      currency: '',
+      condition: '',
+      features: [] as string[]
+    };
+
+    const bodyText = doc.body?.textContent?.toLowerCase() || '';
+    
+    // Extrage marca și modelul
+    const carBrands = ['mercedes', 'bmw', 'audi', 'volkswagen', 'ford', 'opel', 'renault', 'peugeot', 'citroen', 'toyota', 'honda', 'nissan', 'hyundai', 'kia', 'skoda', 'seat', 'fiat', 'alfa romeo', 'lancia', 'volvo', 'saab', 'mazda', 'subaru', 'mitsubishi', 'lexus', 'infiniti', 'acura', 'cadillac', 'lincoln', 'buick', 'chevrolet', 'gmc', 'jeep', 'dodge', 'chrysler', 'ram'];
+    
+    for (const brand of carBrands) {
+      if (bodyText.includes(brand)) {
+        autoData.make = brand.charAt(0).toUpperCase() + brand.slice(1);
+        break;
+      }
+    }
+
+    // Extrage anul
+    const yearMatch = bodyText.match(/\b(19|20)\d{2}\b/);
+    if (yearMatch) autoData.year = yearMatch[0];
+
+    // Extrage kilometrajul
+    const mileageMatch = bodyText.match(/(\d+[.,]?\d*)\s*(km|kilometers)/i);
+    if (mileageMatch) autoData.mileage = mileageMatch[1] + ' km';
+
+    // Extrage motorul
+    const engineMatch = bodyText.match(/(\d+[.,]?\d*)\s*(cm3|l|litri|motor)/i);
+    if (engineMatch) autoData.engine = engineMatch[0];
+
+    // Extrage combustibilul
+    if (bodyText.includes('diesel')) autoData.fuel = 'Diesel';
+    else if (bodyText.includes('benzina') || bodyText.includes('gasoline')) autoData.fuel = 'Benzină';
+    else if (bodyText.includes('electric')) autoData.fuel = 'Electric';
+    else if (bodyText.includes('hybrid')) autoData.fuel = 'Hybrid';
+
+    // Extrage transmisia
+    if (bodyText.includes('automat')) autoData.transmission = 'Automată';
+    else if (bodyText.includes('manual')) autoData.transmission = 'Manuală';
+
+    intelligentData.automotive = autoData;
+  }
+
+  if (contentType === 'ecommerce') {
+    // Extrage date specifice e-commerce
+    const productData = {
+      categories: [] as string[],
+      brands: [] as string[],
+      tags: [] as string[],
+      availability: '',
+      shippingInfo: '',
+      returnPolicy: '',
+      warranty: ''
+    };
+
+    // Extrage categoriile din breadcrumbs
+    const breadcrumbs = doc.querySelectorAll('.breadcrumb, .breadcrumbs, [class*="breadcrumb"]');
+    breadcrumbs.forEach(breadcrumb => {
+      const links = breadcrumb.querySelectorAll('a');
+      links.forEach(link => {
+        const text = link.textContent?.trim();
+        if (text && text.length < 50) {
+          productData.categories.push(text);
+        }
+      });
+    });
+
+    intelligentData.ecommerce = productData;
+  }
+
+  return intelligentData;
+};
 const extractAdvancedLinks = (doc: Document, baseUrl: string) => {
   const links: Array<{url: string; text: string; type: string; category?: string; priority?: number}> = [];
   
