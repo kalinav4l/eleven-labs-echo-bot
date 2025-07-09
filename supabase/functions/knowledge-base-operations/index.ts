@@ -38,11 +38,12 @@ serve(async (req) => {
     const path = url.pathname
     const method = req.method
 
-    // Verify API key
+    // Verify API key - using Supabase anon key as expected
     const apiKey = req.headers.get('X-API-KEY')
-    const expectedApiKey = Deno.env.get('BACKEND_API_KEY')
+    const expectedApiKey = Deno.env.get('SUPABASE_ANON_KEY')
     
     if (!apiKey || apiKey !== expectedApiKey) {
+      console.error('API key validation failed:', { provided: apiKey?.substring(0, 10), expected: expectedApiKey?.substring(0, 10) })
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }), 
         { 
@@ -64,8 +65,11 @@ serve(async (req) => {
       )
     }
 
-    // Handle text document creation
-    if (path === '/api/knowledge-base/documents/text' && method === 'POST') {
+    // Handle text document creation (JSON request)
+    if (method === 'POST') {
+      const contentType = req.headers.get('content-type')
+      
+      if (contentType?.includes('application/json')) {
       const body: CreateTextDocumentRequest = await req.json()
       
       const response = await fetch('https://api.elevenlabs.io/v1/knowledge-base', {
@@ -99,17 +103,17 @@ serve(async (req) => {
         name: body.name,
       }
 
-      return new Response(
-        JSON.stringify(responseData), 
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
+        return new Response(
+          JSON.stringify(responseData), 
+          { 
+            status: 200, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
+      }
 
-    // Handle file document upload
-    if (path.startsWith('/api/knowledge-base/documents/file') && method === 'POST') {
+      // Handle file document upload (multipart/form-data request)
+      if (contentType?.includes('multipart/form-data')) {
       const formData = await req.formData()
       const file = formData.get('file') as File
       const name = url.searchParams.get('name') || file.name
@@ -156,17 +160,18 @@ serve(async (req) => {
         name: name,
       }
 
-      return new Response(
-        JSON.stringify(responseData), 
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+        return new Response(
+          JSON.stringify(responseData), 
+          { 
+            status: 200, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
+      }
     }
 
     // Handle getting existing documents
-    if (path === '/api/knowledge-base/documents' && method === 'GET') {
+    if (method === 'GET') {
       const response = await fetch('https://api.elevenlabs.io/v1/knowledge-base', {
         method: 'GET',
         headers: {
