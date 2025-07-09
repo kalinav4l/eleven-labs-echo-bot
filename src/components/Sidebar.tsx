@@ -76,19 +76,6 @@ const Sidebar = ({
             </div>
           </div>
 
-          {/* Workflow & Automation */}
-          <div className="mb-6">
-            <p className="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-3">
-              Workflow & Automation
-            </p>
-            <div className="space-y-1">
-              <Link to="/account/construction" className={`${location.pathname === '/account/construction' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
-                <Workflow className="mr-3 h-4 w-4" />
-                <span>Construction</span>
-              </Link>
-            </div>
-          </div>
-
           {/* Data & Tools */}
           <div className="mb-6">
             <p className="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-3">
@@ -108,6 +95,19 @@ const Sidebar = ({
               <Link to="/account/gmail" className={`${location.pathname === '/account/gmail' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
                 <Mail className="mr-3 h-4 w-4" />
                 <span>Gmail</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Workflow & Automation */}
+          <div className="mb-6">
+            <p className="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-3">
+              Workflow & Automation
+            </p>
+            <div className="space-y-1">
+              <Link to="/account/construction" className={`${location.pathname === '/account/construction' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
+                <Workflow className="mr-3 h-4 w-4" />
+                <span>Construction</span>
               </Link>
             </div>
           </div>

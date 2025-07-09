@@ -31,13 +31,16 @@ export class KnowledgeBaseController {
     
     const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/knowledge-base/documents/file?name=${encodeURIComponent(userFileName)}`, {
       method: 'POST',
-       headers: {
-          'X-API-KEY': API_CONFIG.BACKEND_API_KEY,
+      headers: {
+        'X-API-KEY': API_CONFIG.BACKEND_API_KEY,
       },
       body: formData,
     });
+    
     if (!response.ok) {
-      throw new Error('File upload failed');
+      const errorText = await response.text();
+      console.error('File upload error:', errorText);
+      throw new Error(`File upload failed: ${response.status} ${response.statusText}`);
     }
     return response.json();
   }
