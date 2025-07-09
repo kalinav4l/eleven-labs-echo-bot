@@ -108,6 +108,10 @@ const ChatAssistant = () => {
     systemPrompt: agent.system_prompt || ''
   }));
   
+  // Debug logging
+  console.log('Agents loaded:', agents);
+  console.log('Selected agent:', selectedAgent);
+  
   // Convert selectedAgent to LocalAgent when needed
   const selectedLocalAgent = selectedAgent ? localAgents.find(a => a.id === selectedAgent.id) : null;
 
@@ -370,19 +374,26 @@ const ChatAssistant = () => {
                 <Select 
                   value={selectedAgent?.id || ''} 
                   onValueChange={(value) => {
+                    console.log('Agent selected:', value);
                     const agent = agents.find(a => a.id === value);
                     setSelectedAgent(agent || null);
                   }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-background">
                     <SelectValue placeholder="Selectează agent" />
                   </SelectTrigger>
-                  <SelectContent>
-                    {agents.map((agent) => (
-                      <SelectItem key={agent.id} value={agent.id}>
-                        {agent.name}
+                  <SelectContent className="bg-background border shadow-lg z-50">
+                    {agents.length === 0 ? (
+                      <SelectItem value="no-agents" disabled>
+                        Nu există agenți - creează unul
                       </SelectItem>
-                    ))}
+                    ) : (
+                      agents.map((agent) => (
+                        <SelectItem key={agent.id} value={agent.id}>
+                          {agent.name}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
                 
