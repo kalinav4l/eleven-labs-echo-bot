@@ -19,7 +19,6 @@ import ConversationAnalytics from "./pages/ConversationAnalytics";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import AgentConsultant from "./pages/AgentConsultant";
-import Landing from "./pages/Landing";
 import Scraping from "./pages/Scraping";
 import Gmail from "./pages/Gmail";
 import Construction from "./pages/Construction";
@@ -36,7 +35,6 @@ function App() {
           <Toaster />
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/landing" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/info" element={<Info />} />
             <Route path="/pricing" element={<Pricing />} />
