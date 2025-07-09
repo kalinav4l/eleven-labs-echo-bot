@@ -1765,6 +1765,8 @@ const Scraping = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [fullSiteData, setFullSiteData] = useState<SiteMapData | null>(null);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [isBackgroundScraping, setIsBackgroundScraping] = useState(false);
+  const [backgroundScrapingId, setBackgroundScrapingId] = useState<string | null>(null);
   const { saveScrapingSession } = useScrapingHistory();
 
   // Salvare automată în localStorage
@@ -1975,6 +1977,8 @@ const Scraping = () => {
       console.error('Eroare la pornirea scraping-ului:', error);
     }
   };
+
+  return (
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
         <div className="flex items-center justify-between mb-6">
@@ -2401,93 +2405,6 @@ const Scraping = () => {
                     </div>
                   </div>
                 </TabsContent>
-
-                <TabsContent value="links">
-                  <ScrollArea className="h-[600px]">
-                    <div className="space-y-2">
-                      {scrapedData.links.map((link, index) => (
-                        <div key={index} className="flex items-center gap-2 p-2 border rounded">
-                          <Link className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium truncate">{link.text}</p>
-                            <p className="text-xs text-muted-foreground truncate">{link.url}</p>
-                          </div>
-                          <Badge variant="outline" className="text-xs">
-                            {link.type}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </TabsContent>
-
-                <TabsContent value="images">
-                  <ScrollArea className="h-[600px]">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {scrapedData.images.map((image, index) => (
-                        <Card key={index} className="p-4">
-                          <div className="space-y-2">
-                            <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
-                              {image.src ? (
-                                <img
-                                  src={image.src}
-                                  alt={image.alt}
-                                  className="max-w-full max-h-full object-contain rounded-lg"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                  }}
-                                />
-                              ) : (
-                                <Image className="w-8 h-8 text-muted-foreground" />
-                              )}
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium truncate" title={image.alt}>
-                                {image.alt || 'Fără descriere'}
-                              </p>
-                              <p className="text-xs text-muted-foreground truncate" title={image.src}>
-                                {image.src}
-                              </p>
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </TabsContent>
-
-                <TabsContent value="content">
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-semibold mb-2">Titluri Găsite</h4>
-                      <ScrollArea className="h-[200px]">
-                        <div className="space-y-1">
-                          {scrapedData.headings.map((heading, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs">
-                                H{heading.level}
-                              </Badge>
-                              <span className="text-sm">{heading.text}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                    </div>
-
-                    <Separator />
-
-                    <div>
-                      <h4 className="font-semibold mb-2">Conținut Text</h4>
-                      <ScrollArea className="h-[300px]">
-                        <Textarea
-                          value={scrapedData.text.substring(0, 2000) + (scrapedData.text.length > 2000 ? '...' : '')}
-                          readOnly
-                          className="min-h-[280px] resize-none"
-                        />
-                      </ScrollArea>
-                    </div>
-                  </div>
-                </TabsContent>
               </Tabs>
             </CardContent>
           </Card>
@@ -2616,5 +2533,7 @@ const Scraping = () => {
     </DashboardLayout>
   );
 };
+
+export default Scraping;
 
 export default Scraping;
