@@ -1304,7 +1304,7 @@ const Scraping = () => {
       description: `Se vor procesa ${parallelWorkers} pagini simultan la adâncimea ${maxDepth}`,
     });
 
-    await startFullSiteScraping(url, maxDepth, deepScraping, unlimitedScraping, parallelWorkers);
+    await startFullSiteScraping(url, maxDepth, deepScraping, unlimitedScraping);
   };
 
   return (
