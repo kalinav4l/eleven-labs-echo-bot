@@ -7,6 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Trash2, Upload, Download, ArrowLeft } from 'lucide-react';
 import { BatchCallData } from '@/hooks/useBatchCalling';
+import { usePhoneNumbers } from '@/hooks/usePhoneNumbers';
+import { useKalinaAgents } from '@/hooks/useKalinaAgents';
+import { toast } from '@/hooks/use-toast';
 
 interface CreateBatchModalProps {
   isOpen: boolean;
@@ -33,11 +36,13 @@ export const CreateBatchModal: React.FC<CreateBatchModalProps> = ({
   const [callName, setCallName] = useState('Untitled Batch');
   const [agentId, setAgentId] = useState('');
   const [agentPhoneId, setAgentPhoneId] = useState('');
-  const [recipients, setRecipients] = useState<Recipient[]>([
-    { phone_number: '', name: '', language: 'en' }
-  ]);
+  const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timing, setTiming] = useState('immediate');
+
+  // Fetch data
+  const { phoneNumbers, isLoading: phoneLoading } = usePhoneNumbers();
+  const { agents, isLoading: agentsLoading } = useKalinaAgents();
 
   const addRecipient = () => {
     setRecipients([...recipients, { phone_number: '', name: '', language: 'en' }]);
@@ -111,41 +116,109 @@ export const CreateBatchModal: React.FC<CreateBatchModalProps> = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Check file size (25MB limit)
+    if (file.size > 25 * 1024 * 1024) {
+      toast({
+        title: "Fișier prea mare",
+        description: "Fișierul nu poate depăși 25MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check file type
+    const allowedTypes = ['.csv', '.xls', '.xlsx'];
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+    if (!allowedTypes.includes(fileExtension)) {
+      toast({
+        title: "Format invalid",
+        description: "Doar fișierele CSV și Excel sunt acceptate",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
-      const text = e.target?.result as string;
-      const lines = text.split('\n').filter(line => line.trim());
-      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-      
-      const phoneIndex = headers.findIndex(h => h.includes('phone_number'));
-      const nameIndex = headers.findIndex(h => h.includes('name'));
-      const languageIndex = headers.findIndex(h => h.includes('language'));
-      const voiceIdIndex = headers.findIndex(h => h.includes('voice_id'));
-      const firstMessageIndex = headers.findIndex(h => h.includes('first_message'));
-      const promptIndex = headers.findIndex(h => h.includes('prompt'));
-      const cityIndex = headers.findIndex(h => h.includes('city'));
-      const otherVarIndex = headers.findIndex(h => h.includes('other_dyn_variable'));
-      
-      if (phoneIndex === -1) {
-        alert('CSV must contain a phone_number column');
-        return;
+      try {
+        const text = e.target?.result as string;
+        const lines = text.split('\n').filter(line => line.trim());
+        
+        if (lines.length < 2) {
+          toast({
+            title: "Fișier invalid",
+            description: "Fișierul trebuie să conțină header și cel puțin o linie de date",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        
+        const phoneIndex = headers.findIndex(h => h.includes('phone_number'));
+        const nameIndex = headers.findIndex(h => h.includes('name'));
+        const languageIndex = headers.findIndex(h => h.includes('language'));
+        const voiceIdIndex = headers.findIndex(h => h.includes('voice_id'));
+        const firstMessageIndex = headers.findIndex(h => h.includes('first_message'));
+        const promptIndex = headers.findIndex(h => h.includes('prompt'));
+        const cityIndex = headers.findIndex(h => h.includes('city'));
+        const otherVarIndex = headers.findIndex(h => h.includes('other_dyn_variable'));
+        
+        if (phoneIndex === -1) {
+          toast({
+            title: "Coloană lipsă",
+            description: "CSV-ul trebuie să conțină o coloană 'phone_number'",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        const csvRecipients = lines.slice(1)
+          .map(line => {
+            const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+            return {
+              phone_number: values[phoneIndex] || '',
+              name: nameIndex >= 0 ? values[nameIndex] || '' : '',
+              language: languageIndex >= 0 ? values[languageIndex] || 'en' : 'en',
+              voice_id: voiceIdIndex >= 0 ? values[voiceIdIndex] || '' : '',
+              first_message: firstMessageIndex >= 0 ? values[firstMessageIndex] || '' : '',
+              prompt: promptIndex >= 0 ? values[promptIndex] || '' : '',
+              city: cityIndex >= 0 ? values[cityIndex] || '' : '',
+              other_dyn_variable: otherVarIndex >= 0 ? values[otherVarIndex] || '' : ''
+            };
+          })
+          .filter(r => r.phone_number.trim());
+
+        if (csvRecipients.length === 0) {
+          toast({
+            title: "Niciun destinatar valid",
+            description: "Nu s-au găsit numere de telefon valide în fișier",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        setRecipients(csvRecipients);
+        toast({
+          title: "Succes",
+          description: `S-au încărcat ${csvRecipients.length} destinatari`,
+        });
+      } catch (error) {
+        console.error('Error parsing CSV:', error);
+        toast({
+          title: "Eroare la procesare",
+          description: "Nu s-a putut procesa fișierul. Verificați formatul.",
+          variant: "destructive"
+        });
       }
+    };
 
-      const csvRecipients = lines.slice(1).map(line => {
-        const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
-        return {
-          phone_number: values[phoneIndex] || '',
-          name: nameIndex >= 0 ? values[nameIndex] || '' : '',
-          language: languageIndex >= 0 ? values[languageIndex] || 'en' : 'en',
-          voice_id: voiceIdIndex >= 0 ? values[voiceIdIndex] || '' : '',
-          first_message: firstMessageIndex >= 0 ? values[firstMessageIndex] || '' : '',
-          prompt: promptIndex >= 0 ? values[promptIndex] || '' : '',
-          city: cityIndex >= 0 ? values[cityIndex] || '' : '',
-          other_dyn_variable: otherVarIndex >= 0 ? values[otherVarIndex] || '' : ''
-        };
-      }).filter(r => r.phone_number);
-
-      setRecipients(csvRecipients);
+    reader.onerror = () => {
+      toast({
+        title: "Eroare la citire",
+        description: "Nu s-a putut citi fișierul",
+        variant: "destructive"
+      });
     };
 
     reader.readAsText(file);
@@ -196,8 +269,17 @@ export const CreateBatchModal: React.FC<CreateBatchModalProps> = ({
                 <SelectValue placeholder="Select a phone number" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="phone1">+1234567890</SelectItem>
-                <SelectItem value="phone2">+0987654321</SelectItem>
+                {phoneLoading ? (
+                  <SelectItem value="" disabled>Se încarcă...</SelectItem>
+                ) : phoneNumbers.length === 0 ? (
+                  <SelectItem value="" disabled>Nu există numere de telefon</SelectItem>
+                ) : (
+                  phoneNumbers.map((phone) => (
+                    <SelectItem key={phone.id} value={phone.elevenlabs_phone_id || phone.id}>
+                      {phone.label} ({phone.phone_number})
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -210,8 +292,20 @@ export const CreateBatchModal: React.FC<CreateBatchModalProps> = ({
                 <SelectValue placeholder="Select an agent" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="agent1">Agent 1</SelectItem>
-                <SelectItem value="agent2">Agent 2</SelectItem>
+                {agentsLoading ? (
+                  <SelectItem value="" disabled>Se încarcă...</SelectItem>
+                ) : agents.length === 0 ? (
+                  <SelectItem value="" disabled>Nu există agenți</SelectItem>
+                ) : (
+                  agents.map((agent) => (
+                    <SelectItem key={agent.id} value={agent.elevenlabs_agent_id || agent.agent_id}>
+                      {agent.name}
+                      {agent.description && (
+                        <span className="text-muted-foreground"> - {agent.description}</span>
+                      )}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
