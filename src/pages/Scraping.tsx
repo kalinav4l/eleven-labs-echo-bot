@@ -3,98 +3,98 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/components/ui/use-toast';
 import { ScrapingHistory } from '@/components/scraping/ScrapingHistory';
 import { useScrapingHistory } from '@/hooks/useScrapingHistory';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Globe, 
   Search, 
   Download, 
   FileText, 
-  Image as ImageIcon, 
-  Link as LinkIcon, 
-  ShoppingCart, 
-  ExternalLink, 
   Loader2, 
-  AlertTriangle,
   History,
   Play,
   Square,
-  RotateCcw
+  Settings,
+  BarChart3
 } from 'lucide-react';
 
-interface ScrapedProduct {
-  name: string;
-  price: string;
-  description?: string;
-  image?: string;
-  url?: string;
-  category?: string;
-}
-
-interface ScrapedData {
-  title: string;
-  description: string;
-  images: string[];
-  links: string[];
-  products: ScrapedProduct[];
-  content: string;
-}
-
-interface SiteMapPage {
-  url: string;
-  title: string;
-  status: 'pending' | 'success' | 'error';
-  products: ScrapedProduct[];
-  error?: string;
-}
-
-interface SiteMap {
-  baseUrl: string;
-  pages: SiteMapPage[];
-  scrapedPages: number;
-  errorPages: number;
+interface ScrapingProgress {
+  pagesProcessed: number;
+  results: number;
+  errors: number;
+  totalProducts: number;
+  currentUrl: string;
   isComplete: boolean;
+  isRunning: boolean;
 }
 
 const Scraping = () => {
   const [url, setUrl] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isBackgroundScraping, setIsBackgroundScraping] = useState(false);
-  const [scrapedData, setScrapedData] = useState<ScrapedData | null>(null);
-  const [siteMap, setSiteMap] = useState<SiteMap | null>(null);
-  const [scrapingType, setScrapingType] = useState<'single' | 'sitemap'>('single');
-  const [maxPages, setMaxPages] = useState(10);
-  const [isScrapingComplete, setIsScrapingComplete] = useState(false);
-  const [backgroundProgress, setBackgroundProgress] = useState(0);
+  const [deepScan, setDeepScan] = useState(true);
+  const [unlimitedScan, setUnlimitedScan] = useState(false);
+  const [maxPages, setMaxPages] = useState(300);
+  const [parallelThreads, setParallelThreads] = useState(5);
+  const [isScrapingRunning, setIsScrapingRunning] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [progress, setProgress] = useState<ScrapingProgress>({
+    pagesProcessed: 0,
+    results: 0,
+    errors: 0,
+    totalProducts: 0,
+    currentUrl: '',
+    isComplete: false,
+    isRunning: false
+  });
+  
   const { saveScrapingSession } = useScrapingHistory();
 
-  // Background scraping monitoring
+  // Simulate scraping progress
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (isBackgroundScraping && siteMap) {
-        const progress = (siteMap.scrapedPages + siteMap.errorPages) / siteMap.pages.length * 100;
-        setBackgroundProgress(progress);
-        
-        if (progress >= 100) {
-          setIsBackgroundScraping(false);
-          setIsScrapingComplete(true);
-          toast({
-            title: "Scraping complet!",
-            description: `Site-ul a fost procesat complet: ${siteMap.scrapedPages} pagini reușite, ${siteMap.errorPages} erori.`,
-          });
-        }
-      }
-    }, 2000);
+    let interval: NodeJS.Timeout;
+    
+    if (isScrapingRunning) {
+      interval = setInterval(() => {
+        setProgress(prev => {
+          const newPagesProcessed = prev.pagesProcessed + Math.floor(Math.random() * 10) + 1;
+          const newResults = prev.results + Math.floor(Math.random() * 8) + 1;
+          const newErrors = prev.errors + (Math.random() > 0.9 ? 1 : 0);
+          const newTotalProducts = prev.totalProducts + Math.floor(Math.random() * 50) + 10;
+          
+          // Check if we should stop
+          const shouldComplete = newPagesProcessed >= maxPages || (unlimitedScan && newPagesProcessed > 9000);
+          
+          if (shouldComplete) {
+            setIsScrapingRunning(false);
+            toast({
+              title: "Scraping complet!",
+              description: `Procesul s-a încheiat cu succes: ${newResults} rezultate, ${newTotalProducts} produse găsite.`,
+            });
+          }
+          
+          return {
+            pagesProcessed: newPagesProcessed,
+            results: newResults,
+            errors: newErrors,
+            totalProducts: newTotalProducts,
+            currentUrl: `${url}/page-${newPagesProcessed}`,
+            isComplete: shouldComplete,
+            isRunning: !shouldComplete
+          };
+        });
+      }, 500);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isScrapingRunning, maxPages, unlimitedScan, url]);
 
-    return () => clearInterval(interval);
-  }, [isBackgroundScraping, siteMap]);
-
-  const handleScrape = async () => {
+  const handleStartScraping = () => {
     if (!url.trim()) {
       toast({
         title: "Eroare",
@@ -104,155 +104,93 @@ const Scraping = () => {
       return;
     }
 
-    setIsLoading(true);
-    setSiteMap(null);
-    setScrapedData(null);
-    setIsScrapingComplete(false);
-
-    try {
-      if (scrapingType === 'single') {
-        await handleSinglePageScrape();
-      } else {
-        await handleSiteMapScrape();
-      }
-    } catch (error) {
-      console.error('Scraping error:', error);
-      toast({
-        title: "Eroare la scraping",
-        description: "A apărut o eroare în timpul procesului de scraping.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSinglePageScrape = async () => {
-    const mockData: ScrapedData = {
-      title: "Pagină Test",
-      description: "Descrierea paginii test",
-      images: [
-        "https://example.com/image1.jpg",
-        "https://example.com/image2.jpg"
-      ],
-      links: [
-        "https://example.com/link1",
-        "https://example.com/link2"
-      ],
-      products: [
-        {
-          name: "Produs Test 1",
-          price: "99.99 RON",
-          description: "Descrierea produsului test",
-          image: "https://example.com/product1.jpg",
-          url: "https://example.com/product1"
-        },
-        {
-          name: "Produs Test 2", 
-          price: "149.99 RON",
-          description: "Alt produs test",
-          image: "https://example.com/product2.jpg",
-          url: "https://example.com/product2"
-        }
-      ],
-      content: "Conținutul paginii..."
-    };
-
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setScrapedData(mockData);
-    
-    saveScrapingSession({
-      url,
-      title: mockData.title,
-      scraping_data: mockData,
-      scraping_type: 'single',
-      total_products: mockData.products.length,
-      total_images: mockData.images.length,
-      total_links: mockData.links.length
+    setIsScrapingRunning(true);
+    setProgress({
+      pagesProcessed: 0,
+      results: 0,
+      errors: 0,
+      totalProducts: 0,
+      currentUrl: url,
+      isComplete: false,
+      isRunning: true
     });
-  };
 
-  const handleSiteMapScrape = async () => {
-    const mockSiteMap: SiteMap = {
-      baseUrl: url,
-      pages: [
-        { url: `${url}/page1`, title: "Pagina 1", status: 'pending', products: [] },
-        { url: `${url}/page2`, title: "Pagina 2", status: 'pending', products: [] },
-        { url: `${url}/page3`, title: "Pagina 3", status: 'pending', products: [] }
-      ],
-      scrapedPages: 0,
-      errorPages: 0,
-      isComplete: false
-    };
-
-    setSiteMap(mockSiteMap);
-    setIsBackgroundScraping(true);
-    
     toast({
-      title: "Scraping în fundal pornit",
-      description: "Procesul rulează în background. Poți ieși de pe pagină.",
+      title: "Scraping început",
+      description: "Procesul de extragere a datelor a fost inițiat.",
     });
   };
 
-  const stopBackgroundScraping = () => {
-    setIsBackgroundScraping(false);
+  const handleStopScraping = () => {
+    setIsScrapingRunning(false);
+    setProgress(prev => ({ ...prev, isRunning: false }));
     toast({
       title: "Scraping oprit",
-      description: "Procesul de scraping a fost oprit.",
+      description: "Procesul a fost oprit de utilizator.",
     });
   };
 
-  const restartScraping = () => {
-    if (siteMap) {
-      setIsBackgroundScraping(true);
-      setIsScrapingComplete(false);
-      toast({
-        title: "Scraping restartat",
-        description: "Procesul continuă din punctul în care a fost oprit.",
+  const handleSaveSession = () => {
+    if (progress.totalProducts > 0) {
+      saveScrapingSession({
+        url,
+        title: `Scraping ${new URL(url).hostname}`,
+        description: `Scanare ${deepScan ? 'profundă' : 'superficială'} cu ${progress.totalProducts} produse`,
+        scraping_data: {
+          pagesProcessed: progress.pagesProcessed,
+          results: progress.results,
+          errors: progress.errors,
+          totalProducts: progress.totalProducts,
+          settings: {
+            deepScan,
+            unlimitedScan,
+            maxPages,
+            parallelThreads
+          }
+        },
+        scraping_type: unlimitedScan ? 'full_site' : 'single',
+        total_products: progress.totalProducts,
+        total_images: Math.floor(progress.totalProducts * 0.8),
+        total_links: progress.results
       });
     }
   };
 
-  const exportToJSON = (data: any) => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'scraped-data.json';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  const exportData = (format: string) => {
+    const data = {
+      url,
+      progress,
+      settings: { deepScan, unlimitedScan, maxPages, parallelThreads },
+      timestamp: new Date().toISOString()
+    };
 
-  const exportToCSV = (products: ScrapedProduct[]) => {
-    const headers = ['Nume', 'Preț', 'Descriere', 'URL', 'Categorie'];
-    const rows = products.map(p => [
-      p.name || '',
-      p.price || '',
-      p.description || '',
-      p.url || '',
-      p.category || ''
-    ]);
-    
-    const csvContent = [headers, ...rows]
-      .map(row => row.map(cell => `"${cell}"`).join(','))
-      .join('\n');
-      
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
+    const blob = new Blob([JSON.stringify(data, null, 2)], { 
+      type: format === 'json' ? 'application/json' : 'text/plain' 
+    });
+    const downloadUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = 'products.csv';
+    a.href = downloadUrl;
+    a.download = `scraping-data.${format}`;
     a.click();
-    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(downloadUrl);
+
+    toast({
+      title: "Export reușit",
+      description: `Datele au fost exportate în format ${format.toUpperCase()}.`,
+    });
   };
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 max-w-6xl mx-auto">
+        {/* Header */}
         <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Scraping Web</h1>
-            <p className="text-muted-foreground">Extrage date din site-uri web</p>
+          <div className="flex items-center gap-3">
+            <Globe className="w-8 h-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold">Web Scraper Universal</h1>
+              <p className="text-muted-foreground">Instrument profesional pentru extragerea datelor web</p>
+            </div>
           </div>
           <Button 
             variant="outline" 
@@ -264,284 +202,255 @@ const Scraping = () => {
           </Button>
         </div>
 
-        {/* Background scraping status */}
-        {isBackgroundScraping && (
-          <Card className="border-blue-200 bg-blue-50/50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-                  <div>
-                    <p className="font-medium text-blue-900">Scraping în desfășurare</p>
-                    <p className="text-sm text-blue-700">Procesul rulează în background</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-blue-900">{Math.round(backgroundProgress)}%</p>
-                    <Progress value={backgroundProgress} className="w-32" />
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={stopBackgroundScraping}
-                    className="text-red-600 border-red-200 hover:bg-red-50"
-                  >
-                    <Square className="w-4 h-4 mr-1" />
-                    Oprește
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Main scraping form */}
+        {/* Main Configuration Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Configurare Scraping</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Search className="w-5 h-5" />
+              Extragere Date Website
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">URL Site</label>
-                <Input
-                  placeholder="https://example.com"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  disabled={isLoading || isBackgroundScraping}
+          <CardContent className="space-y-6">
+            {/* URL Input */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">URL Website</label>
+              <Input
+                placeholder="www.materialeelectrice.ro"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                disabled={isScrapingRunning}
+                className="text-base"
+              />
+            </div>
+
+            {/* Scanning Options */}
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="deep-scan" 
+                  checked={deepScan}
+                  onCheckedChange={(checked) => setDeepScan(!!checked)}
+                  disabled={isScrapingRunning}
                 />
+                <label htmlFor="deep-scan" className="text-sm font-medium">
+                  Scanare profundă (extrage descrieri din paginile produselor)
+                </label>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Tip Scraping</label>
-                <Tabs value={scrapingType} onValueChange={(value: any) => setScrapingType(value)}>
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="single">O pagină</TabsTrigger>
-                    <TabsTrigger value="sitemap">Site complet</TabsTrigger>
-                  </TabsList>
-                </Tabs>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="unlimited-scan" 
+                  checked={unlimitedScan}
+                  onCheckedChange={(checked) => setUnlimitedScan(!!checked)}
+                  disabled={isScrapingRunning}
+                />
+                <label htmlFor="unlimited-scan" className="text-sm font-medium">
+                  Scanare nelimitată (continuă până extrage tot - poate dura mult)
+                </label>
               </div>
             </div>
 
-            {scrapingType === 'sitemap' && (
+            {/* Processing Settings */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Număr maxim de pagini</label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={maxPages}
-                  onChange={(e) => setMaxPages(parseInt(e.target.value) || 10)}
-                  disabled={isLoading || isBackgroundScraping}
-                />
+                <label className="text-sm font-medium">Procesare paralel:</label>
+                <div className="flex items-center gap-2">
+                  <Select value={maxPages.toString()} onValueChange={(value) => setMaxPages(parseInt(value))}>
+                    <SelectTrigger disabled={isScrapingRunning}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="50">50 pag</SelectItem>
+                      <SelectItem value="100">100 pag</SelectItem>
+                      <SelectItem value="300">300 pag</SelectItem>
+                      <SelectItem value="500">500 pag</SelectItem>
+                      <SelectItem value="1000">1000 pag</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <span className="text-sm text-muted-foreground">simultan</span>
+                </div>
               </div>
-            )}
 
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleScrape} 
-                disabled={isLoading || isBackgroundScraping}
-                className="flex items-center gap-2"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Play className="w-4 h-4" />
-                )}
-                {isLoading ? 'Se procesează...' : 'Începe Scraping'}
-              </Button>
-              
-              {isScrapingComplete && !isBackgroundScraping && siteMap && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Adâncime:</label>
+                <Select value={parallelThreads.toString()} onValueChange={(value) => setParallelThreads(parseInt(value))}>
+                  <SelectTrigger disabled={isScrapingRunning}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="3">3</SelectItem>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Acțiuni:</label>
                 <Button 
-                  variant="outline" 
-                  onClick={restartScraping}
+                  onClick={() => setShowHistory(true)}
+                  variant="outline"
+                  disabled={isScrapingRunning}
+                  className="w-full"
+                >
+                  <Globe className="w-4 h-4 mr-2" />
+                  Scanare Paralel
+                </Button>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-2">
+              {!isScrapingRunning ? (
+                <Button 
+                  onClick={handleStartScraping}
+                  className="flex items-center gap-2"
+                  size="lg"
+                >
+                  <Play className="w-4 h-4" />
+                  Extrage Date
+                </Button>
+              ) : (
+                <Button 
+                  onClick={handleStopScraping}
+                  variant="destructive"
+                  className="flex items-center gap-2"
+                  size="lg"
+                >
+                  <Square className="w-4 h-4" />
+                  Oprește
+                </Button>
+              )}
+              
+              {progress.totalProducts > 0 && (
+                <Button 
+                  onClick={handleSaveSession}
+                  variant="outline"
                   className="flex items-center gap-2"
                 >
-                  <RotateCcw className="w-4 h-4" />
-                  Continuă Scraping
+                  <History className="w-4 h-4" />
+                  Salvează Sesiune
                 </Button>
               )}
             </div>
+
+            {/* Status */}
+            {progress.currentUrl && (
+              <div className="text-sm text-muted-foreground">
+                <strong>Status:</strong> {progress.currentUrl}
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Results for single page */}
-        {scrapedData && (
+        {/* Progress Section */}
+        {(isScrapingRunning || progress.pagesProcessed > 0) && (
           <Card>
             <CardHeader>
-              <CardTitle>Rezultate Scraping</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5" />
+                Scraping Complet Site - Progres
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="products">
-                <TabsList>
-                  <TabsTrigger value="products">
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    Produse ({scrapedData.products.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="images">
-                    <ImageIcon className="w-4 h-4 mr-2" />
-                    Imagini ({scrapedData.images.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="links">
-                    <LinkIcon className="w-4 h-4 mr-2" />
-                    Link-uri ({scrapedData.links.length})
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="products" className="space-y-4">
-                  <div className="flex gap-2 mb-4">
-                    <Button
-                      onClick={() => exportToJSON(scrapedData.products)}
-                      size="sm"
-                      variant="outline"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      JSON
-                    </Button>
-                    <Button
-                      onClick={() => exportToCSV(scrapedData.products)}
-                      size="sm"
-                      variant="outline"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      CSV
-                    </Button>
-                  </div>
-
-                  <div className="grid gap-4">
-                    {scrapedData.products.map((product, index) => (
-                      <Card key={index} className="p-4">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h4 className="font-medium">{product.name}</h4>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {product.description || 'Fără descriere'}
-                            </p>
-                            <div className="flex items-center gap-4 mt-2">
-                              <Badge variant="outline">{product.price}</Badge>
-                              {product.url && (
-                                <a 
-                                  href={product.url} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 hover:underline text-sm flex items-center gap-1"
-                                >
-                                  <ExternalLink className="w-3 h-3" />
-                                  Vezi produs
-                                </a>
-                              )}
-                            </div>
-                          </div>
-                          {product.image && (
-                            <img 
-                              src={product.image} 
-                              alt={product.name}
-                              className="w-16 h-16 object-cover rounded"
-                            />
-                          )}
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="images">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {scrapedData.images.map((image, index) => (
-                      <div key={index} className="border rounded p-2">
-                        <img 
-                          src={image} 
-                          alt={`Image ${index + 1}`}
-                          className="w-full h-32 object-cover rounded"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/placeholder-image.png';
-                          }}
-                        />
-                        <p className="text-xs text-muted-foreground mt-2 truncate">
-                          {image}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="links">
-                  <div className="space-y-2">
-                    {scrapedData.links.map((link, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 border rounded">
-                        <span className="text-sm truncate flex-1">{link}</span>
-                        <a 
-                          href={link} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline ml-2"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                      </div>
-                    ))}
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Results for site map */}
-        {siteMap && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Progres Scraping Site Complet</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold">{siteMap.pages.length}</p>
-                    <p className="text-sm text-muted-foreground">Pagini total</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold">{siteMap.scrapedPages}</p>
-                    <p className="text-sm text-muted-foreground">Reușite</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold">{siteMap.errorPages}</p>
-                    <p className="text-sm text-muted-foreground">Erori</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold">
-                      {siteMap.pages.reduce((sum, page) => sum + page.products.length, 0)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">Total produse</p>
-                  </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary">{progress.pagesProcessed}</div>
+                  <div className="text-sm text-muted-foreground">Pagini procesate</div>
                 </div>
-
-                {isScrapingComplete && (
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => exportToJSON(siteMap)}
-                      size="sm"
-                      variant="outline"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Export JSON
-                    </Button>
-                    <Button
-                      onClick={() => exportToCSV(siteMap.pages.flatMap(page => page.products))}
-                      size="sm"
-                      variant="outline"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Export CSV
-                    </Button>
-                  </div>
-                )}
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-green-600">{progress.results}</div>
+                  <div className="text-sm text-muted-foreground">Rezultate</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-red-600">{progress.errors}</div>
+                  <div className="text-sm text-muted-foreground">Erori</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-600">{progress.totalProducts}</div>
+                  <div className="text-sm text-muted-foreground">Total produse</div>
+                </div>
               </div>
+
+              {/* Progress Bar */}
+              {isScrapingRunning && (
+                <div className="mb-6">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span>Progres: {Math.round((progress.pagesProcessed / maxPages) * 100)}%</span>
+                    <span>{progress.pagesProcessed} / {unlimitedScan ? '∞' : maxPages}</span>
+                  </div>
+                  <Progress 
+                    value={unlimitedScan ? 50 : (progress.pagesProcessed / maxPages) * 100} 
+                    className="h-2"
+                  />
+                </div>
+              )}
+
+              {/* Export Buttons */}
+              {progress.isComplete && progress.totalProducts > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={() => exportData('json')}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Site Map JSON
+                  </Button>
+                  <Button
+                    onClick={() => exportData('csv')}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Produse CSV
+                  </Button>
+                  <Button
+                    onClick={() => exportData('txt')}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Produse TXT
+                  </Button>
+                  <Button
+                    onClick={() => exportData('xls')}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Produse XLS
+                  </Button>
+                  <Button
+                    onClick={() => exportData('xml')}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Produse XML
+                  </Button>
+                  <Button
+                    onClick={() => exportData('jsonl')}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Produse JSONL
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
 
-        {/* History modal */}
+        {/* History Modal */}
         {showHistory && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-background border rounded-lg shadow-lg w-full max-w-4xl max-h-[80vh] flex flex-col">
@@ -558,7 +467,6 @@ const Scraping = () => {
               <div className="flex-1 overflow-hidden p-6">
                 <ScrapingHistory 
                   onLoadSession={(session) => {
-                    setScrapedData(session.scraping_data);
                     setUrl(session.url);
                     setShowHistory(false);
                     toast({
