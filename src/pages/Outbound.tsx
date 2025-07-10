@@ -17,7 +17,6 @@ import { BatchConfigPanel } from '@/components/outbound/BatchConfigPanel';
 import { BatchStatusPanel } from '@/components/outbound/BatchStatusPanel';
 import { ContactsList } from '@/components/outbound/ContactsList';
 import { CSVUploadSection } from '@/components/outbound/CSVUploadSection';
-import { SingleCallModal } from '@/components/outbound/SingleCallModal';
 interface Contact {
   id: string;
   name: string;
@@ -26,25 +25,28 @@ interface Contact {
   location: string;
 }
 const Outbound = () => {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // State for configuration
   const [selectedAgentId, setSelectedAgentId] = useState('');
   const [selectedPhoneId, setSelectedPhoneId] = useState('');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
   const [batchStartTime, setBatchStartTime] = useState<Date | undefined>();
-  const [isSingleCallModalOpen, setIsSingleCallModalOpen] = useState(false);
 
   // Get user's phone numbers
-  const { data: phoneNumbers } = useUserPhoneNumbers();
+  const {
+    data: phoneNumbers
+  } = useUserPhoneNumbers();
   const {
     processBatchCalls,
     isProcessingBatch,
     currentProgress,
     totalCalls,
-    callStatuses,
+    callStatuses
   } = useCallInitiation({
     agentId: selectedAgentId,
     phoneNumber: ''
@@ -136,20 +138,17 @@ const Outbound = () => {
       });
       return;
     }
-
     if (!selectedPhoneId) {
       toast({
-        title: "Eroare", 
+        title: "Eroare",
         description: "Trebuie să selectați un număr de telefon pentru apeluri",
         variant: "destructive"
       });
       return;
     }
-
     setBatchStartTime(new Date());
     const contactsToProcess = contacts.filter(c => selectedContacts.has(c.id));
     await processBatchCalls(contactsToProcess, selectedAgentId);
-
     setTimeout(() => {
       refetchHistory();
     }, 2000);
@@ -168,38 +167,19 @@ const Outbound = () => {
     link.click();
     document.body.removeChild(link);
   };
-  return (
-    <DashboardLayout>
+  return <DashboardLayout>
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="space-y-6">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">Apeluri Outbound</h2>
-                <p className="text-gray-600">Gestionează și inițiază apeluri către clienți</p>
-              </div>
-              <Button 
-                onClick={() => setIsSingleCallModalOpen(true)}
-                className="bg-primary hover:bg-primary/90"
-              >
-                <Phone className="w-4 h-4 mr-2" />
-                Apel Individual
-              </Button>
-            </div>
+          <div className="space-y-6 bg-white">
+            <OutboundHeader />
 
             <Tabs defaultValue="batch" className="w-full">
               <TabsList className="grid w-full grid-cols-2 bg-white p-1 h-auto border border-gray-200">
-                <TabsTrigger 
-                  value="batch" 
-                  className="data-[state=active]:bg-primary data-[state=active]:text-white py-3"
-                >
+                <TabsTrigger value="batch" className="data-[state=active]:bg-primary data-[state=active]:text-white py-3">
                   <Phone className="w-4 h-4 mr-2" />
                   Apeluri Batch
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="history" 
-                  className="data-[state=active]:bg-primary data-[state=active]:text-white py-3"
-                >
+                <TabsTrigger value="history" className="data-[state=active]:bg-primary data-[state=active]:text-white py-3">
                   Istoric Apeluri
                 </TabsTrigger>
               </TabsList>
@@ -208,69 +188,32 @@ const Outbound = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Configuration Panel */}
                   <div className="lg:col-span-1">
-                    <BatchConfigPanel
-                      selectedAgentId={selectedAgentId}
-                      onAgentSelect={setSelectedAgentId}
-                      selectedPhoneId={selectedPhoneId}
-                      onPhoneSelect={setSelectedPhoneId}
-                      totalRecipients={contacts.length}
-                      selectedRecipients={selectedContacts.size}
-                    />
+                    <BatchConfigPanel selectedAgentId={selectedAgentId} onAgentSelect={setSelectedAgentId} selectedPhoneId={selectedPhoneId} onPhoneSelect={setSelectedPhoneId} totalRecipients={contacts.length} selectedRecipients={selectedContacts.size} />
                   </div>
 
                   {/* Main Content */}
                   <div className="lg:col-span-2 space-y-6">
                     {/* CSV Upload Section */}
-                    <CSVUploadSection
-                      onFileSelect={() => fileInputRef.current?.click()}
-                      onDownloadTemplate={downloadTemplate}
-                    />
+                    <CSVUploadSection onFileSelect={() => fileInputRef.current?.click()} onDownloadTemplate={downloadTemplate} />
 
                     {/* Contacts List */}
-                    {contacts.length > 0 && (
-                      <ContactsList
-                        contacts={contacts}
-                        selectedContacts={selectedContacts}
-                        onContactSelect={handleContactSelect}
-                        onSelectAll={handleSelectAll}
-                        isProcessingBatch={isProcessingBatch}
-                      />
-                    )}
+                    {contacts.length > 0 && <ContactsList contacts={contacts} selectedContacts={selectedContacts} onContactSelect={handleContactSelect} onSelectAll={handleSelectAll} isProcessingBatch={isProcessingBatch} />}
 
                     {/* Action Button */}
-                    {contacts.length > 0 && (
-                      <Button
-                        onClick={handleBatchProcess}
-                        disabled={!selectedAgentId || !selectedPhoneId || selectedContacts.size === 0 || isProcessingBatch}
-                        className="w-full py-3 bg-primary hover:bg-primary/90"
-                        size="lg"
-                      >
-                        {isProcessingBatch ? (
-                          <>
+                    {contacts.length > 0 && <Button onClick={handleBatchProcess} disabled={!selectedAgentId || !selectedPhoneId || selectedContacts.size === 0 || isProcessingBatch} className="w-full py-3 bg-primary hover:bg-primary/90" size="lg">
+                        {isProcessingBatch ? <>
                             <Phone className="w-4 h-4 mr-2 animate-pulse" />
                             Se procesează... ({currentProgress}/{totalCalls})
-                          </>
-                        ) : (
-                          <>
+                          </> : <>
                             <Phone className="w-4 h-4 mr-2" />
                             Începe Apelurile Batch ({selectedContacts.size} contacte)
-                          </>
-                        )}
-                      </Button>
-                    )}
+                          </>}
+                      </Button>}
                   </div>
                 </div>
 
                 {/* Status Panel */}
-                {(isProcessingBatch || callStatuses.length > 0) && (
-                  <BatchStatusPanel
-                    isProcessing={isProcessingBatch}
-                    currentProgress={currentProgress}
-                    totalCalls={totalCalls}
-                    callStatuses={callStatuses}
-                    startTime={batchStartTime}
-                  />
-                )}
+                {(isProcessingBatch || callStatuses.length > 0) && <BatchStatusPanel isProcessing={isProcessingBatch} currentProgress={currentProgress} totalCalls={totalCalls} callStatuses={callStatuses} startTime={batchStartTime} />}
               </TabsContent>
 
               <TabsContent value="history" className="mt-6">
@@ -284,12 +227,6 @@ const Outbound = () => {
           </div>
         </div>
       </div>
-
-      <SingleCallModal 
-        isOpen={isSingleCallModalOpen}
-        onClose={() => setIsSingleCallModalOpen(false)}
-      />
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
 export default Outbound;
