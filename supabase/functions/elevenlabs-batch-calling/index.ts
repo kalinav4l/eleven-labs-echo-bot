@@ -64,9 +64,13 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('❌ Eroare în batch calling function:', error);
+    console.error('❌ Stack trace:', error.stack);
+    console.error('❌ Error details:', JSON.stringify(error, null, 2));
+    
     return new Response(JSON.stringify({ 
-      error: error.message,
-      details: error.stack 
+      error: error.message || 'Eroare necunoscută',
+      details: error.stack,
+      type: error.constructor.name
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

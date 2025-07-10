@@ -65,33 +65,65 @@ export const CreateBatchModal: React.FC<CreateBatchModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      const formattedRecipients = recipients
-        .filter(r => r.phone_number.trim())
-        .map(r => ({
-          phone_number: r.phone_number.trim(),
-          conversation_initiation_client_data: {
-            user_id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            conversation_config_override: {
-              ...(r.voice_id && {
-                tts: { voice_id: r.voice_id }
-              }),
-              ...(r.first_message && {
-                agent: {
-                  first_message: r.first_message,
-                  language: r.language || 'en',
-                  ...(r.prompt && {
-                    prompt: { prompt: r.prompt }
-                  })
-                }
-              })
-            },
-            dynamic_variables: {
-              name: r.name || 'Client',
-              city: r.city || '',
-              ...(r.other_dyn_variable && { other: r.other_dyn_variable })
-            }
+      console.log('📝 Form data before processing:', {
+        callName,
+        agentId,
+        agentPhoneId,
+        recipients: recipients.filter(r => r.phone_number.trim())
+      });
+
+      const validRecipients = recipients.filter(r => r.phone_number.trim());
+      
+      if (validRecipients.length === 0) {
+        toast({
+          title: "Eroare",
+          description: "Trebuie să adaugi cel puțin un destinatar valid",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (!agentId || !agentPhoneId) {
+        toast({
+          title: "Eroare",
+          description: "Selectează agentul și numărul de telefon",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const formattedRecipients = validRecipients.map(r => ({
+        phone_number: r.phone_number.trim(),
+        conversation_initiation_client_data: {
+          user_id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          conversation_config_override: {
+            ...(r.voice_id && {
+              tts: { voice_id: r.voice_id }
+            }),
+            ...(r.first_message && {
+              agent: {
+                first_message: r.first_message,
+                language: r.language || 'en',
+                ...(r.prompt && {
+                  prompt: { prompt: r.prompt }
+                })
+              }
+            })
+          },
+          dynamic_variables: {
+            name: r.name || 'Client',
+            city: r.city || '',
+            ...(r.other_dyn_variable && { other: r.other_dyn_variable })
           }
-        }));
+        }
+      }));
+
+      console.log('📤 Sending to API:', {
+        call_name: callName,
+        agent_id: agentId,
+        agent_phone_id: agentPhoneId,
+        recipients: formattedRecipients
+      });
 
       await onSubmit({
         call_name: callName,
@@ -104,7 +136,7 @@ export const CreateBatchModal: React.FC<CreateBatchModalProps> = ({
       setCallName('Untitled Batch');
       setAgentId('');
       setAgentPhoneId('');
-      setRecipients([{ phone_number: '', name: '', language: 'en' }]);
+      setRecipients([]);
     } catch (error) {
       console.error('Error submitting batch call:', error);
     } finally {

@@ -85,7 +85,10 @@ export const useBatchCalling = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
 
       toast({
         title: "Succes",
@@ -93,11 +96,13 @@ export const useBatchCalling = () => {
       });
 
       return response;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting batch call:', error);
+      const errorMessage = error?.message || 'Nu s-a putut iniția lotul de apeluri';
+      
       toast({
         title: "Eroare",
-        description: "Nu s-a putut iniția lotul de apeluri",
+        description: errorMessage,
         variant: "destructive"
       });
       throw error;
