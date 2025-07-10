@@ -14,21 +14,21 @@ interface SIPTrunkData {
   // Basic info
   label: string;
   phone_number: string;
-  country_code: string;
-  
-  // Inbound Configuration
-  origination_uri: string;
-  inbound_media_encryption: string;
   
   // Outbound Configuration
   outbound_address: string;
-  transport_type: string;
+  outbound_transport: string;
+  outbound_username: string;
+  outbound_password: string;
   outbound_media_encryption: string;
-  custom_headers: string;
+  outbound_headers: string;
   
-  // Authentication (Optional)
-  sip_username: string;
-  sip_password: string;
+  // Inbound Configuration
+  inbound_allowed_addresses: string;
+  inbound_username: string;
+  inbound_password: string;
+  inbound_media_encryption: string;
+  inbound_allowed_numbers: string;
 }
 
 const countryCodes = [
@@ -43,15 +43,21 @@ export default function PhoneNumbers() {
   const [formData, setFormData] = useState<SIPTrunkData>({
     label: '',
     phone_number: '',
-    country_code: '+373',
-    origination_uri: 'sip:sip.rtc.elevenlabs.io:5060;transport=tcp',
-    inbound_media_encryption: 'allowed',
+    
+    // Outbound Configuration
     outbound_address: '',
-    transport_type: 'TLS',
+    outbound_transport: 'tcp',
+    outbound_username: '',
+    outbound_password: '',
     outbound_media_encryption: 'allowed',
-    custom_headers: '',
-    sip_username: '',
-    sip_password: ''
+    outbound_headers: '',
+    
+    // Inbound Configuration  
+    inbound_allowed_addresses: '',
+    inbound_username: '',
+    inbound_password: '',
+    inbound_media_encryption: 'allowed',
+    inbound_allowed_numbers: ''
   });
 
   const handleInputChange = (field: keyof SIPTrunkData, value: string) => {
@@ -76,24 +82,45 @@ export default function PhoneNumbers() {
     setIsLoading(true);
 
     try {
+      // Parse headers from string to object
+      let headersObj = {};
+      if (formData.outbound_headers.trim()) {
+        try {
+          headersObj = JSON.parse(formData.outbound_headers);
+        } catch {
+          // If not valid JSON, treat as key:value pairs separated by newlines
+          const headerLines = formData.outbound_headers.split('\n');
+          headerLines.forEach(line => {
+            const [key, value] = line.split(':').map(s => s.trim());
+            if (key && value) {
+              headersObj[key] = value;
+            }
+          });
+        }
+      }
+
       const sipData = {
-        phone_number: `${formData.country_code}${formData.phone_number}`,
+        phone_number: formData.phone_number,
         label: formData.label,
-        sip_config: {
-          inbound: {
-            origination_uri: formData.origination_uri,
-            media_encryption: formData.inbound_media_encryption
+        provider: "sip_trunk",
+        outbound_trunk_config: {
+          address: formData.outbound_address,
+          transport: formData.outbound_transport,
+          credentials: {
+            username: formData.outbound_username,
+            password: formData.outbound_password
           },
-          outbound: {
-            address: formData.outbound_address,
-            transport_type: formData.transport_type,
-            media_encryption: formData.outbound_media_encryption,
-            custom_headers: formData.custom_headers
+          media_encryption: formData.outbound_media_encryption,
+          headers: headersObj
+        },
+        inbound_trunk_config: {
+          allowed_addresses: formData.inbound_allowed_addresses ? formData.inbound_allowed_addresses.split(',').map(s => s.trim()) : [],
+          credentials: {
+            username: formData.inbound_username,
+            password: formData.inbound_password
           },
-          authentication: {
-            username: formData.sip_username,
-            password: formData.sip_password
-          }
+          media_encryption: formData.inbound_media_encryption,
+          allowed_numbers: formData.inbound_allowed_numbers ? formData.inbound_allowed_numbers.split(',').map(s => s.trim()) : []
         }
       };
 
@@ -101,7 +128,7 @@ export default function PhoneNumbers() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'xi-api-key': 'conv_01jzssz233fw29c0rb1zcfmja7'
+          'xi-api-key': 'sk_6443a64ab5f84bfe0c72941fd2d4f188317cdab4715a3925'
         },
         body: JSON.stringify(sipData)
       });
@@ -118,15 +145,21 @@ export default function PhoneNumbers() {
         setFormData({
           label: '',
           phone_number: '',
-          country_code: '+373',
-          origination_uri: 'sip:sip.rtc.elevenlabs.io:5060;transport=tcp',
-          inbound_media_encryption: 'allowed',
+          
+          // Outbound Configuration
           outbound_address: '',
-          transport_type: 'TLS',
+          outbound_transport: 'tcp',
+          outbound_username: '',
+          outbound_password: '',
           outbound_media_encryption: 'allowed',
-          custom_headers: '',
-          sip_username: '',
-          sip_password: ''
+          outbound_headers: '',
+          
+          // Inbound Configuration  
+          inbound_allowed_addresses: '',
+          inbound_username: '',
+          inbound_password: '',
+          inbound_media_encryption: 'allowed',
+          inbound_allowed_numbers: ''
         });
       } else {
         throw new Error(result.message || 'A apărut o eroare');
@@ -182,76 +215,16 @@ export default function PhoneNumbers() {
 
                 <div className="space-y-2">
                   <Label htmlFor="phone_number">Phone number *</Label>
-                  <div className="flex gap-2">
-                    <Select value={formData.country_code} onValueChange={(value) => handleInputChange('country_code', value)}>
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {countryCodes.map((country) => (
-                          <SelectItem key={country.code} value={country.code}>
-                            <div className="flex items-center gap-2">
-                              <span>{country.flag}</span>
-                              <span>{country.code}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      id="phone_number"
-                      placeholder="794 16 481"
-                      value={formData.phone_number}
-                      onChange={(e) => handleInputChange('phone_number', e.target.value)}
-                      className="flex-1"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Inbound Configuration */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Globe className="h-5 w-5" />
-                  <h3 className="text-lg font-semibold">Inbound Configuration</h3>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Forward calls to the ElevenLabs SIP server
-                </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="origination_uri">Origination URI</Label>
-                    <Select value={formData.origination_uri} onValueChange={(value) => handleInputChange('origination_uri', value)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="sip:sip.rtc.elevenlabs.io:5060;transport=tcp">
-                          sip:sip.rtc.elevenlabs.io:5060;transport=tcp
-                        </SelectItem>
-                        <SelectItem value="sip:sip.rtc.elevenlabs.io:5060;transport=udp">
-                          sip:sip.rtc.elevenlabs.io:5060;transport=udp
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="inbound_media_encryption">Media Encryption</Label>
-                    <Select value={formData.inbound_media_encryption} onValueChange={(value) => handleInputChange('inbound_media_encryption', value)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="allowed">Allowed</SelectItem>
-                        <SelectItem value="required">Required</SelectItem>
-                        <SelectItem value="disabled">Disabled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <Input
+                    id="phone_number"
+                    placeholder="+37378123378"
+                    value={formData.phone_number}
+                    onChange={(e) => handleInputChange('phone_number', e.target.value)}
+                    className="font-mono"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Include country code (e.g. +37378123378)
+                  </p>
                 </div>
               </div>
 
@@ -272,26 +245,26 @@ export default function PhoneNumbers() {
                     <Label htmlFor="outbound_address">Address</Label>
                     <Input
                       id="outbound_address"
-                      placeholder="w"
+                      placeholder="example.com or 192.168.1.1"
                       value={formData.outbound_address}
                       onChange={(e) => handleInputChange('outbound_address', e.target.value)}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Hostname or IP the SIP INVITE is sent to. This is not a SIP URI and shouldn't contain the sip: protocol.
+                      Hostname or IP where calls will be forwarded
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="transport_type">Transport Type</Label>
-                      <Select value={formData.transport_type} onValueChange={(value) => handleInputChange('transport_type', value)}>
+                      <Label htmlFor="outbound_transport">Transport</Label>
+                      <Select value={formData.outbound_transport} onValueChange={(value) => handleInputChange('outbound_transport', value)}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="TLS">TLS</SelectItem>
-                          <SelectItem value="TCP">TCP</SelectItem>
-                          <SelectItem value="UDP">UDP</SelectItem>
+                          <SelectItem value="tcp">TCP</SelectItem>
+                          <SelectItem value="udp">UDP</SelectItem>
+                          <SelectItem value="tls">TLS</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -311,51 +284,119 @@ export default function PhoneNumbers() {
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="outbound_username">Username (Optional)</Label>
+                      <Input
+                        id="outbound_username"
+                        placeholder="SIP username"
+                        value={formData.outbound_username}
+                        onChange={(e) => handleInputChange('outbound_username', e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="outbound_password">Password (Optional)</Label>
+                      <Input
+                        id="outbound_password"
+                        type="password"
+                        placeholder="SIP password"
+                        value={formData.outbound_password}
+                        onChange={(e) => handleInputChange('outbound_password', e.target.value)}
+                      />
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor="custom_headers">Custom Headers (Optional)</Label>
+                    <Label htmlFor="outbound_headers">Custom Headers (Optional)</Label>
                     <Textarea
-                      id="custom_headers"
-                      placeholder="Add custom SIP headers to be included with outbound calls."
-                      value={formData.custom_headers}
-                      onChange={(e) => handleInputChange('custom_headers', e.target.value)}
+                      id="outbound_headers"
+                      placeholder='{"X-Custom-Header": "value", "X-Another": "value2"} or key:value per line'
+                      value={formData.outbound_headers}
+                      onChange={(e) => handleInputChange('outbound_headers', e.target.value)}
                       rows={3}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      JSON object or key:value pairs (one per line)
+                    </p>
                   </div>
                 </div>
               </div>
 
               <Separator />
 
-              {/* Authentication */}
+              {/* Inbound Configuration */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <Lock className="h-5 w-5" />
-                  <h3 className="text-lg font-semibold">Authentication (Optional)</h3>
+                  <Globe className="h-5 w-5" />
+                  <h3 className="text-lg font-semibold">Inbound Configuration</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Provide digest authentication credentials if required by your SIP trunk provider. If left empty, ACL authentication will be used (you'll need to allowlist ElevenLabs IPs).
+                  Configure security and access control for incoming calls
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="sip_username">SIP Trunk Username</Label>
+                    <Label htmlFor="inbound_allowed_addresses">Allowed Addresses (Optional)</Label>
                     <Input
-                      id="sip_username"
-                      placeholder="Username for SIP digest authentication"
-                      value={formData.sip_username}
-                      onChange={(e) => handleInputChange('sip_username', e.target.value)}
+                      id="inbound_allowed_addresses"
+                      placeholder="192.168.1.1, example.com (comma separated)"
+                      value={formData.inbound_allowed_addresses}
+                      onChange={(e) => handleInputChange('inbound_allowed_addresses', e.target.value)}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      IP addresses or hostnames allowed to send calls (leave empty to allow all)
+                    </p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="sip_password">SIP Trunk Password</Label>
+                    <Label htmlFor="inbound_allowed_numbers">Allowed Numbers (Optional)</Label>
                     <Input
-                      id="sip_password"
-                      type="password"
-                      placeholder="Password for SIP digest authentication"
-                      value={formData.sip_password}
-                      onChange={(e) => handleInputChange('sip_password', e.target.value)}
+                      id="inbound_allowed_numbers"
+                      placeholder="+37378123378, +40721234567 (comma separated)"
+                      value={formData.inbound_allowed_numbers}
+                      onChange={(e) => handleInputChange('inbound_allowed_numbers', e.target.value)}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Phone numbers allowed to call this number (leave empty to allow all)
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="inbound_username">Username (Optional)</Label>
+                      <Input
+                        id="inbound_username"
+                        placeholder="SIP username"
+                        value={formData.inbound_username}
+                        onChange={(e) => handleInputChange('inbound_username', e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="inbound_password">Password (Optional)</Label>
+                      <Input
+                        id="inbound_password"
+                        type="password"
+                        placeholder="SIP password"
+                        value={formData.inbound_password}
+                        onChange={(e) => handleInputChange('inbound_password', e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="inbound_media_encryption">Media Encryption</Label>
+                    <Select value={formData.inbound_media_encryption} onValueChange={(value) => handleInputChange('inbound_media_encryption', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="allowed">Allowed</SelectItem>
+                        <SelectItem value="required">Required</SelectItem>
+                        <SelectItem value="disabled">Disabled</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
@@ -380,13 +421,14 @@ export default function PhoneNumbers() {
         </Card>
 
         <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-          <h3 className="font-semibold mb-3 text-blue-900">Important Notes:</h3>
+          <h3 className="font-semibold mb-3 text-blue-900">SIP Trunk Configuration Guide:</h3>
           <ul className="text-sm text-blue-800 space-y-2">
-            <li>• <strong>Inbound:</strong> Configure your provider to forward calls to ElevenLabs SIP server</li>
-            <li>• <strong>Outbound:</strong> ElevenLabs will send calls to your specified address</li>
-            <li>• <strong>Authentication:</strong> Use digest auth credentials or configure IP allowlisting</li>
-            <li>• <strong>Encryption:</strong> TLS transport provides secure call handling</li>
-            <li>• <strong>Headers:</strong> Add custom SIP headers for advanced routing</li>
+            <li>• <strong>Phone Number:</strong> Include full international format (+37378123378)</li>
+            <li>• <strong>Outbound:</strong> Configure where ElevenLabs forwards calls from your number</li>
+            <li>• <strong>Inbound:</strong> Set security rules for who can call your number</li>
+            <li>• <strong>Authentication:</strong> Optional SIP credentials for secure connections</li>
+            <li>• <strong>Headers:</strong> Custom SIP headers for advanced routing and identification</li>
+            <li>• <strong>Provider:</strong> Uses "sip_trunk" for direct SIP connections</li>
           </ul>
         </div>
       </div>
