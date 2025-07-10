@@ -209,81 +209,91 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
   };
 
   return (
-    <div className="relative flex flex-col items-center justify-center space-y-4">
-      {/* Voice visualization circles */}
+    <div className="relative flex flex-col items-center justify-center space-y-6">
+      {/* Enhanced voice visualization with multiple rings */}
       {isActive && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          {/* Outer ring */}
           <div 
-            className={`absolute w-32 h-32 rounded-full border-2 border-accent/30 transition-all duration-1000 ${
+            className={`absolute w-48 h-48 rounded-full border border-accent/20 transition-all duration-[2000ms] ${
               conversation.isSpeaking 
-                ? 'animate-ping scale-110 opacity-75' 
-                : 'scale-100 opacity-40'
+                ? 'animate-ping scale-125 opacity-30' 
+                : 'scale-100 opacity-10'
             }`}
           />
+          {/* Middle ring */}
           <div 
-            className={`absolute w-24 h-24 rounded-full border-2 border-accent/50 transition-all duration-700 ${
+            className={`absolute w-36 h-36 rounded-full border-2 border-accent/30 transition-all duration-1000 ${
               conversation.isSpeaking 
-                ? 'animate-pulse scale-105 opacity-60' 
+                ? 'animate-pulse scale-110 opacity-50' 
+                : 'scale-100 opacity-20'
+            }`}
+          />
+          {/* Inner ring */}
+          <div 
+            className={`absolute w-24 h-24 rounded-full border-2 border-accent/40 transition-all duration-700 ${
+              conversation.isSpeaking 
+                ? 'animate-bounce scale-105 opacity-60' 
                 : 'scale-100 opacity-30'
             }`}
           />
+          {/* Core glow */}
           <div 
-            className={`absolute w-16 h-16 rounded-full bg-accent/20 transition-all duration-500 ${
+            className={`absolute w-20 h-20 rounded-full bg-gradient-to-br from-accent/30 to-accent/10 transition-all duration-500 ${
               conversation.isSpeaking 
-                ? 'animate-bounce scale-110 opacity-80' 
-                : 'scale-100 opacity-20'
+                ? 'animate-pulse scale-110 opacity-80 shadow-2xl shadow-accent/30' 
+                : 'scale-100 opacity-40'
             }`}
           />
         </div>
       )}
 
-      {/* Main button */}
+      {/* Main button - larger and more elegant */}
       <Button
         onClick={handleToggleConversation}
         disabled={isConnecting}
-        size="lg"
-        className={`relative z-10 h-16 w-16 rounded-full transition-all duration-300 shadow-lg ${
+        className={`relative z-10 h-20 w-20 rounded-full transition-all duration-500 shadow-2xl hover:shadow-3xl transform hover:scale-105 ${
           isActive
-            ? 'bg-red-500 hover:bg-red-600 border-2 border-red-400 text-white'
+            ? 'bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border-2 border-red-400 text-white shadow-red-500/30'
             : hasPermission === false
-              ? 'bg-orange-500 hover:bg-orange-600 border-2 border-orange-400 text-white'
-              : 'bg-accent hover:bg-accent/90 border-2 border-accent/20 text-white'
+              ? 'bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 border-2 border-orange-400 text-white shadow-orange-500/30'
+              : 'bg-gradient-to-br from-accent to-accent/90 hover:from-accent/90 hover:to-accent border-2 border-accent/30 text-white shadow-accent/30'
         }`}
       >
-        {getButtonIcon()}
+        <span className="relative z-10">
+          {getButtonIcon()}
+        </span>
+        {/* Inner glow effect */}
+        <div className={`absolute inset-1 rounded-full bg-white/10 transition-opacity duration-300 ${
+          conversation.isSpeaking ? 'opacity-100' : 'opacity-0'
+        }`} />
       </Button>
 
-      {/* Status text */}
-      <div className="text-center space-y-1">
-        <div className={`text-sm font-medium transition-colors ${
+      {/* Status text with better typography */}
+      <div className="text-center space-y-2 max-w-xs">
+        <div className={`text-base font-medium transition-colors ${
           isActive ? 'text-accent' : 'text-muted-foreground'
         }`}>
           {getButtonText()}
         </div>
         
         {isActive && (
-          <div className="text-xs text-muted-foreground">
-            {conversation.isSpeaking ? '🔊 Agentul vorbește...' : '🎤 Ascultă...'}
+          <div className="text-sm text-muted-foreground bg-accent/5 px-4 py-2 rounded-full border border-accent/10">
+            {conversation.isSpeaking ? '🔊 Agentul vorbește' : '🎤 Te ascult'}
           </div>
         )}
         
         {messages.length > 0 && (
-          <div className="text-xs text-muted-foreground">
+          <div className="text-xs text-muted-foreground bg-muted/50 px-3 py-1 rounded-full">
             {messages.length} mesaje schimbate
-          </div>
-        )}
-        
-        {agentId && (
-          <div className="text-xs text-muted-foreground/70 font-mono bg-muted/30 px-2 py-1 rounded">
-            {agentId}
           </div>
         )}
       </div>
 
-      {/* Permission helper */}
+      {/* Permission helper with better styling */}
       {hasPermission === false && !isActive && (
-        <div className="text-xs text-orange-600 text-center max-w-48">
-          Trebuie să permiți accesul la microfon pentru testul vocal
+        <div className="text-sm text-orange-600 text-center max-w-xs bg-orange-50 border border-orange-200 px-4 py-2 rounded-lg">
+          Permite accesul la microfon pentru test
         </div>
       )}
     </div>

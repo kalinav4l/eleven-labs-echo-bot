@@ -247,41 +247,45 @@ const KalinaAgents = () => {
         agent={testCallAgent || { id: '', agent_id: '', name: '' }}
       />
 
-      {/* Voice Test Modal */}
+      {/* Voice Test Modal - Minimalist Design */}
       {voiceTestAgent && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto border border-gray-100">
-            <div className="flex justify-between items-center p-6 border-b border-gray-100">
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-1">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="relative w-full max-w-lg mx-auto">
+            {/* Close button */}
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setVoiceTestAgent(null)}
+              className="absolute -top-12 right-0 h-10 w-10 p-0 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/20"
+            >
+              ×
+            </Button>
+            
+            {/* Main modal content */}
+            <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+              {/* Header with gradient */}
+              <div className="bg-gradient-to-br from-accent/10 to-primary/10 p-8 text-center border-b border-gray-100/50">
+                <h3 className="text-2xl font-light text-gray-800 mb-2">
                   Test Audio
                 </h3>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 font-medium">
                   {voiceTestAgent.name}
                 </p>
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => setVoiceTestAgent(null)}
-                className="h-10 w-10 p-0 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600"
-              >
-                ×
-              </Button>
-            </div>
-            
-            <div className="p-8 flex flex-col items-center">
-              <VoiceTestButton 
-                agentId={voiceTestAgent.agent_id}
-                agentName={voiceTestAgent.name}
-              />
-            </div>
-            
-            <div className="px-6 pb-6">
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">Agent ID:</span>
-                  <code className="text-xs text-gray-600 bg-white px-2 py-1 rounded border font-mono">
+              
+              {/* Voice test area */}
+              <div className="p-12 flex flex-col items-center min-h-[300px] justify-center">
+                <VoiceTestButton 
+                  agentId={voiceTestAgent.agent_id}
+                  agentName={voiceTestAgent.name}
+                />
+              </div>
+              
+              {/* Agent ID footer */}
+              <div className="bg-gray-50/50 px-8 py-6 border-t border-gray-100/50">
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Agent ID</span>
+                  <code className="text-xs text-gray-700 bg-white/80 px-3 py-1.5 rounded-full border font-mono shadow-sm">
                     {voiceTestAgent.agent_id}
                   </code>
                 </div>
