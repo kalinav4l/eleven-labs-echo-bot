@@ -32,12 +32,13 @@ interface Product {
   url: string;
 }
 
-// Funcție pentru detectarea produselor - optimizată pentru magazine românești
+// Funcție pentru detectarea produselor - optimizată pentru materialeelectrice.ro
 const detectProducts = (doc: Document, targetUrl: string): Product[] => {
   const products: Product[] = [];
   
-  // Selectori îmbunătățiți pentru magazine românești
+  // Selectori îmbunătățiți pentru materialeelectrice.ro și magazine similare
   const productSelectors = [
+    // Selectori generici
     '.product, .product-item, .product-card, .item, .listing-item',
     '.produs, .produs-item, .articol, .articol-item',
     '.oferta, .oferta-item, .promotie',
@@ -46,7 +47,20 @@ const detectProducts = (doc: Document, targetUrl: string): Product[] => {
     '.catalog-item, .grid-item',
     '.woocommerce-product',
     '.electrical-product, .electronic-item',
-    '.material-item, .componenta-item'
+    '.material-item, .componenta-item',
+    
+    // Selectori specifici pentru structuri tip grid cu categorii
+    '.category-box, .category-item, .cat-box',
+    '.product-category, .category-product',
+    '.grid-category, .category-grid',
+    '.category-link, .cat-link',
+    '.product-box, .item-box',
+    
+    // Pentru site-uri cu divuri simple organizate în grid
+    'div[class*="col"] img[alt*="produs"]',
+    'div[class*="grid"] img[alt*="material"]',
+    'a[href*="produs"], a[href*="product"]',
+    'a[href*="categorie"], a[href*="category"]'
   ];
 
   let foundProducts: Element[] = [];
@@ -61,23 +75,51 @@ const detectProducts = (doc: Document, targetUrl: string): Product[] => {
     }
   }
 
-  // Detectare avansată dacă nu găsește produse
+  // Detectare specială pentru structuri cu link-uri către produse (cum e pe materialeelectrice.ro)
+  if (foundProducts.length === 0) {
+    console.log('Caut link-uri către produse...');
+    const productLinks = doc.querySelectorAll('a[href*="produs"], a[href*="product"], a[href*="categorie"], a[href*="category"]');
+    if (productLinks.length > 0) {
+      foundProducts = Array.from(productLinks).map(link => link.parentElement || link).filter(Boolean);
+      console.log(`Găsite ${foundProducts.length} link-uri către produse`);
+    }
+  }
+
+  // Detectare avansată pentru elemente cu imagini și text descriptiv
   if (foundProducts.length === 0) {
     console.log('Folosesc detectarea avansată...');
-    const potentialElements = doc.querySelectorAll('div, article, section, li');
+    const potentialElements = doc.querySelectorAll('div, article, section, li, figure, .box, .card');
     foundProducts = Array.from(potentialElements).filter(element => {
       const text = element.textContent || '';
-      const hasPrice = /(\d+[.,]\d+\s*(?:lei|ron|mdl|\$|€|£)|(?:lei|ron|mdl|\$|€|£)\s*\d+[.,]\d+)/i.test(text);
-      const hasTitle = element.querySelector('h1, h2, h3, h4, h5, h6, .title, .name, .nume, a[title]');
       const hasImage = element.querySelector('img');
+      const hasLink = element.querySelector('a[href*="produs"], a[href*="product"], a[href*="categorie"]');
       const textLength = text.length;
       
-      // Cuvinte cheie pentru materiale electrice
-      const hasElectricalKeywords = /(?:cablu|fir|intrerupator|priza|becuri|led|transformator|siguranta|tablou|electric|electronic|component|material)/i.test(text);
+      // Verifică dacă are text relevant pentru materiale electrice
+      const hasElectricalKeywords = /(?:cablu|fir|intrerupator|priza|becuri|led|transformator|siguranta|tablou|electric|electronic|component|material|aparate|fotovoltaic|cupluri|tresee|ventilatie|automatizari)/i.test(text);
       
-      return hasPrice && hasTitle && textLength > 50 && textLength < 3000 && (hasImage || hasElectricalKeywords);
+      // Verifică dacă textul conține "Vezi produs" sau similar
+      const hasProductAction = /(?:vezi\s+produs|vezi\s+produse|view\s+product|detalii|more)/i.test(text);
+      
+      return (hasImage || hasLink) && hasElectricalKeywords && textLength > 10 && textLength < 1000 && (hasProductAction || hasLink);
     });
     console.log(`Detectare avansată: găsite ${foundProducts.length} produse potențiale`);
+  }
+
+  // Detectare pentru structuri simple de categorii (fallback final)
+  if (foundProducts.length === 0) {
+    console.log('Caut categorii și imagini...');
+    const imageElements = doc.querySelectorAll('img[alt], img[title]');
+    foundProducts = Array.from(imageElements).map(img => {
+      const parent = img.closest('div, a, figure, .box, .card') || img.parentElement;
+      return parent;
+    }).filter((parent, index, arr) => {
+      if (!parent) return false;
+      const text = parent.textContent || '';
+      const hasElectricalKeywords = /(?:cablu|fir|intrerupator|priza|becuri|led|transformator|siguranta|tablou|electric|electronic|component|material|aparate|fotovoltaic|cupluri|tresee|ventilatie|automatizari)/i.test(text);
+      return hasElectricalKeywords && arr.indexOf(parent) === index; // Remove duplicates
+    });
+    console.log(`Detectare pe bază de imagini: găsite ${foundProducts.length} categorii`);
   }
 
   // Extrage informațiile pentru fiecare produs
@@ -96,13 +138,16 @@ const detectProducts = (doc: Document, targetUrl: string): Product[] => {
         url: targetUrl
       };
 
-      // Extrage numele produsului
+      // Extrage numele produsului/categoriei - optimizat pentru materialeelectrice.ro
       const titleSelectors = [
         'h1, h2, h3, h4, h5, h6',
         '.title, .name, .product-title, .product-name',
         '.nume, .denumire, .titlu',
         '[class*="title"], [class*="name"], [class*="nume"]',
-        'a[title]'
+        'a[title]',
+        'img[alt]', // Pentru imagini cu text descriptiv în alt
+        'figcaption', // Pentru caption-uri de imagini
+        '.category-title, .cat-title'
       ];
 
       for (const selector of titleSelectors) {
@@ -110,8 +155,33 @@ const detectProducts = (doc: Document, targetUrl: string): Product[] => {
         if (titleElement?.textContent?.trim()) {
           let title = titleElement.textContent.trim();
           title = title.replace(/(\$|€|£|lei|ron|mdl)[\d.,\s]+/gi, '').trim();
+          title = title.replace(/vezi\s+produs|vezi\s+produse|view\s+product/gi, '').trim();
           if (title.length > 3 && title.length < 200) {
             product.name = title;
+            break;
+          }
+        }
+        // Dacă nu găsește text, încearcă să folosească alt-ul imaginii
+        if (!product.name && selector === 'img[alt]') {
+          const img = titleElement as HTMLImageElement;
+          if (img.alt && img.alt.length > 3 && img.alt.length < 200) {
+            product.name = img.alt.trim();
+            break;
+          }
+        }
+      }
+
+      // Dacă nu găsește numele prin selectori, încearcă să extragă din link-uri
+      if (!product.name) {
+        const links = element.querySelectorAll('a[href*="produs"], a[href*="product"], a[href*="categorie"]');
+        for (const link of links) {
+          if (link.textContent?.trim() && link.textContent.trim() !== 'Vezi produs') {
+            product.name = link.textContent.trim();
+            // Extrage și URL-ul produsului
+            const href = link.getAttribute('href');
+            if (href) {
+              product.url = href.startsWith('http') ? href : new URL(href, targetUrl).href;
+            }
             break;
           }
         }
