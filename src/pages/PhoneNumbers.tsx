@@ -384,23 +384,29 @@ export default function PhoneNumbers() {
                     {/* Expanded View */}
                     {expandedPhone === phone.id && (
                       <div className="border-t bg-muted/20 p-4 space-y-6">
-                        {/* Phone ID Section */}
+                        {/* ElevenLabs Phone ID Section */}
                         <div className="flex items-center gap-2 p-3 bg-background rounded-lg border">
-                          <span className="text-sm text-muted-foreground">ID:</span>
-                          <code className="font-mono text-sm bg-muted px-2 py-1 rounded">{phone.id}</code>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => {
-                              navigator.clipboard.writeText(phone.id);
-                              toast({
-                                title: "Copiat!",
-                                description: "ID-ul a fost copiat în clipboard",
-                              });
-                            }}
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
+                          <span className="text-sm text-muted-foreground">ElevenLabs ID:</span>
+                          {phone.elevenlabs_phone_id ? (
+                            <>
+                              <code className="font-mono text-sm bg-muted px-2 py-1 rounded">{phone.elevenlabs_phone_id}</code>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(phone.elevenlabs_phone_id!);
+                                  toast({
+                                    title: "Copiat!",
+                                    description: "ID-ul ElevenLabs a fost copiat în clipboard",
+                                  });
+                                }}
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                            </>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">Nu este sincronizat cu ElevenLabs</span>
+                          )}
                         </div>
 
                         {/* Agent Assignment */}
