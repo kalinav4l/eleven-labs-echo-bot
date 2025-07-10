@@ -385,7 +385,224 @@ export const useCallInitiation = ({
     }
   };
 
-  // Enhanced batch processing with detailed logging
+  // Submit batch call using ElevenLabs Batch API
+  const submitBatchCall = async (contacts: Contact[], targetAgentId: string): Promise<string | null> => {
+    try {
+      logStep('STEP: Preparing batch call submission', { 
+        contactCount: contacts.length,
+        targetAgentId 
+      });
+
+      // Transform contacts to ElevenLabs batch format
+      const recipients = contacts.map(contact => ({
+        phone_number: contact.phone,
+        conversation_initiation_client_data: {
+          user_id: `${user?.id}_${contact.id}`,
+          dynamic_variables: {
+            nume: contact.name,
+            locatie: contact.location || contact.country
+          }
+        }
+      }));
+
+      const batchCallData = {
+        action: 'submit_batch_call',
+        call_name: `Apeluri batch - ${new Date().toLocaleString('ro-RO')}`,
+        agent_id: targetAgentId,
+        agent_phone_id: null, // Will be set automatically by ElevenLabs
+        recipients: recipients
+      };
+
+      logStep('STEP: Submitting batch call', batchCallData);
+
+      const { data, error } = await supabase.functions.invoke('elevenlabs-batch-calling', {
+        body: batchCallData
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      logStep('SUCCESS: Batch call submitted', { batchId: data.id });
+      return data.id;
+
+    } catch (error) {
+      logStep('ERROR: Failed to submit batch call', { error: error.message });
+      throw error;
+    }
+  };
+
+  // Monitor batch call progress
+  const monitorBatchCall = async (batchId: string, contacts: Contact[]) => {
+    let attempts = 0;
+    const maxAttempts = 60; // 5 minutes max
+    
+    logStep('START: Batch monitoring', { batchId, contactCount: contacts.length });
+    
+    while (attempts < maxAttempts) {
+      try {
+        attempts++;
+        
+        const { data, error } = await supabase.functions.invoke('elevenlabs-batch-calling', {
+          body: { action: 'get_batch_call_details', batch_id: batchId }
+        });
+
+        if (error || data.error) {
+          logStep('WARNING: Error getting batch details, retrying', { error: error?.message || data.error });
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          continue;
+        }
+
+        logStep('STEP: Batch status update', { 
+          status: data.status,
+          attempt: attempts,
+          batchId 
+        });
+
+        setCurrentCallStatus(`Status lot: ${data.status} (${attempts}/${maxAttempts})`);
+
+        // Update individual call statuses based on batch data
+        if (data.calls && Array.isArray(data.calls)) {
+          const updatedStatuses = contacts.map(contact => {
+            const callData = data.calls.find((call: any) => 
+              call.phone_number === contact.phone
+            );
+
+            if (callData) {
+              return {
+                contactId: contact.id,
+                contactName: contact.name,
+                status: mapElevenLabsStatus(callData.status),
+                conversationId: callData.conversation_id,
+                startTime: callData.start_time ? new Date(callData.start_time) : undefined,
+                endTime: callData.end_time ? new Date(callData.end_time) : undefined,
+                duration: callData.duration_seconds,
+                cost: callData.cost_usd
+              };
+            }
+
+            return {
+              contactId: contact.id,
+              contactName: contact.name,
+              status: 'waiting' as const
+            };
+          });
+
+          setCallStatuses(updatedStatuses);
+        }
+
+        // Check if batch is complete
+        if (data.status === 'completed' || data.status === 'failed') {
+          logStep('SUCCESS: Batch completed', { 
+            finalStatus: data.status,
+            batchId 
+          });
+          
+          // Save batch results to call history
+          if (data.calls) {
+            await saveBatchResults(data.calls, contacts);
+          }
+          
+          return data;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 5000));
+
+      } catch (error) {
+        logStep('ERROR: Exception during batch monitoring', { 
+          error: error.message,
+          attempt: attempts,
+          batchId 
+        });
+        await new Promise(resolve => setTimeout(resolve, 10000));
+      }
+    }
+
+    logStep('TIMEOUT: Batch monitoring timeout', { batchId });
+    throw new Error('Timeout monitoring batch call');
+  };
+
+  // Map ElevenLabs status to our internal status
+  const mapElevenLabsStatus = (elevenLabsStatus: string): CallStatus['status'] => {
+    switch (elevenLabsStatus?.toLowerCase()) {
+      case 'queued':
+      case 'pending':
+        return 'waiting';
+      case 'in_progress':
+      case 'calling':
+        return 'calling';
+      case 'active':
+      case 'ongoing':
+        return 'in-progress';
+      case 'completed':
+      case 'success':
+        return 'completed';
+      case 'failed':
+      case 'error':
+        return 'failed';
+      default:
+        return 'waiting';
+    }
+  };
+
+  // Save batch results to call history
+  const saveBatchResults = async (calls: any[], contacts: Contact[]) => {
+    try {
+      logStep('STEP: Saving batch results', { callCount: calls.length });
+
+      for (const callData of calls) {
+        const contact = contacts.find(c => c.phone === callData.phone_number);
+        if (!contact) continue;
+
+        const callRecord = {
+          user_id: user?.id,
+          phone_number: contact.phone,
+          contact_name: contact.name,
+          call_status: callData.status === 'completed' ? 'success' : 'failed',
+          summary: `Apel batch către ${contact.name}`,
+          dialog_json: JSON.stringify(callData, null, 2),
+          call_date: callData.start_time || new Date().toISOString(),
+          cost_usd: Number(callData.cost_usd) || 0,
+          duration_seconds: Number(callData.duration_seconds) || 0,
+          agent_id: agentId,
+          conversation_id: callData.conversation_id,
+          language: 'ro'
+        };
+
+        const { error } = await supabase
+          .from('call_history')
+          .insert(callRecord);
+
+        if (error) {
+          logStep('ERROR: Failed to save call record', { 
+            contactName: contact.name,
+            error: error.message 
+          });
+        } else {
+          logStep('SUCCESS: Call record saved', { contactName: contact.name });
+        }
+      }
+
+      toast({
+        title: "Rezultate salvate",
+        description: "Rezultatele batch-ului au fost salvate în istoric",
+      });
+
+    } catch (error) {
+      logStep('ERROR: Exception saving batch results', { error: error.message });
+      toast({
+        title: "Eroare salvare",
+        description: "Nu s-au putut salva toate rezultatele",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Enhanced batch processing using ElevenLabs Batch API
   const processBatchCalls = useCallback(async (contacts: Contact[], targetAgentId: string) => {
     logStep('START: Batch processing initiated', { 
       contactCount: contacts.length,
@@ -419,186 +636,21 @@ export const useCallInitiation = ({
     setCallStatuses(initialStatuses);
 
     try {
-      // Process contacts ONE BY ONE with detailed logging
-      for (let i = 0; i < contacts.length; i++) {
-        const contact = contacts[i];
-        const callStartTime = new Date();
-        
-        logStep(`BATCH CONTACT ${i + 1}/${contacts.length}: Starting processing`, { 
-          contactName: contact.name,
-          phone: contact.phone,
-          startTime: callStartTime.toISOString() 
-        });
-        
-        setCurrentProgress(i + 1);
-        setCurrentContact(contact.name);
-        setCurrentCallStatus(`Inițiază apelul către ${contact.name}...`);
-
-        // STEP 1: Mark current contact as 'calling'
-        setCallStatuses(prev => prev.map(status => 
-          status.contactId === contact.id 
-            ? { ...status, status: 'calling', startTime: callStartTime }
-            : status
-        ));
-
-        try {
-          // STEP 2: Initiate the call with detailed logging
-          logStep(`BATCH CONTACT ${i + 1}: Initiating call`, { 
-            contactName: contact.name,
-            phone: contact.phone,
-            targetAgentId 
-          });
-          
-          const requestData = {
-            agent_id: targetAgentId,
-            phone_number: contact.phone,
-            contact_name: contact.name,
-            user_id: user?.id,
-            batch_processing: true
-          };
-          
-          logStep(`BATCH CONTACT ${i + 1}: Request payload prepared`, requestData);
-          
-          // Validate required fields
-          if (!targetAgentId || targetAgentId.trim() === '') {
-            logStep(`BATCH CONTACT ${i + 1}: VALIDATION ERROR - Empty Agent ID`, { contactName: contact.name });
-            throw new Error(`Agent ID este gol pentru ${contact.name}`);
-          }
-          
-          if (!contact.phone || contact.phone.trim() === '') {
-            logStep(`BATCH CONTACT ${i + 1}: VALIDATION ERROR - Empty phone number`, { contactName: contact.name });
-            throw new Error(`Numărul de telefon este gol pentru ${contact.name}`);
-          }
-          
-          const { data: callInitData, error: callInitError } = await supabase.functions.invoke('initiate-scheduled-call', {
-            body: requestData
-          });
-
-          logStep(`BATCH CONTACT ${i + 1}: ElevenLabs response received`, { 
-            success: !!callInitData?.success,
-            error: callInitError || callInitData?.error,
-            statusCode: callInitData?.status_code,
-            contactName: contact.name 
-          });
-
-          if (callInitError) {
-            logStep(`BATCH CONTACT ${i + 1}: SUPABASE ERROR`, { 
-              error: callInitError,
-              contactName: contact.name 
-            });
-            
-            setCallStatuses(prev => prev.map(status => 
-              status.contactId === contact.id 
-                ? { ...status, status: 'failed', endTime: new Date() }
-                : status
-            ));
-            
-            setCurrentCallStatus(`❌ Eroare Supabase pentru ${contact.name}: ${callInitError.message}`);
-            continue;
-          }
-          
-          if (!callInitData?.success) {
-            logStep(`BATCH CONTACT ${i + 1}: ELEVENLABS ERROR`, { 
-              error: callInitData?.error,
-              statusCode: callInitData?.status_code,
-              details: callInitData?.details,
-              contactName: contact.name 
-            });
-            
-            setCallStatuses(prev => prev.map(status => 
-              status.contactId === contact.id 
-                ? { ...status, status: 'failed', endTime: new Date() }
-                : status
-            ));
-            
-            setCurrentCallStatus(`❌ Apel eșuat pentru ${contact.name}: ${callInitData?.error}`);
-            continue;
-          }
-
-          logStep(`BATCH CONTACT ${i + 1}: Call initiated successfully`, { 
-            conversationId: callInitData.conversationId,
-            contactName: contact.name 
-          });
-
-          // STEP 3: Update status and start monitoring
-          setCallStatuses(prev => prev.map(status => 
-            status.contactId === contact.id 
-              ? { ...status, status: 'in-progress' }
-              : status
-          ));
-
-          // STEP 4: Start monitoring
-          logStep(`BATCH CONTACT ${i + 1}: Starting conversation monitoring`, { contactName: contact.name });
-          setCurrentCallStatus(`Monitorizează conversații noi pentru ${contact.name}...`);
-          
-          const newConversations = await monitorForNewConversations(targetAgentId, contact, callStartTime);
-          
-          // STEP 5: Process results
-          logStep(`BATCH CONTACT ${i + 1}: Monitoring completed`, { 
-            foundConversations: newConversations.length,
-            contactName: contact.name 
-          });
-          
-          if (newConversations.length > 0) {
-            setCurrentCallStatus(`Salvează ${newConversations.length} conversații pentru ${contact.name}...`);
-            
-            for (const conversationData of newConversations) {
-              const conversationId = conversationData.conversation_id || 
-                                   conversationData.id || 
-                                   `unknown_${Date.now()}`;
-              
-              logStep(`BATCH CONTACT ${i + 1}: Saving conversation data`, { 
-                conversationId,
-                contactName: contact.name 
-              });
-              
-              await saveCompleteCallData(conversationData, contact, conversationId);
-            }
-            
-            setCallStatuses(prev => prev.map(status => 
-              status.contactId === contact.id 
-                ? { 
-                    ...status, 
-                    status: 'completed', 
-                    endTime: new Date()
-                  }
-                : status
-            ));
-
-            logStep(`BATCH CONTACT ${i + 1}: COMPLETED SUCCESSFULLY`, { 
-              conversationsFound: newConversations.length,
-              contactName: contact.name 
-            });
-          } else {
-            setCallStatuses(prev => prev.map(status => 
-              status.contactId === contact.id 
-                ? { ...status, status: 'failed', endTime: new Date() }
-                : status
-            ));
-            
-            logStep(`BATCH CONTACT ${i + 1}: FAILED - No conversations found`, { contactName: contact.name });
-          }
-
-        } catch (contactError) {
-          logStep(`BATCH CONTACT ${i + 1}: CRITICAL ERROR`, { 
-            error: contactError.message,
-            stack: contactError.stack,
-            contactName: contact.name 
-          });
-          
-          setCallStatuses(prev => prev.map(status => 
-            status.contactId === contact.id 
-              ? { ...status, status: 'failed', endTime: new Date() }
-              : status
-          ));
-        }
-        
-        // Brief pause before next contact
-        if (i < contacts.length - 1) {
-          logStep(`BATCH: Brief pause before next contact (${i + 2}/${contacts.length})`);
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
+      // Submit batch call to ElevenLabs
+      setCurrentCallStatus('Trimitere lot de apeluri către ElevenLabs...');
+      const batchId = await submitBatchCall(contacts, targetAgentId);
+      
+      if (!batchId) {
+        throw new Error('Nu s-a putut trimite lotul de apeluri');
       }
+
+      toast({
+        title: "Lot trimis",
+        description: `Lotul cu ${contacts.length} apeluri a fost trimis către ElevenLabs`,
+      });
+
+      // Monitor batch progress
+      await monitorBatchCall(batchId, contacts);
 
       logStep('BATCH PROCESSING: COMPLETED', { 
         totalContacts: contacts.length,
