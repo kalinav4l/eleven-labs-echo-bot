@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Phone, Plus, Settings, Globe, Lock, Trash2, Edit3, PhoneCall } from 'lucide-react';
+import { Loader2, Phone, Plus, Settings, Globe, Lock, Trash2, Edit3, PhoneCall, ChevronDown, ChevronRight, Copy } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
@@ -47,6 +47,7 @@ export default function PhoneNumbers() {
   const [isLoading, setIsLoading] = useState(false);
   const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [expandedPhone, setExpandedPhone] = useState<string | null>(null);
   const [formData, setFormData] = useState<SIPTrunkData>({
     label: '',
     phone_number: '',
@@ -331,68 +332,160 @@ export default function PhoneNumbers() {
                 </Button>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Label</TableHead>
-                    <TableHead>Număr telefon</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Agent conectat</TableHead>
-                    <TableHead>Data adăugării</TableHead>
-                    <TableHead className="text-right">Acțiuni</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {phoneNumbers.map((phone) => (
-                    <TableRow key={phone.id}>
-                      <TableCell className="font-mono text-xs">{phone.id}</TableCell>
-                      <TableCell className="font-medium">{phone.label}</TableCell>
-                      <TableCell className="font-mono">{phone.phone_number}</TableCell>
-                      <TableCell>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          phone.status === 'active' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {phone.status === 'active' ? 'Activ' : 'Inactiv'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        {phone.connected_agent_id ? (
-                          <span className="text-sm text-green-600">
-                            Conectat
-                          </span>
+              <div className="space-y-4">
+                {phoneNumbers.map((phone) => (
+                  <div key={phone.id} className="border rounded-lg">
+                    {/* Collapsed View */}
+                    <div 
+                      className="p-4 cursor-pointer hover:bg-muted/50 flex items-center justify-between"
+                      onClick={() => setExpandedPhone(expandedPhone === phone.id ? null : phone.id)}
+                    >
+                      <div className="flex items-center gap-4">
+                        {expandedPhone === phone.id ? (
+                          <ChevronDown className="h-4 w-4" />
                         ) : (
-                          <span className="text-sm text-muted-foreground">
-                            Neconectat
-                          </span>
+                          <ChevronRight className="h-4 w-4" />
                         )}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {new Date(phone.created_at).toLocaleDateString('ro-RO')}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button variant="outline" size="sm">
-                            <PhoneCall className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Edit3 className="h-4 w-4" />
-                          </Button>
+                        <div>
+                          <div className="flex items-center gap-3">
+                            <h3 className="font-semibold text-lg">{phone.phone_number}</h3>
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              phone.status === 'active' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {phone.status === 'active' ? 'Activ' : 'Inactiv'}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{phone.label}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>
+                          <PhoneCall className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>
+                          <Edit3 className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deletePhoneNumber(phone.id);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Expanded View */}
+                    {expandedPhone === phone.id && (
+                      <div className="border-t bg-muted/20 p-4 space-y-6">
+                        {/* Phone ID Section */}
+                        <div className="flex items-center gap-2 p-3 bg-background rounded-lg border">
+                          <span className="text-sm text-muted-foreground">ID:</span>
+                          <code className="font-mono text-sm bg-muted px-2 py-1 rounded">{phone.id}</code>
                           <Button 
-                            variant="outline" 
+                            variant="ghost" 
                             size="sm"
-                            onClick={() => deletePhoneNumber(phone.id)}
+                            onClick={() => {
+                              navigator.clipboard.writeText(phone.id);
+                              toast({
+                                title: "Copiat!",
+                                description: "ID-ul a fost copiat în clipboard",
+                              });
+                            }}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Copy className="h-4 w-4" />
                           </Button>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+
+                        {/* Agent Assignment */}
+                        <div className="space-y-2">
+                          <Label>Agent conectat</Label>
+                          <div className="flex items-center gap-2">
+                            {phone.connected_agent_id ? (
+                              <span className="text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                                Conectat: {phone.connected_agent_id}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-muted-foreground bg-gray-50 px-3 py-1 rounded-full">
+                                Neconectat
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* SIP Configuration */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Inbound Configuration */}
+                          <Card>
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-sm flex items-center gap-2">
+                                <Globe className="h-4 w-4" />
+                                Inbound SIP Trunk Configuration
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              <div>
+                                <span className="text-xs text-muted-foreground">Media Encryption</span>
+                                <p className="text-sm">{phone.inbound_media_encryption || 'Allowed (Default)'}</p>
+                              </div>
+                              {phone.inbound_allowed_addresses && phone.inbound_allowed_addresses.length > 0 && (
+                                <div>
+                                  <span className="text-xs text-muted-foreground">Allowed Addresses</span>
+                                  <p className="text-sm">{phone.inbound_allowed_addresses.join(', ')}</p>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+
+                          {/* Outbound Configuration */}
+                          <Card>
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-sm flex items-center gap-2">
+                                <Settings className="h-4 w-4" />
+                                Outbound SIP Trunk Configuration
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {phone.outbound_address && (
+                                <div>
+                                  <span className="text-xs text-muted-foreground">Address</span>
+                                  <p className="text-sm font-mono">{phone.outbound_address}</p>
+                                </div>
+                              )}
+                              <div>
+                                <span className="text-xs text-muted-foreground">Transport Protocol</span>
+                                <p className="text-sm uppercase">{phone.outbound_transport || 'TCP'}</p>
+                              </div>
+                              <div>
+                                <span className="text-xs text-muted-foreground">Media Encryption</span>
+                                <p className="text-sm">{phone.outbound_media_encryption || 'Allowed (Default)'}</p>
+                              </div>
+                              {phone.outbound_username && (
+                                <div>
+                                  <span className="text-xs text-muted-foreground">Authentication</span>
+                                  <p className="text-sm">Username and password configured</p>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        </div>
+
+                        {/* Metadata */}
+                        <div className="text-xs text-muted-foreground pt-2 border-t">
+                          Adăugat la: {new Date(phone.created_at).toLocaleString('ro-RO')} | 
+                          Ultima modificare: {new Date(phone.updated_at).toLocaleString('ro-RO')}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>
