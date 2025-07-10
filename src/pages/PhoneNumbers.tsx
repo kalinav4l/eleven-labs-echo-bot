@@ -334,6 +334,7 @@ export default function PhoneNumbers() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>ID</TableHead>
                     <TableHead>Label</TableHead>
                     <TableHead>Număr telefon</TableHead>
                     <TableHead>Status</TableHead>
@@ -345,6 +346,7 @@ export default function PhoneNumbers() {
                 <TableBody>
                   {phoneNumbers.map((phone) => (
                     <TableRow key={phone.id}>
+                      <TableCell className="font-mono text-xs">{phone.id}</TableCell>
                       <TableCell className="font-medium">{phone.label}</TableCell>
                       <TableCell className="font-mono">{phone.phone_number}</TableCell>
                       <TableCell>
