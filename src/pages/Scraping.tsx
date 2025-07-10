@@ -172,7 +172,7 @@ const extractAllImages = (element: Element, baseUrl: string): Array<{src: string
   return images.filter((img, index, arr) => arr.findIndex(i => i.src === img.src) === index);
 };
 
-// Funcție pentru extragerea informațiilor despre preț
+// Funcție pentru extragerea informațiilor despre preț - ÎMBUNĂTĂȚITĂ pentru România
 const extractPriceInfo = (element: Element) => {
   const priceInfo = {
     price: '',
@@ -182,38 +182,83 @@ const extractPriceInfo = (element: Element) => {
     currency: ''
   };
 
+  // Selectori pentru prețuri - îmbunătățiți pentru magazine românești
   const priceSelectors = [
+    // Selectori standard
     '.price, .cost, .amount, .pricing',
     '[class*="price"], [class*="cost"], [class*="amount"]',
     '.price_color, .price-current, .current-price, .sale-price',
     '.priceValue, .price-value, .price_value',
     '[data-price], [data-cost]',
-    '.product-price, .item-price'
+    '.product-price, .item-price',
+    
+    // Selectori în română
+    '.pret, .pret-current, .pret-curent, .pret-final',
+    '[class*="pret"], [class*="cost"]',
+    '.suma, .valoare, .tarif',
+    '.product-pret, .item-pret, .articol-pret',
+    '.oferta-pret, .promotie-pret',
+    
+    // Selectori specifici platforme românești
+    '.price-new, .price-actual, .pretul',
+    '.product-price-value, .item-price-value',
+    '.final-price, .current-price-value',
+    '.price-box .price, .price-container .price'
   ];
 
   for (const selector of priceSelectors) {
     const priceElement = element.querySelector(selector);
     if (priceElement && priceElement.textContent?.trim()) {
       const priceText = priceElement.textContent.trim();
-      const currencyMatch = priceText.match(/(lei|ron|\$|€|£|USD|EUR|MDL)/i);
-      if (currencyMatch) priceInfo.currency = currencyMatch[0];
       
-      const priceMatch = priceText.match(/[\d.,]+/);
-      if (priceMatch) priceInfo.price = priceText;
-      break;
+      // Detectează moneda română
+      const currencyMatch = priceText.match(/(lei|ron|\$|€|£|USD|EUR|MDL|usd|eur|mdl)/i);
+      if (currencyMatch) {
+        priceInfo.currency = currencyMatch[0].toUpperCase();
+      }
+      
+      // Extrage prețul numeric cu pattern îmbunătățit pentru România
+      const priceMatch = priceText.match(/[\d.,]+(?:\s*(?:lei|ron|mdl|\$|€|£))?/i);
+      if (priceMatch) {
+        priceInfo.price = priceText;
+        break;
+      }
     }
   }
 
+  // Selectori pentru prețul original/vechi
   const originalPriceSelectors = [
     '.old-price, .original-price, .was-price',
     '.price-old, .regular-price, .list-price',
-    '[class*="old-price"], [class*="original"]'
+    '[class*="old-price"], [class*="original"]',
+    '.pret-vechi, .pret-initial, .pret-recomandat',
+    '.crossed-price, .strike-price, .discount-price'
   ];
 
   for (const selector of originalPriceSelectors) {
     const originalElement = element.querySelector(selector);
     if (originalElement && originalElement.textContent?.trim()) {
       priceInfo.originalPrice = originalElement.textContent.trim();
+      break;
+    }
+  }
+
+  // Detectează discountul/reducerea
+  const discountSelectors = [
+    '.discount, .sale, .reduction',
+    '.reducere, .oferta, .promotie',
+    '[class*="discount"], [class*="reducere"]'
+  ];
+
+  for (const selector of discountSelectors) {
+    const discountElement = element.querySelector(selector);
+    if (discountElement && discountElement.textContent?.trim()) {
+      const discountText = discountElement.textContent.trim();
+      const percentMatch = discountText.match(/(\d+)%/);
+      if (percentMatch) {
+        priceInfo.discountPercentage = percentMatch[1] + '%';
+      }
+      priceInfo.discount = discountText;
       break;
     }
   }
@@ -378,41 +423,71 @@ const extractProductDescription = async (productUrl: string): Promise<string> =>
   return '';
 };
 
-// Funcția principală de detectare a produselor
+// Funcția principală de detectare a produselor - ÎMBUNĂTĂȚITĂ pentru magazine românești
 const detectProducts = async (doc: Document, targetUrl: string, deepScraping: boolean = false): Promise<Product[]> => {
   const products: Product[] = [];
   
+  // Selectori îmbunătățiți pentru magazine online românești
   const productSelectors = [
+    // Selectori generici pentru produse
     '.product, .product-item, .product-card, .item, .listing-item',
     '[data-product], [data-product-id], [data-item-id], [data-sku]',
     '.woocommerce-product, .product-container, .product-box, .product-wrapper',
     '.product_pod, .product-pod',
     '.s-result-item, .s-item',
     '.product-tile, .product-grid-item',
-    '.productCard, .product-card'
+    '.productCard, .product-card',
+    
+    // Selectori specifici pentru magazine românești
+    '.produs, .produs-item, .articol, .articol-item',
+    '.oferta, .oferta-item, .promotie',
+    '.item-produs, .card-produs, .container-produs',
+    '.lista-produse .item, .grid-produse .item',
+    '.catalog-item, .categorie-item',
+    '.magazin-item, .shop-item',
+    '.element-produs, .box-produs',
+    
+    // Pentru PrestaShop și alte platforme populare în România
+    '.product-miniature, .product-thumb, .product-list-item',
+    '.ajax_block_product, .product_block',
+    '.hproduct, .product-info',
+    '.thumbnail-wrapper, .thumbnail-container',
+    
+    // Pentru site-uri specifice de electrice/electronice
+    '.electrical-product, .electronic-item',
+    '.material-item, .componenta-item',
+    '.echipament-item, .device-item'
   ];
 
   let foundProducts: Element[] = [];
   
+  // Încearcă să găsească produse cu selectorii specifici
   for (const selector of productSelectors) {
     const elements = doc.querySelectorAll(selector);
     if (elements.length > 0) {
       foundProducts = Array.from(elements);
+      console.log(`Găsite ${foundProducts.length} produse cu selectorul: ${selector}`);
       break;
     }
   }
 
+  // Dacă nu găsește produse cu selectorii specifici, folosește detectarea avansată
   if (foundProducts.length === 0) {
-    const potentialProducts = doc.querySelectorAll('div, article, section, li, .item');
+    console.log('Nu s-au găsit produse cu selectorii specifici, folosesc detectarea avansată...');
+    const potentialProducts = doc.querySelectorAll('div, article, section, li, .item, .card, .box');
     foundProducts = Array.from(potentialProducts).filter(element => {
       const text = element.textContent || '';
-      const hasPrice = /(\$|€|£|lei|ron|mdl|\d+[.,]\d+)/i.test(text);
-      const hasTitle = element.querySelector('h1, h2, h3, h4, h5, h6, .title, .name, [class*="title"], [class*="name"], a[title]');
+      const hasPrice = /(\$|€|£|lei|ron|mdl|usd|eur|\d+[.,]\d+\s*(lei|ron|mdl|\$|€|£))/i.test(text);
+      const hasTitle = element.querySelector('h1, h2, h3, h4, h5, h6, .title, .name, .nume, [class*="title"], [class*="name"], [class*="nume"], a[title]');
       const hasImage = element.querySelector('img');
       const textLength = text.length;
       
-      return hasPrice && hasTitle && textLength > 30 && textLength < 3000;
+      // Verifică dacă conține cuvinte cheie pentru produse electrice
+      const hasElectricalKeywords = /(?:cablu|fir|intrerupator|priza|becuri|led|transformator|siguranta|tablou|cupla|mufa|adaptor|contor|releu|contact|switch|socket|wire|cable|electric|electronic|component|material|echipament)/i.test(text);
+      
+      return hasPrice && hasTitle && textLength > 30 && textLength < 5000 && (hasImage || hasElectricalKeywords);
     });
+    console.log(`Detectare avansată: găsite ${foundProducts.length} elemente potențiale`);
   }
 
   for (let index = 0; index < foundProducts.length; index++) {
@@ -431,20 +506,35 @@ const detectProducts = async (doc: Document, targetUrl: string, deepScraping: bo
         url: targetUrl
       };
 
-      // Extrage numele produsului
+      // Extrage numele produsului - ÎMBUNĂTĂȚIT pentru românește
       const titleSelectors = [
+        // Selectori standard
         'h1, h2, h3, h4, h5, h6',
         '.title, .name, .product-title, .product-name',
         '[class*="title"], [class*="name"]',
-        'a[title]'
+        'a[title]',
+        
+        // Selectori în română
+        '.nume, .denumire, .titlu, .product-nume',
+        '[class*="nume"], [class*="denumire"], [class*="titlu"]',
+        '.produs-nume, .item-nume, .articol-nume',
+        '.product-heading, .item-heading',
+        
+        // Pentru magazine online românești
+        '.product-name-link, .item-title-link',
+        '.product-info h3, .product-info h4',
+        '.card-title, .box-title, .element-title',
+        '.product-description h3, .product-description h4'
       ];
 
       for (const selector of titleSelectors) {
         const titleElement = productElement.querySelector(selector);
         if (titleElement && titleElement.textContent?.trim()) {
           let title = titleElement.textContent.trim();
-          title = title.replace(/(\$|€|£|lei|ron|mdl)[\d.,\s]+/gi, '').trim();
-          if (title.length > 3 && title.length < 200) {
+          // Curăță titlul de prețuri și alte elemente nedorite
+          title = title.replace(/(\$|€|£|lei|ron|mdl|usd|eur)[\d.,\s]+/gi, '').trim();
+          title = title.replace(/vezi\s+detalii|adauga\s+in\s+cos|cumpara\s+acum|comanda/gi, '').trim();
+          if (title.length > 3 && title.length < 300) {
             product.name = title;
             break;
           }
