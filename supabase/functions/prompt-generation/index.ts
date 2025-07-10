@@ -14,6 +14,10 @@ serve(async (req) => {
   }
 
   try {
+    if (!gptApiKey) {
+      throw new Error('GPT_API_KEY not configured');
+    }
+
     const { websiteUrl, agentRole, additionalPrompt } = await req.json();
 
     if (!websiteUrl) {
