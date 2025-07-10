@@ -575,6 +575,75 @@ export type Database = {
         }
         Relationships: []
       }
+      phone_numbers: {
+        Row: {
+          connected_agent_id: string | null
+          created_at: string
+          elevenlabs_phone_id: string | null
+          id: string
+          inbound_allowed_addresses: string[] | null
+          inbound_allowed_numbers: string[] | null
+          inbound_media_encryption: string | null
+          inbound_password: string | null
+          inbound_username: string | null
+          label: string
+          outbound_address: string | null
+          outbound_headers: Json | null
+          outbound_media_encryption: string | null
+          outbound_password: string | null
+          outbound_transport: string | null
+          outbound_username: string | null
+          phone_number: string
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          connected_agent_id?: string | null
+          created_at?: string
+          elevenlabs_phone_id?: string | null
+          id?: string
+          inbound_allowed_addresses?: string[] | null
+          inbound_allowed_numbers?: string[] | null
+          inbound_media_encryption?: string | null
+          inbound_password?: string | null
+          inbound_username?: string | null
+          label: string
+          outbound_address?: string | null
+          outbound_headers?: Json | null
+          outbound_media_encryption?: string | null
+          outbound_password?: string | null
+          outbound_transport?: string | null
+          outbound_username?: string | null
+          phone_number: string
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          connected_agent_id?: string | null
+          created_at?: string
+          elevenlabs_phone_id?: string | null
+          id?: string
+          inbound_allowed_addresses?: string[] | null
+          inbound_allowed_numbers?: string[] | null
+          inbound_media_encryption?: string | null
+          inbound_password?: string | null
+          inbound_username?: string | null
+          label?: string
+          outbound_address?: string | null
+          outbound_headers?: Json | null
+          outbound_media_encryption?: string | null
+          outbound_password?: string | null
+          outbound_transport?: string | null
+          outbound_username?: string | null
+          phone_number?: string
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: string | null
