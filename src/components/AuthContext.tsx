@@ -179,7 +179,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const value = {
+  const value: AuthContextType = {
     user,
     session,
     loading,
@@ -188,5 +188,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return React.createElement(AuthContext.Provider, { value }, children);
 };
