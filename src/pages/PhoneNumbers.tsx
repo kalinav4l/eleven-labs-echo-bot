@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Phone, Plus, Settings, Globe, Lock, Trash2, Edit3, PhoneCall, ChevronDown, ChevronRight, Copy } from 'lucide-react';
+import { PhoneTestCallModal } from '@/components/outbound/PhoneTestCallModal';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
@@ -55,6 +56,7 @@ export default function PhoneNumbers() {
   const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [expandedPhone, setExpandedPhone] = useState<string | null>(null);
+  const [testCallModal, setTestCallModal] = useState<{isOpen: boolean, phone?: PhoneNumber}>({isOpen: false});
   const [formData, setFormData] = useState<SIPTrunkData>({
     label: '',
     phone_number: '',
@@ -345,7 +347,10 @@ export default function PhoneNumbers() {
                       </div>
                       
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={e => e.stopPropagation()}>
+                        <Button variant="outline" size="sm" onClick={e => {
+                          e.stopPropagation();
+                          setTestCallModal({isOpen: true, phone});
+                        }}>
                           <PhoneCall className="h-4 w-4" />
                         </Button>
                         <Button variant="outline" size="sm" onClick={e => e.stopPropagation()}>
@@ -700,6 +705,14 @@ export default function PhoneNumbers() {
               </form>
             </CardContent>
           </Card>}
+
+        {/* Test Call Modal */}
+        <PhoneTestCallModal 
+          isOpen={testCallModal.isOpen}
+          onClose={() => setTestCallModal({isOpen: false})}
+          phoneNumber={testCallModal.phone?.phone_number || ''}
+          phoneLabel={testCallModal.phone?.label || ''}
+        />
       </div>
     </DashboardLayout>;
 }
