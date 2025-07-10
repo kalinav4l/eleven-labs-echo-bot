@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Phone, Plus } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -11,19 +11,13 @@ import DashboardLayout from '@/components/DashboardLayout';
 interface PhoneNumberData {
   phone_number: string;
   label: string;
-  sid: string;
-  token: string;
-  provider: string;
 }
 
 export default function PhoneNumbers() {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<PhoneNumberData>({
     phone_number: '',
-    label: '',
-    sid: '',
-    token: '',
-    provider: 'twilio'
+    label: ''
   });
 
   const handleInputChange = (field: keyof PhoneNumberData, value: string) => {
@@ -36,7 +30,7 @@ export default function PhoneNumbers() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.phone_number || !formData.label || !formData.sid || !formData.token) {
+    if (!formData.phone_number || !formData.label) {
       toast({
         title: "Eroare",
         description: "Toate câmpurile sunt obligatorii",
@@ -68,10 +62,7 @@ export default function PhoneNumbers() {
         // Reset form
         setFormData({
           phone_number: '',
-          label: '',
-          sid: '',
-          token: '',
-          provider: 'twilio'
+          label: ''
         });
       } else {
         throw new Error(result.message || 'A apărut o eroare');
@@ -97,7 +88,7 @@ export default function PhoneNumbers() {
             <h1 className="text-3xl font-bold">Numere de Telefon SIP</h1>
           </div>
           <p className="text-muted-foreground">
-            Adaugă un nou număr de telefon pentru agentul conversațional
+            Adaugă un nou număr de telefon SIP pentru agentul conversațional
           </p>
         </div>
 
@@ -108,12 +99,12 @@ export default function PhoneNumbers() {
               Adaugă Număr Nou
             </CardTitle>
             <CardDescription>
-              Completează informațiile necesare pentru a conecta un număr de telefon la sistemul conversațional
+              Completează informațiile pentru a conecta un număr de telefon SIP la sistemul conversațional
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="phone_number">Număr de Telefon *</Label>
                   <Input
@@ -124,56 +115,23 @@ export default function PhoneNumbers() {
                     onChange={(e) => handleInputChange('phone_number', e.target.value)}
                     className="font-mono"
                   />
+                  <p className="text-sm text-muted-foreground">
+                    Format internațional complet (ex: +37378123378)
+                  </p>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="label">Etichetă *</Label>
                   <Input
                     id="label"
-                    placeholder="Nume descriptiv"
+                    placeholder="Nume descriptiv pentru acest număr"
                     value={formData.label}
                     onChange={(e) => handleInputChange('label', e.target.value)}
                   />
+                  <p className="text-sm text-muted-foreground">
+                    Pentru identificarea ușoară (ex: "Suport Clienți", "Vânzări")
+                  </p>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="sid">SID *</Label>
-                  <Input
-                    id="sid"
-                    placeholder="Account SID din Twilio"
-                    value={formData.sid}
-                    onChange={(e) => handleInputChange('sid', e.target.value)}
-                    className="font-mono"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="token">Token *</Label>
-                  <Input
-                    id="token"
-                    type="password"
-                    placeholder="Auth Token din Twilio"
-                    value={formData.token}
-                    onChange={(e) => handleInputChange('token', e.target.value)}
-                    className="font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="provider">Provider</Label>
-                <Select value={formData.provider} onValueChange={(value) => handleInputChange('provider', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="twilio">Twilio</SelectItem>
-                    <SelectItem value="vonage">Vonage</SelectItem>
-                    <SelectItem value="other">Altul</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               <div className="flex justify-end pt-4">
@@ -195,13 +153,14 @@ export default function PhoneNumbers() {
           </CardContent>
         </Card>
 
-        <div className="mt-6 p-4 bg-muted rounded-lg">
-          <h3 className="font-semibold mb-2">Informații despre configurare:</h3>
-          <ul className="text-sm text-muted-foreground space-y-1">
-            <li>• Numărul de telefon trebuie să fie în format internațional (+37378123378)</li>
-            <li>• SID și Token se obțin din contul Twilio</li>
-            <li>• Eticheta este pentru identificarea ușoară a numărului</li>
-            <li>• Asigură-te că numărul este verificat în Twilio înainte de adăugare</li>
+        <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold mb-3 text-blue-900">Despre SIP Trunk:</h3>
+          <ul className="text-sm text-blue-800 space-y-2">
+            <li>• <strong>SIP Trunk</strong> permite conectarea directă fără configurări complexe</li>
+            <li>• Numărul trebuie să fie în format internațional complet (+37378123378)</li>
+            <li>• Nu sunt necesare credențiale externe (SID/Token)</li>
+            <li>• Conexiunea se face automat prin protocolul SIP</li>
+            <li>• Suportă apeluri bidireccționale pentru agentul conversațional</li>
           </ul>
         </div>
       </div>
