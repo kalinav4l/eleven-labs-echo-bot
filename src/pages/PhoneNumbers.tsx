@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Phone, Plus, Settings, Globe, Lock, Trash2, Edit3, PhoneCall, ChevronDown, ChevronRight, Copy, RefreshCw } from 'lucide-react';
+import { Loader2, Phone, Plus, Settings, Globe, Lock, Trash2, Edit3, PhoneCall, ChevronDown, ChevronRight, Copy } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
@@ -292,75 +292,6 @@ export default function PhoneNumbers() {
     }
   };
 
-  const syncWithElevenLabs = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('https://api.elevenlabs.io/v1/convai/phone-numbers', {
-        method: 'GET',
-        headers: {
-          'xi-api-key': 'sk_6443a64ab5f84bfe0c72941fd2d4f188317cdab4715a3925'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch phone numbers from ElevenLabs');
-      }
-
-      const elevenLabsNumbers = await response.json();
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('Nu sunteți autentificat');
-      }
-
-      // Get existing phone numbers from database
-      const { data: localNumbers } = await supabase
-        .from('phone_numbers')
-        .select('*')
-        .eq('user_id', user.id);
-
-      let syncedCount = 0;
-
-      // Update phone numbers that don't have ElevenLabs ID
-      for (const elevenLabsPhone of elevenLabsNumbers.phone_numbers || []) {
-        const matchingLocal = localNumbers?.find(local => 
-          local.phone_number === elevenLabsPhone.phone_number && 
-          !local.elevenlabs_phone_id
-        );
-
-        if (matchingLocal) {
-          const { error } = await supabase
-            .from('phone_numbers')
-            .update({ 
-              elevenlabs_phone_id: elevenLabsPhone.phone_number_id,
-              status: 'active'
-            })
-            .eq('id', matchingLocal.id);
-
-          if (!error) {
-            syncedCount++;
-          }
-        }
-      }
-
-      toast({
-        title: "Sincronizare completă!",
-        description: `${syncedCount} ${syncedCount === 1 ? 'număr sincronizat' : 'numere sincronizate'} cu ElevenLabs`,
-      });
-
-      loadPhoneNumbers();
-    } catch (error) {
-      console.error('Error syncing with ElevenLabs:', error);
-      toast({
-        title: "Eroare",
-        description: error instanceof Error ? error.message : "A apărut o eroare la sincronizare",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <DashboardLayout>
       <div className="container mx-auto p-6 max-w-6xl">
@@ -375,16 +306,10 @@ export default function PhoneNumbers() {
                 Gestiona numerele de telefon SIP pentru agenții conversationali
               </p>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={syncWithElevenLabs} disabled={isLoading}>
-                <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                Sincronizează cu ElevenLabs
-              </Button>
-              <Button onClick={() => setShowAddForm(!showAddForm)}>
-                <Plus className="mr-2 h-4 w-4" />
-                {showAddForm ? 'Anulează' : 'Adaugă număr'}
-              </Button>
-            </div>
+            <Button onClick={() => setShowAddForm(!showAddForm)}>
+              <Plus className="mr-2 h-4 w-4" />
+              {showAddForm ? 'Anulează' : 'Adaugă număr'}
+            </Button>
           </div>
         </div>
 
