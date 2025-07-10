@@ -209,31 +209,86 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-4">
-      {/* Simple central circle with subtle animation */}
+    <div className="flex flex-col items-center justify-center space-y-8 p-8">
+      {/* Large animated button with multiple effects */}
       <div className="relative">
-        {isActive && (
-          <div 
-            className={`absolute -inset-8 rounded-full border border-muted-foreground/20 transition-all duration-1000 ${
-              conversation.isSpeaking ? 'scale-110 opacity-30' : 'scale-100 opacity-10'
-            }`}
-          />
+        {/* Outer animated ring */}
+        <div 
+          className={`absolute -inset-12 rounded-full border-2 transition-all duration-1000 ${
+            isActive 
+              ? 'border-primary/30 animate-pulse scale-110' 
+              : 'border-muted-foreground/10 scale-100'
+          }`}
+        />
+        
+        {/* Middle animated ring */}
+        <div 
+          className={`absolute -inset-8 rounded-full border transition-all duration-700 ${
+            isActive 
+              ? 'border-primary/40 animate-ping scale-105' 
+              : 'border-muted-foreground/5 scale-100'
+          }`}
+        />
+        
+        {/* Speaking animation ring */}
+        {conversation.isSpeaking && (
+          <div className="absolute -inset-16 rounded-full border-2 border-primary/20 animate-pulse" />
         )}
         
+        {/* Main large button */}
         <Button
           onClick={handleToggleConversation}
           disabled={isConnecting}
-          variant={isActive ? "destructive" : "default"}
-          size="lg"
-          className="h-16 w-16 rounded-full relative transition-all duration-300 hover:scale-105"
+          className={`h-32 w-32 rounded-full relative transition-all duration-500 transform hover:scale-110 active:scale-95 shadow-2xl ${
+            isActive
+              ? 'bg-gradient-to-br from-destructive via-destructive/90 to-destructive/80 hover:from-destructive/90 hover:to-destructive shadow-destructive/30'
+              : isConnecting
+                ? 'bg-gradient-to-br from-muted via-muted/90 to-muted/80 animate-pulse'
+                : 'bg-gradient-to-br from-primary via-primary/90 to-primary/80 hover:from-primary/90 hover:to-primary shadow-primary/30'
+          }`}
         >
-          {getButtonIcon()}
+          {/* Animated background glow */}
+          <div 
+            className={`absolute inset-2 rounded-full transition-all duration-300 ${
+              conversation.isSpeaking 
+                ? 'bg-white/20 animate-pulse' 
+                : 'bg-white/5'
+            }`}
+          />
+          
+          {/* Icon with larger size */}
+          <span className="relative z-10 text-white">
+            {isConnecting ? (
+              <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : isActive ? (
+              <PhoneOff className="w-8 h-8" />
+            ) : hasPermission === false ? (
+              <MicOff className="w-8 h-8" />
+            ) : (
+              <Phone className="w-8 h-8" />
+            )}
+          </span>
         </Button>
       </div>
 
-      {/* Minimal status text */}
-      <div className="text-sm text-muted-foreground">
-        {getButtonText()}
+      {/* Enhanced status text with animations */}
+      <div className="text-center space-y-3">
+        <div className={`text-lg font-semibold transition-all duration-300 ${
+          isActive ? 'text-primary animate-pulse' : 'text-muted-foreground'
+        }`}>
+          {getButtonText()}
+        </div>
+        
+        {/* Speaking indicator with animation */}
+        {isActive && (
+          <div className={`text-sm transition-all duration-500 transform ${
+            conversation.isSpeaking 
+              ? 'text-primary font-medium animate-bounce' 
+              : 'text-muted-foreground'
+          }`}>
+            {conversation.isSpeaking ? '🎤 Agentul vorbește...' : '👂 Te ascult'}
+          </div>
+        )}
       </div>
     </div>
   );
