@@ -114,7 +114,7 @@ REGULI CRITICE:
 ${contextText ? `INFORMAȚII DISPONIBILE DIN DOCUMENTE:
 ${contextText}
 
-Bazează-ți răspunsul EXCLUSIV pe informațiile de mai sus.` : 'Nu există informații relevante în baza de cunoștințe pentru această întrebare.'}`;`;
+Bazează-ți răspunsul EXCLUSIV pe informațiile de mai sus.` : 'Nu există informații relevante în baza de cunoștințe pentru această întrebare.'}`;
 
     const messages = [
       { role: 'system', content: finalSystemPrompt },
