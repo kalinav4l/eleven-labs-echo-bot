@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_documents: {
+        Row: {
+          agent_id: string
+          created_at: string
+          document_id: string
+          id: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          document_id: string
+          id?: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          document_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_documents_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_documents_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_agents: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          system_prompt: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          system_prompt?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          system_prompt?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       audio_generations: {
         Row: {
           audio_url: string | null
@@ -258,6 +324,74 @@ export type Database = {
         }
         Relationships: []
       }
+      document_chunks: {
+        Row: {
+          chunk_index: number
+          chunk_text: string
+          created_at: string
+          document_id: string
+          id: string
+        }
+        Insert: {
+          chunk_index: number
+          chunk_text: string
+          created_at?: string
+          document_id: string
+          id?: string
+        }
+        Update: {
+          chunk_index?: number
+          chunk_text?: string
+          created_at?: string
+          document_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_chunks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_embeddings: {
+        Row: {
+          agent_id: string | null
+          chunk_index: number
+          chunk_text: string
+          created_at: string
+          document_id: string
+          document_name: string
+          embedding: Json
+          id: string
+          user_id: string
+        }
+        Insert: {
+          agent_id?: string | null
+          chunk_index: number
+          chunk_text: string
+          created_at?: string
+          document_id: string
+          document_name: string
+          embedding: Json
+          id?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string | null
+          chunk_index?: number
+          chunk_text?: string
+          created_at?: string
+          document_id?: string
+          document_name?: string
+          embedding?: Json
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       kalina_agents: {
         Row: {
           agent_id: string
@@ -300,6 +434,36 @@ export type Database = {
           updated_at?: string
           user_id?: string
           voice_id?: string | null
+        }
+        Relationships: []
+      }
+      knowledge_documents: {
+        Row: {
+          content: string
+          created_at: string
+          file_type: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          file_type?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          file_type?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -408,6 +572,75 @@ export type Database = {
           subtotal?: number
           total?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      phone_numbers: {
+        Row: {
+          connected_agent_id: string | null
+          created_at: string
+          elevenlabs_phone_id: string | null
+          id: string
+          inbound_allowed_addresses: string[] | null
+          inbound_allowed_numbers: string[] | null
+          inbound_media_encryption: string | null
+          inbound_password: string | null
+          inbound_username: string | null
+          label: string
+          outbound_address: string | null
+          outbound_headers: Json | null
+          outbound_media_encryption: string | null
+          outbound_password: string | null
+          outbound_transport: string | null
+          outbound_username: string | null
+          phone_number: string
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          connected_agent_id?: string | null
+          created_at?: string
+          elevenlabs_phone_id?: string | null
+          id?: string
+          inbound_allowed_addresses?: string[] | null
+          inbound_allowed_numbers?: string[] | null
+          inbound_media_encryption?: string | null
+          inbound_password?: string | null
+          inbound_username?: string | null
+          label: string
+          outbound_address?: string | null
+          outbound_headers?: Json | null
+          outbound_media_encryption?: string | null
+          outbound_password?: string | null
+          outbound_transport?: string | null
+          outbound_username?: string | null
+          phone_number: string
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          connected_agent_id?: string | null
+          created_at?: string
+          elevenlabs_phone_id?: string | null
+          id?: string
+          inbound_allowed_addresses?: string[] | null
+          inbound_allowed_numbers?: string[] | null
+          inbound_media_encryption?: string | null
+          inbound_password?: string | null
+          inbound_username?: string | null
+          label?: string
+          outbound_address?: string | null
+          outbound_headers?: Json | null
+          outbound_media_encryption?: string | null
+          outbound_password?: string | null
+          outbound_transport?: string | null
+          outbound_username?: string | null
+          phone_number?: string
+          status?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -742,6 +975,10 @@ export type Database = {
           created_at: string
         }[]
       }
+      cosine_similarity: {
+        Args: { vec1: Json; vec2: Json }
+        Returns: number
+      }
       deduct_balance: {
         Args: {
           p_user_id: string
@@ -759,6 +996,31 @@ export type Database = {
           p_conversation_id?: string
         }
         Returns: boolean
+      }
+      match_document_embeddings: {
+        Args: {
+          query_embedding: Json
+          agent_id_param: string
+          match_threshold?: number
+          match_count?: number
+        }
+        Returns: {
+          chunk_text: string
+          document_name: string
+          similarity: number
+        }[]
+      }
+      search_relevant_chunks: {
+        Args: {
+          query_text: string
+          agent_id_param: string
+          match_count?: number
+        }
+        Returns: {
+          chunk_text: string
+          document_name: string
+          rank: number
+        }[]
       }
     }
     Enums: {

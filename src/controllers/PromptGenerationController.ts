@@ -1,19 +1,21 @@
 import { PromptGenerationRequest, PromptGenerationResponse } from '../types/dtos';
-import { API_CONFIG } from '../constants/constants';
+import { supabase } from '@/integrations/supabase/client';
 
 export class PromptGenerationController {
   static async generatePrompt(request: PromptGenerationRequest): Promise<PromptGenerationResponse> {
-    const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/prompt-generation`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-KEY': API_CONFIG.BACKEND_API_KEY
-      },
-      body: JSON.stringify(request),
+    const { data, error } = await supabase.functions.invoke('prompt-generation', {
+      body: request
     });
-    if (!response.ok) {
-      throw new Error('Prompt generation failed');
+
+    if (error) {
+      console.error('Prompt generation error:', error);
+      throw new Error(`Prompt generation failed: ${error.message}`);
     }
-    return response.json();
+
+    if (!data || !data.response) {
+      throw new Error('Invalid response from prompt generation');
+    }
+
+    return data;
   }
 }

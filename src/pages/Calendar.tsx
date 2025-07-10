@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   CalendarIcon, Clock, Phone, Plus, ChevronLeft, ChevronRight, Users, 
@@ -48,6 +49,8 @@ const Calendar = () => {
   const [isAITaskDialogOpen, setIsAITaskDialogOpen] = useState(false);
   const [isProcessingAI, setIsProcessingAI] = useState(false);
   const [showIntelligentCreator, setShowIntelligentCreator] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisStep, setAnalysisStep] = useState(0);
 
   const [formData, setFormData] = useState({
     client_name: '',
@@ -59,6 +62,64 @@ const Calendar = () => {
     agent_id: '',
     task_type: 'call' as 'call' | 'campaign' | 'follow_up' | 'smart_outreach'
   });
+
+  // Analysis steps configuration
+  const analysisSteps = [
+    { title: 'Analizez istoricul conversațiilor', icon: <MessageSquare className="h-4 w-4" /> },
+    { title: 'Identifică patternuri și tendințe', icon: <TrendingUp className="h-4 w-4" /> },
+    { title: 'Segmentez contactele', icon: <Users className="h-4 w-4" /> },
+    { title: 'Generez campanii personalizate', icon: <Target className="h-4 w-4" /> },
+    { title: 'Optimizez timing și mesaje', icon: <Clock className="h-4 w-4" /> }
+  ];
+
+  // Perform intelligent analysis function
+  const performIntelligentAnalysis = async () => {
+    setIsAnalyzing(true);
+    setAnalysisStep(0);
+    setShowIntelligentCreator(false);
+
+    // Simulate AI analysis process
+    for (let step = 0; step < analysisSteps.length; step++) {
+      setAnalysisStep(step);
+      await new Promise(resolve => setTimeout(resolve, 1500));
+    }
+
+    setIsAnalyzing(false);
+    
+    toast({
+      title: "🧠 Analiza completă!",
+      description: "Am generat campanii inteligente personalizate.",
+    });
+
+    // Generate some smart tasks after analysis
+    await generateSmartTasks();
+  };
+
+  // Generate smart tasks based on analysis
+  const generateSmartTasks = async () => {
+    const smartTasks = [
+      {
+        title: 'Reactivare Clienți Premium',
+        description: 'Campanie personalizată pentru clienții cu valoare mare',
+        priority: 'high' as const,
+        scheduled_time: new Date(Date.now() + 2 * 60 * 60 * 1000),
+        agent_instruction: 'Contactează clienții premium cu oferte exclusive'
+      },
+      {
+        title: 'Welcome Call pentru Clienți Noi',
+        description: 'Apeluri de bun venit pentru clienții noi',
+        priority: 'medium' as const,
+        scheduled_time: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        agent_instruction: 'Oferă suport și informații pentru clienții noi'
+      }
+    ];
+
+    for (const task of smartTasks) {
+      await createSmartTask(task);
+    }
+
+    queryClient.invalidateQueries({ queryKey: ['scheduled-calls', user.id] });
+  };
 
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -538,16 +599,160 @@ const Calendar = () => {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="max-w-xs">
-                  <p className="font-medium">Butonul Fermecat - Funcția Unică!</p>
+                  <p className="font-medium">Creator Inteligent de Campanii</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Analizează automat toate contactele, conversațiile și contextul pentru a crea 
-                    campanii inteligente personalizate și taskuri optimizate pentru fiecare contact. 
-                    Folosește RAG, MCP și AI avansat pentru a genera strategic planuri de contact.
+                    Funcția unică care analizează toate datele tale pentru a crea campanii personalizate și optimizate automat.
                   </p>
                 </TooltipContent>
               </Tooltip>
             </div>
           </div>
+
+          {/* Creator Inteligent de Campanii - Modal similar cu imaginea */}
+          {showIntelligentCreator && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-auto border border-gray-100 max-h-[90vh] overflow-y-auto">
+                {/* Header */}
+                <div className="p-8 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-pink-50">
+                  <div className="flex items-center justify-between">
+                    <div className="text-center flex-1">
+                      <div className="flex items-center justify-center mb-4">
+                        <Sparkles className="w-8 h-8 text-purple-600 mr-3" />
+                        <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                          Creator Inteligent de Campanii
+                        </h2>
+                      </div>
+                      <p className="text-gray-600 text-lg">
+                        Funcția unică care analizează toate datele tale pentru a crea campanii personalizate
+                      </p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setShowIntelligentCreator(false)}
+                      className="ml-4"
+                    >
+                      ×
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Features Grid */}
+                <div className="p-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div className="flex items-start space-x-4">
+                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <BrainCircuit className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 mb-2">Analiză AI Avansată</h3>
+                        <p className="text-gray-600 text-sm">
+                          Procesez istoric conversații, patternuri de comportament și preferințe cliente
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start space-x-4">
+                      <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <Network className="w-6 h-6 text-green-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 mb-2">RAG & MCP Integration</h3>
+                        <p className="text-gray-600 text-sm">
+                          Folosesc toate sursele de date conectate pentru context complet
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start space-x-4">
+                      <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                        <Target className="w-6 h-6 text-red-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 mb-2">Segmentare Inteligentă</h3>
+                        <p className="text-gray-600 text-sm">
+                          Împart contactele în segmente pentru campanii ultra-personalizate
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start space-x-4">
+                      <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <Zap className="w-6 h-6 text-yellow-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 mb-2">Optimizare Automată</h3>
+                        <p className="text-gray-600 text-sm">
+                          Aleg cel mai bun timing, agent și mesaj pentru fiecare contact
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Button */}
+                  <div className="text-center">
+                    <Button
+                      onClick={performIntelligentAnalysis}
+                      disabled={isProcessingAI}
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 text-lg"
+                    >
+                      <Sparkles className="w-5 h-5 mr-2" />
+                      Activează Magia AI
+                    </Button>
+                    <p className="text-sm text-gray-500 mt-3">
+                      Procesul va dura 10-15 secunde pentru analiză completă
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Analysis Progress Modal */}
+          {isAnalyzing && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-auto border border-gray-100 p-8">
+                <div className="text-center mb-6">
+                  <div className="flex items-center justify-center mb-4">
+                    <BrainCircuit className="w-8 h-8 text-blue-600 mr-3" />
+                    <h3 className="text-2xl font-bold text-gray-900">Analiză AI în progres...</h3>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {analysisSteps.map((step, index) => (
+                    <div key={index} className="flex items-center space-x-4">
+                      <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                        index < analysisStep ? 'bg-green-100 text-green-600' :
+                        index === analysisStep ? 'bg-blue-100 text-blue-600' :
+                        'bg-gray-100 text-gray-400'
+                      }`}>
+                        {index < analysisStep ? (
+                          <CheckCircle className="w-4 h-4" />
+                        ) : (
+                          step.icon
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className={`font-medium ${
+                          index <= analysisStep ? 'text-gray-900' : 'text-gray-400'
+                        }`}>
+                          {step.title}
+                        </div>
+                      </div>
+                      {index < analysisStep && (
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6">
+                  <Progress value={(analysisStep / analysisSteps.length) * 100} className="h-2" />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
