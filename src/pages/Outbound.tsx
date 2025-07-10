@@ -245,6 +245,20 @@ const Outbound = () => {
                   </p>
                 </div>
               )}
+              
+              {/* API Configuration Status */}
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                <h3 className="text-sm font-medium text-blue-900 mb-2">Status Configurare API</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-blue-700">ElevenLabs API Key:</span>
+                    <span className="text-sm text-blue-600">Se verifică automat la primul apel</span>
+                  </div>
+                  <p className="text-xs text-blue-600">
+                    Dacă apelurile eșuează cu eroare API Key, configurați ELEVENLABS_API_KEY în Supabase Edge Functions Secrets
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Call Management Section */}

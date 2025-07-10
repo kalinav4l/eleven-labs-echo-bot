@@ -41,12 +41,16 @@ serve(async (req) => {
     const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY')
     const agentPhoneId = Deno.env.get('PHONE_NUMBER_ID') || 'phnum_01jz06e77dfce9034d7jnpj5v7'
     
+    console.log('API Key exists:', !!elevenLabsApiKey)
+    console.log('Phone ID:', agentPhoneId)
+    
     if (!elevenLabsApiKey) {
-      console.error('ElevenLabs API key not configured')
+      console.error('❌ ElevenLabs API key not configured')
       return new Response(
         JSON.stringify({ 
-          error: 'ElevenLabs API key nu este configurat în Supabase Secrets',
-          success: false
+          error: 'ElevenLabs API key nu este configurat în Supabase Secrets. Configurați ELEVENLABS_API_KEY în Edge Functions Secrets.',
+          success: false,
+          details: 'Mergeți la Project Settings > Edge Functions > Manage secrets și adăugați ELEVENLABS_API_KEY'
         }),
         {
           status: 500,
@@ -55,7 +59,7 @@ serve(async (req) => {
       )
     }
 
-    console.log(`Inițiere apel pentru ${phone_number} cu agentul ${agent_id} pentru utilizatorul ${user_id}`)
+    console.log(`🚀 Inițiere apel pentru ${phone_number} cu agentul ${agent_id} pentru utilizatorul ${user_id}`)
 
     const requestBody = {
       agent_id: agent_id,
@@ -63,7 +67,7 @@ serve(async (req) => {
       to_number: phone_number
     }
 
-    console.log('Request body pentru ElevenLabs:', JSON.stringify(requestBody, null, 2))
+    console.log('📤 Request body pentru ElevenLabs:', JSON.stringify(requestBody, null, 2))
 
     // Make the call to ElevenLabs
     const response = await fetch('https://api.elevenlabs.io/v1/convai/sip-trunk/outbound-call', {
@@ -75,30 +79,49 @@ serve(async (req) => {
       body: JSON.stringify(requestBody),
     })
 
-    console.log('ElevenLabs response status:', response.status)
-    console.log('ElevenLabs response headers:', Object.fromEntries(response.headers.entries()))
+    console.log('📡 ElevenLabs response status:', response.status)
+    console.log('📡 ElevenLabs response headers:', Object.fromEntries(response.headers.entries()))
 
     let elevenLabsData
     let responseText = ''
     
     try {
       responseText = await response.text()
-      console.log('ElevenLabs raw response:', responseText)
+      console.log('📝 ElevenLabs raw response:', responseText)
       
       if (responseText) {
         elevenLabsData = JSON.parse(responseText)
+        console.log('✅ Parsed ElevenLabs data:', JSON.stringify(elevenLabsData, null, 2))
       }
     } catch (parseError) {
-      console.error('Error parsing ElevenLabs response:', parseError)
-      console.error('Raw response was:', responseText)
+      console.error('❌ Error parsing ElevenLabs response:', parseError)
+      console.error('📄 Raw response was:', responseText)
     }
 
     if (!response.ok) {
-      console.error('ElevenLabs API error:', response.status, responseText)
+      console.error('❌ ElevenLabs API error:', response.status, responseText)
+      
+      // Enhanced error message based on status code
+      let errorMessage = `Eroare ElevenLabs: ${response.status}`
+      
+      if (response.status === 401) {
+        errorMessage += ' - API Key invalid sau lipsă'
+      } else if (response.status === 400) {
+        errorMessage += ' - Date de intrare invalide (verificați Agent ID și numărul de telefon)'
+      } else if (response.status === 404) {
+        errorMessage += ' - Agent sau numărul de telefon nu a fost găsit'
+      } else if (response.status === 429) {
+        errorMessage += ' - Prea multe cereri (rate limit)'
+      } else if (response.status >= 500) {
+        errorMessage += ' - Eroare server ElevenLabs'
+      }
+      
       return new Response(
         JSON.stringify({ 
-          error: `Eroare ElevenLabs: ${response.status} - ${responseText}`,
-          success: false
+          error: errorMessage,
+          details: responseText,
+          success: false,
+          status_code: response.status
         }),
         {
           status: response.status,
@@ -158,11 +181,15 @@ serve(async (req) => {
       },
     )
   } catch (error) {
-    console.error('Eroare în inițierea apelului:', error)
+    console.error('💥 Eroare critică în inițierea apelului:', error)
+    console.error('🔍 Stack trace:', error.stack)
+    
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Eroare necunoscută',
-        success: false
+        error: error.message || 'Eroare necunoscută în inițierea apelului',
+        details: error.stack || 'Nu sunt disponibile detalii suplimentare',
+        success: false,
+        timestamp: new Date().toISOString()
       }),
       {
         status: 500,

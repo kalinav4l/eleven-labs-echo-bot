@@ -384,13 +384,49 @@ export const useCallInitiation = ({
 
           if (callInitError) {
             console.error(`❌ Supabase function error for ${contact.name}:`, callInitError);
-            throw new Error(`Eroare Supabase: ${callInitError.message}`);
+            
+            // Enhanced error handling with detailed error message
+            let errorMessage = callInitError.message || 'Eroare necunoscută la inițiere apel';
+            
+            setCallStatuses(prev => prev.map(status => 
+              status.contactId === contact.id 
+                ? { ...status, status: 'failed', endTime: new Date() }
+                : status
+            ));
+            
+            setCurrentCallStatus(`❌ Eroare Supabase pentru ${contact.name}: ${errorMessage}`);
+            
+            toast({
+              title: "Eroare inițiere",
+              description: `${contact.name}: ${errorMessage}`,
+              variant: "destructive",
+            });
+            
+            continue; // Skip to next contact
           }
           
           if (!callInitData?.success) {
             console.error(`❌ Call initiation failed for ${contact.name}:`, callInitData);
+            
             const errorMsg = callInitData?.error || callInitData?.message || 'Eroare necunoscută la inițierea apelului';
-            throw new Error(`Inițierea apelului a eșuat: ${errorMsg}`);
+            const statusCode = callInitData?.status_code || 'unknown';
+            const details = callInitData?.details || '';
+            
+            setCallStatuses(prev => prev.map(status => 
+              status.contactId === contact.id 
+                ? { ...status, status: 'failed', endTime: new Date() }
+                : status
+            ));
+            
+            setCurrentCallStatus(`❌ Apel eșuat pentru ${contact.name}: ${errorMsg} (${statusCode})`);
+            
+            toast({
+              title: "Eroare inițiere apel",
+              description: `${contact.name}: ${errorMsg}${details ? ` - ${details}` : ''}`,
+              variant: "destructive",
+            });
+            
+            continue; // Skip to next contact
           }
 
           console.log(`✅ Call initiated successfully for ${contact.name}:`, callInitData);
