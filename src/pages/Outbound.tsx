@@ -14,7 +14,6 @@ import { SingleCallTab } from '@/components/outbound/SingleCallTab';
 import { BatchTab } from '@/components/outbound/BatchTab';
 import { CallHistoryTab } from '@/components/outbound/CallHistoryTab';
 import { DetailedCallDebugPanel } from '@/components/outbound/DetailedCallDebugPanel';
-
 interface Contact {
   id: string;
   name: string;
@@ -22,7 +21,6 @@ interface Contact {
   country: string;
   location: string;
 }
-
 const Outbound = () => {
   const {
     user
@@ -33,7 +31,6 @@ const Outbound = () => {
   const [contactName, setContactName] = useState('');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
-
   const {
     initiateCall,
     processBatchCalls,
@@ -48,17 +45,14 @@ const Outbound = () => {
     agentId,
     phoneNumber
   });
-
   const {
     callHistory,
     isLoading: historyLoading,
     refetch: refetchHistory
   } = useCallHistory();
-
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
-
   const handleCSVUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -70,7 +64,6 @@ const Outbound = () => {
       });
       return;
     }
-
     const reader = new FileReader();
     reader.onload = e => {
       const text = e.target?.result as string;
@@ -80,7 +73,6 @@ const Outbound = () => {
       const phoneIndex = headers.findIndex(h => h.includes('phone') || h.includes('telefon'));
       const countryIndex = headers.findIndex(h => h.includes('country') || h.includes('tara'));
       const locationIndex = headers.findIndex(h => h.includes('location') || h.includes('locatie'));
-
       if (phoneIndex === -1) {
         toast({
           title: "Eroare",
@@ -89,7 +81,6 @@ const Outbound = () => {
         });
         return;
       }
-
       const parsedContacts: Contact[] = lines.slice(1).map((line, index) => {
         const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
         return {
@@ -100,20 +91,17 @@ const Outbound = () => {
           location: locationIndex >= 0 ? values[locationIndex] || 'Necunoscut' : 'Necunoscut'
         };
       }).filter(contact => contact.phone);
-
       setContacts(parsedContacts);
       toast({
         title: "Succes",
         description: `S-au încărcat ${parsedContacts.length} contacte din CSV.`
       });
     };
-
     reader.readAsText(file);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
-
   const handleSingleCall = async () => {
     if (!agentId.trim() || !phoneNumber.trim()) {
       toast({
@@ -123,9 +111,7 @@ const Outbound = () => {
       });
       return;
     }
-
     const conversationId = await initiateCall(agentId, phoneNumber, contactName || phoneNumber);
-
     if (conversationId) {
       toast({
         title: "Procesare",
@@ -139,7 +125,6 @@ const Outbound = () => {
       }, 2000);
     }
   };
-
   const handleContactSelect = (contactId: string, checked: boolean) => {
     const newSelected = new Set(selectedContacts);
     if (checked) {
@@ -149,7 +134,6 @@ const Outbound = () => {
     }
     setSelectedContacts(newSelected);
   };
-
   const handleSelectAll = () => {
     if (selectedContacts.size === contacts.length) {
       setSelectedContacts(new Set());
@@ -157,7 +141,6 @@ const Outbound = () => {
       setSelectedContacts(new Set(contacts.map(c => c.id)));
     }
   };
-
   const handleBatchProcess = async () => {
     if (!agentId.trim() || selectedContacts.size === 0) {
       toast({
@@ -167,7 +150,6 @@ const Outbound = () => {
       });
       return;
     }
-
     const contactsToProcess = contacts.filter(c => selectedContacts.has(c.id));
     await processBatchCalls(contactsToProcess, agentId);
 
@@ -177,7 +159,6 @@ const Outbound = () => {
       refetchHistory();
     }, 2000);
   };
-
   const downloadTemplate = () => {
     const csvContent = "nume,telefon,tara,locatie\nJohn Doe,+40712345678,Romania,Bucuresti\nJane Smith,+40798765432,Romania,Cluj";
     const blob = new Blob([csvContent], {
@@ -192,7 +173,6 @@ const Outbound = () => {
     link.click();
     document.body.removeChild(link);
   };
-
   return <DashboardLayout>
       <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto px-6 py-8">
@@ -200,44 +180,16 @@ const Outbound = () => {
             <OutboundHeader />
 
             {/* Enhanced Detailed Debug Panel */}
-            {(isInitiating || isProcessingBatch || callStatuses.length > 0) && (
-              <DetailedCallDebugPanel
-                isProcessingBatch={isProcessingBatch}
-                isInitiating={isInitiating}
-                currentCallStatus={currentCallStatus}
-                callStatuses={callStatuses}
-                currentContact={currentContact}
-                currentProgress={currentProgress}
-                totalCalls={totalCalls}
-                agentId={agentId}
-              />
-            )}
+            {(isInitiating || isProcessingBatch || callStatuses.length > 0) && <DetailedCallDebugPanel isProcessingBatch={isProcessingBatch} isInitiating={isInitiating} currentCallStatus={currentCallStatus} callStatuses={callStatuses} currentContact={currentContact} currentProgress={currentProgress} totalCalls={totalCalls} agentId={agentId} />}
 
             {/* Agent Configuration Card */}
             <div className="bg-white border border-gray-200 rounded-2xl p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Configurare Agent</h2>
               <AgentIdInput agentId={agentId} setAgentId={setAgentId} />
-              {!agentId.trim() && (
-                <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
-                  <p className="text-sm text-amber-800">
-                    ⚠️ Agent ID este obligatoriu pentru inițierea apelurilor
-                  </p>
-                </div>
-              )}
+              {!agentId.trim()}
               
               {/* API Configuration Status */}
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                <h3 className="text-sm font-medium text-blue-900 mb-2">Status Configurare API</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-blue-700">ElevenLabs API Key:</span>
-                    <span className="text-sm text-blue-600">Se verifică automat la primul apel</span>
-                  </div>
-                  <p className="text-xs text-blue-600">
-                    Dacă apelurile eșuează cu eroare API Key, configurați ELEVENLABS_API_KEY în Supabase Edge Functions Secrets
-                  </p>
-                </div>
-              </div>
+              
             </div>
 
             {/* Call Management Section */}
@@ -249,54 +201,23 @@ const Outbound = () => {
               
               <Tabs defaultValue="single" className="w-full">
                 <TabsList className="grid w-full grid-cols-3 rounded-none border-b border-gray-200 bg-transparent h-auto p-0">
-                  <TabsTrigger 
-                    value="single" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:bg-transparent bg-transparent px-6 py-4"
-                  >
+                  <TabsTrigger value="single" className="rounded-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:bg-transparent bg-transparent px-6 py-4">
                     Apel Individual
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="batch" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:bg-transparent bg-transparent px-6 py-4"
-                  >
+                  <TabsTrigger value="batch" className="rounded-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:bg-transparent bg-transparent px-6 py-4">
                     Apeluri Batch
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="history" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:bg-transparent bg-transparent px-6 py-4"
-                  >
+                  <TabsTrigger value="history" className="rounded-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:bg-transparent bg-transparent px-6 py-4">
                     Istoric Apeluri
                   </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="single" className="p-6">
-                  <SingleCallTab 
-                    contactName={contactName} 
-                    setContactName={setContactName} 
-                    phoneNumber={phoneNumber} 
-                    setPhoneNumber={setPhoneNumber} 
-                    handleSingleCall={handleSingleCall} 
-                    agentId={agentId} 
-                    isInitiating={isInitiating} 
-                  />
+                  <SingleCallTab contactName={contactName} setContactName={setContactName} phoneNumber={phoneNumber} setPhoneNumber={setPhoneNumber} handleSingleCall={handleSingleCall} agentId={agentId} isInitiating={isInitiating} />
                 </TabsContent>
 
                 <TabsContent value="batch" className="p-6">
-                  <BatchTab 
-                    contacts={contacts} 
-                    selectedContacts={selectedContacts} 
-                    onContactSelect={handleContactSelect} 
-                    onSelectAll={handleSelectAll} 
-                    onFileSelect={() => fileInputRef.current?.click()} 
-                    onDownloadTemplate={downloadTemplate} 
-                    onBatchProcess={handleBatchProcess} 
-                    agentId={agentId} 
-                    isProcessingBatch={isProcessingBatch} 
-                    currentProgress={currentProgress} 
-                    totalCalls={totalCalls} 
-                    currentCallStatus={currentCallStatus} 
-                    callStatuses={callStatuses} 
-                  />
+                  <BatchTab contacts={contacts} selectedContacts={selectedContacts} onContactSelect={handleContactSelect} onSelectAll={handleSelectAll} onFileSelect={() => fileInputRef.current?.click()} onDownloadTemplate={downloadTemplate} onBatchProcess={handleBatchProcess} agentId={agentId} isProcessingBatch={isProcessingBatch} currentProgress={currentProgress} totalCalls={totalCalls} currentCallStatus={currentCallStatus} callStatuses={callStatuses} />
                 </TabsContent>
 
                 <TabsContent value="history" className="p-6">
@@ -311,5 +232,4 @@ const Outbound = () => {
       </div>
     </DashboardLayout>;
 };
-
 export default Outbound;
