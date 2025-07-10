@@ -124,11 +124,7 @@ const KalinaAgents = () => {
       {/* Agents List - Vertical Layout like ElevenLabs */}
       <div className="space-y-3">
         {filteredAgents && filteredAgents.length > 0 ? filteredAgents.map(agent =>
-            <div 
-              key={agent.id} 
-              className="bg-white rounded-lg p-4 transition-all duration-200 hover:bg-gray-50/50 cursor-pointer"
-              onClick={() => handleEditAgent(agent.agent_id)}
-            >
+            <div key={agent.id} className="bg-white rounded-lg p-4 transition-all duration-200 hover:bg-gray-50/50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4 flex-1">
                   <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -169,10 +165,7 @@ const KalinaAgents = () => {
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCopyAgentId(agent.agent_id);
-                            }}
+                            onClick={() => handleCopyAgentId(agent.agent_id)}
                             className="h-5 w-5 p-0 hover:bg-gray-100"
                         >
                           <Copy className="w-3 h-3 text-gray-400" />
@@ -187,10 +180,7 @@ const KalinaAgents = () => {
                     size="sm" 
                     className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 px-3" 
                     disabled={!agent.is_active}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setVoiceTestAgent(agent);
-                    }}
+                    onClick={() => setVoiceTestAgent(agent)}
                   >
                     <Mic className="w-3 h-3 mr-1" />
                     Test Audio
@@ -200,14 +190,56 @@ const KalinaAgents = () => {
                     size="sm" 
                     className="bg-black hover:bg-gray-800 text-white text-xs h-8 px-3" 
                     disabled={!agent.is_active}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleTestCall(agent);
-                    }}
+                    onClick={() => handleTestCall(agent)}
                   >
                     <Phone className="w-3 h-3 mr-1" />
                     Test Apel
                   </Button>
+                  
+                  <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-white border-gray-200 hover:bg-gray-50 text-gray-700 text-xs h-8 px-3"
+                      onClick={() => handleEditAgent(agent.agent_id)}
+                  >
+                    Editează
+                  </Button>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-100">
+                        <Settings className="w-4 h-4 text-gray-500" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-48 bg-white border-gray-200">
+                      <DropdownMenuItem onClick={() => handleDuplicateAgent(agent)} disabled={isDuplicating}>
+                        <Files className="w-4 h-4 mr-2" />
+                        {isDuplicating ? 'Se duplică...' : 'Duplică'}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => handleToggleAgentStatus(agent)}>
+                        {agent.is_active ? (
+                            <>
+                              <PowerOff className="w-4 h-4 mr-2" />
+                              Dezactivează
+                            </>
+                        ) : (
+                            <>
+                              <Power className="w-4 h-4 mr-2" />
+                              Activează
+                            </>
+                        )}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                          className="text-red-600 focus:text-red-600"
+                          onClick={() => setSelectedAgentForDeletion(agent)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Șterge
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             </div>
@@ -247,45 +279,41 @@ const KalinaAgents = () => {
         agent={testCallAgent || { id: '', agent_id: '', name: '' }}
       />
 
-      {/* Voice Test Modal - Minimalist Design */}
+      {/* Voice Test Modal */}
       {voiceTestAgent && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="relative w-full max-w-lg mx-auto">
-            {/* Close button */}
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setVoiceTestAgent(null)}
-              className="absolute -top-12 right-0 h-10 w-10 p-0 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/20"
-            >
-              ×
-            </Button>
-            
-            {/* Main modal content */}
-            <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
-              {/* Header with gradient */}
-              <div className="bg-gradient-to-br from-accent/10 to-primary/10 p-8 text-center border-b border-gray-100/50">
-                <h3 className="text-2xl font-light text-gray-800 mb-2">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto border border-gray-100">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-1">
                   Test Audio
                 </h3>
-                <p className="text-sm text-gray-500 font-medium">
+                <p className="text-sm text-gray-500">
                   {voiceTestAgent.name}
                 </p>
               </div>
-              
-              {/* Voice test area */}
-              <div className="p-12 flex flex-col items-center min-h-[300px] justify-center">
-                <VoiceTestButton 
-                  agentId={voiceTestAgent.agent_id}
-                  agentName={voiceTestAgent.name}
-                />
-              </div>
-              
-              {/* Agent ID footer */}
-              <div className="bg-gray-50/50 px-8 py-6 border-t border-gray-100/50">
-                <div className="flex items-center justify-center gap-3">
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Agent ID</span>
-                  <code className="text-xs text-gray-700 bg-white/80 px-3 py-1.5 rounded-full border font-mono shadow-sm">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setVoiceTestAgent(null)}
+                className="h-10 w-10 p-0 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+              >
+                ×
+              </Button>
+            </div>
+            
+            <div className="p-8 flex flex-col items-center">
+              <VoiceTestButton 
+                agentId={voiceTestAgent.agent_id}
+                agentName={voiceTestAgent.name}
+              />
+            </div>
+            
+            <div className="px-6 pb-6">
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Agent ID:</span>
+                  <code className="text-xs text-gray-600 bg-white px-2 py-1 rounded border font-mono">
                     {voiceTestAgent.agent_id}
                   </code>
                 </div>

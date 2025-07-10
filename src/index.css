@@ -33,7 +33,7 @@
     --input: 0 0% 92%;
     --ring: 0 0% 9%;
 
-    --radius: 12px;
+    --radius: 8px;
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 0 0% 15%;
@@ -128,7 +128,7 @@
 
   /* ElevenLabs inspired components */
   .elevenlabs-card {
-    @apply bg-white rounded-2xl p-6 transition-all duration-200;
+    @apply bg-white rounded-lg p-6 transition-all duration-200;
     border: none;
     box-shadow: none;
   }
@@ -138,18 +138,18 @@
   }
 
   .elevenlabs-button {
-    @apply bg-black text-white rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 hover:bg-gray-800 focus:outline-none;
+    @apply bg-black text-white rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 hover:bg-gray-800 focus:outline-none;
     border: none;
     box-shadow: none;
   }
 
   .elevenlabs-button-secondary {
-    @apply bg-white text-gray-700 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 hover:bg-gray-50 focus:outline-none;
+    @apply bg-white text-gray-700 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 hover:bg-gray-50 focus:outline-none;
     border: 1px solid #e5e7eb;
   }
 
   .elevenlabs-input {
-    @apply bg-white text-gray-900 rounded-xl px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none disabled:opacity-50;
+    @apply bg-white text-gray-900 rounded-lg px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none disabled:opacity-50;
     border: 1px solid #e5e7eb;
   }
 
@@ -173,12 +173,12 @@
   }
 
   .elevenlabs-sidebar-item {
-    @apply text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl px-3 py-2 text-sm font-medium transition-colors duration-200;
+    @apply text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200;
     border: none;
   }
 
   .elevenlabs-sidebar-item-active {
-    @apply bg-gray-100 text-gray-900 rounded-xl px-3 py-2 text-sm font-medium;
+    @apply bg-gray-100 text-gray-900 rounded-lg px-3 py-2 text-sm font-medium;
   }
 
   /* Table styling like ElevenLabs */
@@ -206,7 +206,7 @@
 
   /* Status badges */
   .status-badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-2xl text-xs font-medium;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
 
   .status-success {
@@ -223,7 +223,7 @@
 
   /* Search and filter styling */
   .filter-button {
-    @apply inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 focus:outline-none transition-colors duration-200;
+    @apply inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none transition-colors duration-200;
   }
 
   .filter-button.active {

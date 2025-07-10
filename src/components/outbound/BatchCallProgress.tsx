@@ -33,13 +33,13 @@ export const BatchCallProgress: React.FC<BatchCallProgressProps> = ({
       case 'waiting':
         return <Clock className="w-4 h-4 text-gray-500" />;
       case 'calling':
-        return <Phone className="w-4 h-4 text-gray-600 animate-pulse" />;
+        return <Phone className="w-4 h-4 text-blue-500 animate-pulse" />;
       case 'in-progress':
-        return <Mic className="w-4 h-4 text-gray-700 animate-pulse" />;
+        return <Mic className="w-4 h-4 text-green-500 animate-pulse" />;
       case 'processing':
-        return <Loader2 className="w-4 h-4 text-gray-600 animate-spin" />;
+        return <Loader2 className="w-4 h-4 text-yellow-500 animate-spin" />;
       case 'completed':
-        return <CheckCircle className="w-4 h-4 text-gray-800" />;
+        return <CheckCircle className="w-4 h-4 text-green-600" />;
       case 'failed':
         return <AlertCircle className="w-4 h-4 text-red-500" />;
       default:
@@ -69,13 +69,13 @@ export const BatchCallProgress: React.FC<BatchCallProgressProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-green-100 text-green-800 border-green-200';
       case 'in-progress':
-        return 'bg-gray-50 text-gray-700 border-gray-200';
+        return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'processing':
-        return 'bg-gray-50 text-gray-700 border-gray-200';
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'calling':
-        return 'bg-gray-50 text-gray-700 border-gray-200';
+        return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'failed':
         return 'bg-red-100 text-red-800 border-red-200';
       default:
@@ -95,20 +95,20 @@ export const BatchCallProgress: React.FC<BatchCallProgressProps> = ({
         
         {/* Current Status */}
         {currentCallStatus && (
-          <div className="flex items-center gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-            <Loader2 className="w-4 h-4 animate-spin text-gray-600 flex-shrink-0" />
-            <span className="text-sm font-medium text-gray-800">{currentCallStatus}</span>
+          <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <Loader2 className="w-4 h-4 animate-spin text-blue-600 flex-shrink-0" />
+            <span className="text-sm font-medium text-blue-800">{currentCallStatus}</span>
           </div>
         )}
       </div>
 
       {/* Optimized Processing Info */}
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
         <div className="flex items-center gap-2 mb-2">
-          <CheckCircle className="w-5 h-5 text-gray-600" />
-          <h4 className="font-medium text-gray-800">Procesare Optimizată Activă</h4>
+          <CheckCircle className="w-5 h-5 text-green-600" />
+          <h4 className="font-medium text-green-800">Procesare Optimizată Activă</h4>
         </div>
-        <div className="text-sm text-gray-700 space-y-1">
+        <div className="text-sm text-green-700 space-y-1">
           <p>• Inițiere apel → Așteptare 30s → Verificare conversații noi</p>
           <p>• Monitorizare inteligentă prin lista conversațiilor agentului</p>
           <p>• Detectare automată a conversațiilor noi (nu în istoric)</p>
@@ -160,12 +160,12 @@ export const BatchCallProgress: React.FC<BatchCallProgressProps> = ({
       )}
 
       {/* Optimized Processing Guarantee */}
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="flex items-center gap-2 mb-2">
-          <AlertCircle className="w-5 h-5 text-gray-600" />
-          <h4 className="font-medium text-gray-800">Garanție Procesare Optimizată</h4>
+          <AlertCircle className="w-5 h-5 text-blue-600" />
+          <h4 className="font-medium text-blue-800">Garanție Procesare Optimizată</h4>
         </div>
-        <div className="text-sm text-gray-700 space-y-1">
+        <div className="text-sm text-blue-700 space-y-1">
           <p>• <strong>Detectare inteligentă:</strong> Monitorizează toate conversațiile agentului</p>
           <p>• <strong>Salvare garantată:</strong> Orice conversație găsită se salvează imediat</p>
           <p>• <strong>Eficiență maximă:</strong> Timeout redus la 2 minute per apel</p>

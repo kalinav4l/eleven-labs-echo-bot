@@ -385,40 +385,26 @@ const AgentEdit = () => {
                   RAG mărește dimensiunea maximă a Knowledge Base-ului agentului. Agentul va avea acces la informații relevante din Knowledge Base în timpul generării răspunsului.
                 </p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="flex flex-col space-y-2 sm:flex-row sm:flex-wrap sm:gap-2 sm:space-y-0 md:flex-col md:space-y-2 xl:flex-row xl:gap-2 xl:space-y-0">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={loadExistingDocuments}
                   disabled={isLoadingExisting}
-                  className="flex items-center justify-center gap-2 h-12 hover:bg-accent/5 transition-colors"
+                  className="flex items-center gap-2 w-full sm:flex-1 sm:min-w-0 md:w-full xl:flex-1 xl:min-w-0"
                 >
                   <Database className="w-4 h-4" />
-                  <span className="text-sm font-medium">
-                    {isLoadingExisting ? 'Se încarcă...' : 'Selectează existente'}
-                  </span>
+                  {isLoadingExisting ? 'Se încarcă...' : 'Selectează documente existente'}
                 </Button>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setIsAddingDoc(true)} 
-                  className="flex items-center justify-center gap-2 h-12 hover:bg-accent/5 transition-colors"
-                >
+                <Button variant="outline" size="sm" onClick={() => setIsAddingDoc(true)} className="flex items-center gap-2 w-full sm:flex-1 sm:min-w-0 md:w-full xl:flex-1 xl:min-w-0">
                   <FileText className="w-4 h-4" />
-                  <span className="text-sm font-medium">Adaugă Manual</span>
+                  Adaugă Manual
                 </Button>
-                
-                <label className="cursor-pointer">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex items-center justify-center gap-2 w-full h-12 hover:bg-accent/5 transition-colors" 
-                    asChild
-                  >
+                <label className="cursor-pointer w-full sm:flex-1 sm:min-w-0 md:w-full xl:flex-1 xl:min-w-0">
+                  <Button variant="outline" size="sm" className="flex items-center gap-2 w-full" asChild>
                     <span>
                       <Upload className="w-4 h-4" />
-                      <span className="text-sm font-medium">Încarcă Document</span>
+                      Încarcă Document
                     </span>
                   </Button>
                   <input type="file" className="hidden" accept=".txt,.md,.pdf,.doc,.docx" onChange={handleFileUpload} />

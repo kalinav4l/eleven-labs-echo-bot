@@ -2,21 +2,18 @@ import React, { useState, useRef } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useCallInitiation } from '@/hooks/useCallInitiation';
 import { useCallHistory } from '@/hooks/useCallHistory';
-import { useUserPhoneNumbers } from '@/hooks/useUserPhoneNumbers';
 import { toast } from '@/components/ui/use-toast';
-import { Phone, Upload, FileDown } from 'lucide-react';
 
 // Import refactored components
 import { OutboundHeader } from '@/components/outbound/OutboundHeader';
+import { AgentIdInput } from '@/components/outbound/AgentIdInput';
+import { SingleCallTab } from '@/components/outbound/SingleCallTab';
+import { BatchTab } from '@/components/outbound/BatchTab';
 import { CallHistoryTab } from '@/components/outbound/CallHistoryTab';
-import { BatchConfigPanel } from '@/components/outbound/BatchConfigPanel';
-import { BatchStatusPanel } from '@/components/outbound/BatchStatusPanel';
-import { ContactsList } from '@/components/outbound/ContactsList';
-import { CSVUploadSection } from '@/components/outbound/CSVUploadSection';
+
 interface Contact {
   id: string;
   name: string;
@@ -24,44 +21,41 @@ interface Contact {
   country: string;
   location: string;
 }
-const Outbound = () => {
-  const {
-    user
-  } = useAuth();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // State for configuration
-  const [selectedAgentId, setSelectedAgentId] = useState('');
-  const [selectedPhoneId, setSelectedPhoneId] = useState('');
+const Outbound = () => {
+  const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [agentId, setAgentId] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [contactName, setContactName] = useState('');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
-  const [batchStartTime, setBatchStartTime] = useState<Date | undefined>();
 
-  // Get user's phone numbers
-  const {
-    data: phoneNumbers
-  } = useUserPhoneNumbers();
-  const {
-    processBatchCalls,
-    isProcessingBatch,
-    currentProgress,
+  const { 
+    initiateCall, 
+    processBatchCalls, 
+    isInitiating, 
+    isProcessingBatch, 
+    currentProgress, 
     totalCalls,
-    callStatuses
+    currentContact,
+    callStatuses,
+    currentCallStatus
   } = useCallInitiation({
-    agentId: selectedAgentId,
-    phoneNumber: ''
+    agentId,
+    phoneNumber
   });
-  const {
-    callHistory,
-    isLoading: historyLoading,
-    refetch: refetchHistory
-  } = useCallHistory();
+
+  const { callHistory, isLoading: historyLoading, refetch: refetchHistory } = useCallHistory();
+
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
+
   const handleCSVUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
     if (!file.name.endsWith('.csv')) {
       toast({
         title: "Eroare",
@@ -70,15 +64,18 @@ const Outbound = () => {
       });
       return;
     }
+
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = (e) => {
       const text = e.target?.result as string;
       const lines = text.split('\n').filter(line => line.trim());
       const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      
       const nameIndex = headers.findIndex(h => h.includes('name') || h.includes('nume'));
       const phoneIndex = headers.findIndex(h => h.includes('phone') || h.includes('telefon'));
       const countryIndex = headers.findIndex(h => h.includes('country') || h.includes('tara'));
       const locationIndex = headers.findIndex(h => h.includes('location') || h.includes('locatie'));
+
       if (phoneIndex === -1) {
         toast({
           title: "Eroare",
@@ -87,6 +84,7 @@ const Outbound = () => {
         });
         return;
       }
+
       const parsedContacts: Contact[] = lines.slice(1).map((line, index) => {
         const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
         return {
@@ -97,22 +95,47 @@ const Outbound = () => {
           location: locationIndex >= 0 ? values[locationIndex] || 'Necunoscut' : 'Necunoscut'
         };
       }).filter(contact => contact.phone);
+
       setContacts(parsedContacts);
       toast({
         title: "Succes",
-        description: `S-au încărcat ${parsedContacts.length} contacte din CSV.`
+        description: `S-au încărcat ${parsedContacts.length} contacte din CSV.`,
       });
     };
+    
     reader.readAsText(file);
+    
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
-  const getSelectedPhoneNumber = () => {
-    if (!selectedPhoneId || !phoneNumbers) return '';
-    const phone = phoneNumbers.find(p => p.id === selectedPhoneId);
-    return phone?.phone_number || '';
+
+  const handleSingleCall = async () => {
+    if (!agentId.trim() || !phoneNumber.trim()) {
+      toast({
+        title: "Eroare",
+        description: "Agent ID și numărul de telefon sunt obligatorii",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const conversationId = await initiateCall(agentId, phoneNumber, contactName || phoneNumber);
+    
+    if (conversationId) {
+      toast({
+        title: "Procesare",
+        description: "Apelul a fost inițiat. Se monitorizează statusul în timp real...",
+      });
+      
+      // The call will be automatically saved to history in useCallInitiation hook
+      // Just refresh after a short delay
+      setTimeout(() => {
+        refetchHistory();
+      }, 2000);
+    }
   };
+
   const handleContactSelect = (contactId: string, checked: boolean) => {
     const newSelected = new Set(selectedContacts);
     if (checked) {
@@ -122,6 +145,7 @@ const Outbound = () => {
     }
     setSelectedContacts(newSelected);
   };
+
   const handleSelectAll = () => {
     if (selectedContacts.size === contacts.length) {
       setSelectedContacts(new Set());
@@ -129,35 +153,30 @@ const Outbound = () => {
       setSelectedContacts(new Set(contacts.map(c => c.id)));
     }
   };
+
   const handleBatchProcess = async () => {
-    if (!selectedAgentId || selectedContacts.size === 0) {
+    if (!agentId.trim() || selectedContacts.size === 0) {
       toast({
         title: "Eroare",
-        description: "Trebuie să selectați un agent și cel puțin un contact",
-        variant: "destructive"
+        description: "Agent ID și contactele selectate sunt obligatorii",
+        variant: "destructive",
       });
       return;
     }
-    if (!selectedPhoneId) {
-      toast({
-        title: "Eroare",
-        description: "Trebuie să selectați un număr de telefon pentru apeluri",
-        variant: "destructive"
-      });
-      return;
-    }
-    setBatchStartTime(new Date());
+    
     const contactsToProcess = contacts.filter(c => selectedContacts.has(c.id));
-    await processBatchCalls(contactsToProcess, selectedAgentId);
+    await processBatchCalls(contactsToProcess, agentId);
+    
+    // Calls will be automatically saved to history in useCallInitiation hook
+    // Refresh history after processing completes
     setTimeout(() => {
       refetchHistory();
     }, 2000);
   };
+
   const downloadTemplate = () => {
     const csvContent = "nume,telefon,tara,locatie\nJohn Doe,+40712345678,Romania,Bucuresti\nJane Smith,+40798765432,Romania,Cluj";
-    const blob = new Blob([csvContent], {
-      type: 'text/csv;charset=utf-8;'
-    });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
@@ -167,66 +186,74 @@ const Outbound = () => {
     link.click();
     document.body.removeChild(link);
   };
-  return <DashboardLayout>
-      <div className="min-h-screen bg-gray-50">
+
+  return (
+    <DashboardLayout>
+      <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="space-y-6 bg-white">
-            <OutboundHeader />
+          <OutboundHeader />
 
-            <Tabs defaultValue="batch" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-white p-1 h-auto border border-gray-200">
-                <TabsTrigger value="batch" className="data-[state=active]:bg-primary data-[state=active]:text-white py-3">
-                  <Phone className="w-4 h-4 mr-2" />
-                  Apeluri Batch
-                </TabsTrigger>
-                <TabsTrigger value="history" className="data-[state=active]:bg-primary data-[state=active]:text-white py-3">
-                  Istoric Apeluri
-                </TabsTrigger>
-              </TabsList>
+          <AgentIdInput 
+            agentId={agentId}
+            setAgentId={setAgentId}
+          />
 
-              <TabsContent value="batch" className="space-y-6 mt-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Configuration Panel */}
-                  <div className="lg:col-span-1">
-                    <BatchConfigPanel selectedAgentId={selectedAgentId} onAgentSelect={setSelectedAgentId} selectedPhoneId={selectedPhoneId} onPhoneSelect={setSelectedPhoneId} totalRecipients={contacts.length} selectedRecipients={selectedContacts.size} />
-                  </div>
+          <Tabs defaultValue="single" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="single">Apel Individual</TabsTrigger>
+              <TabsTrigger value="batch">Apeluri Batch</TabsTrigger>
+              <TabsTrigger value="history">Istoric</TabsTrigger>
+            </TabsList>
 
-                  {/* Main Content */}
-                  <div className="lg:col-span-2 space-y-6">
-                    {/* CSV Upload Section */}
-                    <CSVUploadSection onFileSelect={() => fileInputRef.current?.click()} onDownloadTemplate={downloadTemplate} />
+            <TabsContent value="single">
+              <SingleCallTab
+                contactName={contactName}
+                setContactName={setContactName}
+                phoneNumber={phoneNumber}
+                setPhoneNumber={setPhoneNumber}
+                handleSingleCall={handleSingleCall}
+                agentId={agentId}
+                isInitiating={isInitiating}
+              />
+            </TabsContent>
 
-                    {/* Contacts List */}
-                    {contacts.length > 0 && <ContactsList contacts={contacts} selectedContacts={selectedContacts} onContactSelect={handleContactSelect} onSelectAll={handleSelectAll} isProcessingBatch={isProcessingBatch} />}
+            <TabsContent value="batch">
+              <BatchTab
+                contacts={contacts}
+                selectedContacts={selectedContacts}
+                onContactSelect={handleContactSelect}
+                onSelectAll={handleSelectAll}
+                onFileSelect={() => fileInputRef.current?.click()}
+                onDownloadTemplate={downloadTemplate}
+                onBatchProcess={handleBatchProcess}
+                agentId={agentId}
+                isProcessingBatch={isProcessingBatch}
+                currentProgress={currentProgress}
+                totalCalls={totalCalls}
+                currentCallStatus={currentCallStatus}
+                callStatuses={callStatuses}
+              />
+            </TabsContent>
 
-                    {/* Action Button */}
-                    {contacts.length > 0 && <Button onClick={handleBatchProcess} disabled={!selectedAgentId || !selectedPhoneId || selectedContacts.size === 0 || isProcessingBatch} className="w-full py-3 bg-primary hover:bg-primary/90" size="lg">
-                        {isProcessingBatch ? <>
-                            <Phone className="w-4 h-4 mr-2 animate-pulse" />
-                            Se procesează... ({currentProgress}/{totalCalls})
-                          </> : <>
-                            <Phone className="w-4 h-4 mr-2" />
-                            Începe Apelurile Batch ({selectedContacts.size} contacte)
-                          </>}
-                      </Button>}
-                  </div>
-                </div>
+            <TabsContent value="history">
+              <CallHistoryTab
+                callHistory={callHistory}
+                isLoading={historyLoading}
+              />
+            </TabsContent>
+          </Tabs>
 
-                {/* Status Panel */}
-                {(isProcessingBatch || callStatuses.length > 0) && <BatchStatusPanel isProcessing={isProcessingBatch} currentProgress={currentProgress} totalCalls={totalCalls} callStatuses={callStatuses} startTime={batchStartTime} />}
-              </TabsContent>
-
-              <TabsContent value="history" className="mt-6">
-                <div className="bg-white rounded-lg border border-gray-200">
-                  <CallHistoryTab callHistory={callHistory} isLoading={historyLoading} />
-                </div>
-              </TabsContent>
-            </Tabs>
-
-            <input ref={fileInputRef} type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" />
-          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv"
+            onChange={handleCSVUpload}
+            className="hidden"
+          />
         </div>
       </div>
-    </DashboardLayout>;
+    </DashboardLayout>
+  );
 };
+
 export default Outbound;

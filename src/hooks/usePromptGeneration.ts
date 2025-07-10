@@ -14,8 +14,7 @@ export const usePromptGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const generatePrompt = useCallback(async ({ websiteUrl, agentRole, additionalPrompt }: UsePromptGenerationProps): Promise<string | null> => {
-    // Simple URL validation - just check if it's not empty
-    if (!websiteUrl || !websiteUrl.trim()) {
+      if (!websiteUrl.trim()) {
       toast({
         title: "Eroare",
         description: MESSAGES.ERRORS.INVALID_URL,
@@ -27,17 +26,11 @@ export const usePromptGeneration = () => {
     setIsGenerating(true);
     try {
       const request: PromptGenerationRequest = {
-        websiteUrl: websiteUrl.trim(),
-        agentRole: agentRole.trim(),
-        additionalPrompt: additionalPrompt.trim(),
+        websiteUrl,
+        agentRole,
+        additionalPrompt,
       };
-      
-      console.log('Generating prompt with request:', request);
       const response = await PromptGenerationController.generatePrompt(request);
-
-      if (!response || !response.response) {
-        throw new Error('Invalid response from prompt generation');
-      }
 
       toast({
         title: "Succes!",

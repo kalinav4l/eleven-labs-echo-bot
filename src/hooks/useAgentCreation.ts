@@ -3,7 +3,6 @@ import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import { elevenLabsApi, CreateAgentRequest, ConversationConfig } from '../utils/apiService';
 import { API_CONFIG, MESSAGES } from '../constants/constants';
 
@@ -27,7 +26,6 @@ export const useAgentCreation = ({
   const [isCreating, setIsCreating] = useState(false);
   const [createdAgentId, setCreatedAgentId] = useState('');
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   // Handler for copying agent ID to clipboard
   const handleCopyAgentId = useCallback(async () => {
@@ -127,11 +125,6 @@ export const useAgentCreation = ({
         title: "Succes!",
         description: `${agentName} ${MESSAGES.SUCCESS.AGENT_CREATED}`,
       });
-
-      // Redirect to agent edit page after successful creation
-      setTimeout(() => {
-        navigate(`/account/agent-edit/${response.agent_id}`);
-      }, 1500);
     } catch (error) {
       console.error('Error creating agent:', error);
       toast({
@@ -142,7 +135,7 @@ export const useAgentCreation = ({
     } finally {
       setIsCreating(false);
     }
-  }, [agentName, agentLanguage, selectedVoice, generatePrompt, user, websiteUrl, navigate]);
+  }, [agentName, agentLanguage, selectedVoice, generatePrompt, user, websiteUrl]);
 
   return {
     isCreating,

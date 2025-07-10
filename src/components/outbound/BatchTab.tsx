@@ -56,17 +56,6 @@ export const BatchTab: React.FC<BatchTabProps> = ({
   currentCallStatus,
   callStatuses,
 }) => {
-  // Check if we can process batch calls
-  const canProcessBatch = agentId.trim() !== '' && selectedContacts.size > 0 && !isProcessingBatch;
-
-  console.log('BatchTab - Debug info:', {
-    agentId: agentId,
-    agentIdTrimmed: agentId.trim(),
-    selectedContactsSize: selectedContacts.size,
-    isProcessingBatch: isProcessingBatch,
-    canProcessBatch: canProcessBatch
-  });
-
   return (
     <div className="space-y-6">
       <CSVUploadSection
@@ -96,8 +85,8 @@ export const BatchTab: React.FC<BatchTabProps> = ({
 
           <Button
             onClick={onBatchProcess}
-            disabled={!canProcessBatch}
-            className="w-full bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!agentId.trim() || selectedContacts.size === 0 || isProcessingBatch}
+            className="w-full bg-green-600 hover:bg-green-700 text-white"
           >
             {isProcessingBatch ? (
               <>
@@ -111,13 +100,6 @@ export const BatchTab: React.FC<BatchTabProps> = ({
               </>
             )}
           </Button>
-
-          {/* Debug Info */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded">
-              Debug: Agent ID: "{agentId}" | Selected: {selectedContacts.size} | Processing: {isProcessingBatch.toString()}
-            </div>
-          )}
         </div>
       )}
     </div>

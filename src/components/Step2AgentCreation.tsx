@@ -135,6 +135,14 @@ export const Step2AgentCreation: React.FC<Step2Props> = ({
           </div>
         )}
 
+        {canProceed && (
+          <Button
+            onClick={onNextStep}
+            className="bg-accent text-white hover:bg-accent/90 w-full mt-4"
+          >
+            Continuă la Pasul 3
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

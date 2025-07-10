@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,65 +41,54 @@ export const useCallInitiation = ({
   const [callStatuses, setCallStatuses] = useState<CallStatus[]>([]);
   const [currentCallStatus, setCurrentCallStatus] = useState<string>('');
 
-  // Enhanced logging function
-  const logStep = (step: string, details: any = {}) => {
-    const timestamp = new Date().toISOString();
-    console.log(`🔍 [${timestamp}] ${step}:`, details);
-  };
-
-  // Get all conversations for an agent with enhanced logging
+  // Get all conversations for an agent
   const getAgentConversations = async (targetAgentId: string): Promise<any> => {
     try {
-      logStep('STEP: Getting agent conversations', { targetAgentId });
+      console.log(`Getting all conversations for agent ${targetAgentId}`);
       
       const { data, error } = await supabase.functions.invoke('get-agent-conversations', {
         body: { agentId: targetAgentId }
       });
 
       if (error) {
-        logStep('ERROR: Supabase function error in getAgentConversations', { error, targetAgentId });
+        console.error('Error getting agent conversations:', error);
         return { error: error.message, status: 'api_error' };
       }
 
       if (data?.error) {
-        logStep('ERROR: ElevenLabs API error in getAgentConversations', { error: data.error, status: data.status });
+        console.error('ElevenLabs API error:', data.error);
         return { error: data.error, status: data.status || 'api_error' };
       }
 
-      logStep('SUCCESS: Agent conversations retrieved', { 
-        conversationCount: data?.conversations?.length || 0,
-        targetAgentId 
-      });
       return data;
     } catch (error) {
-      logStep('CRITICAL ERROR: Exception in getAgentConversations', { error: error.message, targetAgentId });
+      console.error('Error in getAgentConversations:', error);
       return { error: error.message, status: 'function_error' };
     }
   };
 
-  // Get conversation details with enhanced logging
+  // Get conversation details from ElevenLabs using conversation_id
   const getConversationDetails = async (conversationId: string): Promise<any> => {
     try {
-      logStep('STEP: Getting conversation details', { conversationId });
+      console.log(`Getting detailed conversation data for ${conversationId}`);
       
       const { data, error } = await supabase.functions.invoke('get-elevenlabs-conversation', {
         body: { conversationId }
       });
 
       if (error) {
-        logStep('ERROR: Supabase function error in getConversationDetails', { error, conversationId });
+        console.error('Error getting conversation details:', error);
         return { error: error.message, status: 'api_error' };
       }
 
       if (data?.error) {
-        logStep('ERROR: ElevenLabs API error in getConversationDetails', { error: data.error, conversationId });
+        console.error('ElevenLabs API error:', data.error);
         return { error: data.error, status: data.status || 'api_error' };
       }
 
-      logStep('SUCCESS: Conversation details retrieved', { conversationId });
       return data;
     } catch (error) {
-      logStep('CRITICAL ERROR: Exception in getConversationDetails', { error: error.message, conversationId });
+      console.error('Error in getConversationDetails:', error);
       return { error: error.message, status: 'function_error' };
     }
   };
@@ -124,39 +114,26 @@ export const useCallInitiation = ({
     }
   };
 
-  // Enhanced monitoring with detailed logging
+  // Monitor for new conversations after call initiation
   const monitorForNewConversations = async (targetAgentId: string, contact: Contact, startTime: Date): Promise<any[]> => {
     const maxAttempts = 24; // 2 minutes max (24 * 5 seconds)
     let attempts = 0;
     
-    logStep('START: Conversation monitoring', { 
-      contactName: contact.name, 
-      targetAgentId, 
-      startTime: startTime.toISOString(),
-      maxAttempts 
-    });
+    console.log(`🔍 Starting conversation monitoring for ${contact.name} with agent ${targetAgentId}`);
     
     // Get existing conversation IDs before we start monitoring
     const existingConversationIds = await getExistingConversationIds();
-    logStep('STEP: Existing conversation IDs retrieved', { 
-      count: existingConversationIds.length,
-      ids: existingConversationIds 
-    });
+    console.log(`📋 Existing conversation IDs:`, existingConversationIds);
     
     while (attempts < maxAttempts) {
       try {
         attempts++;
-        logStep('STEP: Monitoring attempt', { 
-          attempt: attempts, 
-          maxAttempts, 
-          contactName: contact.name 
-        });
-        
+        console.log(`🔄 Monitoring attempt ${attempts}/${maxAttempts} for ${contact.name}`);
         setCurrentCallStatus(`Verifică conversații noi pentru ${contact.name} (${attempts}/${maxAttempts})`);
         
         // Wait 30 seconds before first check, then 5 seconds between checks
         if (attempts === 1) {
-          logStep('STEP: Initial wait period', { waitTime: '30 seconds', contactName: contact.name });
+          console.log(`⏳ Initial wait of 30 seconds for ${contact.name}...`);
           await new Promise(resolve => setTimeout(resolve, 30000));
         } else {
           await new Promise(resolve => setTimeout(resolve, 5000));
@@ -166,20 +143,12 @@ export const useCallInitiation = ({
         const conversationsData = await getAgentConversations(targetAgentId);
         
         if (conversationsData?.error) {
-          logStep('WARNING: API error during monitoring, continuing', { 
-            error: conversationsData.error, 
-            attempt: attempts,
-            contactName: contact.name 
-          });
+          console.log(`⚠️ API error for ${contact.name}, continuing...`, conversationsData.error);
           continue;
         }
         
         const conversations = conversationsData?.conversations || [];
-        logStep('STEP: Conversations retrieved for monitoring', { 
-          totalConversations: conversations.length,
-          attempt: attempts,
-          contactName: contact.name 
-        });
+        console.log(`📞 Found ${conversations.length} total conversations for agent`);
         
         // Filter conversations that are newer than our start time and not in our database
         const newConversations = conversations.filter((conv: any) => {
@@ -187,79 +156,40 @@ export const useCallInitiation = ({
           const isNewer = convDate >= startTime;
           const isNotInDb = !existingConversationIds.includes(conv.conversation_id);
           
-          logStep('STEP: Filtering conversation', { 
-            conversationId: conv.conversation_id,
-            createdAt: convDate.toISOString(),
-            isNewer,
-            isNotInDb,
-            contactName: contact.name 
-          });
+          console.log(`🔍 Conversation ${conv.conversation_id}: created=${convDate.toISOString()}, isNewer=${isNewer}, isNotInDb=${isNotInDb}`);
           
           return isNewer && isNotInDb;
         });
         
         if (newConversations.length > 0) {
-          logStep('SUCCESS: New conversations found!', { 
-            count: newConversations.length,
-            contactName: contact.name,
-            conversationIds: newConversations.map(c => c.conversation_id) 
-          });
-          
+          console.log(`✅ Found ${newConversations.length} new conversations for ${contact.name}!`);
           setCurrentCallStatus(`Găsit ${newConversations.length} conversații noi pentru ${contact.name} - extragere date...`);
           
           // Get detailed data for each new conversation
           const detailedConversations = [];
           for (const conv of newConversations) {
-            logStep('STEP: Getting detailed data for conversation', { 
-              conversationId: conv.conversation_id,
-              contactName: contact.name 
-            });
-            
+            console.log(`📝 Getting detailed data for conversation ${conv.conversation_id}`);
             const details = await getConversationDetails(conv.conversation_id);
             if (details && !details.error) {
               detailedConversations.push(details);
-              logStep('SUCCESS: Detailed conversation data retrieved', { 
-                conversationId: conv.conversation_id,
-                contactName: contact.name 
-              });
-            } else {
-              logStep('ERROR: Failed to get detailed conversation data', { 
-                conversationId: conv.conversation_id,
-                error: details?.error,
-                contactName: contact.name 
-              });
             }
           }
           
-          logStep('SUCCESS: All detailed conversations retrieved', { 
-            count: detailedConversations.length,
-            contactName: contact.name 
-          });
+          console.log(`✅ Successfully retrieved ${detailedConversations.length} detailed conversations for ${contact.name}`);
           return detailedConversations;
         }
         
-        logStep('STEP: No new conversations found, continuing monitoring', { 
-          attempt: attempts,
-          contactName: contact.name 
-        });
+        console.log(`⏳ No new conversations found for ${contact.name} on attempt ${attempts}`);
         
       } catch (error) {
-        logStep('ERROR: Exception during monitoring', { 
-          error: error.message,
-          attempt: attempts,
-          contactName: contact.name 
-        });
+        console.error(`❌ Error monitoring ${contact.name} on attempt ${attempts}:`, error);
         setCurrentCallStatus(`Eroare temporară pentru ${contact.name}, se reîncearcă...`);
         await new Promise(resolve => setTimeout(resolve, 10000));
       }
     }
 
-    // Timeout reached - final check
-    logStep('TIMEOUT: Monitoring timeout reached, final check', { 
-      maxAttempts,
-      contactName: contact.name 
-    });
-    
+    // Timeout reached - still try to get any new conversations one last time
+    console.log(`⏰ Monitoring timeout for ${contact.name} after ${maxAttempts} attempts - final check...`);
     try {
       const conversationsData = await getAgentConversations(targetAgentId);
       if (conversationsData?.conversations) {
@@ -270,11 +200,7 @@ export const useCallInitiation = ({
         });
         
         if (newConversations.length > 0) {
-          logStep('SUCCESS: Final check found conversations', { 
-            count: newConversations.length,
-            contactName: contact.name 
-          });
-          
+          console.log(`🎯 Final check found ${newConversations.length} conversations for ${contact.name}!`);
           const detailedConversations = [];
           for (const conv of newConversations) {
             const details = await getConversationDetails(conv.conversation_id);
@@ -286,13 +212,10 @@ export const useCallInitiation = ({
         }
       }
     } catch (error) {
-      logStep('ERROR: Exception in final check', { 
-        error: error.message,
-        contactName: contact.name 
-      });
+      console.error(`❌ Error in final check for ${contact.name}:`, error);
     }
     
-    logStep('FAILURE: No conversations found after timeout', { contactName: contact.name });
+    console.log(`❌ No new conversations found for ${contact.name} after timeout`);
     return [];
   };
 
@@ -385,18 +308,9 @@ export const useCallInitiation = ({
     }
   };
 
-  // Enhanced batch processing with detailed logging
+  // Process batch calls with the new monitoring strategy
   const processBatchCalls = useCallback(async (contacts: Contact[], targetAgentId: string) => {
-    logStep('START: Batch processing initiated', { 
-      contactCount: contacts.length,
-      targetAgentId 
-    });
-
     if (!targetAgentId || contacts.length === 0) {
-      logStep('ERROR: Missing required parameters for batch processing', { 
-        hasAgentId: !!targetAgentId,
-        contactCount: contacts.length 
-      });
       toast({
         title: "Eroare",
         description: "Agent ID și contactele sunt obligatorii",
@@ -405,6 +319,8 @@ export const useCallInitiation = ({
       return;
     }
 
+    console.log(`🚀 Starting OPTIMIZED batch processing for ${contacts.length} contacts`);
+    
     setIsProcessingBatch(true);
     setTotalCalls(contacts.length);
     setCurrentProgress(0);
@@ -419,16 +335,11 @@ export const useCallInitiation = ({
     setCallStatuses(initialStatuses);
 
     try {
-      // Process contacts ONE BY ONE with detailed logging
+      // Process contacts ONE BY ONE with optimized monitoring
       for (let i = 0; i < contacts.length; i++) {
         const contact = contacts[i];
         const callStartTime = new Date();
-        
-        logStep(`BATCH CONTACT ${i + 1}/${contacts.length}: Starting processing`, { 
-          contactName: contact.name,
-          phone: contact.phone,
-          startTime: callStartTime.toISOString() 
-        });
+        console.log(`\n🎯 === PROCESSING CONTACT ${i + 1}/${contacts.length}: ${contact.name} ===`);
         
         setCurrentProgress(i + 1);
         setCurrentContact(contact.name);
@@ -442,50 +353,21 @@ export const useCallInitiation = ({
         ));
 
         try {
-          // STEP 2: Initiate the call with detailed logging
-          logStep(`BATCH CONTACT ${i + 1}: Initiating call`, { 
-            contactName: contact.name,
-            phone: contact.phone,
-            targetAgentId 
-          });
-          
-          const requestData = {
-            agent_id: targetAgentId,
-            phone_number: contact.phone,
-            contact_name: contact.name,
-            user_id: user?.id,
-            batch_processing: true
-          };
-          
-          logStep(`BATCH CONTACT ${i + 1}: Request payload prepared`, requestData);
-          
-          // Validate required fields
-          if (!targetAgentId || targetAgentId.trim() === '') {
-            logStep(`BATCH CONTACT ${i + 1}: VALIDATION ERROR - Empty Agent ID`, { contactName: contact.name });
-            throw new Error(`Agent ID este gol pentru ${contact.name}`);
-          }
-          
-          if (!contact.phone || contact.phone.trim() === '') {
-            logStep(`BATCH CONTACT ${i + 1}: VALIDATION ERROR - Empty phone number`, { contactName: contact.name });
-            throw new Error(`Numărul de telefon este gol pentru ${contact.name}`);
-          }
+          // STEP 2: Initiate the call
+          console.log(`📞 Step 2: Initiating call to ${contact.name}`);
           
           const { data: callInitData, error: callInitError } = await supabase.functions.invoke('initiate-scheduled-call', {
-            body: requestData
+            body: {
+              agent_id: targetAgentId,
+              phone_number: contact.phone,
+              contact_name: contact.name,
+              user_id: user?.id,
+              batch_processing: true
+            }
           });
 
-          logStep(`BATCH CONTACT ${i + 1}: ElevenLabs response received`, { 
-            success: !!callInitData?.success,
-            error: callInitError || callInitData?.error,
-            statusCode: callInitData?.status_code,
-            contactName: contact.name 
-          });
-
-          if (callInitError) {
-            logStep(`BATCH CONTACT ${i + 1}: SUPABASE ERROR`, { 
-              error: callInitError,
-              contactName: contact.name 
-            });
+          if (callInitError || !callInitData?.success) {
+            console.error(`❌ Failed to initiate call for ${contact.name}:`, callInitError);
             
             setCallStatuses(prev => prev.map(status => 
               status.contactId === contact.id 
@@ -493,51 +375,37 @@ export const useCallInitiation = ({
                 : status
             ));
             
-            setCurrentCallStatus(`❌ Eroare Supabase pentru ${contact.name}: ${callInitError.message}`);
-            continue;
-          }
-          
-          if (!callInitData?.success) {
-            logStep(`BATCH CONTACT ${i + 1}: ELEVENLABS ERROR`, { 
-              error: callInitData?.error,
-              statusCode: callInitData?.status_code,
-              details: callInitData?.details,
-              contactName: contact.name 
+            toast({
+              title: "Eroare inițiere",
+              description: `Nu s-a putut iniția apelul către ${contact.name}`,
+              variant: "destructive",
             });
             
-            setCallStatuses(prev => prev.map(status => 
-              status.contactId === contact.id 
-                ? { ...status, status: 'failed', endTime: new Date() }
-                : status
-            ));
-            
-            setCurrentCallStatus(`❌ Apel eșuat pentru ${contact.name}: ${callInitData?.error}`);
-            continue;
+            continue; // Skip to next contact
           }
 
-          logStep(`BATCH CONTACT ${i + 1}: Call initiated successfully`, { 
-            conversationId: callInitData.conversationId,
-            contactName: contact.name 
-          });
+          console.log(`✅ Call initiated for ${contact.name}`);
 
-          // STEP 3: Update status and start monitoring
+          // STEP 3: Update status and start optimized monitoring
           setCallStatuses(prev => prev.map(status => 
             status.contactId === contact.id 
               ? { ...status, status: 'in-progress' }
               : status
           ));
 
-          // STEP 4: Start monitoring
-          logStep(`BATCH CONTACT ${i + 1}: Starting conversation monitoring`, { contactName: contact.name });
+          toast({
+            title: "Apel inițiat",
+            description: `Se monitorizează conversațiile noi pentru ${contact.name}...`,
+          });
+
+          // STEP 4: OPTIMIZED MONITORING - check for new conversations
+          console.log(`👁️ Step 4: Starting optimized monitoring for ${contact.name}`);
           setCurrentCallStatus(`Monitorizează conversații noi pentru ${contact.name}...`);
           
           const newConversations = await monitorForNewConversations(targetAgentId, contact, callStartTime);
           
-          // STEP 5: Process results
-          logStep(`BATCH CONTACT ${i + 1}: Monitoring completed`, { 
-            foundConversations: newConversations.length,
-            contactName: contact.name 
-          });
+          // STEP 5: PROCESS ALL NEW CONVERSATIONS
+          console.log(`💾 Step 5: Processing ${newConversations.length} new conversations for ${contact.name}`);
           
           if (newConversations.length > 0) {
             setCurrentCallStatus(`Salvează ${newConversations.length} conversații pentru ${contact.name}...`);
@@ -547,14 +415,10 @@ export const useCallInitiation = ({
                                    conversationData.id || 
                                    `unknown_${Date.now()}`;
               
-              logStep(`BATCH CONTACT ${i + 1}: Saving conversation data`, { 
-                conversationId,
-                contactName: contact.name 
-              });
-              
               await saveCompleteCallData(conversationData, contact, conversationId);
             }
             
+            // Update status to completed
             setCallStatuses(prev => prev.map(status => 
               status.contactId === contact.id 
                 ? { 
@@ -565,51 +429,66 @@ export const useCallInitiation = ({
                 : status
             ));
 
-            logStep(`BATCH CONTACT ${i + 1}: COMPLETED SUCCESSFULLY`, { 
-              conversationsFound: newConversations.length,
-              contactName: contact.name 
+            toast({
+              title: "Apel finalizat",
+              description: `${contact.name}: ${newConversations.length} conversații salvate în istoric`,
             });
           } else {
+            // No conversations found - mark as failed
             setCallStatuses(prev => prev.map(status => 
               status.contactId === contact.id 
                 ? { ...status, status: 'failed', endTime: new Date() }
                 : status
             ));
             
-            logStep(`BATCH CONTACT ${i + 1}: FAILED - No conversations found`, { contactName: contact.name });
+            toast({
+              title: "Nicio conversație găsită",
+              description: `Pentru ${contact.name} nu s-au găsit conversații noi`,
+              variant: "destructive",
+            });
           }
 
+          console.log(`✅ === COMPLETED PROCESSING FOR ${contact.name} ===\n`);
+
         } catch (contactError) {
-          logStep(`BATCH CONTACT ${i + 1}: CRITICAL ERROR`, { 
-            error: contactError.message,
-            stack: contactError.stack,
-            contactName: contact.name 
-          });
+          console.error(`💥 Critical error processing ${contact.name}:`, contactError);
           
           setCallStatuses(prev => prev.map(status => 
             status.contactId === contact.id 
               ? { ...status, status: 'failed', endTime: new Date() }
               : status
           ));
+          
+          toast({
+            title: "Eroare critică",
+            description: `Eroare la procesarea apelului către ${contact.name}`,
+            variant: "destructive",
+          });
         }
         
-        // Brief pause before next contact
+        // Small delay before next contact
         if (i < contacts.length - 1) {
-          logStep(`BATCH: Brief pause before next contact (${i + 2}/${contacts.length})`);
+          console.log(`⏳ Brief pause before next contact...`);
           await new Promise(resolve => setTimeout(resolve, 2000));
         }
       }
 
-      logStep('BATCH PROCESSING: COMPLETED', { 
-        totalContacts: contacts.length,
-        completed: callStatuses.filter(s => s.status === 'completed').length,
-        failed: callStatuses.filter(s => s.status === 'failed').length 
+      // Final completion
+      setCurrentCallStatus('Procesare batch completată cu succes!');
+      
+      toast({
+        title: "🎉 Procesare completă",
+        description: `Toate cele ${contacts.length} contacte au fost procesate cu monitorizare optimizată.`,
       });
 
+      console.log(`🏁 === OPTIMIZED BATCH PROCESSING COMPLETED FOR ALL ${contacts.length} CONTACTS ===`);
+
     } catch (batchError) {
-      logStep('BATCH PROCESSING: CRITICAL ERROR', { 
-        error: batchError.message,
-        stack: batchError.stack 
+      console.error('💥 Critical batch processing error:', batchError);
+      toast({
+        title: "Eroare procesare batch",
+        description: "Eroare critică în timpul procesării",
+        variant: "destructive",
       });
     } finally {
       setIsProcessingBatch(false);
@@ -619,19 +498,9 @@ export const useCallInitiation = ({
     }
   }, [user?.id, agentId]);
 
-  // Enhanced single call initiation with detailed logging
+  // Single call initiation (existing functionality)
   const initiateCall = useCallback(async (targetAgentId: string, targetPhone: string, contactName?: string): Promise<string | null> => {
-    logStep('SINGLE CALL: Initiation started', { 
-      targetAgentId, 
-      targetPhone, 
-      contactName 
-    });
-
     if (!targetAgentId || !targetPhone.trim()) {
-      logStep('SINGLE CALL: VALIDATION ERROR - Missing required fields', { 
-        hasAgentId: !!targetAgentId,
-        hasPhone: !!targetPhone?.trim() 
-      });
       toast({
         title: "Eroare",
         description: "Agent ID și numărul de telefon sunt obligatorii",
@@ -643,12 +512,6 @@ export const useCallInitiation = ({
     setIsInitiating(true);
 
     try {
-      logStep('SINGLE CALL: Making request to initiate-scheduled-call', { 
-        targetAgentId, 
-        targetPhone, 
-        contactName 
-      });
-
       const { data, error } = await supabase.functions.invoke('initiate-scheduled-call', {
         body: {
           agent_id: targetAgentId,
@@ -658,41 +521,23 @@ export const useCallInitiation = ({
         }
       });
 
-      logStep('SINGLE CALL: Response received', { 
-        success: data?.success,
-        error: error || data?.error,
-        conversationId: data?.conversationId 
-      });
-
       if (error) {
-        logStep('SINGLE CALL: SUPABASE ERROR', { error });
         throw error;
       }
 
       if (data?.success) {
-        logStep('SINGLE CALL: SUCCESS', { 
-          conversationId: data.conversationId,
-          contactName: contactName || targetPhone 
-        });
-
         toast({
           title: "Succes!",
           description: `Apelul către ${contactName || targetPhone} a fost inițiat cu succes`,
         });
 
+        console.log('Single call initiated:', data);
         return data.conversationId || 'initiated';
       } else {
-        logStep('SINGLE CALL: FAILED', { 
-          error: data?.error,
-          statusCode: data?.status_code 
-        });
-        throw new Error(data?.error || 'Nu s-a putut iniția apelul');
+        throw new Error('Nu s-a putut iniția apelul');
       }
     } catch (error) {
-      logStep('SINGLE CALL: CRITICAL ERROR', { 
-        error: error.message,
-        stack: error.stack 
-      });
+      console.error('Error initiating single call:', error);
       toast({
         title: "Eroare",
         description: "Nu s-a putut iniția apelul",
