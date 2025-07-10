@@ -178,14 +178,77 @@ const Outbound = () => {
           <div className="space-y-8">
             <OutboundHeader />
 
+            {/* Debug Panel - Show Error Logs */}
+            {(isInitiating || isProcessingBatch || callStatuses.some(s => s.status === 'failed')) && (
+              <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-red-800 mb-4">Debug Logs - Monitorizare Erori</h3>
+                <div className="space-y-3">
+                  <div className="text-sm">
+                    <span className="font-medium text-red-700">Status curent:</span> {currentCallStatus}
+                  </div>
+                  {currentContact && (
+                    <div className="text-sm">
+                      <span className="font-medium text-red-700">Contact procesat:</span> {currentContact}
+                    </div>
+                  )}
+                  <div className="text-sm">
+                    <span className="font-medium text-red-700">Agent ID:</span> {agentId || 'NU ESTE SETAT'}
+                  </div>
+                  {isProcessingBatch && (
+                    <div className="text-sm">
+                      <span className="font-medium text-red-700">Progres:</span> {currentProgress}/{totalCalls}
+                    </div>
+                  )}
+                  
+                  {/* Failed calls details */}
+                  {callStatuses.filter(s => s.status === 'failed').length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="font-medium text-red-700 mb-2">Apeluri eșuate:</h4>
+                      <div className="space-y-2">
+                        {callStatuses.filter(s => s.status === 'failed').map(status => (
+                          <div key={status.contactId} className="bg-red-100 p-3 rounded-xl text-sm">
+                            <div className="font-medium">{status.contactName}</div>
+                            <div>Status: {status.status}</div>
+                            {status.startTime && (
+                              <div>Început: {status.startTime.toLocaleTimeString()}</div>
+                            )}
+                            {status.endTime && (
+                              <div>Sfârșit: {status.endTime.toLocaleTimeString()}</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="mt-4 p-3 bg-yellow-100 rounded-xl">
+                    <h4 className="font-medium text-yellow-800 mb-2">Verificați:</h4>
+                    <ul className="text-sm text-yellow-700 space-y-1">
+                      <li>• Agent ID este completat și valid</li>
+                      <li>• Numerele de telefon sunt în format internațional (+40...)</li>
+                      <li>• API key ElevenLabs este valid</li>
+                      <li>• Agentul există în contul ElevenLabs</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Agent Configuration Card */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="bg-white border border-gray-200 rounded-2xl p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Configurare Agent</h2>
               <AgentIdInput agentId={agentId} setAgentId={setAgentId} />
+              {!agentId.trim() && (
+                <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                  <p className="text-sm text-amber-800">
+                    ⚠️ Agent ID este obligatoriu pentru inițierea apelurilor
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Call Management Section */}
-            <div className="bg-white border border-gray-200 rounded-lg">
+            <div className="bg-white border border-gray-200 rounded-2xl">
               <div className="border-b border-gray-200 p-6">
                 <h2 className="text-lg font-semibold text-gray-900">Management Apeluri</h2>
                 <p className="text-sm text-gray-600 mt-1">Inițiați apeluri individuale sau în batch și monitorizați istoricul</p>

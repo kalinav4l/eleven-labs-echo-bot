@@ -354,37 +354,46 @@ export const useCallInitiation = ({
 
         try {
           // STEP 2: Initiate the call
-          console.log(`📞 Step 2: Initiating call to ${contact.name}`);
+          console.log(`📞 Step 2: Initiating call to ${contact.name} with agent ${targetAgentId}`);
+          
+          // Log detailed request data
+          const requestData = {
+            agent_id: targetAgentId,
+            phone_number: contact.phone,
+            contact_name: contact.name,
+            user_id: user?.id,
+            batch_processing: true
+          };
+          console.log(`📊 Request payload:`, requestData);
+          
+          if (!targetAgentId || targetAgentId.trim() === '') {
+            console.error(`❌ Agent ID is empty for ${contact.name}`);
+            throw new Error(`Agent ID este gol pentru ${contact.name}`);
+          }
+          
+          if (!contact.phone || contact.phone.trim() === '') {
+            console.error(`❌ Phone number is empty for ${contact.name}`);
+            throw new Error(`Numărul de telefon este gol pentru ${contact.name}`);
+          }
           
           const { data: callInitData, error: callInitError } = await supabase.functions.invoke('initiate-scheduled-call', {
-            body: {
-              agent_id: targetAgentId,
-              phone_number: contact.phone,
-              contact_name: contact.name,
-              user_id: user?.id,
-              batch_processing: true
-            }
+            body: requestData
           });
 
-          if (callInitError || !callInitData?.success) {
-            console.error(`❌ Failed to initiate call for ${contact.name}:`, callInitError);
-            
-            setCallStatuses(prev => prev.map(status => 
-              status.contactId === contact.id 
-                ? { ...status, status: 'failed', endTime: new Date() }
-                : status
-            ));
-            
-            toast({
-              title: "Eroare inițiere",
-              description: `Nu s-a putut iniția apelul către ${contact.name}`,
-              variant: "destructive",
-            });
-            
-            continue; // Skip to next contact
+          console.log(`📤 Response for ${contact.name}:`, { callInitData, callInitError });
+
+          if (callInitError) {
+            console.error(`❌ Supabase function error for ${contact.name}:`, callInitError);
+            throw new Error(`Eroare Supabase: ${callInitError.message}`);
+          }
+          
+          if (!callInitData?.success) {
+            console.error(`❌ Call initiation failed for ${contact.name}:`, callInitData);
+            const errorMsg = callInitData?.error || callInitData?.message || 'Eroare necunoscută la inițierea apelului';
+            throw new Error(`Inițierea apelului a eșuat: ${errorMsg}`);
           }
 
-          console.log(`✅ Call initiated for ${contact.name}`);
+          console.log(`✅ Call initiated successfully for ${contact.name}:`, callInitData);
 
           // STEP 3: Update status and start optimized monitoring
           setCallStatuses(prev => prev.map(status => 
