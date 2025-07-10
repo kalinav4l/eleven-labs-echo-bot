@@ -322,15 +322,19 @@ export const CreateBatchModal: React.FC<CreateBatchModalProps> = ({
             </div>
 
             <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
-              <label className="cursor-pointer">
-                <input
-                  type="file"
-                  accept=".csv,.xls,.xlsx"
-                  onChange={handleCSVUpload}
-                  className="hidden"
-                />
-                <Button type="button" variant="outline">
-                  Upload
+              <input
+                type="file"
+                accept=".csv,.xls,.xlsx"
+                onChange={handleCSVUpload}
+                className="hidden"
+                id="file-upload"
+              />
+              <label htmlFor="file-upload" className="cursor-pointer">
+                <Button type="button" variant="outline" asChild>
+                  <span>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload
+                  </span>
                 </Button>
               </label>
             </div>
