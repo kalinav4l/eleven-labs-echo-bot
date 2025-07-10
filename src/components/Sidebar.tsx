@@ -70,6 +70,11 @@ const Sidebar = ({
                 <span>Calendar</span>
               </Link>
 
+              <Link to="/account/batch-calling" className={`${location.pathname === '/account/batch-calling' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
+                <Phone className="mr-3 h-4 w-4" />
+                <span>Batch Calling</span>
+              </Link>
+
               <Link to="/account/phone-numbers" className={`${location.pathname === '/account/phone-numbers' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
                 <Phone className="mr-3 h-4 w-4" />
                 <span>Phone Numbers</span>

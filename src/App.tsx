@@ -15,6 +15,7 @@ import Voices from "./pages/Voices";
 import Transcript from "./pages/Transcript";
 
 import Calendar from "./pages/Calendar";
+import BatchCalling from "./pages/BatchCalling";
 import ConversationAnalytics from "./pages/ConversationAnalytics";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -47,6 +48,7 @@ function App() {
             <Route path="/account/transcript" element={<Transcript />} />
             
             <Route path="/account/calendar" element={<Calendar />} />
+            <Route path="/account/batch-calling" element={<BatchCalling />} />
             <Route path="/account/construction" element={<Construction />} />
             <Route path="/account/scraping" element={<Scraping />} />
             <Route path="/account/gmail" element={<Gmail />} />
