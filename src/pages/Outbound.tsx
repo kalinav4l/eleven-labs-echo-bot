@@ -17,6 +17,7 @@ import { BatchConfigPanel } from '@/components/outbound/BatchConfigPanel';
 import { BatchStatusPanel } from '@/components/outbound/BatchStatusPanel';
 import { ContactsList } from '@/components/outbound/ContactsList';
 import { CSVUploadSection } from '@/components/outbound/CSVUploadSection';
+import { SingleCallModal } from '@/components/outbound/SingleCallModal';
 interface Contact {
   id: string;
   name: string;
@@ -34,6 +35,7 @@ const Outbound = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
   const [batchStartTime, setBatchStartTime] = useState<Date | undefined>();
+  const [isSingleCallModalOpen, setIsSingleCallModalOpen] = useState(false);
 
   // Get user's phone numbers
   const { data: phoneNumbers } = useUserPhoneNumbers();
@@ -171,7 +173,19 @@ const Outbound = () => {
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="space-y-6">
-            <OutboundHeader />
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Apeluri Outbound</h2>
+                <p className="text-gray-600">Gestionează și inițiază apeluri către clienți</p>
+              </div>
+              <Button 
+                onClick={() => setIsSingleCallModalOpen(true)}
+                className="bg-primary hover:bg-primary/90"
+              >
+                <Phone className="w-4 h-4 mr-2" />
+                Apel Individual
+              </Button>
+            </div>
 
             <Tabs defaultValue="batch" className="w-full">
               <TabsList className="grid w-full grid-cols-2 bg-white p-1 h-auto border border-gray-200">
@@ -270,6 +284,11 @@ const Outbound = () => {
           </div>
         </div>
       </div>
+
+      <SingleCallModal 
+        isOpen={isSingleCallModalOpen}
+        onClose={() => setIsSingleCallModalOpen(false)}
+      />
     </DashboardLayout>
   );
 };
