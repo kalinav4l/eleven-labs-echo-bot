@@ -16,11 +16,17 @@ serve(async (req) => {
   }
 
   try {
+    console.log('🔑 ELEVENLABS_API_KEY set:', !!ELEVENLABS_API_KEY);
+    
     if (!ELEVENLABS_API_KEY) {
+      console.error('❌ ELEVENLABS_API_KEY nu este configurat');
       throw new Error('ELEVENLABS_API_KEY nu este configurat în Supabase Secrets');
     }
 
-    const { action, ...params } = await req.json();
+    const body = await req.json();
+    console.log('📥 Request body received:', JSON.stringify(body, null, 2));
+    
+    const { action, ...params } = body;
     console.log(`🔄 Acțiune batch calling: ${action}`, params);
 
     const headers = {
@@ -50,11 +56,19 @@ serve(async (req) => {
         throw new Error(`Acțiune necunoscută: ${action}`);
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      console.error('❌ Eroare la parsarea JSON:', jsonError);
+      const text = await response.text();
+      console.error('❌ Response text:', text);
+      throw new Error(`Răspuns invalid de la ElevenLabs: ${text}`);
+    }
     
     if (!response.ok) {
       console.error(`❌ Eroare ElevenLabs ${action}:`, data);
-      throw new Error(data.detail || `Eroare ${response.status}: ${response.statusText}`);
+      throw new Error(data.detail || data.message || `Eroare ${response.status}: ${response.statusText}`);
     }
 
     console.log(`✅ Succes ${action}:`, data);
@@ -81,6 +95,17 @@ serve(async (req) => {
 async function submitBatchCall(headers: Record<string, string>, params: any) {
   console.log('🚀 Se inițiază lotul de apeluri:', params.call_name);
   
+  // Validare parametri
+  if (!params.agent_id) {
+    throw new Error('agent_id este obligatoriu');
+  }
+  if (!params.agent_phone_id) {
+    throw new Error('agent_phone_id este obligatoriu');
+  }
+  if (!params.recipients || !Array.isArray(params.recipients) || params.recipients.length === 0) {
+    throw new Error('recipients trebuie să fie un array cu cel puțin un element');
+  }
+  
   const payload = {
     call_name: params.call_name || "Lot de apeluri",
     agent_id: params.agent_id,
@@ -89,11 +114,26 @@ async function submitBatchCall(headers: Record<string, string>, params: any) {
   };
 
   console.log('📤 Payload batch call:', JSON.stringify(payload, null, 2));
+  console.log('📤 Headers:', JSON.stringify(headers, null, 2));
 
-  return await fetch(`${BASE_URL}/submit`, {
+  const response = await fetch(`${BASE_URL}/submit`, {
     method: 'POST',
     headers,
     body: JSON.stringify(payload)
+  });
+
+  console.log('📥 Response status:', response.status);
+  console.log('📥 Response headers:', JSON.stringify([...response.headers.entries()], null, 2));
+  
+  // Citește răspunsul o singură dată
+  const responseText = await response.text();
+  console.log('📥 Response body:', responseText);
+  
+  // Creează un nou response object pentru a fi returnat
+  return new Response(responseText, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers
   });
 }
 
