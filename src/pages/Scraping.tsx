@@ -13,6 +13,7 @@ import { Search, Download, Globe, Package, Image, Link, FileText, AlertCircle, C
 import DashboardLayout from '@/components/DashboardLayout';
 import { ScrapingHistory } from '@/components/scraping/ScrapingHistory';
 import { useScrapingHistory } from '@/hooks/useScrapingHistory';
+import { supabase } from '@/integrations/supabase/client';
 
 // Interfețe TypeScript
 interface Product {
@@ -794,8 +795,43 @@ const extractAllContent = async (htmlContent: string, targetUrl: string, deepScr
   };
 };
 
-// Funcția principală de scraping
+// Funcția principală de scraping - ÎMBUNĂTĂȚITĂ cu Edge Function
 const handleScrape = async (url: string, deepScraping: boolean = false): Promise<ScrapedData | null> => {
+  try {
+    console.log(`Încep scraping pentru: ${url}`);
+    
+    // Încearcă să folosească edge function-ul pentru scraping mai robust
+    const { data, error } = await supabase.functions.invoke('web-scraper', {
+      body: {
+        url: url,
+        deepScraping: deepScraping,
+        maxDepth: deepScraping ? 3 : 1
+      }
+    });
+
+    if (error) {
+      console.error('Eroare la edge function:', error);
+      throw new Error(`Eroare la scraping: ${error.message}`);
+    }
+
+    if (data && data.products) {
+      console.log(`Scraping reușit: ${data.products.length} produse găsite`);
+      return data as ScrapedData;
+    }
+
+    throw new Error('Nu s-au primit date valide de la server');
+
+  } catch (error) {
+    console.error('Eroare la scraping:', error);
+    
+    // Fallback la scraping-ul local în caz de eroare
+    console.log('Încerc fallback-ul local...');
+    return handleScrapeFallback(url, deepScraping);
+  }
+};
+
+// Funcția de fallback pentru scraping local
+const handleScrapeFallback = async (url: string, deepScraping: boolean = false): Promise<ScrapedData | null> => {
   const proxyServices = [
     `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
     `https://cors-anywhere.herokuapp.com/${url}`,
@@ -808,7 +844,9 @@ const handleScrape = async (url: string, deepScraping: boolean = false): Promise
     
     try {
       const headers: any = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'ro-RO,ro;q=0.9,en;q=0.8'
       };
 
       if (proxyUrl.includes('cors-anywhere')) {
