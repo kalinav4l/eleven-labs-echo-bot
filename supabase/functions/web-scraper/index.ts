@@ -36,94 +36,49 @@ interface Product {
 const detectProducts = (doc: Document, targetUrl: string): Product[] => {
   const products: Product[] = [];
   
-  // Selectori îmbunătățiți pentru materialeelectrice.ro și magazine similare
-  const productSelectors = [
-    // Selectori generici
-    '.product, .product-item, .product-card, .item, .listing-item',
-    '.produs, .produs-item, .articol, .articol-item',
-    '.oferta, .oferta-item, .promotie',
-    '.product-miniature, .product-thumb, .product-list-item',
-    '[data-product], [data-product-id], [data-item-id]',
-    '.catalog-item, .grid-item',
-    '.woocommerce-product',
-    '.electrical-product, .electronic-item',
-    '.material-item, .componenta-item',
-    
-    // Selectori specifici pentru structuri tip grid cu categorii
-    '.category-box, .category-item, .cat-box',
-    '.product-category, .category-product',
-    '.grid-category, .category-grid',
-    '.category-link, .cat-link',
-    '.product-box, .item-box',
-    
-    // Pentru site-uri cu divuri simple organizate în grid
-    'div[class*="col"] img[alt*="produs"]',
-    'div[class*="grid"] img[alt*="material"]',
-    'a[href*="produs"], a[href*="product"]',
-    'a[href*="categorie"], a[href*="category"]'
-  ];
-
-  let foundProducts: Element[] = [];
+  console.log('Începe detectarea produselor...');
+  console.log('URL:', targetUrl);
+  console.log('Document title:', doc.title);
   
-  // Încearcă să găsească produse cu selectorii specifici
-  for (const selector of productSelectors) {
-    const elements = doc.querySelectorAll(selector);
-    if (elements.length > 0) {
-      foundProducts = Array.from(elements);
-      console.log(`Găsite ${foundProducts.length} produse cu selectorul: ${selector}`);
-      break;
+  // Detectare simplificată pentru orice element cu imagine și text
+  const allElements = doc.querySelectorAll('*');
+  const potentialProducts: Element[] = [];
+  
+  console.log(`Analysing ${allElements.length} elements`);
+  
+  // Caută orice element care pare să fie un produs/categorie
+  allElements.forEach((element, index) => {
+    const text = element.textContent?.trim() || '';
+    const hasImage = element.querySelector('img') !== null;
+    const hasLink = element.querySelector('a') !== null;
+    
+    // Verifică dacă elementul conține cuvinte cheie pentru materiale electrice
+    const hasElectricalKeywords = /(?:cablu|fir|întrerupător|priză|bec|led|transformator|siguranță|tablou|electric|electronic|component|material|aparat|fotovoltaic|cuplu|treseă|ventilație|automatizare|produs|categorie|vezi)/i.test(text);
+    
+    // Verifică dimensiunea elementului
+    const rect = element.getBoundingClientRect();
+    const hasReasonableSize = rect.width > 50 && rect.height > 50;
+    
+    if (hasElectricalKeywords && (hasImage || hasLink) && text.length > 5 && text.length < 500 && hasReasonableSize) {
+      // Evită duplicatele (dacă elementul este deja în listă sau este copil al unui element din listă)
+      const isDuplicate = potentialProducts.some(existing => 
+        existing.contains(element) || element.contains(existing)
+      );
+      
+      if (!isDuplicate) {
+        potentialProducts.push(element);
+      }
     }
-  }
+  });
+  
+  console.log(`Găsite ${potentialProducts.length} produse potențiale`);
 
-  // Detectare specială pentru structuri cu link-uri către produse (cum e pe materialeelectrice.ro)
-  if (foundProducts.length === 0) {
-    console.log('Caut link-uri către produse...');
-    const productLinks = doc.querySelectorAll('a[href*="produs"], a[href*="product"], a[href*="categorie"], a[href*="category"]');
-    if (productLinks.length > 0) {
-      foundProducts = Array.from(productLinks).map(link => link.parentElement || link).filter(Boolean);
-      console.log(`Găsite ${foundProducts.length} link-uri către produse`);
-    }
-  }
-
-  // Detectare avansată pentru elemente cu imagini și text descriptiv
-  if (foundProducts.length === 0) {
-    console.log('Folosesc detectarea avansată...');
-    const potentialElements = doc.querySelectorAll('div, article, section, li, figure, .box, .card');
-    foundProducts = Array.from(potentialElements).filter(element => {
-      const text = element.textContent || '';
-      const hasImage = element.querySelector('img');
-      const hasLink = element.querySelector('a[href*="produs"], a[href*="product"], a[href*="categorie"]');
-      const textLength = text.length;
-      
-      // Verifică dacă are text relevant pentru materiale electrice
-      const hasElectricalKeywords = /(?:cablu|fir|intrerupator|priza|becuri|led|transformator|siguranta|tablou|electric|electronic|component|material|aparate|fotovoltaic|cupluri|tresee|ventilatie|automatizari)/i.test(text);
-      
-      // Verifică dacă textul conține "Vezi produs" sau similar
-      const hasProductAction = /(?:vezi\s+produs|vezi\s+produse|view\s+product|detalii|more)/i.test(text);
-      
-      return (hasImage || hasLink) && hasElectricalKeywords && textLength > 10 && textLength < 1000 && (hasProductAction || hasLink);
-    });
-    console.log(`Detectare avansată: găsite ${foundProducts.length} produse potențiale`);
-  }
-
-  // Detectare pentru structuri simple de categorii (fallback final)
-  if (foundProducts.length === 0) {
-    console.log('Caut categorii și imagini...');
-    const imageElements = doc.querySelectorAll('img[alt], img[title]');
-    foundProducts = Array.from(imageElements).map(img => {
-      const parent = img.closest('div, a, figure, .box, .card') || img.parentElement;
-      return parent;
-    }).filter((parent, index, arr) => {
-      if (!parent) return false;
-      const text = parent.textContent || '';
-      const hasElectricalKeywords = /(?:cablu|fir|intrerupator|priza|becuri|led|transformator|siguranta|tablou|electric|electronic|component|material|aparate|fotovoltaic|cupluri|tresee|ventilatie|automatizari)/i.test(text);
-      return hasElectricalKeywords && arr.indexOf(parent) === index; // Remove duplicates
-    });
-    console.log(`Detectare pe bază de imagini: găsite ${foundProducts.length} categorii`);
-  }
+  // Folosește produsele potențiale găsite
+  const foundProducts = potentialProducts.slice(0, 50);
+  console.log(`Procesez ${foundProducts.length} produse`);
 
   // Extrage informațiile pentru fiecare produs
-  foundProducts.slice(0, 50).forEach((element, index) => {
+  foundProducts.forEach((element, index) => {
     try {
       const product: Product = {
         id: `product_${Date.now()}_${index}`,
@@ -171,9 +126,28 @@ const detectProducts = (doc: Document, targetUrl: string): Product[] => {
         }
       }
 
-      // Dacă nu găsește numele prin selectori, încearcă să extragă din link-uri
+      // Dacă nu găsește numele prin selectori, încearcă să extragă din textul elementului
       if (!product.name) {
-        const links = element.querySelectorAll('a[href*="produs"], a[href*="product"], a[href*="categorie"]');
+        const elementText = element.textContent?.trim() || '';
+        // Caută primul text semnificativ (nu doar keywords)
+        const lines = elementText.split('\n').map(line => line.trim()).filter(line => line.length > 3 && line.length < 200);
+        for (const line of lines) {
+          // Evită liniile care sunt doar keywords sau acțiuni
+          if (!/(vezi|view|produs|product|categorie|category)$/i.test(line) && !/^(vezi|view)/i.test(line)) {
+            // Curăță textul de prețuri și cuvinte comune
+            let cleanedText = line.replace(/(\$|€|£|lei|ron|mdl)[\d.,\s]+/gi, '').trim();
+            cleanedText = cleanedText.replace(/\b(produs|product|categorie|category|vezi|view)\b/gi, '').trim();
+            if (cleanedText.length > 3) {
+              product.name = cleanedText;
+              break;
+            }
+          }
+        }
+      }
+      
+      // Fallback: încearcă să extragă din link-uri
+      if (!product.name) {
+        const links = element.querySelectorAll('a');
         for (const link of links) {
           if (link.textContent?.trim() && link.textContent.trim() !== 'Vezi produs') {
             product.name = link.textContent.trim();
