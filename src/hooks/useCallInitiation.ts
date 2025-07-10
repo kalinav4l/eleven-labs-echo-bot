@@ -114,54 +114,109 @@ export const useCallInitiation = ({
     }
   };
 
-  // Monitor call status by checking ElevenLabs every 30 seconds
-  const monitorCallStatus = async (conversationId: string, contact: Contact): Promise<any> => {
-    console.log(`🔍 Starting call status monitoring for ${contact.name} - conversation: ${conversationId}`);
-    
+  // Monitor for new conversations after call initiation
+  const monitorForNewConversations = async (targetAgentId: string, contact: Contact, startTime: Date): Promise<any[]> => {
+    const maxAttempts = 24; // 2 minutes max (24 * 5 seconds)
     let attempts = 0;
-    const maxAttempts = 20; // 10 minutes max (20 * 30 seconds)
+    
+    console.log(`🔍 Starting conversation monitoring for ${contact.name} with agent ${targetAgentId}`);
+    
+    // Get existing conversation IDs before we start monitoring
+    const existingConversationIds = await getExistingConversationIds();
+    console.log(`📋 Existing conversation IDs:`, existingConversationIds);
     
     while (attempts < maxAttempts) {
       try {
         attempts++;
-        console.log(`🔄 Status check attempt ${attempts}/${maxAttempts} for ${contact.name}`);
-        setCurrentCallStatus(`Verifică status apel pentru ${contact.name} (${attempts}/${maxAttempts})`);
+        console.log(`🔄 Monitoring attempt ${attempts}/${maxAttempts} for ${contact.name}`);
+        setCurrentCallStatus(`Verifică conversații noi pentru ${contact.name} (${attempts}/${maxAttempts})`);
         
-        // Wait 30 seconds before each check
-        console.log(`⏳ Waiting 30 seconds before status check for ${contact.name}...`);
-        await new Promise(resolve => setTimeout(resolve, 30000));
+        // Wait 30 seconds before first check, then 5 seconds between checks
+        if (attempts === 1) {
+          console.log(`⏳ Initial wait of 30 seconds for ${contact.name}...`);
+          await new Promise(resolve => setTimeout(resolve, 30000));
+        } else {
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
         
-        // Check call status from ElevenLabs
-        const { data: statusData, error: statusError } = await supabase.functions.invoke('check-call-status', {
-          body: { conversation_id: conversationId }
-        });
+        // Get all conversations for this agent
+        const conversationsData = await getAgentConversations(targetAgentId);
         
-        if (statusError) {
-          console.log(`⚠️ API error checking status for ${contact.name}, continuing...`, statusError);
+        if (conversationsData?.error) {
+          console.log(`⚠️ API error for ${contact.name}, continuing...`, conversationsData.error);
           continue;
         }
         
-        if (statusData?.success && statusData.is_completed) {
-          console.log(`✅ Call completed for ${contact.name}! Status: ${statusData.status}`);
-          setCurrentCallStatus(`Apel finalizat pentru ${contact.name} - status: ${statusData.status}`);
+        const conversations = conversationsData?.conversations || [];
+        console.log(`📞 Found ${conversations.length} total conversations for agent`);
+        
+        // Filter conversations that are newer than our start time and not in our database
+        const newConversations = conversations.filter((conv: any) => {
+          const convDate = new Date(conv.created_at || conv.start_time);
+          const isNewer = convDate >= startTime;
+          const isNotInDb = !existingConversationIds.includes(conv.conversation_id);
           
-          // Return the full conversation data for processing
-          return statusData.full_data;
+          console.log(`🔍 Conversation ${conv.conversation_id}: created=${convDate.toISOString()}, isNewer=${isNewer}, isNotInDb=${isNotInDb}`);
+          
+          return isNewer && isNotInDb;
+        });
+        
+        if (newConversations.length > 0) {
+          console.log(`✅ Found ${newConversations.length} new conversations for ${contact.name}!`);
+          setCurrentCallStatus(`Găsit ${newConversations.length} conversații noi pentru ${contact.name} - extragere date...`);
+          
+          // Get detailed data for each new conversation
+          const detailedConversations = [];
+          for (const conv of newConversations) {
+            console.log(`📝 Getting detailed data for conversation ${conv.conversation_id}`);
+            const details = await getConversationDetails(conv.conversation_id);
+            if (details && !details.error) {
+              detailedConversations.push(details);
+            }
+          }
+          
+          console.log(`✅ Successfully retrieved ${detailedConversations.length} detailed conversations for ${contact.name}`);
+          return detailedConversations;
         }
         
-        console.log(`⏳ Call still in progress for ${contact.name} - status: ${statusData?.status}`);
-        setCurrentCallStatus(`Apel în curs pentru ${contact.name} - status: ${statusData?.status}`);
+        console.log(`⏳ No new conversations found for ${contact.name} on attempt ${attempts}`);
         
       } catch (error) {
-        console.error(`❌ Error checking status for ${contact.name} on attempt ${attempts}:`, error);
+        console.error(`❌ Error monitoring ${contact.name} on attempt ${attempts}:`, error);
         setCurrentCallStatus(`Eroare temporară pentru ${contact.name}, se reîncearcă...`);
-        await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds on error
+        await new Promise(resolve => setTimeout(resolve, 10000));
       }
     }
+
+    // Timeout reached - still try to get any new conversations one last time
+    console.log(`⏰ Monitoring timeout for ${contact.name} after ${maxAttempts} attempts - final check...`);
+    try {
+      const conversationsData = await getAgentConversations(targetAgentId);
+      if (conversationsData?.conversations) {
+        const conversations = conversationsData.conversations;
+        const newConversations = conversations.filter((conv: any) => {
+          const convDate = new Date(conv.created_at || conv.start_time);
+          return convDate >= startTime && !existingConversationIds.includes(conv.conversation_id);
+        });
+        
+        if (newConversations.length > 0) {
+          console.log(`🎯 Final check found ${newConversations.length} conversations for ${contact.name}!`);
+          const detailedConversations = [];
+          for (const conv of newConversations) {
+            const details = await getConversationDetails(conv.conversation_id);
+            if (details && !details.error) {
+              detailedConversations.push(details);
+            }
+          }
+          return detailedConversations;
+        }
+      }
+    } catch (error) {
+      console.error(`❌ Error in final check for ${contact.name}:`, error);
+    }
     
-    // Timeout reached
-    console.log(`⏰ Status monitoring timeout for ${contact.name} after ${maxAttempts} attempts`);
-    return null;
+    console.log(`❌ No new conversations found for ${contact.name} after timeout`);
+    return [];
   };
 
   // Save complete call data to history and analytics
@@ -329,33 +384,39 @@ export const useCallInitiation = ({
             continue; // Skip to next contact
           }
 
-          console.log(`✅ Call initiated for ${contact.name}. Conversation ID: ${callInitData.conversationId}`);
+          console.log(`✅ Call initiated for ${contact.name}`);
 
-          // STEP 3: Update status and start call monitoring  
+          // STEP 3: Update status and start optimized monitoring
           setCallStatuses(prev => prev.map(status => 
             status.contactId === contact.id 
-              ? { ...status, status: 'in-progress', conversationId: callInitData.conversationId }
+              ? { ...status, status: 'in-progress' }
               : status
           ));
 
           toast({
             title: "Apel inițiat",
-            description: `Se monitorizează statusul apelului către ${contact.name}...`,
+            description: `Se monitorizează conversațiile noi pentru ${contact.name}...`,
           });
 
-          // STEP 4: MONITOR CALL STATUS - check every 30 seconds until completed
-          console.log(`👁️ Step 4: Starting call status monitoring for ${contact.name}`);
-          setCurrentCallStatus(`Monitorizează status apel pentru ${contact.name}...`);
+          // STEP 4: OPTIMIZED MONITORING - check for new conversations
+          console.log(`👁️ Step 4: Starting optimized monitoring for ${contact.name}`);
+          setCurrentCallStatus(`Monitorizează conversații noi pentru ${contact.name}...`);
           
-          const conversationData = await monitorCallStatus(callInitData.conversationId, contact);
+          const newConversations = await monitorForNewConversations(targetAgentId, contact, callStartTime);
           
-          // STEP 5: PROCESS CONVERSATION RESULT
-          console.log(`💾 Step 5: Processing conversation result for ${contact.name}`);
+          // STEP 5: PROCESS ALL NEW CONVERSATIONS
+          console.log(`💾 Step 5: Processing ${newConversations.length} new conversations for ${contact.name}`);
           
-          if (conversationData) {
-            setCurrentCallStatus(`Salvează datele conversației pentru ${contact.name}...`);
+          if (newConversations.length > 0) {
+            setCurrentCallStatus(`Salvează ${newConversations.length} conversații pentru ${contact.name}...`);
             
-            await saveCompleteCallData(conversationData, contact, callInitData.conversationId);
+            for (const conversationData of newConversations) {
+              const conversationId = conversationData.conversation_id || 
+                                   conversationData.id || 
+                                   `unknown_${Date.now()}`;
+              
+              await saveCompleteCallData(conversationData, contact, conversationId);
+            }
             
             // Update status to completed
             setCallStatuses(prev => prev.map(status => 
@@ -370,10 +431,10 @@ export const useCallInitiation = ({
 
             toast({
               title: "Apel finalizat",
-              description: `${contact.name}: conversația a fost salvată în istoric`,
+              description: `${contact.name}: ${newConversations.length} conversații salvate în istoric`,
             });
           } else {
-            // Call timeout or failed - mark as failed
+            // No conversations found - mark as failed
             setCallStatuses(prev => prev.map(status => 
               status.contactId === contact.id 
                 ? { ...status, status: 'failed', endTime: new Date() }
@@ -381,8 +442,8 @@ export const useCallInitiation = ({
             ));
             
             toast({
-              title: "Apel nefinalizat",
-              description: `Pentru ${contact.name} apelul nu s-a finalizat în timp util`,
+              title: "Nicio conversație găsită",
+              description: `Pentru ${contact.name} nu s-au găsit conversații noi`,
               variant: "destructive",
             });
           }
