@@ -319,19 +319,28 @@ export default function PhoneNumbers() {
                   Adaugă primul număr
                 </Button>
               </div> : <div className="space-y-4">
-                {phoneNumbers.map(phone => <div key={phone.id} className="border rounded-lg">
+                {phoneNumbers.map(phone => <div key={phone.id} className="border rounded-2xl overflow-hidden">
                     {/* Collapsed View */}
-                    <div className="p-4 cursor-pointer hover:bg-muted/50 flex items-center justify-between" onClick={() => setExpandedPhone(expandedPhone === phone.id ? null : phone.id)}>
+                    <div className="p-6 cursor-pointer hover:bg-muted/50 flex items-center justify-between" onClick={() => setExpandedPhone(expandedPhone === phone.id ? null : phone.id)}>
                       <div className="flex items-center gap-4">
                         {expandedPhone === phone.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                         <div>
-                          <div className="flex items-center gap-3">
-                            <h3 className="font-semibold text-lg">{phone.phone_number}</h3>
-                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${phone.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                              {phone.status === 'active' ? 'Activ' : 'Inactiv'}
-                            </span>
+                          <div className="flex items-center gap-3 mb-1">
+                            <h3 className="font-semibold text-xl">{phone.phone_number}</h3>
+                            <Copy className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground" 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigator.clipboard.writeText(phone.phone_number);
+                                    toast({
+                                      title: "Copiat!",
+                                      description: "Numărul de telefon a fost copiat în clipboard"
+                                    });
+                                  }} />
                           </div>
-                          <p className="text-sm text-muted-foreground">{phone.label}</p>
+                          <p className="text-sm text-muted-foreground mb-1">{phone.label}</p>
+                          <div className="text-sm text-muted-foreground font-mono">
+                            {phone.elevenlabs_phone_id || 'Nu este sincronizat cu ElevenLabs'}
+                          </div>
                         </div>
                       </div>
                       
@@ -352,85 +361,156 @@ export default function PhoneNumbers() {
                     </div>
 
                     {/* Expanded View */}
-                    {expandedPhone === phone.id && <div className="border-t bg-muted/20 p-4 space-y-6">
-                        {/* ElevenLabs Phone ID Section */}
-                        <div className="flex items-center gap-2 p-3 bg-background rounded-lg border">
-                          <span className="text-sm text-muted-foreground">Kalina ID:</span>
-                          {phone.elevenlabs_phone_id ? <>
-                              <code className="font-mono text-sm bg-muted px-2 py-1 rounded">{phone.elevenlabs_phone_id}</code>
-                              <Button variant="ghost" size="sm" onClick={() => {
-                      navigator.clipboard.writeText(phone.elevenlabs_phone_id!);
-                      toast({
-                        title: "Copiat!",
-                        description: "ID-ul ElevenLabs a fost copiat în clipboard"
-                      });
-                    }}>
-                                <Copy className="h-4 w-4" />
-                              </Button>
-                            </> : <span className="text-sm text-muted-foreground">Nu este sincronizat cu ElevenLabs</span>}
-                        </div>
-
+                    {expandedPhone === phone.id && <div className="border-t bg-muted/20 p-6 space-y-8">
+                        
                         {/* Agent Assignment */}
-                        <div className="space-y-2">
-                          <Label>Agent conectat</Label>
+                        <div className="space-y-4">
+                          <h4 className="font-medium">Agent</h4>
+                          <p className="text-sm text-muted-foreground">Assign an agent to handle calls to this phone number.</p>
                           <div className="flex items-center gap-2">
-                            {phone.connected_agent_id ? <span className="text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
-                                Conectat: {phone.connected_agent_id}
-                              </span> : <span className="text-sm text-muted-foreground bg-gray-50 px-3 py-1 rounded-full">
-                                Neconectat
-                              </span>}
+                            <Select value={phone.connected_agent_id || "no-agent"} onValueChange={(value) => {
+                              if (value !== "no-agent") {
+                                connectAgent(phone.id, value);
+                              }
+                            }}>
+                              <SelectTrigger className="w-[280px] rounded-xl">
+                                <SelectValue placeholder="No agent" />
+                              </SelectTrigger>
+                              <SelectContent className="rounded-xl">
+                                <SelectItem value="no-agent">No agent</SelectItem>
+                                {/* Add your agents here */}
+                              </SelectContent>
+                            </Select>
                           </div>
                         </div>
 
                         {/* SIP Configuration */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-6">
                           {/* Inbound Configuration */}
-                          <Card>
-                            <CardHeader className="pb-3">
-                              <CardTitle className="text-sm flex items-center gap-2">
-                                <Globe className="h-4 w-4" />
-                                Inbound SIP Trunk Configuration
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                              <div>
-                                <span className="text-xs text-muted-foreground">Media Encryption</span>
-                                <p className="text-sm">{phone.inbound_media_encryption || 'Allowed (Default)'}</p>
+                          <div className="space-y-4">
+                            <div className="flex items-start gap-3">
+                              <div className="bg-muted rounded-xl p-3">
+                                <Globe className="h-5 w-5" />
                               </div>
-                              {phone.inbound_allowed_addresses && phone.inbound_allowed_addresses.length > 0 && <div>
-                                  <span className="text-xs text-muted-foreground">Allowed Addresses</span>
-                                  <p className="text-sm">{phone.inbound_allowed_addresses.join(', ')}</p>
-                                </div>}
-                            </CardContent>
-                          </Card>
+                              <div className="flex-1">
+                                <h4 className="font-medium mb-2">Inbound SIP Trunk Configuration</h4>
+                                <p className="text-sm text-muted-foreground mb-6">You can use any of the following SIP servers to receive calls.</p>
+                                
+                                <div className="bg-background rounded-xl border p-6 space-y-6">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <h5 className="text-sm font-medium">SIP Server TCP</h5>
+                                        <div className="bg-muted rounded-lg p-1">
+                                          <Globe className="h-3 w-3" />
+                                        </div>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground font-mono">sip:sip.rtc.elevenlabs.io:5060;transport=tcp</p>
+                                    </div>
+                                    <div>
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <h5 className="text-sm font-medium">SIP Server TLS</h5>
+                                        <div className="bg-muted rounded-lg p-1">
+                                          <Lock className="h-3 w-3" />
+                                        </div>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground font-mono">sip:sip.rtc.elevenlabs.io:5061;transport=tls</p>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <h5 className="text-sm font-medium">Media Encryption</h5>
+                                        <div className="bg-muted rounded-lg p-1">
+                                          <Lock className="h-3 w-3" />
+                                        </div>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground">{phone.inbound_media_encryption || 'Allowed (Default)'}</p>
+                                    </div>
+                                    <div>
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <h5 className="text-sm font-medium">Allowed Addresses</h5>
+                                        <div className="bg-muted rounded-lg p-1">
+                                          <Globe className="h-3 w-3" />
+                                        </div>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground">All addresses</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
 
                           {/* Outbound Configuration */}
-                          <Card>
-                            <CardHeader className="pb-3">
-                              <CardTitle className="text-sm flex items-center gap-2">
-                                <Settings className="h-4 w-4" />
-                                Outbound SIP Trunk Configuration
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                              {phone.outbound_address && <div>
-                                  <span className="text-xs text-muted-foreground">Address</span>
-                                  <p className="text-sm font-mono">{phone.outbound_address}</p>
-                                </div>}
-                              <div>
-                                <span className="text-xs text-muted-foreground">Transport Protocol</span>
-                                <p className="text-sm uppercase">{phone.outbound_transport || 'TCP'}</p>
+                          <div className="space-y-4">
+                            <div className="flex items-start gap-3">
+                              <div className="bg-muted rounded-xl p-3">
+                                <Settings className="h-5 w-5" />
                               </div>
-                              <div>
-                                <span className="text-xs text-muted-foreground">Media Encryption</span>
-                                <p className="text-sm">{phone.outbound_media_encryption || 'Allowed (Default)'}</p>
+                              <div className="flex-1">
+                                <h4 className="font-medium mb-2">Outbound SIP Trunk Configuration</h4>
+                                <p className="text-sm text-muted-foreground mb-6">Configuration details for this SIP Trunk phone number.</p>
+                                
+                                <div className="bg-background rounded-xl border p-6 space-y-6">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <h5 className="text-sm font-medium">Address</h5>
+                                        <div className="bg-muted rounded-lg p-1">
+                                          <Globe className="h-3 w-3" />
+                                        </div>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground font-mono">{phone.outbound_address || '193.53.40.79:5060'}</p>
+                                    </div>
+                                    <div>
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <h5 className="text-sm font-medium">Transport Protocol</h5>
+                                        <div className="bg-muted rounded-lg p-1">
+                                          <Settings className="h-3 w-3" />
+                                        </div>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground uppercase">{phone.outbound_transport || 'TCP'}</p>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <h5 className="text-sm font-medium">Media Encryption</h5>
+                                        <div className="bg-muted rounded-lg p-1">
+                                          <Lock className="h-3 w-3" />
+                                        </div>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground">{phone.outbound_media_encryption || 'Allowed (Default)'}</p>
+                                    </div>
+                                    <div>
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <h5 className="text-sm font-medium">Authentication</h5>
+                                        <div className="bg-muted rounded-lg p-1">
+                                          <Lock className="h-3 w-3" />
+                                        </div>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground">Username and password configured</p>
+                                    </div>
+                                  </div>
+                                  
+                                  {phone.outbound_username && (
+                                    <div>
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <h5 className="text-sm font-medium">Username</h5>
+                                        <div className="bg-muted rounded-lg p-1">
+                                          <Settings className="h-3 w-3" />
+                                        </div>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground font-mono">{phone.outbound_username}</p>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                              {phone.outbound_username && <div>
-                                  <span className="text-xs text-muted-foreground">Authentication</span>
-                                  <p className="text-sm">Username and password configured</p>
-                                </div>}
-                            </CardContent>
-                          </Card>
+                            </div>
+                          </div>
                         </div>
 
                         {/* Metadata */}
