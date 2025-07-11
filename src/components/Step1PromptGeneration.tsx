@@ -9,8 +9,6 @@ import { Loader2, Globe, ArrowRight } from 'lucide-react';
 interface Step1PromptGenerationProps {
   websiteUrl: string;
   setWebsiteUrl: (url: string) => void;
-  agentRole: string;
-  setAgentRole: (role: string) => void;
   additionalPrompt: string;
   setAdditionalPrompt: (prompt: string) => void;
   generatedPrompt: string;
@@ -18,23 +16,21 @@ interface Step1PromptGenerationProps {
   onGeneratePrompt: () => void;
   onNextStep: () => void;
   isGenerating: boolean;
-  isPromptGenerated?: boolean; // New prop to track if prompt was successfully generated
+  isPromptGenerated?: boolean;
 }
 
 export const Step1PromptGeneration: React.FC<Step1PromptGenerationProps> = ({
-                                                                              websiteUrl,
-                                                                              setWebsiteUrl,
-                                                                              agentRole,
-                                                                              setAgentRole,
-                                                                              additionalPrompt,
-                                                                              setAdditionalPrompt,
-                                                                              generatedPrompt,
-                                                                              setGeneratedPrompt,
-                                                                              onGeneratePrompt,
-                                                                              onNextStep,
-                                                                              isGenerating,
-                                                                              isPromptGenerated = false,
-                                                                            }) => {
+                                                                               websiteUrl,
+                                                                               setWebsiteUrl,
+                                                                               additionalPrompt,
+                                                                               setAdditionalPrompt,
+                                                                               generatedPrompt,
+                                                                               setGeneratedPrompt,
+                                                                               onGeneratePrompt,
+                                                                               onNextStep,
+                                                                               isGenerating,
+                                                                               isPromptGenerated = false,
+                                                                             }) => {
   // Updated logic: button is enabled only if:
   // 1. Website URL is provided
   // 2. Generated prompt field has content
@@ -65,18 +61,6 @@ export const Step1PromptGeneration: React.FC<Step1PromptGenerationProps> = ({
             />
           </div>
 
-          <div>
-            <Label htmlFor="agent-role" className="text-foreground">
-              Rolul Agentului
-            </Label>
-            <Input
-                id="agent-role"
-                value={agentRole}
-                onChange={(e) => setAgentRole(e.target.value)}
-                placeholder="De ex: consultant vânzări, suport tehnic, etc."
-                className="glass-input"
-            />
-          </div>
 
           <div>
             <Label htmlFor="additional-prompt" className="text-foreground">

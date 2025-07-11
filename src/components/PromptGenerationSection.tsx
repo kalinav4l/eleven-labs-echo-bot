@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Label } from '@/components/ui/label.tsx';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select.tsx';
-import { Loader2, Globe } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea.tsx';
+import { Loader2, Globe, Wand2 } from 'lucide-react';
 import { VOICES, LANGUAGES, DEFAULT_VALUES } from '../constants/constants';
 import { AgentCreationStatusDisplay } from './AgentCreationStatusDisplay.tsx';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PromptGenerationSectionProps {
   // Form state
@@ -14,6 +16,8 @@ interface PromptGenerationSectionProps {
   setWebsiteUrl: React.Dispatch<React.SetStateAction<string>>;
   additionalPrompt: string;
   setAdditionalPrompt: React.Dispatch<React.SetStateAction<string>>;
+  generatedPrompt: string;
+  setGeneratedPrompt: React.Dispatch<React.SetStateAction<string>>;
   agentName: string;
   setAgentName: React.Dispatch<React.SetStateAction<string>>;
   agentLanguage: string;
@@ -32,22 +36,42 @@ interface PromptGenerationSectionProps {
 }
 
 export const PromptGenerationSection: React.FC<PromptGenerationSectionProps> = ({
-                                                                                  websiteUrl,
-                                                                                  setWebsiteUrl,
-                                                                                  additionalPrompt,
-                                                                                  setAdditionalPrompt,
-                                                                                  agentName,
-                                                                                  setAgentName,
-                                                                                  agentLanguage,
-                                                                                  setAgentLanguage,
-                                                                                  selectedVoice,
-                                                                                  setSelectedVoice,
-                                                                                  onCreateAgent,
-                                                                                  onCopyAgentId,
-                                                                                  isCreatingAgent,
-                                                                                  isGeneratingPrompt,
-                                                                                  createdAgentId,
-                                                                                }) => {
+                                                                                   websiteUrl,
+                                                                                   setWebsiteUrl,
+                                                                                   additionalPrompt,
+                                                                                   setAdditionalPrompt,
+                                                                                   generatedPrompt,
+                                                                                   setGeneratedPrompt,
+                                                                                   agentName,
+                                                                                   setAgentName,
+                                                                                   agentLanguage,
+                                                                                   setAgentLanguage,
+                                                                                   selectedVoice,
+                                                                                   setSelectedVoice,
+                                                                                   onCreateAgent,
+                                                                                   onCopyAgentId,
+                                                                                   isCreatingAgent,
+                                                                                   isGeneratingPrompt,
+                                                                                   createdAgentId,
+                                                                                 }) => {
+  
+  const handleGeneratePrompt = async () => {
+    if (!websiteUrl) return;
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-agent-prompt', {
+        body: { websiteUrl }
+      });
+      
+      if (error) throw error;
+      
+      if (data.success && data.prompt) {
+        setGeneratedPrompt(data.prompt);
+      }
+    } catch (error) {
+      console.error('Error generating prompt:', error);
+    }
+  };
   const renderButtonContent = (): React.ReactNode => {
     if (isCreatingAgent) {
       return (
@@ -105,6 +129,45 @@ export const PromptGenerationSection: React.FC<PromptGenerationSectionProps> = (
                 placeholder="De exemplu: Atrage atentia ca in urmatoarele 3 luni avem reducere 30%"
                 className="glass-input"
             />
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              onClick={handleGeneratePrompt}
+              disabled={!websiteUrl || isGeneratingPrompt}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              {isGeneratingPrompt ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Se generează...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="w-4 h-4" />
+                  Generează Prompt
+                </>
+              )}
+            </Button>
+          </div>
+
+          <div>
+            <Label htmlFor="generated-prompt" className="text-foreground">
+              Prompt Generat (Opțional) *
+            </Label>
+            <Textarea
+              id="generated-prompt"
+              value={generatedPrompt}
+              onChange={(e) => setGeneratedPrompt(e.target.value)}
+              placeholder="Aici va fi generat prompt-ul pentru agent pe baza site-ului analizat..."
+              className="glass-input min-h-[200px] text-sm"
+              rows={8}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              * Prompt-ul va fi generat automat pe baza analizei site-ului sau îl poți edita manual
+            </p>
           </div>
 
           <div>

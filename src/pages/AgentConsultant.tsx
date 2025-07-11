@@ -18,7 +18,6 @@ const AgentConsultant: React.FC = () => {
 
   // Step 1 - Prompt Generation
   const [websiteUrl, setWebsiteUrl] = useState('');
-  const [agentRole, setAgentRole] = useState('');
   const [additionalPrompt, setAdditionalPrompt] = useState('');
   const [generatedPrompt, setGeneratedPrompt] = useState('');
 
@@ -56,7 +55,7 @@ const AgentConsultant: React.FC = () => {
   const handleGeneratePrompt = async () => {
     const prompt = await generatePrompt({
       websiteUrl,
-      agentRole,
+      agentRole: '',  // Nu mai e nevoie de agentRole
       additionalPrompt
     });
     if (prompt) {
@@ -80,8 +79,6 @@ const AgentConsultant: React.FC = () => {
           <Step1PromptGeneration
             websiteUrl={websiteUrl}
             setWebsiteUrl={setWebsiteUrl}
-            agentRole={agentRole}
-            setAgentRole={setAgentRole}
             additionalPrompt={additionalPrompt}
             setAdditionalPrompt={setAdditionalPrompt}
             generatedPrompt={generatedPrompt}
