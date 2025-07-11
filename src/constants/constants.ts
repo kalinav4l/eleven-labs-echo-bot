@@ -21,6 +21,15 @@ export const VOICES = [
   
 ] as const;
 
+export const VOICES = [
+  { id: 'vrlYThSLKW8zkmzKp6HB', name: 'Lili' },
+  { id: 'cjVigY5qzO86Huf0OWal', name: 'Eric' },
+  { id: 'hnrrfdVZhpEHlvvBppOW', name: 'Kalina' },
+  { id: 'YKAmPotHIjfmLzh5daE4', name: 'Andreea' },
+  { id: 'kdmDKE6EkgrWrrykO9Qt', name: 'Alexandra' },
+  
+] as const;
+
 // Complete language map with language IDs as keys
 export const LANGUAGE_MAP = {
   'af': 'Afrikaans',
