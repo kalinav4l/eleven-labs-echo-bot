@@ -13,12 +13,12 @@ export const API_CONFIG = {
 } as const;
 
 export const VOICES = [
-  { id: 'cjVigY5qzO86Huf0OWal', name: 'Eric' },
-  { id: '9BWtsMINqrJLrRacOk9x', name: 'Aria' },
-  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah' },
-  { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura' },
-  { id: 'IKne3meq5aSn9XLyUdCD', name: 'Charlie' },
   { id: 'vrlYThSLKW8zkmzKp6HB', name: 'Lili' },
+  { id: 'cjVigY5qzO86Huf0OWal', name: 'Eric' },
+  { id: 'hnrrfdVZhpEHlvvBppOW', name: 'Kalina' },
+  { id: 'YKAmPotHIjfmLzh5daE4', name: 'Andreea' },
+  { id: 'kdmDKE6EkgrWrrykO9Qt', name: 'Alexandra' },
+  
 ] as const;
 
 // Complete language map with language IDs as keys
@@ -75,7 +75,7 @@ export const LANGUAGES = [
 ] as const;
 
 export const DEFAULT_VALUES = {
-  VOICE_ID: 'cjVigY5qzO86Huf0OWal',
+  VOICE_ID: 'vrlYThSLKW8zkmzKp6HB',
   LANGUAGE: 'ro',
 } as const;
 
