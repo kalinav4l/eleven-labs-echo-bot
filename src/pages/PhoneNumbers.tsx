@@ -44,7 +44,6 @@ const countryCodes = [{
 }, {
   code: '+373',
   country: 'MD',
-  flag: '🇲🇩'
 }, {
   code: '+40',
   country: 'RO',
