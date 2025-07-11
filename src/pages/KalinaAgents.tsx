@@ -208,6 +208,65 @@ const KalinaAgents = () => {
                     <Phone className="w-3 h-3 mr-1" />
                     Test Apel
                   </Button>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0 hover:bg-gray-100"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Settings className="w-4 h-4 text-gray-500" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleAgentStatus(agent);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        {agent.is_active ? (
+                          <>
+                            <PowerOff className="w-4 h-4 mr-2" />
+                            Dezactivează
+                          </>
+                        ) : (
+                          <>
+                            <Power className="w-4 h-4 mr-2" />
+                            Activează
+                          </>
+                        )}
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDuplicateAgent(agent);
+                        }}
+                        className="cursor-pointer"
+                        disabled={isDuplicating}
+                      >
+                        <Copy className="w-4 h-4 mr-2" />
+                        Duplică Agent
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuSeparator />
+                      
+                      <DropdownMenuItem 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedAgentForDeletion(agent);
+                        }}
+                        className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Șterge Agent
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             </div>
