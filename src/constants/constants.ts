@@ -9,7 +9,7 @@ export const API_CONFIG = {
   ELEVENLABS_BASE_URL: 'https://api.elevenlabs.io/v1',
   DEFAULT_MODEL_ID: 'eleven_turbo_v2_5',
   // Default agent phone number ID
-  DEFAULT_AGENT_PHONE_ID: 'phnum_01jz06e77dfce9034d7jnpj5v7',
+  DEFAULT_AGENT_PHONE_ID: 'phnum_01jzwnpa8cfnhbxh0367z4jtqs',
 } as const;
 
 export const VOICES = [
@@ -18,8 +18,6 @@ export const VOICES = [
   { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah' },
   { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura' },
   { id: 'IKne3meq5aSn9XLyUdCD', name: 'Charlie' },
-  { id: 'YKAmPotHIjfmLzh5daE4', name: 'Nova' },
-  { id: 'hnrrfdVZhpEHlvvBppOW', name: 'Adrian' },
 ] as const;
 
 // Complete language map with language IDs as keys
