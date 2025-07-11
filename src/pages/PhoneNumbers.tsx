@@ -160,7 +160,7 @@ export default function PhoneNumbers() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'xi-api-key': 'sk_6443a64ab5f84bfe0c72941fd2d4f188317cdab4715a3925'
+          'xi-api-key': 'ELEVENLABS_API_KEY'
         },
         body: JSON.stringify(sipData)
       });
