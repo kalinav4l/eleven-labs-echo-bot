@@ -132,13 +132,47 @@ serve(async (req) => {
 
     console.log('Apel inițiat cu succes:', elevenLabsData)
 
+    // Determine call status based on ElevenLabs response
+    let callStatus = 'initiated'
+    let callSummary = `Apel inițiat către ${contact_name || phone_number}`
+    
+    if (elevenLabsData) {
+      const message = elevenLabsData.message || ''
+      const success = elevenLabsData.success
+      
+      if (success === false) {
+        callStatus = 'failed'
+        callSummary = `Apel eșuat către ${contact_name || phone_number}: ${message}`
+      } else if (success === true) {
+        if (message.includes('initiated')) {
+          callStatus = 'initiated'
+          callSummary = `Apel inițiat către ${contact_name || phone_number}`
+        } else {
+          callStatus = 'success'
+          callSummary = `Apel reușit către ${contact_name || phone_number}`
+        }
+      }
+      
+      // Check for specific SIP error patterns
+      if (message.includes('TEMPORARILY_UNAVAILABLE') || message.includes('480')) {
+        callStatus = 'busy'
+        callSummary = `Apel ocupat către ${contact_name || phone_number}: temporar indisponibil`
+      } else if (message.includes('FORBIDDEN') || message.includes('403')) {
+        callStatus = 'failed'
+        callSummary = `Apel interzis către ${contact_name || phone_number}: acces refuzat`
+      } else if (message.includes('NOT_FOUND') || message.includes('404')) {
+        callStatus = 'failed'
+        callSummary = `Apel eșuat către ${contact_name || phone_number}: număr negăsit`
+      }
+    }
+
     // Store call initiation in database
     const callHistoryData = {
       user_id: user_id,
       phone_number: phone_number,
       contact_name: contact_name || phone_number,
-      call_status: 'initiated',
-      summary: `Apel inițiat către ${contact_name || phone_number}`,
+      call_status: callStatus,
+      summary: callSummary,
       agent_id: agent_id,
       conversation_id: elevenLabsData?.conversation_id || null,
       elevenlabs_history_id: elevenLabsData?.conversation_id || null,

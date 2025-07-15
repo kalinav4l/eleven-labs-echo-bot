@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { FileText, Loader2, CheckCircle, AlertCircle, Clock, Phone } from 'lucide-react';
 
 interface CallHistoryRecord {
   id: string;
@@ -49,6 +49,10 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
                     <div className="flex items-center gap-2">
                       {call.call_status === 'success' ? (
                         <CheckCircle className="w-4 h-4 text-green-600" />
+                      ) : call.call_status === 'busy' ? (
+                        <Clock className="w-4 h-4 text-yellow-600" />
+                      ) : call.call_status === 'initiated' ? (
+                        <Phone className="w-4 h-4 text-blue-600" />
                       ) : (
                         <AlertCircle className="w-4 h-4 text-red-600" />
                       )}
@@ -57,10 +61,16 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
                           ? 'bg-green-100 text-green-800' 
                           : call.call_status === 'initiated'
                           ? 'bg-blue-100 text-blue-800'
-                          : 'bg-red-100 text-red-800'
+                          : call.call_status === 'busy'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : call.call_status === 'failed'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {call.call_status === 'success' ? 'Finalizat' : 
-                         call.call_status === 'initiated' ? 'Inițiat' : 'Eșuat'}
+                        {call.call_status === 'success' ? 'Successful' : 
+                         call.call_status === 'initiated' ? 'Initiated' : 
+                         call.call_status === 'busy' ? 'Busy' :
+                         call.call_status === 'failed' ? 'Error' : 'Unknown'}
                       </span>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">{call.call_date}</p>

@@ -44,8 +44,11 @@ const ConversationAnalytics = () => {
       case 'failed':
       case 'error':
         return 'bg-red-100 text-red-800';
+      case 'initiated':
       case 'in_progress':
         return 'bg-blue-100 text-blue-800';
+      case 'busy':
+        return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -150,10 +153,11 @@ const ConversationAnalytics = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Toate statusurile</SelectItem>
-              <SelectItem value="success">Success</SelectItem>
-              <SelectItem value="failed">Failed</SelectItem>
+              <SelectItem value="success">Successful</SelectItem>
+              <SelectItem value="initiated">Initiated</SelectItem>
+              <SelectItem value="busy">Busy</SelectItem>
+              <SelectItem value="failed">Error</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="error">Error</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -222,7 +226,10 @@ const ConversationAnalytics = () => {
                               className={getStatusColor(call.call_status)}
                               variant="secondary"
                             >
-                              {call.call_status === 'success' || call.duration_seconds > 0 ? 'Successful' : 'Error'}
+                              {call.call_status === 'success' ? 'Successful' : 
+                               call.call_status === 'initiated' ? 'Initiated' : 
+                               call.call_status === 'busy' ? 'Busy' :
+                               call.call_status === 'failed' ? 'Error' : 'Unknown'}
                             </Badge>
                           </td>
                           <td className="p-3">
