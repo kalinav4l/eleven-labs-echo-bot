@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Phone, PlayCircle, Loader2 } from 'lucide-react';
+import { Phone, PlayCircle, Loader2, MessageSquare, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
@@ -12,6 +12,9 @@ const TestCall = () => {
   const [agentId, setAgentId] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [conversationId, setConversationId] = useState('');
+  const [conversation, setConversation] = useState(null);
+  const [isLoadingConversation, setIsLoadingConversation] = useState(false);
   const {
     toast
   } = useToast();
@@ -64,6 +67,9 @@ const TestCall = () => {
           description: `Apelul a fost inițiat către ${phoneNumber}. Conversation ID: ${data.conversationId}`
         });
 
+        // Store conversation ID for later retrieval
+        setConversationId(data.conversationId);
+        
         // Clear form after successful call
         setAgentId('');
         setPhoneNumber('');
@@ -85,6 +91,118 @@ const TestCall = () => {
       setIsLoading(false);
     }
   };
+
+  const fetchConversation = async () => {
+    if (!conversationId) {
+      toast({
+        title: "Nu există conversație",
+        description: "Vă rugăm să inițiați mai întâi un apel de test",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoadingConversation(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('get-elevenlabs-conversation', {
+        body: { conversationId }
+      });
+
+      if (error) {
+        console.error('Error fetching conversation:', error);
+        toast({
+          title: "Eroare la încărcarea conversației",
+          description: error.message || "A apărut o eroare la încărcarea conversației",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (data?.error) {
+        toast({
+          title: "Conversația nu este încă disponibilă",
+          description: "Încercați din nou în câteva momente după finalizarea apelului",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setConversation(data);
+      toast({
+        title: "Conversația a fost încărcată cu succes!",
+        description: "Conversația este afișată mai jos"
+      });
+    } catch (error) {
+      console.error('Error fetching conversation:', error);
+      toast({
+        title: "Eroare la încărcarea conversației",
+        description: "A apărut o eroare la încărcarea conversației",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingConversation(false);
+    }
+  };
+
+  const renderConversation = () => {
+    if (!conversation) return null;
+
+    const messages = conversation.transcript || [];
+    
+    return (
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <MessageSquare className="w-5 h-5 mr-2" />
+            Conversația ({conversationId})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            {messages.length === 0 ? (
+              <p className="text-gray-500">Nu sunt disponibile mesaje pentru această conversație.</p>
+            ) : (
+              messages.map((message, index) => (
+                <div
+                  key={index}
+                  className={`p-3 rounded-lg ${
+                    message.role === 'agent' 
+                      ? 'bg-blue-50 border-l-4 border-blue-500' 
+                      : 'bg-gray-50 border-l-4 border-gray-500'
+                  }`}
+                >
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-medium text-sm">
+                      {message.role === 'agent' ? 'Agent' : 'Utilizator'}
+                    </span>
+                    {message.timestamp && (
+                      <span className="text-xs text-gray-500">
+                        {new Date(message.timestamp).toLocaleTimeString()}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm">{message.content || message.text}</p>
+                </div>
+              ))
+            )}
+          </div>
+          
+          {conversation.status && (
+            <div className="mt-4 p-3 bg-gray-100 rounded-lg">
+              <p className="text-sm"><strong>Status:</strong> {conversation.status}</p>
+              {conversation.duration_seconds && (
+                <p className="text-sm"><strong>Durată:</strong> {conversation.duration_seconds} secunde</p>
+              )}
+              {conversation.cost && (
+                <p className="text-sm"><strong>Cost:</strong> ${conversation.cost}</p>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
   return <DashboardLayout>
       <div className="container mx-auto p-6 max-w-2xl">
         <div className="mb-8">
@@ -132,7 +250,41 @@ const TestCall = () => {
           </CardContent>
         </Card>
 
-        
+        {conversationId && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center">
+                  <MessageSquare className="w-5 h-5 mr-2" />
+                  Conversația
+                </span>
+                <Button
+                  onClick={fetchConversation}
+                  disabled={isLoadingConversation}
+                  variant="outline"
+                  size="sm"
+                >
+                  {isLoadingConversation ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                  )}
+                  Încarcă Conversația
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600 mb-4">
+                ID Conversație: <code className="bg-gray-100 px-2 py-1 rounded">{conversationId}</code>
+              </p>
+              <p className="text-sm text-gray-500">
+                După finalizarea apelului, apăsați "Încarcă Conversația" pentru a vedea dialogul.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {renderConversation()}
       </div>
     </DashboardLayout>;
 };
