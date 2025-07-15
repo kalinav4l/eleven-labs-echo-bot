@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Cool-gray brand palette custom properties */
+    --brand-100: #EAEFEF; /* Lightest */
+    --brand-200: #B8CFCE;
+    --brand-300: #7F8CAA;
+    --brand-400: #333446; /* Darkest */
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+}
+
+@layer components {
+  .glass {
+    background: rgba(234, 239, 239, 0.4);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(127, 140, 170, 0.2);
+  }
+  
+  .btn-primary {
+    background: linear-gradient(135deg, var(--brand-400), var(--brand-300));
+    color: var(--brand-100);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 25px rgba(51, 52, 70, 0.3);
+  }
+  
+  .btn-primary:hover {
+    background: linear-gradient(135deg, var(--brand-300), var(--brand-200));
+    box-shadow: 0 15px 35px rgba(51, 52, 70, 0.4);
+    transform: translateY(-2px);
+  }
+  
+  .btn-secondary {
+    background: rgba(234, 239, 239, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(127, 140, 170, 0.3);
+    color: var(--brand-400);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-secondary:hover {
+    background: rgba(234, 239, 239, 0.8);
+    border-color: rgba(127, 140, 170, 0.4);
+  }
+  
+  .section-padding {
+    padding: 4rem 1rem;
+  }
+  
+  @media (min-width: 640px) {
+    .section-padding {
+      padding: 4rem 1.5rem;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .section-padding {
+      padding: 6rem 2rem;
+    }
+  }
+  
+  .container-width {
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+}
+
+@keyframes float {
+  0%, 100% { 
+    transform: translateY(0px);
+  }
+  50% { 
+    transform: translateY(-20px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
