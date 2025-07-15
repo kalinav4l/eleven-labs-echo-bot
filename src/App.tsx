@@ -22,6 +22,7 @@ import Gmail from "./pages/Gmail";
 import Construction from "./pages/Construction";
 import Documentation from "./pages/Documentation";
 import PhoneNumbers from "./pages/PhoneNumbers";
+import TestCall from "./pages/TestCall";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ function App() {
             <Route path="/account/gmail" element={<Gmail />} />
             <Route path="/account/documentation" element={<Documentation />} />
             <Route path="/account/phone-numbers" element={<PhoneNumbers />} />
+            <Route path="/account/test-call" element={<TestCall />} />
             <Route path="/account/settings" element={<AccountSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
