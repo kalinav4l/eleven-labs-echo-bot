@@ -9,46 +9,39 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, Clock, Phone, MessageSquare, Copy, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ConversationDetailModal } from '@/components/outbound/ConversationDetailModal';
-
 const ConversationAnalytics = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAgent, setSelectedAgent] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const { callHistory, isLoading } = useCallHistory();
-  const { toast } = useToast();
-
+  const {
+    callHistory,
+    isLoading
+  } = useCallHistory();
+  const {
+    toast
+  } = useToast();
   const handleConversationClick = (conversationId: string) => {
     setSelectedConversationId(conversationId);
     setIsModalOpen(true);
   };
-
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedConversationId(null);
   };
-
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({
       title: "Copiat",
-      description: "Conversation ID a fost copiat în clipboard",
+      description: "Conversation ID a fost copiat în clipboard"
     });
   };
-
   const filteredCalls = callHistory.filter(call => {
-    const matchesSearch = call.phone_number.includes(searchTerm) || 
-                         call.contact_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (call.summary && call.summary.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                         (call.conversation_id && call.conversation_id.includes(searchTerm));
-    
+    const matchesSearch = call.phone_number.includes(searchTerm) || call.contact_name?.toLowerCase().includes(searchTerm.toLowerCase()) || call.summary && call.summary.toLowerCase().includes(searchTerm.toLowerCase()) || call.conversation_id && call.conversation_id.includes(searchTerm);
     const matchesStatus = statusFilter === 'all' || call.call_status === statusFilter;
-    
     return matchesSearch && matchesStatus;
   });
-
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'success':
@@ -66,114 +59,50 @@ const ConversationAnalytics = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return {
-      date: date.toLocaleDateString('ro-RO', { 
-        day: '2-digit', 
-        month: 'short', 
-        year: 'numeric' 
+      date: date.toLocaleDateString('ro-RO', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
       }),
-      time: date.toLocaleTimeString('ro-RO', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+      time: date.toLocaleTimeString('ro-RO', {
+        hour: '2-digit',
+        minute: '2-digit'
       })
     };
   };
-
   const formatDuration = (seconds: number) => {
     if (!seconds || seconds === 0) return '0:00';
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
-
   const getUniqueAgents = () => {
     const agents = [...new Set(callHistory.map(call => call.agent_id).filter(Boolean))];
     return agents;
   };
-
   if (isLoading) {
-    return (
-      <DashboardLayout>
+    return <DashboardLayout>
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
             <p className="mt-4 text-muted-foreground">Se încarcă istoricul conversațiilor...</p>
           </div>
         </div>
-      </DashboardLayout>
-    );
+      </DashboardLayout>;
   }
-
-  return (
-    <DashboardLayout>
+  return <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Conversation Analytics
-          </h1>
-          <p className="text-muted-foreground">
-            Analizează conversațiile și performanța agenților
-          </p>
-        </div>
+        
 
         {/* Search Bar */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Search className="w-5 h-5 mr-2" />
-              Caută după ID conversație
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Introdu ID-ul unei conversații pentru a o găsi toate informațiile disponibile
-            </p>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input 
-                placeholder="conv_XXXXXXXXXX sau ID conversație..." 
-                value={searchTerm} 
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10" 
-              />
-            </div>
-          </CardContent>
-        </Card>
+        
 
         {/* Filters */}
-        <div className="flex gap-4">
-          <Select value={selectedAgent} onValueChange={setSelectedAgent}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Toți agenții" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Toți agenții</SelectItem>
-              {getUniqueAgents().map((agentId) => (
-                <SelectItem key={agentId} value={agentId}>
-                  {agentId.slice(0, 8)}...
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Toate statusurile" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Toate statusurile</SelectItem>
-              <SelectItem value="success">Successful</SelectItem>
-              <SelectItem value="initiated">Initiated</SelectItem>
-              <SelectItem value="busy">Busy</SelectItem>
-              <SelectItem value="failed">Error</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        
 
         {/* Call History Table */}
         <Card>
@@ -200,17 +129,13 @@ const ConversationAnalytics = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredCalls.length === 0 ? (
-                    <tr>
+                  {filteredCalls.length === 0 ? <tr>
                       <td colSpan={6} className="text-center p-8 text-muted-foreground">
                         Nu sunt conversații disponibile
                       </td>
-                    </tr>
-                  ) : (
-                    filteredCalls.map((call) => {
-                      const dateTime = formatDate(call.call_date);
-                      return (
-                        <tr key={call.id} className="border-b hover:bg-muted/50">
+                    </tr> : filteredCalls.map(call => {
+                  const dateTime = formatDate(call.call_date);
+                  return <tr key={call.id} className="border-b hover:bg-muted/50">
                           <td className="p-3">
                             <div className="text-sm">
                               <div className="font-medium">{dateTime.date}</div>
@@ -235,66 +160,38 @@ const ConversationAnalytics = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            <Badge 
-                              className={getStatusColor(call.call_status)}
-                              variant="secondary"
-                            >
-                              {call.call_status === 'success' ? 'Successful' : 
-                               call.call_status === 'initiated' ? 'Initiated' : 
-                               call.call_status === 'busy' ? 'Busy' :
-                               call.call_status === 'failed' ? 'Error' : 'Unknown'}
+                            <Badge className={getStatusColor(call.call_status)} variant="secondary">
+                              {call.call_status === 'success' ? 'Successful' : call.call_status === 'initiated' ? 'Initiated' : call.call_status === 'busy' ? 'Busy' : call.call_status === 'failed' ? 'Error' : 'Unknown'}
                             </Badge>
                           </td>
                            <td className="p-3">
-                             {call.conversation_id ? (
-                               <div className="flex items-center space-x-2">
-                                 <code 
-                                   className="text-xs bg-muted px-2 py-1 rounded cursor-pointer hover:bg-blue-100 transition-colors flex items-center gap-1"
-                                   onClick={() => handleConversationClick(call.conversation_id)}
-                                 >
+                             {call.conversation_id ? <div className="flex items-center space-x-2">
+                                 <code className="text-xs bg-muted px-2 py-1 rounded cursor-pointer hover:bg-blue-100 transition-colors flex items-center gap-1" onClick={() => handleConversationClick(call.conversation_id)}>
                                    <ExternalLink className="w-3 h-3" />
                                    {call.conversation_id.slice(0, 12)}...
                                  </code>
-                                 <Button
-                                   variant="ghost"
-                                   size="sm"
-                                   onClick={(e) => {
-                                     e.stopPropagation();
-                                     copyToClipboard(call.conversation_id);
-                                   }}
-                                   className="h-6 w-6 p-0"
-                                 >
+                                 <Button variant="ghost" size="sm" onClick={e => {
+                          e.stopPropagation();
+                          copyToClipboard(call.conversation_id);
+                        }} className="h-6 w-6 p-0">
                                    <Copy className="w-3 h-3" />
                                  </Button>
-                               </div>
-                             ) : (
-                               <span className="text-muted-foreground text-sm">N/A</span>
-                             )}
+                               </div> : <span className="text-muted-foreground text-sm">N/A</span>}
                            </td>
-                        </tr>
-                      );
-                    })
-                  )}
+                        </tr>;
+                })}
                 </tbody>
               </table>
             </div>
             
-            {filteredCalls.length > 0 && (
-              <div className="mt-4 text-sm text-muted-foreground">
+            {filteredCalls.length > 0 && <div className="mt-4 text-sm text-muted-foreground">
                 Afișând {filteredCalls.length} din {callHistory.length} conversații
-              </div>
-            )}
+              </div>}
           </CardContent>
         </Card>
       </div>
       
-      <ConversationDetailModal
-        conversationId={selectedConversationId}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-      />
-    </DashboardLayout>
-  );
+      <ConversationDetailModal conversationId={selectedConversationId} isOpen={isModalOpen} onClose={handleCloseModal} />
+    </DashboardLayout>;
 };
-
 export default ConversationAnalytics;
