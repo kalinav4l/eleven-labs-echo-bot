@@ -5,6 +5,7 @@ import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Eye, EyeOff } from 'lucide-react';
 
 const Auth = () => {
   const { user, signIn, signUp } = useAuth();
@@ -16,6 +17,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -149,16 +151,26 @@ const Auth = () => {
               className="glass-input"
               disabled={loading}
             />
-            <Input
-              type="password"
-              placeholder={isLogin ? "Parolă" : "Parolă (minim 6 caractere)"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={isLogin ? undefined : 6}
-              className="glass-input"
-              disabled={loading}
-            />
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                placeholder={isLogin ? "Parolă" : "Parolă (minim 6 caractere)"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={isLogin ? undefined : 6}
+                className="glass-input pr-10"
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                disabled={loading}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
             
             {error && (
               <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
@@ -191,6 +203,7 @@ const Auth = () => {
                 setPassword('');
                 setFirstName('');
                 setLastName('');
+                setShowPassword(false);
               }}
               className="text-muted-foreground hover:text-foreground text-sm transition-colors"
               disabled={loading}

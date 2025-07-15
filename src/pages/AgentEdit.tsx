@@ -524,15 +524,24 @@ const AgentEdit = () => {
         </Card>
 
         {/* Bottom Action Buttons - Mobile optimized */}
-        <div className="flex flex-col space-y-2 lg:flex-row lg:justify-end lg:gap-4 lg:space-y-0">
-          <Button variant="outline" onClick={() => navigate('/account/kalina-agents')} className="glass-button border-border w-full lg:w-auto">
+        <div className="flex flex-col space-y-2 lg:flex-row lg:justify-end lg:gap-4 lg:space-y-0 sticky bottom-4 bg-background/95 backdrop-blur-sm p-4 -mx-4 border-t">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/account/kalina-agents')} 
+            className="glass-button border-border w-full lg:w-auto hover:bg-muted/50 transition-colors"
+            disabled={isSaving}
+          >
             Anulează
           </Button>
-          <Button onClick={handleSave} disabled={isSaving} className="bg-accent text-white hover:bg-accent/90 w-full lg:w-auto">
+          <Button 
+            onClick={handleSave} 
+            disabled={isSaving} 
+            className="bg-accent text-white hover:bg-accent/90 w-full lg:w-auto transition-all duration-200 shadow-md hover:shadow-lg"
+          >
             {isSaving ? (
               <>
                 <Save className="w-4 h-4 mr-2 animate-spin" />
-                Se salvează și se reîncarcă...
+                Se salvează...
               </>
             ) : (
               <>
