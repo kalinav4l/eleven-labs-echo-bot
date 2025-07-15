@@ -8,14 +8,16 @@ import { Phone, PlayCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
-
 const TestCall = () => {
   const [agentId, setAgentId] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  const { user } = useAuth();
-
+  const {
+    toast
+  } = useToast();
+  const {
+    user
+  } = useAuth();
   const handleTestCall = async () => {
     if (!agentId || !phoneNumber) {
       toast({
@@ -25,7 +27,6 @@ const TestCall = () => {
       });
       return;
     }
-
     if (!user) {
       toast({
         title: "Eroare de autentificare",
@@ -34,11 +35,12 @@ const TestCall = () => {
       });
       return;
     }
-
     setIsLoading(true);
-
     try {
-      const { data, error } = await supabase.functions.invoke('initiate-scheduled-call', {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('initiate-scheduled-call', {
         body: {
           agent_id: agentId,
           phone_number: phoneNumber,
@@ -47,7 +49,6 @@ const TestCall = () => {
           batch_processing: false
         }
       });
-
       if (error) {
         console.error('Test call error:', error);
         toast({
@@ -57,13 +58,12 @@ const TestCall = () => {
         });
         return;
       }
-
       if (data?.success) {
         toast({
           title: "Apel de test inițiat cu succes!",
-          description: `Apelul a fost inițiat către ${phoneNumber}. Conversation ID: ${data.conversationId}`,
+          description: `Apelul a fost inițiat către ${phoneNumber}. Conversation ID: ${data.conversationId}`
         });
-        
+
         // Clear form after successful call
         setAgentId('');
         setPhoneNumber('');
@@ -85,9 +85,7 @@ const TestCall = () => {
       setIsLoading(false);
     }
   };
-
-  return (
-    <DashboardLayout>
+  return <DashboardLayout>
       <div className="container mx-auto p-6 max-w-2xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Test Call</h1>
@@ -106,13 +104,7 @@ const TestCall = () => {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="agentId">ID Agent</Label>
-              <Input
-                id="agentId"
-                placeholder="Introduceți ID-ul agentului ElevenLabs"
-                value={agentId}
-                onChange={(e) => setAgentId(e.target.value)}
-                disabled={isLoading}
-              />
+              <Input id="agentId" placeholder="Introduceți ID-ul agentului ElevenLabs" value={agentId} onChange={e => setAgentId(e.target.value)} disabled={isLoading} />
               <p className="text-sm text-gray-500">
                 ID-ul agentului din ElevenLabs pe care doriți să îl testați
               </p>
@@ -120,61 +112,28 @@ const TestCall = () => {
 
             <div className="space-y-2">
               <Label htmlFor="phoneNumber">Numărul de telefon</Label>
-              <Input
-                id="phoneNumber"
-                placeholder="+40712345678"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                disabled={isLoading}
-              />
+              <Input id="phoneNumber" placeholder="+40712345678" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} disabled={isLoading} />
               <p className="text-sm text-gray-500">
                 Numărul de telefon la care doriți să primiți apelul de test (format internațional)
               </p>
             </div>
 
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h3 className="font-medium text-blue-900 mb-2">Cum funcționează:</h3>
-              <ul className="text-sm text-blue-800 space-y-1">
-                <li>• Introduceți ID-ul agentului ElevenLabs</li>
-                <li>• Introduceți numărul dvs. de telefon</li>
-                <li>• Apăsați "Inițiază Apel de Test"</li>
-                <li>• Veți primi un apel de la agent în câteva secunde</li>
-              </ul>
-            </div>
+            
 
-            <Button 
-              onClick={handleTestCall}
-              disabled={isLoading || !agentId || !phoneNumber}
-              className="w-full"
-              size="lg"
-            >
-              {isLoading ? (
-                <>
+            <Button onClick={handleTestCall} disabled={isLoading || !agentId || !phoneNumber} className="w-full" size="lg">
+              {isLoading ? <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Se inițiază apelul...
-                </>
-              ) : (
-                <>
+                </> : <>
                   <PlayCircle className="w-4 h-4 mr-2" />
                   Inițiază Apel de Test
-                </>
-              )}
+                </>}
             </Button>
           </CardContent>
         </Card>
 
-        <div className="mt-6 p-4 bg-amber-50 rounded-lg">
-          <h3 className="font-medium text-amber-900 mb-2">⚠️ Important:</h3>
-          <ul className="text-sm text-amber-800 space-y-1">
-            <li>• Asigurați-vă că aveți suficiente credite pentru apel</li>
-            <li>• Numărul de telefon trebuie să fie valid și accesibil</li>
-            <li>• Apelul se va efectua prin sistemul ElevenLabs</li>
-            <li>• Costul apelului va fi dedus din contul dvs.</li>
-          </ul>
-        </div>
+        
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
-
 export default TestCall;
