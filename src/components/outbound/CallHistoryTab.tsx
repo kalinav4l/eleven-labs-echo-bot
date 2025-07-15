@@ -1,17 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Loader2, CheckCircle, AlertCircle, Clock, Phone } from 'lucide-react';
+import { FileText, Loader2, CheckCircle, AlertCircle, Clock, Phone, ExternalLink } from 'lucide-react';
+import { ConversationDetailModal } from './ConversationDetailModal';
 
-interface CallHistoryRecord {
-  id: string;
-  phone_number: string;
-  contact_name: string;
-  call_status: 'success' | 'failed' | 'busy' | 'no-answer' | 'unknown' | 'initiated';
-  summary: string;
-  call_date: string;
-  cost_usd: number;
-}
+import { CallHistoryRecord } from '@/hooks/useCallHistory';
 
 interface CallHistoryTabProps {
   callHistory: CallHistoryRecord[];
@@ -22,6 +15,21 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
   callHistory,
   isLoading,
 }) => {
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleCallClick = (conversationId: string | null) => {
+    if (conversationId) {
+      setSelectedConversationId(conversationId);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedConversationId(null);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -39,11 +47,23 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
         ) : callHistory.length > 0 ? (
           <div className="space-y-3">
             {callHistory.map((call) => (
-              <div key={call.id} className="p-4 border border-gray-200 rounded-lg">
+              <div 
+                key={call.id} 
+                className={`p-4 border border-gray-200 rounded-lg ${
+                  call.conversation_id ? 'cursor-pointer hover:bg-gray-50 transition-colors' : ''
+                }`}
+                onClick={() => handleCallClick(call.conversation_id)}
+              >
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-medium text-gray-900">{call.contact_name}</h3>
                     <p className="text-sm text-gray-600">{call.phone_number}</p>
+                    {call.conversation_id && (
+                      <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                        <ExternalLink className="w-3 h-3" />
+                        ID: {call.conversation_id.substring(0, 20)}...
+                      </p>
+                    )}
                   </div>
                   <div className="text-right">
                     <div className="flex items-center gap-2">
@@ -93,6 +113,12 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
           </div>
         )}
       </CardContent>
+
+      <ConversationDetailModal
+        conversationId={selectedConversationId}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </Card>
   );
 };
