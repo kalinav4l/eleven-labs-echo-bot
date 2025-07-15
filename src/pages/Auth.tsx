@@ -19,6 +19,20 @@ const Auth = () => {
   const [success, setSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
+  // Load saved credentials on component mount
+  React.useEffect(() => {
+    const savedCredentials = localStorage.getItem('lastLoginCredentials');
+    if (savedCredentials) {
+      try {
+        const { email: savedEmail, password: savedPassword } = JSON.parse(savedCredentials);
+        if (savedEmail) setEmail(savedEmail);
+        if (savedPassword) setPassword(savedPassword);
+      } catch (err) {
+        console.error('Error parsing saved credentials:', err);
+      }
+    }
+  }, []);
+
   if (user) {
     return <Navigate to="/" replace />;
   }
@@ -47,6 +61,12 @@ const Auth = () => {
           }
           
           setError(errorMessage);
+        } else {
+          // Save successful login credentials
+          localStorage.setItem('lastLoginCredentials', JSON.stringify({
+            email: email,
+            password: password
+          }));
         }
       } else {
         // Validation for sign up
@@ -150,6 +170,7 @@ const Auth = () => {
               required
               className="glass-input"
               disabled={loading}
+              autoComplete="email"
             />
             <div className="relative">
               <Input
@@ -161,16 +182,25 @@ const Auth = () => {
                 minLength={isLogin ? undefined : 6}
                 className="glass-input pr-10"
                 disabled={loading}
+                autoComplete={isLogin ? "current-password" : "new-password"}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground transition-colors"
                 disabled={loading}
+                title={showPassword ? "Ascunde parola" : "Arată parola"}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+            
+            {/* Show saved credentials info for login */}
+            {isLogin && (email || password) && (
+              <div className="text-xs text-muted-foreground bg-muted/20 p-2 rounded border">
+                💡 Folosim ultimele credențiale salvate pentru a vă facilita conectarea
+              </div>
+            )}
             
             {error && (
               <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
