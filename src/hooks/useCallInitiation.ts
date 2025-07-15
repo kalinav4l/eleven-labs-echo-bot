@@ -126,7 +126,7 @@ export const useCallInitiation = ({
 
   // Enhanced monitoring with detailed logging
   const monitorForNewConversations = async (targetAgentId: string, contact: Contact, startTime: Date): Promise<any[]> => {
-    const maxAttempts = 24; // 2 minutes max (24 * 5 seconds)
+    const maxAttempts = 5; // 2.5 minutes max (5 * 25 seconds + 30 seconds initial wait)
     let attempts = 0;
     
     logStep('START: Conversation monitoring', { 
@@ -154,12 +154,13 @@ export const useCallInitiation = ({
         
         setCurrentCallStatus(`Verifică conversații noi pentru ${contact.name} (${attempts}/${maxAttempts})`);
         
-        // Wait 30 seconds before first check, then 5 seconds between checks
+        // Wait 30 seconds before first check, then 25 seconds between checks
         if (attempts === 1) {
           logStep('STEP: Initial wait period', { waitTime: '30 seconds', contactName: contact.name });
           await new Promise(resolve => setTimeout(resolve, 30000));
         } else {
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          logStep('STEP: Wait period between checks', { waitTime: '25 seconds', contactName: contact.name });
+          await new Promise(resolve => setTimeout(resolve, 25000));
         }
         
         // Get all conversations for this agent

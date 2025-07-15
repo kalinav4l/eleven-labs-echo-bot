@@ -109,11 +109,11 @@ export const BatchCallProgress: React.FC<BatchCallProgressProps> = ({
           <h4 className="font-medium text-gray-800">Procesare Optimizată Activă</h4>
         </div>
         <div className="text-sm text-gray-700 space-y-1">
-          <p>• Inițiere apel → Așteptare 30s → Verificare conversații noi</p>
+          <p>• Inițiere apel → Așteptare 30s → Verificare conversații noi la fiecare 25s</p>
           <p>• Monitorizare inteligentă prin lista conversațiilor agentului</p>
           <p>• Detectare automată a conversațiilor noi (nu în istoric)</p>
           <p>• Salvare garantată a tuturor datelor găsite</p>
-          <p>• Timeout redus la 2 minute per apel pentru eficiență maximă</p>
+          <p>• Timeout optimizat la 2.5 minute per apel pentru eficiență maximă</p>
         </div>
       </div>
 
@@ -168,7 +168,7 @@ export const BatchCallProgress: React.FC<BatchCallProgressProps> = ({
         <div className="text-sm text-gray-700 space-y-1">
           <p>• <strong>Detectare inteligentă:</strong> Monitorizează toate conversațiile agentului</p>
           <p>• <strong>Salvare garantată:</strong> Orice conversație găsită se salvează imediat</p>
-          <p>• <strong>Eficiență maximă:</strong> Timeout redus la 2 minute per apel</p>
+          <p>• <strong>Eficiență maximă:</strong> Timeout optimizat la 2.5 minute per apel</p>
           <p>• <strong>Exactitate:</strong> Funcționează identic cu logica ElevenLabs</p>
         </div>
       </div>
