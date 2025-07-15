@@ -127,6 +127,7 @@ export type Database = {
           created_at: string
           dialog_json: string | null
           duration_seconds: number | null
+          elevenlabs_history_id: string | null
           id: string
           language: string | null
           phone_number: string
@@ -145,6 +146,7 @@ export type Database = {
           created_at?: string
           dialog_json?: string | null
           duration_seconds?: number | null
+          elevenlabs_history_id?: string | null
           id?: string
           language?: string | null
           phone_number: string
@@ -163,6 +165,7 @@ export type Database = {
           created_at?: string
           dialog_json?: string | null
           duration_seconds?: number | null
+          elevenlabs_history_id?: string | null
           id?: string
           language?: string | null
           phone_number?: string
