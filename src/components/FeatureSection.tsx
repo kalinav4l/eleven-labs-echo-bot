@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import { useScrollReveal } from '@/hooks/useScrollReveal'
 
 interface FeatureSectionProps {
   title: string
@@ -10,28 +10,18 @@ interface FeatureSectionProps {
 }
 
 export function FeatureSection({ title, body, imgSrc, imgAlt }: FeatureSectionProps) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    const io = new IntersectionObserver(
-      ([e]) => e.isIntersecting && setVisible(true),
-      { threshold: 0.25 }
-    )
-    if (ref.current) io.observe(ref.current)
-    return () => io.disconnect()
-  }, [])
+  const textReveal = useScrollReveal('left')
+  const imageReveal = useScrollReveal('right')
 
   return (
-    <section ref={ref} className="section-padding">
+    <section className="section-padding">
       <div className="container-width">
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center">
           {/* Text Content - Left Side on Desktop, Bottom on Mobile */}
-          <div className={`lg:col-span-6 max-w-xl transition-all duration-500 ease-out order-2 lg:order-1 ${
-            visible 
-              ? 'opacity-100 lg:translate-x-0' 
-              : 'opacity-0 lg:-translate-x-10'
-          }`}>
+          <div 
+            ref={textReveal.ref}
+            className={`lg:col-span-6 max-w-xl order-2 lg:order-1 ${textReveal.classes}`}
+          >
             <h3 className="text-3xl lg:text-4xl font-bold text-brand-400 mb-6">
               {title}
             </h3>
@@ -41,11 +31,10 @@ export function FeatureSection({ title, body, imgSrc, imgAlt }: FeatureSectionPr
           </div>
           
           {/* Image - Right Side on Desktop, Top on Mobile */}
-          <div className={`lg:col-span-6 transition-all duration-500 ease-out delay-150 order-1 lg:order-2 ${
-            visible 
-              ? 'opacity-100 lg:translate-x-0' 
-              : 'opacity-0 lg:translate-x-10'
-          }`}>
+          <div 
+            ref={imageReveal.ref}
+            className={`lg:col-span-6 order-1 lg:order-2 delay-150 ${imageReveal.classes}`}
+          >
             <img 
               src={imgSrc}
               alt={imgAlt}

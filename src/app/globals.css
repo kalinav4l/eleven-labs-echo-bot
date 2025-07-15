@@ -29,6 +29,31 @@
     border: 1px solid rgba(127, 140, 170, 0.2);
   }
   
+  /* Scroll reveal utilities */
+  .reveal-left {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  
+  .reveal-right {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  
+  .reveal-show {
+    opacity: 1;
+    transform: translateX(0);
+    transition: all 500ms ease-out;
+  }
+  
+  /* Mobile: disable translateX, only fade */
+  @media (max-width: 1023px) {
+    .reveal-left,
+    .reveal-right {
+      transform: translateX(0);
+    }
+  }
+  
   .btn-primary {
     background: linear-gradient(135deg, var(--brand-400), var(--brand-300));
     color: var(--brand-100);
