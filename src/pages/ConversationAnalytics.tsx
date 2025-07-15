@@ -6,16 +6,29 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Clock, Phone, MessageSquare, Copy } from 'lucide-react';
+import { Search, Clock, Phone, MessageSquare, Copy, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { ConversationDetailModal } from '@/components/outbound/ConversationDetailModal';
 
 const ConversationAnalytics = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAgent, setSelectedAgent] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { callHistory, isLoading } = useCallHistory();
   const { toast } = useToast();
+
+  const handleConversationClick = (conversationId: string) => {
+    setSelectedConversationId(conversationId);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedConversationId(null);
+  };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -232,25 +245,32 @@ const ConversationAnalytics = () => {
                                call.call_status === 'failed' ? 'Error' : 'Unknown'}
                             </Badge>
                           </td>
-                          <td className="p-3">
-                            {call.conversation_id ? (
-                              <div className="flex items-center space-x-2">
-                                <code className="text-xs bg-muted px-2 py-1 rounded">
-                                  {call.conversation_id.slice(0, 12)}...
-                                </code>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => copyToClipboard(call.conversation_id)}
-                                  className="h-6 w-6 p-0"
-                                >
-                                  <Copy className="w-3 h-3" />
-                                </Button>
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground text-sm">N/A</span>
-                            )}
-                          </td>
+                           <td className="p-3">
+                             {call.conversation_id ? (
+                               <div className="flex items-center space-x-2">
+                                 <code 
+                                   className="text-xs bg-muted px-2 py-1 rounded cursor-pointer hover:bg-blue-100 transition-colors flex items-center gap-1"
+                                   onClick={() => handleConversationClick(call.conversation_id)}
+                                 >
+                                   <ExternalLink className="w-3 h-3" />
+                                   {call.conversation_id.slice(0, 12)}...
+                                 </code>
+                                 <Button
+                                   variant="ghost"
+                                   size="sm"
+                                   onClick={(e) => {
+                                     e.stopPropagation();
+                                     copyToClipboard(call.conversation_id);
+                                   }}
+                                   className="h-6 w-6 p-0"
+                                 >
+                                   <Copy className="w-3 h-3" />
+                                 </Button>
+                               </div>
+                             ) : (
+                               <span className="text-muted-foreground text-sm">N/A</span>
+                             )}
+                           </td>
                         </tr>
                       );
                     })
@@ -267,6 +287,12 @@ const ConversationAnalytics = () => {
           </CardContent>
         </Card>
       </div>
+      
+      <ConversationDetailModal
+        conversationId={selectedConversationId}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </DashboardLayout>
   );
 };
