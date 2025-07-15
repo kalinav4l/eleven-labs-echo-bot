@@ -39,7 +39,7 @@ serve(async (req) => {
 
     // Get ElevenLabs API credentials
     const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY')
-    const agentPhoneId = Deno.env.get('PHONE_NUMBER_ID') || 'phnum_01jz06e77dfce9034d7jnpj5v7'
+    const agentPhoneId = 'phnum_01jzwnpa8cfnhbxh0367z4jtqs'
     
     console.log('API Key exists:', !!elevenLabsApiKey)
     console.log('Phone ID:', agentPhoneId)
