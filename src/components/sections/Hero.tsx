@@ -28,7 +28,7 @@ export function Hero() {
             <div className="flex flex-col sm:flex-row gap-4">
               <button className="btn-primary flex items-center gap-2 group">
                 Start Free Trial
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
+                <span>→</span>
               </button>
               
               <button className="btn-secondary flex items-center gap-2 group">
@@ -48,7 +48,7 @@ export function Hero() {
                 Sub-100ms latency
               </div>
               <div className="flex items-center gap-2 text-sm text-brand-300">
-                <div className="w-2 h-2 bg-success-400 rounded-full animate-pulse" />
+                <div className="w-2 h-2 bg-success-400 rounded-full" />
                 99.9% uptime
               </div>
             </div>
@@ -69,14 +69,14 @@ export function Hero() {
               </div>
               
               {/* Floating elements */}
-              <div className="absolute -top-6 -right-6 glass rounded-2xl p-4 animate-float">
+              <div className="absolute -top-6 -right-6 glass rounded-2xl p-4">
                 <div className="flex items-center gap-2 text-sm text-brand-100">
-                  <div className="w-2 h-2 bg-success-400 rounded-full animate-pulse" />
+                  <div className="w-2 h-2 bg-success-400 rounded-full" />
                   Active: 1.2M users
                 </div>
               </div>
               
-              <div className="absolute -bottom-6 -left-6 glass rounded-2xl p-4 animate-float" style={{ animationDelay: '1s' }}>
+              <div className="absolute -bottom-6 -left-6 glass rounded-2xl p-4">
                 <div className="text-sm text-brand-100">
                   <div className="font-semibold">Global Coverage</div>
                   <div className="text-brand-300">120+ countries</div>

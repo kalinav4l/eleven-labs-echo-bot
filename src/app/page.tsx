@@ -8,7 +8,6 @@ import { FAQ } from '@/components/sections/FAQ'
 import { CTA } from '@/components/sections/CTA'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
-import { FloatingCards } from '@/components/three/FloatingCards'
 import { SmoothScrollProvider } from '@/components/providers/SmoothScrollProvider'
 
 export default function HomePage() {
@@ -17,9 +16,6 @@ export default function HomePage() {
       <div className="relative min-h-screen bg-gradient-to-br from-brand-100 via-brand-200 to-brand-400">
         {/* Background Effects */}
         <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brand-300/20 via-transparent to-transparent pointer-events-none" />
-        
-        {/* Floating 3D Cards */}
-        <FloatingCards />
         
         {/* Navigation */}
         <Header />

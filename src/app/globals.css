@@ -60,14 +60,12 @@
     font-weight: 600;
     padding: 0.75rem 1.5rem;
     border-radius: 0.75rem;
-    transition: all 0.3s ease;
     box-shadow: 0 10px 25px rgba(51, 52, 70, 0.3);
   }
   
   .btn-primary:hover {
     background: linear-gradient(135deg, var(--brand-300), var(--brand-200));
     box-shadow: 0 15px 35px rgba(51, 52, 70, 0.4);
-    transform: translateY(-2px);
   }
   
   .btn-secondary {
@@ -78,7 +76,6 @@
     font-weight: 600;
     padding: 0.75rem 1.5rem;
     border-radius: 0.75rem;
-    transition: all 0.3s ease;
   }
   
   .btn-secondary:hover {
@@ -106,17 +103,4 @@
     max-width: 1280px;
     margin: 0 auto;
   }
-}
-
-@keyframes float {
-  0%, 100% { 
-    transform: translateY(0px);
-  }
-  50% { 
-    transform: translateY(-20px);
-  }
-}
-
-.animate-float {
-  animation: float 6s ease-in-out infinite;
 }

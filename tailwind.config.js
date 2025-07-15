@@ -69,17 +69,7 @@ module.exports = {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },
-      animation: {
-        'float': 'float 6s ease-in-out infinite',
-        'pulse-slow': 'pulse 4s ease-in-out infinite',
-        'gradient': 'gradient 8s ease infinite',
-        'shimmer': 'shimmer 2s linear infinite',
-      },
       keyframes: {
-        float: {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-20px)' },
-        },
         gradient: {
           '0%, 100%': {
             'background-size': '200% 200%',
