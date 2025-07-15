@@ -122,38 +122,32 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <Label className="text-foreground font-medium">Knowledge Base</Label>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
+            <div className="flex flex-wrap gap-2">
+              <button
                 onClick={loadExistingDocuments}
                 disabled={isLoadingExisting}
-                className="flex items-center gap-2"
+                className="elevenlabs-button elevenlabs-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
               >
                 <Database className="w-4 h-4" />
-                {isLoadingExisting ? 'Se încarcă...' : 'Selectează documente existente'}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
+                <span className="hidden sm:inline">
+                  {isLoadingExisting ? 'Se încarcă...' : 'Selectează Existente'}
+                </span>
+                <span className="sm:hidden">Existente</span>
+              </button>
+              <button
                 onClick={() => setIsAddingDoc(true)}
-                className="flex items-center gap-2"
+                className="elevenlabs-button elevenlabs-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
               >
                 <FileText className="w-4 h-4" />
-                Adaugă Manual
-              </Button>
+                <span className="hidden sm:inline">Adaugă Manual</span>
+                <span className="sm:hidden">Manual</span>
+              </button>
               <label className="cursor-pointer">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
-                  asChild
-                >
-                  <span>
-                    <Upload className="w-4 h-4" />
-                    Încarcă Fișier
-                  </span>
-                </Button>
+                <span className="elevenlabs-button elevenlabs-button-secondary flex items-center gap-2 px-3 py-2 text-sm">
+                  <Upload className="w-4 h-4" />
+                  <span className="hidden sm:inline">Încarcă Fișier</span>
+                  <span className="sm:hidden">Fișier</span>
+                </span>
                 <input
                   type="file"
                   className="hidden"
@@ -184,15 +178,14 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
                     ))}
                   </SelectContent>
                 </Select>
-                <Button 
+                <button 
                   onClick={handleAddExistingDocument}
                   disabled={!selectedExistingDocId}
-                  size="sm"
-                  className="flex items-center gap-2"
+                  className="elevenlabs-button elevenlabs-button-primary flex items-center gap-2 px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Plus className="w-4 h-4" />
                   Adaugă
-                </Button>
+                </button>
               </div>
             </div>
           )}
@@ -212,16 +205,18 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
                 className="glass-input min-h-[100px]"
               />
               <div className="flex gap-2">
-                <Button onClick={addManualDocument} size="sm">
+                <button 
+                  onClick={addManualDocument} 
+                  className="elevenlabs-button elevenlabs-button-primary px-4 py-2 text-sm"
+                >
                   Adaugă
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                </button>
+                <button 
                   onClick={() => setIsAddingDoc(false)}
+                  className="elevenlabs-button elevenlabs-button-secondary px-4 py-2 text-sm"
                 >
                   Anulează
-                </Button>
+                </button>
               </div>
             </div>
           )}
@@ -252,24 +247,22 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
                       </p>
                     )}
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <button
                     onClick={() => handleRemoveDocument(doc.id)}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="elevenlabs-button elevenlabs-button-danger p-2 hover:bg-red-50"
                   >
                     <Trash2 className="w-4 h-4" />
-                  </Button>
+                  </button>
                 </div>
               ))
             )}
           </div>
 
           {documents.length > 0 && (
-            <Button
+            <button
               onClick={handleUpdateKnowledgeBase}
               disabled={isUpdating || !agentIdForEdit.trim()}
-              className="bg-foreground text-background hover:bg-foreground/90 w-full"
+              className="elevenlabs-button elevenlabs-button-primary w-full py-3 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isUpdating ? (
                 <>
@@ -282,17 +275,17 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
                   Actualizează Knowledge Base în ElevenLabs
                 </>
               )}
-            </Button>
+            </button>
           )}
         </div>
 
         {canProceed && (
-          <Button
+          <button
             onClick={onNextStep}
-            className="bg-accent text-white hover:bg-accent/90 w-full"
+            className="elevenlabs-button elevenlabs-button-primary w-full py-3 text-sm font-medium"
           >
             Continuă la Pasul 4
-          </Button>
+          </button>
         )}
       </CardContent>
     </Card>
