@@ -8,6 +8,8 @@ import { Phone, PlayCircle, Loader2, MessageSquare, RefreshCw } from 'lucide-rea
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
+import TestCallHistory from '@/components/TestCallHistory';
+import { useTestCallHistory } from '@/hooks/useTestCallHistory';
 const TestCall = () => {
   const [agentId, setAgentId] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -15,12 +17,9 @@ const TestCall = () => {
   const [conversationId, setConversationId] = useState('');
   const [conversation, setConversation] = useState(null);
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
-  const {
-    toast
-  } = useToast();
-  const {
-    user
-  } = useAuth();
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const { history, addToHistory, updateHistoryItem, clearHistory } = useTestCallHistory();
   const handleTestCall = async () => {
     if (!agentId || !phoneNumber) {
       toast({
@@ -70,6 +69,13 @@ const TestCall = () => {
         // Store conversation ID for later retrieval
         setConversationId(data.conversationId);
         
+        // Add to history
+        addToHistory({
+          conversationId: data.conversationId,
+          agentId,
+          phoneNumber,
+        });
+        
         // Clear form after successful call
         setAgentId('');
         setPhoneNumber('');
@@ -92,8 +98,10 @@ const TestCall = () => {
     }
   };
 
-  const fetchConversation = async () => {
-    if (!conversationId) {
+  const fetchConversation = async (targetConversationId?: string) => {
+    const idToFetch = targetConversationId || conversationId;
+    
+    if (!idToFetch) {
       toast({
         title: "Nu există conversație",
         description: "Vă rugăm să inițiați mai întâi un apel de test",
@@ -105,7 +113,7 @@ const TestCall = () => {
     setIsLoadingConversation(true);
     try {
       const { data, error } = await supabase.functions.invoke('get-elevenlabs-conversation', {
-        body: { conversationId }
+        body: { conversationId: idToFetch }
       });
 
       if (error) {
@@ -128,6 +136,13 @@ const TestCall = () => {
       }
 
       setConversation(data);
+      setConversationId(idToFetch);
+      
+      // Update history with cost if available
+      if (data.cost) {
+        updateHistoryItem(idToFetch, { cost: parseFloat(data.cost) });
+      }
+      
       toast({
         title: "Conversația a fost încărcată cu succes!",
         description: "Conversația este afișată mai jos"
@@ -142,6 +157,10 @@ const TestCall = () => {
     } finally {
       setIsLoadingConversation(false);
     }
+  };
+
+  const handleHistoryDoubleClick = (conversationId: string) => {
+    fetchConversation(conversationId);
   };
 
   const renderConversation = () => {
@@ -204,13 +223,14 @@ const TestCall = () => {
   };
 
   return <DashboardLayout>
-      <div className="container mx-auto p-6 max-w-2xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Test Call</h1>
-          <p className="text-gray-600">
-            Testați un agent AI prin inițierea unui apel direct către numărul dvs. de telefon
-          </p>
-        </div>
+      <div className="flex gap-6 p-6">
+        <div className="flex-1 max-w-2xl">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Test Call</h1>
+            <p className="text-gray-600">
+              Testați un agent AI prin inițierea unui apel direct către numărul dvs. de telefon
+            </p>
+          </div>
 
         <Card>
           <CardHeader>
@@ -259,7 +279,7 @@ const TestCall = () => {
                   Conversația
                 </span>
                 <Button
-                  onClick={fetchConversation}
+                  onClick={() => fetchConversation()}
                   disabled={isLoadingConversation}
                   variant="outline"
                   size="sm"
@@ -284,7 +304,16 @@ const TestCall = () => {
           </Card>
         )}
 
-        {renderConversation()}
+          {renderConversation()}
+        </div>
+        
+        <div className="flex-shrink-0">
+          <TestCallHistory
+            history={history}
+            onConversationDoubleClick={handleHistoryDoubleClick}
+            onClearHistory={clearHistory}
+          />
+        </div>
       </div>
     </DashboardLayout>;
 };
