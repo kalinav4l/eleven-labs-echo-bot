@@ -226,10 +226,17 @@ const TestCall = () => {
       <div className="flex gap-6 p-6">
         <div className="flex-1 max-w-2xl">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Test Call</h1>
-            <p className="text-gray-600">
-              Testați un agent AI prin inițierea unui apel direct către numărul dvs. de telefon
-            </p>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                <Phone className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-foreground mb-1">Test Call</h1>
+                <p className="text-muted-foreground">
+                  Testați un agent AI prin inițierea unui apel direct către numărul dvs. de telefon
+                </p>
+              </div>
+            </div>
           </div>
 
         <Card>
