@@ -2,8 +2,6 @@ import React from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { Bot, Phone, BarChart3, Calendar, Globe, Mail, FileText, Settings } from 'lucide-react';
 
 const Documentation = () => {
@@ -15,22 +13,22 @@ const Documentation = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6 max-w-6xl mx-auto">
+      <div className="elevenlabs-container elevenlabs-section">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Documentație Kalina AI</h1>
-          <p className="text-gray-600">Ghidul complet pentru utilizarea platformei de asistenți AI vocali</p>
+          <h1>Documentație Kalina AI</h1>
+          <p>Ghidul complet pentru utilizarea platformei de asistenți AI vocali</p>
         </div>
 
-        <div className="grid gap-6">
+        <div className="clean-spacing">
           {/* Introducere */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <div className="elevenlabs-card">
+            <div className="mb-4">
+              <h2 className="flex items-center gap-2">
                 <Bot className="h-5 w-5" />
                 Ce este Kalina AI?
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </h2>
+            </div>
+            <div className="clean-spacing">
               <p>
                 Kalina AI este o platformă completă pentru crearea și gestionarea asistenților vocali inteligenti. 
                 Poți construi agenți AI care pot vorbi cu clienții tăi prin telefon, pot răspunde la întrebări, 
@@ -40,22 +38,22 @@ const Documentation = () => {
                 Platforma oferă instrumente pentru a crea, testa, monitoriza și optimiza asistenții tăi vocali, 
                 totul într-o interfață simplă și intuitivă.
               </p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Agenți AI */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <div className="elevenlabs-card">
+            <div className="mb-4">
+              <h2 className="flex items-center gap-2">
                 <Bot className="h-5 w-5" />
                 Agenți AI
-              </CardTitle>
-              <CardDescription>Crearea și gestionarea asistenților vocali</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </h2>
+              <p className="text-subtle">Crearea și gestionarea asistenților vocali</p>
+            </div>
+            <div className="clean-spacing">
               <div>
-                <h4 className="font-semibold mb-2">Cum să creezi un agent nou:</h4>
-                <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
+                <h3 className="mb-2">Cum să creezi un agent nou:</h3>
+                <ol className="list-decimal list-inside space-y-1 text-subtle">
                   <li>Mergi la secțiunea "Agents" din meniu</li>
                   <li>Apasă butonul "Create New Agent"</li>
                   <li>Completează numele și descrierea agentului</li>
@@ -65,30 +63,30 @@ const Documentation = () => {
                 </ol>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">Configurarea agentului:</h4>
-                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                  <li><strong>System Prompt:</strong> Instrucțiunile principale care definesc personalitatea și scopul agentului</li>
-                  <li><strong>First Message:</strong> Primul mesaj pe care îl va spune agentul când începe conversația</li>
-                  <li><strong>Voice:</strong> Vocea cu care va vorbi agentul - poți alege din diverse opțiuni</li>
-                  <li><strong>Language:</strong> Limba în care va vorbi agentul</li>
+                <h3 className="mb-2">Configurarea agentului:</h3>
+                <ul className="list-disc list-inside space-y-1 text-subtle">
+                  <li><span className="text-emphasis">System Prompt:</span> Instrucțiunile principale care definesc personalitatea și scopul agentului</li>
+                  <li><span className="text-emphasis">First Message:</span> Primul mesaj pe care îl va spune agentul când începe conversația</li>
+                  <li><span className="text-emphasis">Voice:</span> Vocea cu care va vorbi agentul - poți alege din diverse opțiuni</li>
+                  <li><span className="text-emphasis">Language:</span> Limba în care va vorbi agentul</li>
                 </ul>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Apeluri */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <div className="elevenlabs-card">
+            <div className="mb-4">
+              <h2 className="flex items-center gap-2">
                 <Phone className="h-5 w-5" />
                 Apeluri
-              </CardTitle>
-              <CardDescription>Inițierea și gestionarea apelurilor telefonice</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </h2>
+              <p className="text-subtle">Inițierea și gestionarea apelurilor telefonice</p>
+            </div>
+            <div className="clean-spacing">
               <div>
-                <h4 className="font-semibold mb-2">Apeluri individuale:</h4>
-                <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
+                <h3 className="mb-2">Apeluri individuale:</h3>
+                <ol className="list-decimal list-inside space-y-1 text-subtle">
                   <li>Mergi la secțiunea "Calls" din meniu</li>
                   <li>Selectează tab-ul "Single Call"</li>
                   <li>Alege agentul pe care vrei să-l folosești</li>
@@ -97,8 +95,8 @@ const Documentation = () => {
                 </ol>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">Apeluri în serie (Batch):</h4>
-                <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
+                <h3 className="mb-2">Apeluri în serie (Batch):</h3>
+                <ol className="list-decimal list-inside space-y-1 text-subtle">
                   <li>Selectează tab-ul "Batch"</li>
                   <li>Încarcă un fișier CSV cu lista de contacte</li>
                   <li>Mapează coloanele din CSV (nume, telefon, etc.)</li>
@@ -107,38 +105,38 @@ const Documentation = () => {
                 </ol>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">Istoricul apelurilor:</h4>
-                <p className="text-sm text-gray-600">
+                <h3 className="mb-2">Istoricul apelurilor:</h3>
+                <p className="text-subtle">
                   În tab-ul "History" poți vedea toate apelurile efectuate, durata lor, 
                   costurile și poți asculta înregistrările conversațiilor.
                 </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Analytics */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <div className="elevenlabs-card">
+            <div className="mb-4">
+              <h2 className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
                 Analytics
-              </CardTitle>
-              <CardDescription>Monitorizarea performanțelor și analizele conversațiilor</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </h2>
+              <p className="text-subtle">Monitorizarea performanțelor și analizele conversațiilor</p>
+            </div>
+            <div className="clean-spacing">
               <div>
-                <h4 className="font-semibold mb-2">Ce poți analiza:</h4>
-                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                  <li><strong>Metrics:</strong> Statistici generale (numărul de apeluri, durata medie, rata de succes)</li>
-                  <li><strong>Conversations:</strong> Analiză detaliată a fiecărei conversații</li>
-                  <li><strong>Sentiment:</strong> Analiza sentimentului clienților în timpul conversațiilor</li>
-                  <li><strong>Keywords:</strong> Cuvintele cheie cele mai frecvente în conversații</li>
-                  <li><strong>Performance:</strong> Performanța fiecărui agent în parte</li>
+                <h3 className="mb-2">Ce poți analiza:</h3>
+                <ul className="list-disc list-inside space-y-1 text-subtle">
+                  <li><span className="text-emphasis">Metrics:</span> Statistici generale (numărul de apeluri, durata medie, rata de succes)</li>
+                  <li><span className="text-emphasis">Conversations:</span> Analiză detaliată a fiecărei conversații</li>
+                  <li><span className="text-emphasis">Sentiment:</span> Analiza sentimentului clienților în timpul conversațiilor</li>
+                  <li><span className="text-emphasis">Keywords:</span> Cuvintele cheie cele mai frecvente în conversații</li>
+                  <li><span className="text-emphasis">Performance:</span> Performanța fiecărui agent în parte</li>
                 </ul>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">Cum să folosești analytics:</h4>
-                <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
+                <h3 className="mb-2">Cum să folosești analytics:</h3>
+                <ol className="list-decimal list-inside space-y-1 text-subtle">
                   <li>Mergi la secțiunea "Analytics"</li>
                   <li>Alege perioada de timp pentru analiză</li>
                   <li>Filtrează după agent sau tip de conversație</li>
@@ -146,24 +144,22 @@ const Documentation = () => {
                   <li>Exportă datele pentru analize suplimentare</li>
                 </ol>
               </div>
-            </CardContent>
-          </Card>
-
-          <Separator />
+            </div>
+          </div>
 
           {/* Calendar */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <div className="elevenlabs-card">
+            <div className="mb-4">
+              <h2 className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
                 Calendar
-              </CardTitle>
-              <CardDescription>Programarea apelurilor și gestionarea întâlnirilor</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </h2>
+              <p className="text-subtle">Programarea apelurilor și gestionarea întâlnirilor</p>
+            </div>
+            <div className="clean-spacing">
               <div>
-                <h4 className="font-semibold mb-2">Programarea apelurilor:</h4>
-                <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
+                <h3 className="mb-2">Programarea apelurilor:</h3>
+                <ol className="list-decimal list-inside space-y-1 text-subtle">
                   <li>Deschide calendarul din meniul principal</li>
                   <li>Selectează data și ora dorită</li>
                   <li>Alege agentul care va efectua apelul</li>
@@ -172,30 +168,30 @@ const Documentation = () => {
                 </ol>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">Gestionarea programărilor:</h4>
-                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                <h3 className="mb-2">Gestionarea programărilor:</h3>
+                <ul className="list-disc list-inside space-y-1 text-subtle">
                   <li>Vezi toate apelurile programate în vizualizarea de calendar</li>
                   <li>Modifică sau anulează programările existente</li>
-                  <li>Primește notificări înainte de apeluri</li>
+                  <li>Primești notificări înainte de apeluri</li>
                   <li>Sincronizează cu calendarul tău personal</li>
                 </ul>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Scraping */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <div className="elevenlabs-card">
+            <div className="mb-4">
+              <h2 className="flex items-center gap-2">
                 <Globe className="h-5 w-5" />
                 Web Scraping
-              </CardTitle>
-              <CardDescription>Extragerea automată de date din website-uri</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </h2>
+              <p className="text-subtle">Extragerea automată de date din website-uri</p>
+            </div>
+            <div className="clean-spacing">
               <div>
-                <h4 className="font-semibold mb-2">Cum să extragi date:</h4>
-                <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
+                <h3 className="mb-2">Cum să extragi date:</h3>
+                <ol className="list-decimal list-inside space-y-1 text-subtle">
                   <li>Mergi la secțiunea "Scraping"</li>
                   <li>Introdu URL-ul website-ului de unde vrei să extragi date</li>
                   <li>Alege tipul de date pe care le vrei (produse, contacte, articole)</li>
@@ -205,8 +201,8 @@ const Documentation = () => {
                 </ol>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">Tipuri de date disponibile:</h4>
-                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                <h3 className="mb-2">Tipuri de date disponibile:</h3>
+                <ul className="list-disc list-inside space-y-1 text-subtle">
                   <li>Informații de contact (nume, telefon, email)</li>
                   <li>Produse și prețuri</li>
                   <li>Articole și conținut</li>
@@ -214,22 +210,22 @@ const Documentation = () => {
                   <li>Link-uri și structura site-ului</li>
                 </ul>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Gmail */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <div className="elevenlabs-card">
+            <div className="mb-4">
+              <h2 className="flex items-center gap-2">
                 <Mail className="h-5 w-5" />
                 Integrare Gmail
-              </CardTitle>
-              <CardDescription>Conectarea cu Gmail pentru automatizări email</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </h2>
+              <p className="text-subtle">Conectarea cu Gmail pentru automatizări email</p>
+            </div>
+            <div className="clean-spacing">
               <div>
-                <h4 className="font-semibold mb-2">Configurarea Gmail:</h4>
-                <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
+                <h3 className="mb-2">Configurarea Gmail:</h3>
+                <ol className="list-decimal list-inside space-y-1 text-subtle">
                   <li>Mergi la secțiunea "Gmail"</li>
                   <li>Conectează-ți contul Gmail folosind OAuth</li>
                   <li>Acordă permisiunile necesare</li>
@@ -237,8 +233,8 @@ const Documentation = () => {
                 </ol>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">Funcționalități disponibile:</h4>
-                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                <h3 className="mb-2">Funcționalități disponibile:</h3>
+                <ul className="list-disc list-inside space-y-1 text-subtle">
                   <li>Citirea automată a email-urilor noi</li>
                   <li>Trimiterea de răspunsuri automate</li>
                   <li>Extragerea informațiilor din atașamente</li>
@@ -246,22 +242,22 @@ const Documentation = () => {
                   <li>Sincronizarea cu CRM-ul tău</li>
                 </ul>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Transcripts */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <div className="elevenlabs-card">
+            <div className="mb-4">
+              <h2 className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
                 Transcripturi
-              </CardTitle>
-              <CardDescription>Procesarea și analiza înregistrărilor audio</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </h2>
+              <p className="text-subtle">Procesarea și analiza înregistrărilor audio</p>
+            </div>
+            <div className="clean-spacing">
               <div>
-                <h4 className="font-semibold mb-2">Încărcarea fișierelor audio:</h4>
-                <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
+                <h3 className="mb-2">Încărcarea fișierelor audio:</h3>
+                <ol className="list-decimal list-inside space-y-1 text-subtle">
                   <li>Mergi la secțiunea "Transcripts"</li>
                   <li>Încarcă fișierul audio (MP3, WAV, M4A)</li>
                   <li>Alege limba pentru transcripție</li>
@@ -270,8 +266,8 @@ const Documentation = () => {
                 </ol>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">Funcționalități avansate:</h4>
-                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                <h3 className="mb-2">Funcționalități avansate:</h3>
+                <ul className="list-disc list-inside space-y-1 text-subtle">
                   <li>Identificarea vorbitorilor (speaker identification)</li>
                   <li>Marcarea timpului pentru fiecare frază</li>
                   <li>Analiza sentimentului</li>
@@ -279,22 +275,22 @@ const Documentation = () => {
                   <li>Export în multiple formate</li>
                 </ul>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <div className="elevenlabs-card">
+            <div className="mb-4">
+              <h2 className="flex items-center gap-2">
                 <Settings className="h-5 w-5" />
                 Setări și Configurări
-              </CardTitle>
-              <CardDescription>Personalizarea platformei și gestionarea contului</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </h2>
+              <p className="text-subtle">Personalizarea platformei și gestionarea contului</p>
+            </div>
+            <div className="clean-spacing">
               <div>
-                <h4 className="font-semibold mb-2">Setări cont:</h4>
-                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                <h3 className="mb-2">Setări cont:</h3>
+                <ul className="list-disc list-inside space-y-1 text-subtle">
                   <li>Modificarea informațiilor de profil</li>
                   <li>Schimbarea parolei</li>
                   <li>Configurarea notificărilor</li>
@@ -302,41 +298,41 @@ const Documentation = () => {
                 </ul>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">Setări agenți:</h4>
-                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                <h3 className="mb-2">Setări agenți:</h3>
+                <ul className="list-disc list-inside space-y-1 text-subtle">
                   <li>Configurații globale pentru toți agenții</li>
                   <li>Setarea limitelor de cost</li>
                   <li>Configurarea backup-urilor</li>
                   <li>Integrări externe</li>
                 </ul>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Consilii */}
-          <Card className="bg-blue-50">
-            <CardHeader>
-              <CardTitle className="text-blue-900">Consilii pentru utilizare optimă</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+          <div className="elevenlabs-card" style={{ backgroundColor: '#f8fafc' }}>
+            <div className="mb-4">
+              <h2>Consilii pentru utilizare optimă</h2>
+            </div>
+            <div className="clean-spacing">
               <div>
-                <h4 className="font-semibold text-blue-900 mb-1">Pentru agenți mai buni:</h4>
-                <ul className="list-disc list-inside space-y-1 text-sm text-blue-800">
+                <h3 className="mb-1">Pentru agenți mai buni:</h3>
+                <ul className="list-disc list-inside space-y-1 text-subtle">
                   <li>Scrie instrucțiuni clare și specifice în System Prompt</li>
                   <li>Testează agentul cu scenarii diverse înainte de a-l pune în producție</li>
                   <li>Monitorizează performanțele în Analytics și optimizează periodic</li>
                 </ul>
               </div>
               <div>
-                <h4 className="font-semibold text-blue-900 mb-1">Pentru rezultate mai bune:</h4>
-                <ul className="list-disc list-inside space-y-1 text-sm text-blue-800">
+                <h3 className="mb-1">Pentru rezultate mai bune:</h3>
+                <ul className="list-disc list-inside space-y-1 text-subtle">
                   <li>Folosește date de calitate pentru training și scraping</li>
                   <li>Segmentează clienții pentru mesaje personalizate</li>
                   <li>Analizează feedback-ul și ajustează strategia</li>
                 </ul>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </DashboardLayout>
