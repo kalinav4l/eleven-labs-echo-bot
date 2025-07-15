@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Play, Pause, Download, Clock, Phone, X, ArrowLeft, Headphones } from 'lucide-react';
+import { Search, Play, Pause, Download, Clock, Phone, X, ArrowLeft, Headphones, Database } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
 const ConversationAnalytics = () => {
@@ -19,9 +19,12 @@ const ConversationAnalytics = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAgent, setSelectedAgent] = useState('all');
   const [isPlaying, setIsPlaying] = useState(false);
+  const [manualConversationId, setManualConversationId] = useState('');
+  const [lookupConversation, setLookupConversation] = useState(null);
 
   const { callHistory, isLoading: callHistoryLoading } = useCallHistory();
   const { data: elevenLabsData, isLoading: conversationLoading, error: conversationError } = useConversationById(conversationId);
+  const { data: manualLookupData, isLoading: manualLookupLoading, error: manualLookupError } = useConversationById(manualConversationId);
 
   // Auto-select conversation if ID provided in URL
   useEffect(() => {
@@ -47,6 +50,23 @@ const ConversationAnalytics = () => {
       navigate('/account/conversation-analytics');
     }
   }, [conversationError, navigate]);
+
+  const handleManualLookup = () => {
+    if (!manualConversationId.trim()) {
+      toast({
+        title: "Eroare",
+        description: "Te rog introdu un ID de conversație valid.",
+        variant: "destructive"
+      });
+      return;
+    }
+    setLookupConversation(manualConversationId);
+  };
+
+  const clearManualLookup = () => {
+    setManualConversationId('');
+    setLookupConversation(null);
+  };
 
   const handleCallClick = (call) => {
     if (call.elevenlabs_history_id) {
@@ -199,6 +219,104 @@ const ConversationAnalytics = () => {
               </div>
             )}
           </div>
+
+          {/* Conversation ID Lookup Section */}
+          <Card className="mb-8 border-gray-200">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <Database className="w-5 h-5 text-gray-600" />
+                <h3 className="text-lg font-medium text-gray-900">Caută după ID conversație</h3>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">
+                Introdu ID-ul unei conversații pentru a obține toate informațiile disponibile
+              </p>
+              
+              <div className="flex space-x-3">
+                <Input
+                  placeholder="conv_XXXXXXXXXX sau ID conversație..."
+                  value={manualConversationId}
+                  onChange={(e) => setManualConversationId(e.target.value)}
+                  className="flex-1 border-gray-200"
+                />
+                <Button 
+                  onClick={handleManualLookup}
+                  disabled={manualLookupLoading || !manualConversationId.trim()}
+                  className="bg-gray-900 hover:bg-gray-800 text-white"
+                >
+                  {manualLookupLoading ? 'Caută...' : 'Caută'}
+                </Button>
+                {lookupConversation && (
+                  <Button 
+                    variant="outline" 
+                    onClick={clearManualLookup}
+                    className="border-gray-200"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+
+              {/* Manual Lookup Results */}
+              {lookupConversation && manualLookupData && (
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium text-gray-900 mb-3">Informații conversație</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-600">ID:</span>
+                      <span className="ml-2 font-mono text-xs bg-gray-200 px-2 py-1 rounded">
+                        {manualLookupData.conversation_id || lookupConversation}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Status:</span>
+                      <span className="ml-2 text-green-600">{manualLookupData.status || 'Activ'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Agent ID:</span>
+                      <span className="ml-2 font-mono text-xs">{manualLookupData.agent_id || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Durată:</span>
+                      <span className="ml-2">{manualLookupData.duration_seconds || 'N/A'}s</span>
+                    </div>
+                    {manualLookupData.cost && (
+                      <div>
+                        <span className="text-gray-600">Cost:</span>
+                        <span className="ml-2">${manualLookupData.cost}</span>
+                      </div>
+                    )}
+                    <div>
+                      <span className="text-gray-600">Data:</span>
+                      <span className="ml-2">
+                        {manualLookupData.date_unix 
+                          ? new Date(manualLookupData.date_unix * 1000).toLocaleString('ro-RO')
+                          : 'N/A'
+                        }
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Raw Data Accordion */}
+                  <details className="mt-4">
+                    <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-900">
+                      Toate datele (JSON)
+                    </summary>
+                    <pre className="mt-2 text-xs bg-gray-900 text-green-400 p-3 rounded overflow-auto max-h-60">
+                      {JSON.stringify(manualLookupData, null, 2)}
+                    </pre>
+                  </details>
+                </div>
+              )}
+
+              {manualLookupError && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-700">
+                    Nu s-au găsit informații pentru acest ID sau nu ai acces la această conversație.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Stats */}
           <div className="grid grid-cols-3 gap-8 mb-8">
