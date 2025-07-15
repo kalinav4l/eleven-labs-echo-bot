@@ -102,10 +102,7 @@ const Sidebar = ({
                 <span>Scraping</span>
               </Link>
 
-              <Link to="/account/gmail" className={`${location.pathname === '/account/gmail' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
-                <Mail className="mr-3 h-4 w-4" />
-                <span>Gmail</span>
-              </Link>
+              
             </div>
           </div>
 
