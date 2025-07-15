@@ -124,7 +124,7 @@ export const useCallInitiation = ({
     }
   };
 
-  // Enhanced monitoring with detailed logging
+  // Enhanced monitoring with detailed logging - checks for final call status
   const monitorForNewConversations = async (targetAgentId: string, contact: Contact, startTime: Date): Promise<any[]> => {
     const maxAttempts = 5; // 2.5 minutes max (5 * 25 seconds + 30 seconds initial wait)
     let attempts = 0;
@@ -206,10 +206,12 @@ export const useCallInitiation = ({
             conversationIds: newConversations.map(c => c.conversation_id) 
           });
           
-          setCurrentCallStatus(`Găsit ${newConversations.length} conversații noi pentru ${contact.name} - extragere date...`);
+          setCurrentCallStatus(`Găsit ${newConversations.length} conversații noi pentru ${contact.name} - verifică status final...`);
           
-          // Get detailed data for each new conversation
+          // Get detailed data for each new conversation and check for final status
           const detailedConversations = [];
+          let finalStatusFound = false;
+          
           for (const conv of newConversations) {
             logStep('STEP: Getting detailed data for conversation', { 
               conversationId: conv.conversation_id,
@@ -218,9 +220,35 @@ export const useCallInitiation = ({
             
             const details = await getConversationDetails(conv.conversation_id);
             if (details && !details.error) {
+              const conversationStatus = details.status?.toLowerCase();
+              
+              logStep('STEP: Checking conversation status', { 
+                conversationId: conv.conversation_id,
+                status: conversationStatus,
+                contactName: contact.name 
+              });
+              
+              // Check if conversation has final status (successful, error, or failed)
+              if (conversationStatus === 'successful' || 
+                  conversationStatus === 'error' || 
+                  conversationStatus === 'failed') {
+                
+                finalStatusFound = true;
+                logStep('SUCCESS: Final status detected - proceeding to next call', { 
+                  conversationId: conv.conversation_id,
+                  finalStatus: conversationStatus,
+                  contactName: contact.name 
+                });
+                
+                detailedConversations.push(details);
+                break; // Stop checking other conversations since we found a final status
+              }
+              
               detailedConversations.push(details);
+              
               logStep('SUCCESS: Detailed conversation data retrieved', { 
                 conversationId: conv.conversation_id,
+                status: conversationStatus,
                 contactName: contact.name 
               });
             } else {
@@ -232,14 +260,22 @@ export const useCallInitiation = ({
             }
           }
           
-          logStep('SUCCESS: All detailed conversations retrieved', { 
+          // If we found a final status, return the conversations and proceed
+          if (finalStatusFound) {
+            logStep('SUCCESS: Final status found - call processing complete', { 
+              count: detailedConversations.length,
+              contactName: contact.name 
+            });
+            return detailedConversations;
+          }
+          
+          logStep('INFO: Conversations found but no final status yet, continuing monitoring', { 
             count: detailedConversations.length,
             contactName: contact.name 
           });
-          return detailedConversations;
         }
         
-        logStep('STEP: No new conversations found, continuing monitoring', { 
+        logStep('STEP: No new conversations with final status found, continuing monitoring', { 
           attempt: attempts,
           contactName: contact.name 
         });
@@ -255,7 +291,7 @@ export const useCallInitiation = ({
       }
     }
 
-    // Timeout reached - final check
+    // Timeout reached - final check for any conversations (regardless of status)
     logStep('TIMEOUT: Monitoring timeout reached, final check', { 
       maxAttempts,
       contactName: contact.name 
@@ -280,6 +316,14 @@ export const useCallInitiation = ({
           for (const conv of newConversations) {
             const details = await getConversationDetails(conv.conversation_id);
             if (details && !details.error) {
+              const conversationStatus = details.status?.toLowerCase();
+              
+              logStep('TIMEOUT: Final check conversation status', { 
+                conversationId: conv.conversation_id,
+                status: conversationStatus,
+                contactName: contact.name 
+              });
+              
               detailedConversations.push(details);
             }
           }
