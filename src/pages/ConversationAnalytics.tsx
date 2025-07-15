@@ -258,53 +258,179 @@ const ConversationAnalytics = () => {
 
               {/* Manual Lookup Results */}
               {lookupConversation && manualLookupData && (
-                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-3">Informații conversație</h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600">ID:</span>
-                      <span className="ml-2 font-mono text-xs bg-gray-200 px-2 py-1 rounded">
-                        {manualLookupData.conversation_id || lookupConversation}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Status:</span>
-                      <span className="ml-2 text-green-600">{manualLookupData.status || 'Activ'}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Agent ID:</span>
-                      <span className="ml-2 font-mono text-xs">{manualLookupData.agent_id || 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Durată:</span>
-                      <span className="ml-2">{manualLookupData.duration_seconds || 'N/A'}s</span>
-                    </div>
-                    {manualLookupData.cost && (
-                      <div>
-                        <span className="text-gray-600">Cost:</span>
-                        <span className="ml-2">${manualLookupData.cost}</span>
+                <div className="mt-6 space-y-6">
+                  {/* Basic Info */}
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-4">Informații conversație</h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="space-y-2">
+                        <div>
+                          <span className="text-gray-600 block">ID Conversație:</span>
+                          <span className="font-mono text-xs bg-white px-2 py-1 rounded border">
+                            {manualLookupData.conversation_id || lookupConversation}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600 block">Status:</span>
+                          <Badge className="text-green-600 bg-green-50">
+                            {manualLookupData.status || 'Activ'}
+                          </Badge>
+                        </div>
+                        <div>
+                          <span className="text-gray-600 block">Agent ID:</span>
+                          <span className="font-mono text-xs bg-white px-2 py-1 rounded border">
+                            {manualLookupData.agent_id || 'N/A'}
+                          </span>
+                        </div>
                       </div>
-                    )}
-                    <div>
-                      <span className="text-gray-600">Data:</span>
-                      <span className="ml-2">
-                        {manualLookupData.date_unix 
-                          ? new Date(manualLookupData.date_unix * 1000).toLocaleString('ro-RO')
-                          : 'N/A'
-                        }
-                      </span>
+                      <div className="space-y-2">
+                        <div>
+                          <span className="text-gray-600 block">Durată:</span>
+                          <span className="font-medium">
+                            {manualLookupData.duration_seconds 
+                              ? `${Math.floor(manualLookupData.duration_seconds / 60)}m ${manualLookupData.duration_seconds % 60}s`
+                              : 'N/A'
+                            }
+                          </span>
+                        </div>
+                        {manualLookupData.cost && (
+                          <div>
+                            <span className="text-gray-600 block">Cost:</span>
+                            <span className="font-medium">${manualLookupData.cost}</span>
+                          </div>
+                        )}
+                        <div>
+                          <span className="text-gray-600 block">Data:</span>
+                          <span className="text-sm">
+                            {manualLookupData.date_unix 
+                              ? new Date(manualLookupData.date_unix * 1000).toLocaleString('ro-RO')
+                              : 'N/A'
+                            }
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Raw Data Accordion */}
-                  <details className="mt-4">
-                    <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-900">
-                      Toate datele (JSON)
-                    </summary>
-                    <pre className="mt-2 text-xs bg-gray-900 text-green-400 p-3 rounded overflow-auto max-h-60">
-                      {JSON.stringify(manualLookupData, null, 2)}
-                    </pre>
-                  </details>
+                  {/* Audio Player */}
+                  {manualLookupData.recording_url && (
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h4 className="font-medium text-gray-900 mb-4 flex items-center">
+                        <Headphones className="w-4 h-4 mr-2" />
+                        Înregistrare Audio
+                      </h4>
+                      <div className="bg-white rounded-lg p-4 border">
+                        <audio controls className="w-full">
+                          <source src={manualLookupData.recording_url} type="audio/mpeg" />
+                          <source src={manualLookupData.recording_url} type="audio/wav" />
+                          Browser-ul tău nu suportă elementul audio.
+                        </audio>
+                        <div className="mt-3 flex justify-between text-sm text-gray-600">
+                          <span>Audio HD Quality</span>
+                          <Button variant="ghost" size="sm" asChild>
+                            <a href={manualLookupData.recording_url} download>
+                              <Download className="w-3 h-3 mr-1" />
+                              Descarcă
+                            </a>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Transcript/Chat */}
+                  {(manualLookupData.text || manualLookupData.transcript) && (
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h4 className="font-medium text-gray-900 mb-4">Transcript Conversație</h4>
+                      <div className="bg-white rounded-lg border max-h-80 overflow-y-auto">
+                        <div className="p-4 space-y-4">
+                          {(() => {
+                            const transcript = manualLookupData.text || manualLookupData.transcript;
+                            if (typeof transcript === 'string') {
+                              // Split by lines and try to identify speakers
+                              const lines = transcript.split('\n').filter(line => line.trim());
+                              return lines.map((line, index) => {
+                                const isAgent = line.toLowerCase().includes('agent') || 
+                                               line.toLowerCase().includes('kalina') || 
+                                               index % 2 === 0;
+                                return (
+                                  <div key={index} className="flex space-x-3">
+                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
+                                      isAgent ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-700'
+                                    }`}>
+                                      {isAgent ? 'A' : 'C'}
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="text-xs text-gray-500 mb-1">
+                                        {isAgent ? 'Agent' : 'Client'}
+                                      </div>
+                                      <p className="text-sm text-gray-700 leading-relaxed">{line}</p>
+                                    </div>
+                                  </div>
+                                );
+                              });
+                            } else if (Array.isArray(transcript)) {
+                              return transcript.map((message, index) => (
+                                <div key={index} className="flex space-x-3">
+                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
+                                    message.speaker === 'agent' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-700'
+                                  }`}>
+                                    {message.speaker === 'agent' ? 'A' : 'C'}
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="text-xs text-gray-500 mb-1">
+                                      {message.speaker === 'agent' ? 'Agent' : 'Client'}
+                                    </div>
+                                    <p className="text-sm text-gray-700 leading-relaxed">{message.text}</p>
+                                  </div>
+                                </div>
+                              ));
+                            }
+                            return <p className="text-sm text-gray-500">Nu s-a putut procesa transcriptul</p>;
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Additional Details */}
+                  {(manualLookupData.metadata || manualLookupData.analysis) && (
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h4 className="font-medium text-gray-900 mb-4">Detalii Suplimentare</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {manualLookupData.metadata?.language && (
+                          <div>
+                            <span className="text-gray-600 block text-sm">Limbă:</span>
+                            <span className="font-medium">{manualLookupData.metadata.language}</span>
+                          </div>
+                        )}
+                        {manualLookupData.analysis?.sentiment && (
+                          <div>
+                            <span className="text-gray-600 block text-sm">Sentiment:</span>
+                            <Badge className={`${
+                              manualLookupData.analysis.sentiment === 'positive' ? 'text-green-600 bg-green-50' :
+                              manualLookupData.analysis.sentiment === 'negative' ? 'text-red-600 bg-red-50' :
+                              'text-gray-600 bg-gray-50'
+                            }`}>
+                              {manualLookupData.analysis.sentiment}
+                            </Badge>
+                          </div>
+                        )}
+                        {manualLookupData.phone_number && (
+                          <div>
+                            <span className="text-gray-600 block text-sm">Număr telefon:</span>
+                            <span className="font-medium">{manualLookupData.phone_number}</span>
+                          </div>
+                        )}
+                        {manualLookupData.call_type && (
+                          <div>
+                            <span className="text-gray-600 block text-sm">Tip apel:</span>
+                            <span className="font-medium">{manualLookupData.call_type}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
