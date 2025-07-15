@@ -313,22 +313,33 @@ const ConversationAnalytics = () => {
                   </div>
 
                   {/* Audio Player */}
-                  {manualLookupData.recording_url && (
+                  {(manualLookupData.recording_url || manualLookupData.audio_url || manualLookupData.audio_file_url) && (
                     <div className="p-4 bg-gray-50 rounded-lg">
                       <h4 className="font-medium text-gray-900 mb-4 flex items-center">
                         <Headphones className="w-4 h-4 mr-2" />
                         Înregistrare Audio
                       </h4>
                       <div className="bg-white rounded-lg p-4 border">
-                        <audio controls className="w-full">
-                          <source src={manualLookupData.recording_url} type="audio/mpeg" />
-                          <source src={manualLookupData.recording_url} type="audio/wav" />
-                          Browser-ul tău nu suportă elementul audio.
+                        <audio controls className="w-full" preload="metadata">
+                          <source src={manualLookupData.recording_url || manualLookupData.audio_url || manualLookupData.audio_file_url} type="audio/mpeg" />
+                          <source src={manualLookupData.recording_url || manualLookupData.audio_url || manualLookupData.audio_file_url} type="audio/wav" />
+                          <source src={manualLookupData.recording_url || manualLookupData.audio_url || manualLookupData.audio_file_url} type="audio/mp3" />
+                          Browser-ul tău nu suportă redarea audio.
                         </audio>
-                        <div className="mt-3 flex justify-between text-sm text-gray-600">
-                          <span>Audio HD Quality</span>
+                        <div className="mt-3 flex justify-between items-center text-sm text-gray-600">
+                          <div className="flex items-center space-x-2">
+                            <span>Audio Quality: HD</span>
+                            {manualLookupData.duration_seconds && (
+                              <span>• Durată: {Math.floor(manualLookupData.duration_seconds / 60)}:{(manualLookupData.duration_seconds % 60).toString().padStart(2, '0')}</span>
+                            )}
+                          </div>
                           <Button variant="ghost" size="sm" asChild>
-                            <a href={manualLookupData.recording_url} download>
+                            <a 
+                              href={manualLookupData.recording_url || manualLookupData.audio_url || manualLookupData.audio_file_url} 
+                              download={`conversation_${lookupConversation}.mp3`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
                               <Download className="w-3 h-3 mr-1" />
                               Descarcă
                             </a>
