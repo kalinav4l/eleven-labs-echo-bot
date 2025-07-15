@@ -2,6 +2,15 @@ import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
+import { useSMSService } from './useSMSService';
+
+interface SMSConfig {
+  enabled: boolean;
+  apiToken: string;
+  senderId: string;
+  message: string;
+  delay: number;
+}
 
 interface Contact {
   id: string;
@@ -14,6 +23,7 @@ interface Contact {
 interface UseCallInitiationProps {
   agentId: string;
   phoneNumber?: string;
+  smsConfig?: SMSConfig;
 }
 
 interface CallStatus {
@@ -30,8 +40,10 @@ interface CallStatus {
 export const useCallInitiation = ({
   agentId,
   phoneNumber,
+  smsConfig,
 }: UseCallInitiationProps) => {
   const { user } = useAuth();
+  const { scheduleSMS } = useSMSService();
   const [isInitiating, setIsInitiating] = useState(false);
   const [isProcessingBatch, setIsProcessingBatch] = useState(false);
   const [currentProgress, setCurrentProgress] = useState(0);
@@ -449,6 +461,21 @@ export const useCallInitiation = ({
               });
               
               await saveCompleteCallData(conversationData, contact, conversationId);
+              
+              // Send SMS if configured
+              if (smsConfig?.enabled) {
+                try {
+                  await scheduleSMS.mutateAsync({
+                    phoneNumber: contact.phone,
+                    contactName: contact.name,
+                    smsConfig,
+                    conversationId
+                  });
+                  console.log(`✅ SMS scheduled for ${contact.name}`);
+                } catch (smsError) {
+                  console.error(`❌ SMS failed for ${contact.name}:`, smsError);
+                }
+              }
             }
             
             setCallStatuses(prev => prev.map(status => 

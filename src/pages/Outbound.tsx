@@ -17,12 +17,21 @@ import { BatchConfigPanel } from '@/components/outbound/BatchConfigPanel';
 import { BatchStatusPanel } from '@/components/outbound/BatchStatusPanel';
 import { ContactsList } from '@/components/outbound/ContactsList';
 import { CSVUploadSection } from '@/components/outbound/CSVUploadSection';
+
 interface Contact {
   id: string;
   name: string;
   phone: string;
   country: string;
   location: string;
+}
+
+interface SMSConfig {
+  enabled: boolean;
+  apiToken: string;
+  senderId: string;
+  message: string;
+  delay: number;
 }
 const Outbound = () => {
   const {
@@ -36,6 +45,13 @@ const Outbound = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
   const [batchStartTime, setBatchStartTime] = useState<Date | undefined>();
+  const [smsConfig, setSmsConfig] = useState<SMSConfig>({
+    enabled: false,
+    apiToken: '',
+    senderId: 'aichat',
+    message: '',
+    delay: 2
+  });
 
   // Get user's phone numbers
   const {
@@ -49,7 +65,8 @@ const Outbound = () => {
     callStatuses
   } = useCallInitiation({
     agentId: selectedAgentId,
-    phoneNumber: ''
+    phoneNumber: '',
+    smsConfig: smsConfig
   });
   const {
     callHistory,
@@ -188,7 +205,16 @@ const Outbound = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Configuration Panel */}
                   <div className="lg:col-span-1">
-                    <BatchConfigPanel selectedAgentId={selectedAgentId} onAgentSelect={setSelectedAgentId} selectedPhoneId={selectedPhoneId} onPhoneSelect={setSelectedPhoneId} totalRecipients={contacts.length} selectedRecipients={selectedContacts.size} />
+                    <BatchConfigPanel 
+                      selectedAgentId={selectedAgentId} 
+                      onAgentSelect={setSelectedAgentId} 
+                      selectedPhoneId={selectedPhoneId} 
+                      onPhoneSelect={setSelectedPhoneId} 
+                      totalRecipients={contacts.length} 
+                      selectedRecipients={selectedContacts.size}
+                      smsConfig={smsConfig}
+                      onSMSConfigChange={setSmsConfig}
+                    />
                   </div>
 
                   {/* Main Content */}
