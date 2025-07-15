@@ -195,12 +195,6 @@ const Auth = () => {
               </button>
             </div>
             
-            {/* Show saved credentials info for login */}
-            {isLogin && (email || password) && (
-              <div className="text-xs text-muted-foreground bg-muted/20 p-2 rounded border">
-                💡 Folosim ultimele credențiale salvate pentru a vă facilita conectarea
-              </div>
-            )}
             
             {error && (
               <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
