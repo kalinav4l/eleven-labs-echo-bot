@@ -126,14 +126,14 @@ export const useCallInitiation = ({
 
   // Enhanced monitoring with detailed logging - checks for final call status
   const monitorForNewConversations = async (targetAgentId: string, contact: Contact, startTime: Date): Promise<any[]> => {
-    const maxAttempts = 5; // 2.5 minutes max (5 * 25 seconds + 30 seconds initial wait)
+    const maxInitialAttempts = 5; // Max attempts to find new conversations
     let attempts = 0;
     
     logStep('START: Conversation monitoring', { 
       contactName: contact.name, 
       targetAgentId, 
       startTime: startTime.toISOString(),
-      maxAttempts 
+      maxInitialAttempts 
     });
     
     // Get existing conversation IDs before we start monitoring
@@ -143,16 +143,17 @@ export const useCallInitiation = ({
       ids: existingConversationIds 
     });
     
-    while (attempts < maxAttempts) {
+    // Phase 1: Find new conversations
+    while (attempts < maxInitialAttempts) {
       try {
         attempts++;
         logStep('STEP: Monitoring attempt', { 
           attempt: attempts, 
-          maxAttempts, 
+          maxInitialAttempts, 
           contactName: contact.name 
         });
         
-        setCurrentCallStatus(`Verifică conversații noi pentru ${contact.name} (${attempts}/${maxAttempts})`);
+        setCurrentCallStatus(`Verifică conversații noi pentru ${contact.name} (${attempts}/${maxInitialAttempts})`);
         
         // Wait 30 seconds before first check, then 25 seconds between checks
         if (attempts === 1) {
@@ -200,82 +201,17 @@ export const useCallInitiation = ({
         });
         
         if (newConversations.length > 0) {
-          logStep('SUCCESS: New conversations found!', { 
+          logStep('SUCCESS: New conversations found! Starting fast status monitoring...', { 
             count: newConversations.length,
             contactName: contact.name,
             conversationIds: newConversations.map(c => c.conversation_id) 
           });
           
-          setCurrentCallStatus(`Găsit ${newConversations.length} conversații noi pentru ${contact.name} - verifică status final...`);
-          
-          // Get detailed data for each new conversation and check for final status
-          const detailedConversations = [];
-          let finalStatusFound = false;
-          
-          for (const conv of newConversations) {
-            logStep('STEP: Getting detailed data for conversation', { 
-              conversationId: conv.conversation_id,
-              contactName: contact.name 
-            });
-            
-            const details = await getConversationDetails(conv.conversation_id);
-            if (details && !details.error) {
-              const conversationStatus = details.status?.toLowerCase();
-              
-              logStep('STEP: Checking conversation status', { 
-                conversationId: conv.conversation_id,
-                status: conversationStatus,
-                contactName: contact.name 
-              });
-              
-              // Check if conversation has final status (successful, error, or failed)
-              if (conversationStatus === 'successful' || 
-                  conversationStatus === 'error' || 
-                  conversationStatus === 'failed') {
-                
-                finalStatusFound = true;
-                logStep('SUCCESS: Final status detected - proceeding to next call', { 
-                  conversationId: conv.conversation_id,
-                  finalStatus: conversationStatus,
-                  contactName: contact.name 
-                });
-                
-                detailedConversations.push(details);
-                break; // Stop checking other conversations since we found a final status
-              }
-              
-              detailedConversations.push(details);
-              
-              logStep('SUCCESS: Detailed conversation data retrieved', { 
-                conversationId: conv.conversation_id,
-                status: conversationStatus,
-                contactName: contact.name 
-              });
-            } else {
-              logStep('ERROR: Failed to get detailed conversation data', { 
-                conversationId: conv.conversation_id,
-                error: details?.error,
-                contactName: contact.name 
-              });
-            }
-          }
-          
-          // If we found a final status, return the conversations and proceed
-          if (finalStatusFound) {
-            logStep('SUCCESS: Final status found - call processing complete', { 
-              count: detailedConversations.length,
-              contactName: contact.name 
-            });
-            return detailedConversations;
-          }
-          
-          logStep('INFO: Conversations found but no final status yet, continuing monitoring', { 
-            count: detailedConversations.length,
-            contactName: contact.name 
-          });
+          // Phase 2: Fast polling for final status
+          return await fastPollForFinalStatus(newConversations, contact);
         }
         
-        logStep('STEP: No new conversations with final status found, continuing monitoring', { 
+        logStep('STEP: No new conversations found, continuing monitoring', { 
           attempt: attempts,
           contactName: contact.name 
         });
@@ -291,9 +227,9 @@ export const useCallInitiation = ({
       }
     }
 
-    // Timeout reached - final check for any conversations (regardless of status)
-    logStep('TIMEOUT: Monitoring timeout reached, final check', { 
-      maxAttempts,
+    // Phase 3: Final check if no conversations found during initial monitoring
+    logStep('TIMEOUT: Initial monitoring timeout reached, final check', { 
+      maxInitialAttempts,
       contactName: contact.name 
     });
     
@@ -312,22 +248,7 @@ export const useCallInitiation = ({
             contactName: contact.name 
           });
           
-          const detailedConversations = [];
-          for (const conv of newConversations) {
-            const details = await getConversationDetails(conv.conversation_id);
-            if (details && !details.error) {
-              const conversationStatus = details.status?.toLowerCase();
-              
-              logStep('TIMEOUT: Final check conversation status', { 
-                conversationId: conv.conversation_id,
-                status: conversationStatus,
-                contactName: contact.name 
-              });
-              
-              detailedConversations.push(details);
-            }
-          }
-          return detailedConversations;
+          return await fastPollForFinalStatus(newConversations, contact);
         }
       }
     } catch (error) {
@@ -339,6 +260,105 @@ export const useCallInitiation = ({
     
     logStep('FAILURE: No conversations found after timeout', { contactName: contact.name });
     return [];
+  };
+
+  // Fast polling function to check for final status
+  const fastPollForFinalStatus = async (conversations: any[], contact: Contact): Promise<any[]> => {
+    const maxStatusChecks = 60; // Max 10 minutes (60 * 10 seconds)
+    let statusChecks = 0;
+    
+    logStep('START: Fast polling for final status', { 
+      conversationCount: conversations.length,
+      contactName: contact.name,
+      maxStatusChecks 
+    });
+    
+    while (statusChecks < maxStatusChecks) {
+      try {
+        statusChecks++;
+        setCurrentCallStatus(`Verifică status final pentru ${contact.name} (${statusChecks}/${maxStatusChecks})`);
+        
+        logStep('STEP: Fast status check', { 
+          attempt: statusChecks, 
+          maxStatusChecks, 
+          contactName: contact.name 
+        });
+        
+        const detailedConversations = [];
+        let finalStatusFound = false;
+        
+        // Check status for each conversation
+        for (const conv of conversations) {
+          const details = await getConversationDetails(conv.conversation_id);
+          if (details && !details.error) {
+            const conversationStatus = details.status?.toLowerCase();
+            
+            logStep('STEP: Checking conversation status in fast poll', { 
+              conversationId: conv.conversation_id,
+              status: conversationStatus,
+              contactName: contact.name 
+            });
+            
+            // Check if conversation has final status
+            if (conversationStatus === 'successful' || 
+                conversationStatus === 'error' || 
+                conversationStatus === 'failed') {
+              
+              finalStatusFound = true;
+              logStep('SUCCESS: Final status detected in fast poll - proceeding to next call', { 
+                conversationId: conv.conversation_id,
+                finalStatus: conversationStatus,
+                contactName: contact.name 
+              });
+              
+              detailedConversations.push(details);
+              break; // Stop checking other conversations since we found a final status
+            }
+            
+            detailedConversations.push(details);
+          }
+        }
+        
+        // If we found a final status, return immediately
+        if (finalStatusFound) {
+          logStep('SUCCESS: Final status found in fast poll - call processing complete', { 
+            count: detailedConversations.length,
+            contactName: contact.name 
+          });
+          return detailedConversations;
+        }
+        
+        // Wait 10 seconds before next check (fast polling)
+        logStep('STEP: No final status yet, waiting 10 seconds for next check', { 
+          attempt: statusChecks,
+          contactName: contact.name 
+        });
+        await new Promise(resolve => setTimeout(resolve, 10000));
+        
+      } catch (error) {
+        logStep('ERROR: Exception during fast status polling', { 
+          error: error.message,
+          attempt: statusChecks,
+          contactName: contact.name 
+        });
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      }
+    }
+    
+    // If we reach here, we didn't find final status within time limit
+    logStep('TIMEOUT: Fast polling timeout reached, returning current conversations', { 
+      contactName: contact.name 
+    });
+    
+    const detailedConversations = [];
+    for (const conv of conversations) {
+      const details = await getConversationDetails(conv.conversation_id);
+      if (details && !details.error) {
+        detailedConversations.push(details);
+      }
+    }
+    
+    return detailedConversations;
   };
 
   // Save complete call data to history and analytics
