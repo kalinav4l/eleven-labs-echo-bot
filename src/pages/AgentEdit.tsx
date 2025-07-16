@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Bot, Save, Upload, FileText, Trash2, TestTube, Database, Plus } from 'lucide-react';
+import { ArrowLeft, Bot, Save, Upload, FileText, Trash2, TestTube, Database, Plus, Settings } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import AgentTestModal from '@/components/AgentTestModal';
 import AdditionalLanguagesSection from '@/components/AdditionalLanguagesSection';
@@ -16,6 +16,7 @@ import { useEnhancedKnowledgeBase } from '@/hooks/useEnhancedKnowledgeBase';
 import AgentGeneralInfo from '@/components/agent/AgentGeneralInfo';
 import AgentSystemPrompt from '@/components/agent/AgentSystemPrompt';
 import AgentFirstMessage from '@/components/agent/AgentFirstMessage';
+import AgentTools from '@/components/agent/AgentTools';
 import {AgentResponse, LanguagePreset} from "@/types/dtos.ts";
 import {ElevenLabsController} from "@/controllers/ElevenLabsController.ts";
 
@@ -563,6 +564,21 @@ const AgentEdit = () => {
             )}
           </CardContent>
         </Card>
+        </div>
+
+        {/* Tools și Funcționalități */}
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+              <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center">
+                <Settings className="w-4 h-4 text-accent" />
+              </div>
+              Tools și Funcționalități
+            </h2>
+            <p className="text-sm text-muted-foreground">Configurează acțiunile pe care agentul le poate efectua</p>
+          </div>
+          
+          <AgentTools agentData={agentData} setAgentData={setAgentData} />
         </div>
 
         {/* Bottom Action Buttons - Mobile optimized */}
