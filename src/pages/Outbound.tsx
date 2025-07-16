@@ -203,7 +203,7 @@ const Outbound = () => {
                   Apeluri Automate
                 </h1>
                 <p className="text-muted-foreground text-lg">
-                  Gestionează și lansează apeluri în lot către clienții tăi
+                  Automatizează conversațiile cu clienții tăi
                 </p>
               </div>
               <div className="flex gap-3">
@@ -241,10 +241,10 @@ const Outbound = () => {
                         <Phone className={`w-5 h-5 ${activeSection === 'batch' ? 'text-white' : 'text-primary'}`} />
                       </div>
                       <div>
-                        <div className="font-medium">Apeluri în Lot</div>
-                        <div className={`text-sm ${activeSection === 'batch' ? 'text-white/80' : 'text-muted-foreground'}`}>
-                          Configurează și lansează
-                        </div>
+                         <div className="font-medium">Apeluri în Lot</div>
+                         <div className={`text-sm ${activeSection === 'batch' ? 'text-white/80' : 'text-muted-foreground'}`}>
+                           Configurare
+                         </div>
                       </div>
                     </div>
                   </button>
@@ -322,9 +322,9 @@ const Outbound = () => {
                     <h3 className="text-2xl font-bold text-foreground mb-3">
                       Automatizează apelurile
                     </h3>
-                    <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-                      Lansează apeluri automate către multiple contacte simultan cu AI-ul nostru avansat
-                    </p>
+                     <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+                       Automatizează conversațiile cu multiple contacte simultan
+                     </p>
                     <div className="flex items-center justify-center gap-4">
                       <Button 
                         variant="outline" 
