@@ -1,14 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useCallInitiation } from '@/hooks/useCallInitiation';
 import { useCallHistory } from '@/hooks/useCallHistory';
 import { useUserPhoneNumbers } from '@/hooks/useUserPhoneNumbers';
-import { toast } from '@/components/ui/use-toast';
-import { Phone, Upload, FileDown } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { Phone, Upload, History, Settings, Play } from 'lucide-react';
 
 // Import refactored components
 import { OutboundHeader } from '@/components/outbound/OutboundHeader';
@@ -34,10 +33,9 @@ interface SMSConfig {
   delay: number;
 }
 const Outbound = () => {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
 
   // State for configuration
   const [selectedAgentId, setSelectedAgentId] = useState('');
@@ -54,9 +52,7 @@ const Outbound = () => {
   });
 
   // Get user's phone numbers
-  const {
-    data: phoneNumbers
-  } = useUserPhoneNumbers();
+  const { data: phoneNumbers } = useUserPhoneNumbers();
   const {
     processBatchCalls,
     isProcessingBatch,
@@ -73,12 +69,15 @@ const Outbound = () => {
     isLoading: historyLoading,
     refetch: refetchHistory
   } = useCallHistory();
+
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
+
   const handleCSVUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    
     if (!file.name.endsWith('.csv')) {
       toast({
         title: "Eroare",
@@ -87,15 +86,18 @@ const Outbound = () => {
       });
       return;
     }
+
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = (e) => {
       const text = e.target?.result as string;
       const lines = text.split('\n').filter(line => line.trim());
       const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      
       const nameIndex = headers.findIndex(h => h.includes('name') || h.includes('nume'));
       const phoneIndex = headers.findIndex(h => h.includes('phone') || h.includes('telefon'));
       const countryIndex = headers.findIndex(h => h.includes('country') || h.includes('tara'));
       const locationIndex = headers.findIndex(h => h.includes('location') || h.includes('locatie'));
+
       if (phoneIndex === -1) {
         toast({
           title: "Eroare",
@@ -104,6 +106,7 @@ const Outbound = () => {
         });
         return;
       }
+
       const parsedContacts: Contact[] = lines.slice(1).map((line, index) => {
         const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
         return {
@@ -114,22 +117,21 @@ const Outbound = () => {
           location: locationIndex >= 0 ? values[locationIndex] || 'Necunoscut' : 'Necunoscut'
         };
       }).filter(contact => contact.phone);
+
       setContacts(parsedContacts);
+      setActiveSection('contacts');
       toast({
         title: "Succes",
         description: `S-au încărcat ${parsedContacts.length} contacte din CSV.`
       });
     };
     reader.readAsText(file);
+    
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
-  const getSelectedPhoneNumber = () => {
-    if (!selectedPhoneId || !phoneNumbers) return '';
-    const phone = phoneNumbers.find(p => p.id === selectedPhoneId);
-    return phone?.phone_number || '';
-  };
+
   const handleContactSelect = (contactId: string, checked: boolean) => {
     const newSelected = new Set(selectedContacts);
     if (checked) {
@@ -139,6 +141,7 @@ const Outbound = () => {
     }
     setSelectedContacts(newSelected);
   };
+
   const handleSelectAll = () => {
     if (selectedContacts.size === contacts.length) {
       setSelectedContacts(new Set());
@@ -146,6 +149,7 @@ const Outbound = () => {
       setSelectedContacts(new Set(contacts.map(c => c.id)));
     }
   };
+
   const handleBatchProcess = async () => {
     if (!selectedAgentId || selectedContacts.size === 0) {
       toast({
@@ -155,6 +159,7 @@ const Outbound = () => {
       });
       return;
     }
+    
     if (!selectedPhoneId) {
       toast({
         title: "Eroare",
@@ -163,18 +168,19 @@ const Outbound = () => {
       });
       return;
     }
+
     setBatchStartTime(new Date());
     const contactsToProcess = contacts.filter(c => selectedContacts.has(c.id));
     await processBatchCalls(contactsToProcess, selectedAgentId);
+    
     setTimeout(() => {
       refetchHistory();
     }, 2000);
   };
+
   const downloadTemplate = () => {
     const csvContent = "nume,telefon,tara,locatie\nJohn Doe,+40712345678,Romania,Bucuresti\nJane Smith,+40798765432,Romania,Cluj";
-    const blob = new Blob([csvContent], {
-      type: 'text/csv;charset=utf-8;'
-    });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
@@ -184,75 +190,241 @@ const Outbound = () => {
     link.click();
     document.body.removeChild(link);
   };
-  return <DashboardLayout>
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="space-y-6 bg-white">
-            <OutboundHeader />
 
-            <Tabs defaultValue="batch" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-white p-1 h-auto border border-gray-200">
-                <TabsTrigger value="batch" className="data-[state=active]:bg-primary data-[state=active]:text-white py-3">
-                  <Phone className="w-4 h-4 mr-2" />
-                  Apeluri Batch
-                </TabsTrigger>
-                <TabsTrigger value="history" className="data-[state=active]:bg-primary data-[state=active]:text-white py-3">
-                  Istoric Apeluri
-                </TabsTrigger>
-              </TabsList>
+  return (
+    <DashboardLayout>
+      <div className="min-h-screen bg-background">
+        <div className="flex max-w-7xl mx-auto">
+          {/* Sidebar */}
+          <div className="w-64 bg-card border-r border-border p-4">
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-foreground mb-1">Apeluri</h2>
+              <p className="text-sm text-muted-foreground">Gestionează apelurile automate</p>
+            </div>
+            
+            <nav className="space-y-2">
+              <button
+                onClick={() => setActiveSection('batch')}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                  activeSection === 'batch' 
+                    ? 'bg-primary/10 text-primary font-medium' 
+                    : 'text-foreground hover:bg-muted'
+                }`}
+              >
+                <Phone className="w-4 h-4" />
+                Apel în lot
+              </button>
+              
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                  activeSection === 'upload' 
+                    ? 'bg-primary/10 text-primary font-medium' 
+                    : 'text-foreground hover:bg-muted'
+                }`}
+              >
+                <Upload className="w-4 h-4" />
+                Import CSV
+              </button>
+              
+              <button
+                onClick={() => setActiveSection('history')}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                  activeSection === 'history' 
+                    ? 'bg-primary/10 text-primary font-medium' 
+                    : 'text-foreground hover:bg-muted'
+                }`}
+              >
+                <History className="w-4 h-4" />
+                Istoric
+              </button>
+            </nav>
+          </div>
 
-              <TabsContent value="batch" className="space-y-6 mt-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Configuration Panel */}
-                  <div className="lg:col-span-1">
+          {/* Main Content */}
+          <div className="flex-1 p-6">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">
+                  {activeSection === 'batch' && 'Apeluri în lot'}
+                  {activeSection === 'history' && 'Istoric apeluri'}
+                  {activeSection === 'contacts' && 'Contacte'}
+                  {!activeSection && 'Apeluri automate'}
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {activeSection === 'batch' && 'Configurează și lansează apeluri către multiple contacte'}
+                  {activeSection === 'history' && 'Vezi toate apelurile efectuate'}
+                  {activeSection === 'contacts' && 'Gestionează contactele încărcate'}
+                  {!activeSection && 'Alege o opțiune din meniul lateral pentru a începe'}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button variant="outline" onClick={downloadTemplate} className="gap-2">
+                  <Upload className="w-4 h-4" />
+                  Template CSV
+                </Button>
+                {activeSection && (
+                  <Button variant="outline" onClick={() => setActiveSection(null)}>
+                    Înapoi
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Content Area */}
+            <div className="bg-card rounded-xl border border-border">
+              {/* Default State */}
+              {!activeSection && (
+                <div className="p-12 text-center">
+                  <div className="max-w-md mx-auto">
+                    <div className="w-20 h-20 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-6">
+                      <Phone className="w-10 h-10 text-primary" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-foreground mb-3">
+                      Începe să automatizezi apelurile
+                    </h3>
+                    <p className="text-muted-foreground mb-8">
+                      Selectează o opțiune din meniul lateral pentru a configura 
+                      și lansa apeluri automate către clienții tăi.
+                    </p>
+                    <div className="flex items-center justify-center gap-4">
+                      <Button variant="outline" onClick={() => setActiveSection('batch')} className="gap-2">
+                        <Phone className="w-4 h-4" />
+                        Configurează apeluri
+                      </Button>
+                      <Button onClick={() => fileInputRef.current?.click()} className="gap-2">
+                        <Upload className="w-4 h-4" />
+                        Încarcă contacte
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Batch Configuration */}
+              {activeSection === 'batch' && (
+                <div className="flex">
+                  {/* Main Content */}
+                  <div className="flex-1 p-6">
+                    {contacts.length === 0 ? (
+                      <div className="border-2 border-dashed border-border rounded-xl p-12 text-center">
+                        <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-foreground mb-2">
+                          Încarcă contacte pentru a începe
+                        </h3>
+                        <p className="text-muted-foreground mb-6">
+                          Selectează un fișier CSV cu contactele tale sau înregistrează audio pentru test
+                        </p>
+                        <div className="flex items-center justify-center gap-4">
+                          <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="gap-2">
+                            <Upload className="w-4 h-4" />
+                            Selectează CSV
+                          </Button>
+                          <span className="text-muted-foreground">sau</span>
+                          <Button variant="outline" onClick={downloadTemplate} className="gap-2">
+                            <Upload className="w-4 h-4" />
+                            Descarcă template
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        <ContactsList 
+                          contacts={contacts}
+                          selectedContacts={selectedContacts}
+                          onContactSelect={handleContactSelect}
+                          onSelectAll={handleSelectAll}
+                          isProcessingBatch={isProcessingBatch}
+                        />
+                        
+                        <div className="pt-4 border-t border-border">
+                          <Button 
+                            onClick={handleBatchProcess}
+                            disabled={!selectedAgentId || !selectedPhoneId || selectedContacts.size === 0 || isProcessingBatch}
+                            className="w-full py-3"
+                            size="lg"
+                          >
+                            {isProcessingBatch ? (
+                              <>
+                                <Phone className="w-4 h-4 mr-2 animate-pulse" />
+                                Se procesează... ({currentProgress}/{totalCalls})
+                              </>
+                            ) : (
+                              <>
+                                <Phone className="w-4 h-4 mr-2" />
+                                Lansează apelurile ({selectedContacts.size} contacte)
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Settings Panel */}
+                  <div className="w-80 border-l border-border p-6 bg-muted/30">
+                    <h3 className="font-semibold text-foreground mb-4">Configurări</h3>
                     <BatchConfigPanel 
-                      selectedAgentId={selectedAgentId} 
-                      onAgentSelect={setSelectedAgentId} 
-                      selectedPhoneId={selectedPhoneId} 
-                      onPhoneSelect={setSelectedPhoneId} 
-                      totalRecipients={contacts.length} 
+                      selectedAgentId={selectedAgentId}
+                      onAgentSelect={setSelectedAgentId}
+                      selectedPhoneId={selectedPhoneId}
+                      onPhoneSelect={setSelectedPhoneId}
+                      totalRecipients={contacts.length}
                       selectedRecipients={selectedContacts.size}
                       smsConfig={smsConfig}
                       onSMSConfigChange={setSmsConfig}
                     />
                   </div>
-
-                  {/* Main Content */}
-                  <div className="lg:col-span-2 space-y-6">
-                    {/* CSV Upload Section */}
-                    <CSVUploadSection onFileSelect={() => fileInputRef.current?.click()} onDownloadTemplate={downloadTemplate} />
-
-                    {/* Contacts List */}
-                    {contacts.length > 0 && <ContactsList contacts={contacts} selectedContacts={selectedContacts} onContactSelect={handleContactSelect} onSelectAll={handleSelectAll} isProcessingBatch={isProcessingBatch} />}
-
-                    {/* Action Button */}
-                    {contacts.length > 0 && <Button onClick={handleBatchProcess} disabled={!selectedAgentId || !selectedPhoneId || selectedContacts.size === 0 || isProcessingBatch} className="w-full py-3 bg-primary hover:bg-primary/90" size="lg">
-                        {isProcessingBatch ? <>
-                            <Phone className="w-4 h-4 mr-2 animate-pulse" />
-                            Se procesează... ({currentProgress}/{totalCalls})
-                          </> : <>
-                            <Phone className="w-4 h-4 mr-2" />
-                            Începe Apelurile Batch ({selectedContacts.size} contacte)
-                          </>}
-                      </Button>}
-                  </div>
                 </div>
+              )}
 
-                {/* Status Panel */}
-                {(isProcessingBatch || callStatuses.length > 0) && <BatchStatusPanel isProcessing={isProcessingBatch} currentProgress={currentProgress} totalCalls={totalCalls} callStatuses={callStatuses} startTime={batchStartTime} />}
-              </TabsContent>
-
-              <TabsContent value="history" className="mt-6">
-                <div className="bg-white rounded-lg border border-gray-200">
+              {/* History */}
+              {activeSection === 'history' && (
+                <div className="p-6">
                   <CallHistoryTab callHistory={callHistory} isLoading={historyLoading} />
                 </div>
-              </TabsContent>
-            </Tabs>
+              )}
 
-            <input ref={fileInputRef} type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" />
+              {/* Contacts */}
+              {activeSection === 'contacts' && contacts.length > 0 && (
+                <div className="p-6">
+                  <ContactsList 
+                    contacts={contacts}
+                    selectedContacts={selectedContacts}
+                    onContactSelect={handleContactSelect}
+                    onSelectAll={handleSelectAll}
+                    isProcessingBatch={isProcessingBatch}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Batch Status Panel */}
+            {(isProcessingBatch || callStatuses.length > 0) && (
+              <div className="mt-6">
+                <BatchStatusPanel 
+                  isProcessing={isProcessingBatch}
+                  currentProgress={currentProgress}
+                  totalCalls={totalCalls}
+                  callStatuses={callStatuses}
+                  startTime={batchStartTime}
+                />
+              </div>
+            )}
           </div>
+
+          <input 
+            ref={fileInputRef} 
+            type="file" 
+            accept=".csv" 
+            onChange={handleCSVUpload} 
+            className="hidden" 
+          />
         </div>
       </div>
-    </DashboardLayout>;
+    </DashboardLayout>
+  );
 };
+
 export default Outbound;
