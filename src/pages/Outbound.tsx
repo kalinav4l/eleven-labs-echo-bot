@@ -3,12 +3,14 @@ import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useCallInitiation } from '@/hooks/useCallInitiation';
 import { useCallHistory } from '@/hooks/useCallHistory';
 import { useUserPhoneNumbers } from '@/hooks/useUserPhoneNumbers';
 import { toast } from '@/components/ui/use-toast';
-import { Phone, Upload, FileDown } from 'lucide-react';
+import { Phone, Upload, FileDown, Settings, Users, MessageSquare, ChevronDown, ChevronRight } from 'lucide-react';
 
 // Import refactored components
 import { OutboundHeader } from '@/components/outbound/OutboundHeader';
@@ -52,6 +54,12 @@ const Outbound = () => {
     message: '',
     delay: 2
   });
+
+  // State for collapsible sections
+  const [configOpen, setConfigOpen] = useState(true);
+  const [uploadOpen, setUploadOpen] = useState(true);
+  const [contactsOpen, setContactsOpen] = useState(true);
+  const [smsOpen, setSmsOpen] = useState(false);
 
   // Get user's phone numbers
   const {
@@ -201,68 +209,160 @@ const Outbound = () => {
             </TabsList>
 
             <TabsContent value="batch" className="space-y-6 mt-6">
-              <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-                {/* Left Sidebar - Configuration */}
-                <div className="xl:col-span-1 space-y-6">
-                  <BatchConfigPanel 
-                    selectedAgentId={selectedAgentId} 
-                    onAgentSelect={setSelectedAgentId} 
-                    selectedPhoneId={selectedPhoneId} 
-                    onPhoneSelect={setSelectedPhoneId} 
-                    totalRecipients={contacts.length} 
-                    selectedRecipients={selectedContacts.size}
-                    smsConfig={smsConfig}
-                    onSMSConfigChange={setSmsConfig}
-                  />
-                </div>
+              <div className="max-w-5xl mx-auto space-y-6">
+                
+                {/* Configuration Section */}
+                <Card className="bg-white shadow-lg border-0">
+                  <Collapsible open={configOpen} onOpenChange={setConfigOpen}>
+                    <CollapsibleTrigger asChild>
+                      <CardHeader className="hover:bg-gray-50/50 cursor-pointer transition-colors p-6">
+                        <CardTitle className="flex items-center justify-between text-xl font-semibold text-gray-800">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-primary/10 rounded-lg">
+                              <Settings className="w-5 h-5 text-primary" />
+                            </div>
+                            Configurație Batch
+                          </div>
+                          {configOpen ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                        </CardTitle>
+                      </CardHeader>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <CardContent className="pt-0 px-6 pb-6">
+                        <BatchConfigPanel 
+                          selectedAgentId={selectedAgentId} 
+                          onAgentSelect={setSelectedAgentId} 
+                          selectedPhoneId={selectedPhoneId} 
+                          onPhoneSelect={setSelectedPhoneId} 
+                          totalRecipients={contacts.length} 
+                          selectedRecipients={selectedContacts.size}
+                          smsConfig={smsConfig}
+                          onSMSConfigChange={setSmsConfig}
+                        />
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </Card>
 
-                {/* Main Content Area */}
-                <div className="xl:col-span-3 space-y-6">
-                  {/* Top Section - CSV Upload */}
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <CSVUploadSection 
-                      onFileSelect={() => fileInputRef.current?.click()} 
-                      onDownloadTemplate={downloadTemplate} 
-                    />
-                  </div>
+                {/* CSV Upload Section */}
+                <Card className="bg-white shadow-lg border-0">
+                  <Collapsible open={uploadOpen} onOpenChange={setUploadOpen}>
+                    <CollapsibleTrigger asChild>
+                      <CardHeader className="hover:bg-gray-50/50 cursor-pointer transition-colors p-6">
+                        <CardTitle className="flex items-center justify-between text-xl font-semibold text-gray-800">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-green-100 rounded-lg">
+                              <Upload className="w-5 h-5 text-green-600" />
+                            </div>
+                            Încărcare Contacte CSV
+                          </div>
+                          {uploadOpen ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                        </CardTitle>
+                      </CardHeader>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <CardContent className="pt-0 px-6 pb-6">
+                        <CSVUploadSection 
+                          onFileSelect={() => fileInputRef.current?.click()} 
+                          onDownloadTemplate={downloadTemplate} 
+                        />
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </Card>
 
-                  {/* Contacts Section */}
-                  {contacts.length > 0 && (
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                      <ContactsList 
-                        contacts={contacts} 
-                        selectedContacts={selectedContacts} 
-                        onContactSelect={handleContactSelect} 
-                        onSelectAll={handleSelectAll} 
-                        isProcessingBatch={isProcessingBatch} 
-                      />
-                    </div>
-                  )}
+                {/* SMS Configuration Section */}
+                <Card className="bg-white shadow-lg border-0">
+                  <Collapsible open={smsOpen} onOpenChange={setSmsOpen}>
+                    <CollapsibleTrigger asChild>
+                      <CardHeader className="hover:bg-gray-50/50 cursor-pointer transition-colors p-6">
+                        <CardTitle className="flex items-center justify-between text-xl font-semibold text-gray-800">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-100 rounded-lg">
+                              <MessageSquare className="w-5 h-5 text-blue-600" />
+                            </div>
+                            Configurație SMS
+                            <span className={`text-xs px-2 py-1 rounded-full ${smsConfig.enabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                              {smsConfig.enabled ? 'Activat' : 'Dezactivat'}
+                            </span>
+                          </div>
+                          {smsOpen ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                        </CardTitle>
+                      </CardHeader>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <CardContent className="pt-0 px-6 pb-6">
+                        <p className="text-sm text-gray-600 mb-4">
+                          Configurează trimiterea automată de SMS-uri după finalizarea apelurilor.
+                        </p>
+                        <div className="text-sm text-gray-500">
+                          Accesează secțiunea de Configurație Batch pentru a gestiona setările SMS.
+                        </div>
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </Card>
 
-                  {/* Action Button */}
-                  {contacts.length > 0 && (
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                {/* Contacts Section */}
+                {contacts.length > 0 && (
+                  <Card className="bg-white shadow-lg border-0">
+                    <Collapsible open={contactsOpen} onOpenChange={setContactsOpen}>
+                      <CollapsibleTrigger asChild>
+                        <CardHeader className="hover:bg-gray-50/50 cursor-pointer transition-colors p-6">
+                          <CardTitle className="flex items-center justify-between text-xl font-semibold text-gray-800">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-purple-100 rounded-lg">
+                                <Users className="w-5 h-5 text-purple-600" />
+                              </div>
+                              Contacte Încărcate ({contacts.length})
+                              <span className="text-sm bg-primary/10 text-primary px-2 py-1 rounded-full">
+                                {selectedContacts.size} selectate
+                              </span>
+                            </div>
+                            {contactsOpen ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                          </CardTitle>
+                        </CardHeader>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <CardContent className="pt-0 px-0 pb-0">
+                          <ContactsList 
+                            contacts={contacts} 
+                            selectedContacts={selectedContacts} 
+                            onContactSelect={handleContactSelect} 
+                            onSelectAll={handleSelectAll} 
+                            isProcessingBatch={isProcessingBatch} 
+                          />
+                        </CardContent>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </Card>
+                )}
+
+                {/* Action Button */}
+                {contacts.length > 0 && (
+                  <Card className="bg-gradient-to-r from-primary to-primary/80 border-0 shadow-lg">
+                    <CardContent className="p-6">
                       <Button 
                         onClick={handleBatchProcess} 
                         disabled={!selectedAgentId || !selectedPhoneId || selectedContacts.size === 0 || isProcessingBatch} 
-                        className="w-full py-4 bg-primary hover:bg-primary/90 text-lg font-medium" 
+                        className="w-full py-6 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white text-lg font-medium border border-white/20" 
                         size="lg"
                       >
                         {isProcessingBatch ? (
                           <>
-                            <Phone className="w-5 h-5 mr-3 animate-pulse" />
-                            Se procesează... ({currentProgress}/{totalCalls})
+                            <Phone className="w-6 h-6 mr-3 animate-pulse" />
+                            Se procesează apelurile... ({currentProgress}/{totalCalls})
                           </>
                         ) : (
                           <>
-                            <Phone className="w-5 h-5 mr-3" />
-                            Începe Apelurile Batch ({selectedContacts.size} contacte selectate)
+                            <Phone className="w-6 h-6 mr-3" />
+                            Începe Apelurile Batch - {selectedContacts.size} contacte selectate
                           </>
                         )}
                       </Button>
-                    </div>
-                  )}
-                </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
               {/* Status Panel - Full Width */}
