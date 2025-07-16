@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Clock, Phone, MessageSquare, Copy, ExternalLink } from 'lucide-react';
+import { Search, Phone, Copy, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ConversationDetailModal } from '@/components/outbound/ConversationDetailModal';
 import { useConversationById } from '@/hooks/useConversationById';
@@ -177,7 +177,7 @@ const ConversationAnalytics = () => {
                   <tr className="border-b">
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Contact Number</th>
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Agent</th>
-                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Date</th>
+                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Cost total:</th>
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Evaluation result</th>
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Actions</th>
                   </tr>
@@ -207,8 +207,7 @@ const ConversationAnalytics = () => {
                           </td>
                           <td className="p-3">
                             <div className="text-sm">
-                              <div className="font-medium">{dateTime.date}</div>
-                              <div className="text-muted-foreground text-xs">{dateTime.time}</div>
+                              <div className="font-medium">${(call.cost_usd || 0).toFixed(4)}</div>
                             </div>
                           </td>
                           <td className="p-3">
@@ -222,28 +221,14 @@ const ConversationAnalytics = () => {
                             </Badge>
                           </td>
                           <td className="p-3">
-                            <div className="flex items-center gap-2">
-                              <div className="flex items-center text-sm text-muted-foreground">
-                                <Clock className="w-3 h-3 mr-1" />
+                            <div className="text-sm">
+                              <div className="font-medium">Durată:</div>
+                              <div className="text-muted-foreground">
                                 {call.conversation_id ? 
                                   formatDuration(conversationDurations[call.conversation_id] || 0) : 
                                   formatDuration(call.duration_seconds || 0)
                                 }
                               </div>
-                               {call.conversation_id && (
-                                 <Button 
-                                   variant="outline" 
-                                   size="sm"
-                                   onClick={(e) => {
-                                     e.stopPropagation();
-                                     navigate(`/account/conversation-analytics/${call.conversation_id}`);
-                                   }}
-                                   className="h-6 text-xs"
-                                 >
-                                   <MessageSquare className="w-3 h-3 mr-1" />
-                                   Detalii
-                                 </Button>
-                               )}
                             </div>
                           </td>
                         </tr>;
