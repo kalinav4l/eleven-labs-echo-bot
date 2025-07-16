@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Phone, Activity, TrendingUp, FileText, Settings, Play, Pause, BarChart3, Plus, Eye, Edit, Trash2, Upload, History } from 'lucide-react';
+import { Users, Phone, Activity, TrendingUp, FileText, Settings, Play, Pause, BarChart3, Plus, Eye, Edit, Trash2, Upload, History, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -36,12 +36,22 @@ interface Campaign {
   updated_at: string;
 }
 
+interface Contact {
+  id: string;
+  name: string;
+  phone: string;
+  country: string;
+  location: string;
+}
+
 const Outbound = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('campaigns');
   const [isCreateCampaignOpen, setIsCreateCampaignOpen] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [campaignForm, setCampaignForm] = useState({
     name: '',
     description: '',
@@ -91,15 +101,35 @@ const Outbound = () => {
         .from('campaigns')
         .insert([{
           ...campaignForm,
-          user_id: user.id
+          user_id: user.id,
+          total_contacts: contacts.length
         }])
         .select()
         .single();
 
       if (error) throw error;
 
+      // If we have contacts, insert them into campaign_contacts
+      if (contacts.length > 0) {
+        const { error: contactsError } = await supabase
+          .from('campaign_contacts')
+          .insert(
+            contacts.map(contact => ({
+              campaign_id: data.id,
+              phone_number: contact.phone,
+              contact_name: contact.name
+            }))
+          );
+
+        if (contactsError) {
+          console.error('Error inserting contacts:', contactsError);
+          // Continue even if contacts insertion fails
+        }
+      }
+
       setCampaigns([data as Campaign, ...campaigns]);
       setIsCreateCampaignOpen(false);
+      setContacts([]);
       setCampaignForm({
         name: '',
         description: '',
@@ -110,7 +140,7 @@ const Outbound = () => {
       
       toast({
         title: "Succes",
-        description: "Campania a fost creată cu succes"
+        description: `Campania a fost creată cu succes${contacts.length > 0 ? ` cu ${contacts.length} contacte` : ''}`
       });
     } catch (error) {
       console.error('Error creating campaign:', error);
@@ -191,71 +221,140 @@ const Outbound = () => {
               Campanie Nouă
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Creează Campanie Nouă</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Nume Campanie</Label>
-                <Input
-                  id="name"
-                  value={campaignForm.name}
-                  onChange={(e) => setCampaignForm({...campaignForm, name: e.target.value})}
-                  placeholder="Ex: Campania Q1 2025"
-                />
-              </div>
-              <div>
-                <Label htmlFor="description">Descriere</Label>
-                <Textarea
-                  id="description"
-                  value={campaignForm.description}
-                  onChange={(e) => setCampaignForm({...campaignForm, description: e.target.value})}
-                  placeholder="Descrierea campaniei..."
-                />
-              </div>
-              <div>
-                <Label htmlFor="agent">Agent</Label>
-                <Select
-                  value={campaignForm.agent_id}
-                  onValueChange={(value) => setCampaignForm({...campaignForm, agent_id: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selectează agentul" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {agents.map((agent) => (
-                      <SelectItem key={agent.id} value={agent.elevenlabs_agent_id || agent.agent_id}>
-                        {agent.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="sms"
-                  checked={campaignForm.sms_enabled}
-                  onCheckedChange={(checked) => setCampaignForm({...campaignForm, sms_enabled: checked})}
-                />
-                <Label htmlFor="sms">Activează SMS</Label>
-              </div>
-              {campaignForm.sms_enabled && (
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Creează Campanie Nouă</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 max-h-[80vh] overflow-y-auto">
                 <div>
-                  <Label htmlFor="sms_message">Mesaj SMS</Label>
-                  <Textarea
-                    id="sms_message"
-                    value={campaignForm.sms_message}
-                    onChange={(e) => setCampaignForm({...campaignForm, sms_message: e.target.value})}
-                    placeholder="Mesajul SMS care va fi trimis..."
+                  <Label htmlFor="name">Nume Campanie</Label>
+                  <Input
+                    id="name"
+                    value={campaignForm.name}
+                    onChange={(e) => setCampaignForm({...campaignForm, name: e.target.value})}
+                    placeholder="Ex: Campania Q1 2025"
                   />
                 </div>
-              )}
-              <Button onClick={createCampaign} className="w-full">
-                Creează Campania
-              </Button>
-            </div>
-          </DialogContent>
+                <div>
+                  <Label htmlFor="description">Descriere</Label>
+                  <Textarea
+                    id="description"
+                    value={campaignForm.description}
+                    onChange={(e) => setCampaignForm({...campaignForm, description: e.target.value})}
+                    placeholder="Descrierea campaniei..."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="agent">Agent</Label>
+                  <Select
+                    value={campaignForm.agent_id}
+                    onValueChange={(value) => setCampaignForm({...campaignForm, agent_id: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selectează agentul" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {agents.map((agent) => (
+                        <SelectItem key={agent.id} value={agent.elevenlabs_agent_id || agent.agent_id}>
+                          {agent.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* CSV Upload Section */}
+                <div className="space-y-3 border rounded-lg p-4 bg-muted/10">
+                  <Label>Baza de Date Contacte</Label>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                       <input
+                         type="file"
+                         ref={fileInputRef}
+                         onChange={handleNewCampaignFileSelect}
+                         accept=".csv"
+                         className="hidden"
+                       />
+                       <Button
+                         type="button"
+                         variant="outline"
+                         onClick={() => fileInputRef.current?.click()}
+                         className="gap-2"
+                       >
+                         <Upload className="w-4 h-4" />
+                         {contacts.length > 0 ? 'Schimbă CSV' : 'Selectează CSV'}
+                       </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={downloadTemplate}
+                        className="gap-2 text-blue-600"
+                      >
+                        <Download className="w-4 h-4" />
+                        Template
+                      </Button>
+                    </div>
+                    {contacts.length > 0 && (
+                      <span className="text-sm text-green-600 font-medium">
+                        {contacts.length} contacte încărcate
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    CSV-ul trebuie să conțină coloanele: nume, telefon, tara, locatie
+                  </p>
+                  
+                  {/* Preview contacts */}
+                  {contacts.length > 0 && (
+                    <div className="mt-3">
+                      <Label className="text-sm">Preview Contacte:</Label>
+                      <div className="max-h-32 overflow-y-auto border rounded mt-1 p-2 bg-background">
+                        {contacts.slice(0, 5).map((contact, index) => (
+                          <div key={index} className="text-sm py-1 border-b last:border-b-0">
+                            <span className="font-medium">{contact.name}</span> - {contact.phone} ({contact.country})
+                          </div>
+                        ))}
+                        {contacts.length > 5 && (
+                          <div className="text-sm text-muted-foreground mt-1">
+                            ...și încă {contacts.length - 5} contacte
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="sms"
+                    checked={campaignForm.sms_enabled}
+                    onCheckedChange={(checked) => setCampaignForm({...campaignForm, sms_enabled: checked})}
+                  />
+                  <Label htmlFor="sms">Activează SMS</Label>
+                </div>
+                {campaignForm.sms_enabled && (
+                  <div>
+                    <Label htmlFor="sms_message">Mesaj SMS</Label>
+                    <Textarea
+                      id="sms_message"
+                      value={campaignForm.sms_message}
+                      onChange={(e) => setCampaignForm({...campaignForm, sms_message: e.target.value})}
+                      placeholder="Mesajul SMS care va fi trimis..."
+                    />
+                  </div>
+                )}
+                <Button 
+                  onClick={createCampaign} 
+                  className="w-full"
+                  disabled={!campaignForm.name || !campaignForm.agent_id}
+                >
+                  {contacts.length > 0 
+                    ? `Creează Campania cu ${contacts.length} contacte` 
+                    : 'Creează Campania'
+                  }
+                </Button>
+              </div>
+            </DialogContent>
         </Dialog>
       </div>
 
@@ -360,6 +459,50 @@ const Outbound = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleNewCampaignFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split('\n').filter(line => line.trim());
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      
+      const nameIndex = headers.findIndex(h => h.includes('name') || h.includes('nume'));
+      const phoneIndex = headers.findIndex(h => h.includes('phone') || h.includes('telefon'));
+      const countryIndex = headers.findIndex(h => h.includes('country') || h.includes('tara'));
+      const locationIndex = headers.findIndex(h => h.includes('location') || h.includes('locatie'));
+
+      if (phoneIndex === -1) {
+        toast({
+          variant: "destructive",
+          title: "Eroare",
+          description: "CSV-ul trebuie să conțină o coloană pentru telefon"
+        });
+        return;
+      }
+
+      const parsedContacts = lines.slice(1).map((line, index) => {
+        const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+        return {
+          id: `temp-${index}`,
+          name: nameIndex >= 0 ? values[nameIndex] || 'Contact' : 'Contact',
+          phone: values[phoneIndex] || '',
+          country: countryIndex >= 0 ? values[countryIndex] || 'Romania' : 'Romania',
+          location: locationIndex >= 0 ? values[locationIndex] || 'Necunoscut' : 'Necunoscut'
+        };
+      }).filter(contact => contact.phone);
+
+      setContacts(parsedContacts);
+      toast({
+        title: "Succes",
+        description: `S-au încărcat ${parsedContacts.length} contacte`
+      });
+    };
+    reader.readAsText(file);
   };
 
   const handleFileSelect = () => {
