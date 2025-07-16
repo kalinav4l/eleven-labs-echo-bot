@@ -185,72 +185,108 @@ const Outbound = () => {
     document.body.removeChild(link);
   };
   return <DashboardLayout>
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="space-y-6 bg-white">
-            <OutboundHeader />
+      <div className="min-h-screen bg-gray-50/30">
+        <div className="max-w-7xl mx-auto p-6 space-y-6">
+          <OutboundHeader />
 
-            <Tabs defaultValue="batch" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-white p-1 h-auto border border-gray-200">
-                <TabsTrigger value="batch" className="data-[state=active]:bg-primary data-[state=active]:text-white py-3">
-                  <Phone className="w-4 h-4 mr-2" />
-                  Apeluri Batch
-                </TabsTrigger>
-                <TabsTrigger value="history" className="data-[state=active]:bg-primary data-[state=active]:text-white py-3">
-                  Istoric Apeluri
-                </TabsTrigger>
-              </TabsList>
+          <Tabs defaultValue="batch" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-white p-1 h-12 border border-gray-200 rounded-lg shadow-sm">
+              <TabsTrigger value="batch" className="data-[state=active]:bg-primary data-[state=active]:text-white py-3 rounded-md transition-all">
+                <Phone className="w-4 h-4 mr-2" />
+                Apeluri Batch
+              </TabsTrigger>
+              <TabsTrigger value="history" className="data-[state=active]:bg-primary data-[state=active]:text-white py-3 rounded-md transition-all">
+                Istoric Apeluri
+              </TabsTrigger>
+            </TabsList>
 
-              <TabsContent value="batch" className="space-y-6 mt-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Configuration Panel */}
-                  <div className="lg:col-span-1">
-                    <BatchConfigPanel 
-                      selectedAgentId={selectedAgentId} 
-                      onAgentSelect={setSelectedAgentId} 
-                      selectedPhoneId={selectedPhoneId} 
-                      onPhoneSelect={setSelectedPhoneId} 
-                      totalRecipients={contacts.length} 
-                      selectedRecipients={selectedContacts.size}
-                      smsConfig={smsConfig}
-                      onSMSConfigChange={setSmsConfig}
+            <TabsContent value="batch" className="space-y-6 mt-6">
+              <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+                {/* Left Sidebar - Configuration */}
+                <div className="xl:col-span-1 space-y-6">
+                  <BatchConfigPanel 
+                    selectedAgentId={selectedAgentId} 
+                    onAgentSelect={setSelectedAgentId} 
+                    selectedPhoneId={selectedPhoneId} 
+                    onPhoneSelect={setSelectedPhoneId} 
+                    totalRecipients={contacts.length} 
+                    selectedRecipients={selectedContacts.size}
+                    smsConfig={smsConfig}
+                    onSMSConfigChange={setSmsConfig}
+                  />
+                </div>
+
+                {/* Main Content Area */}
+                <div className="xl:col-span-3 space-y-6">
+                  {/* Top Section - CSV Upload */}
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <CSVUploadSection 
+                      onFileSelect={() => fileInputRef.current?.click()} 
+                      onDownloadTemplate={downloadTemplate} 
                     />
                   </div>
 
-                  {/* Main Content */}
-                  <div className="lg:col-span-2 space-y-6">
-                    {/* CSV Upload Section */}
-                    <CSVUploadSection onFileSelect={() => fileInputRef.current?.click()} onDownloadTemplate={downloadTemplate} />
+                  {/* Contacts Section */}
+                  {contacts.length > 0 && (
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                      <ContactsList 
+                        contacts={contacts} 
+                        selectedContacts={selectedContacts} 
+                        onContactSelect={handleContactSelect} 
+                        onSelectAll={handleSelectAll} 
+                        isProcessingBatch={isProcessingBatch} 
+                      />
+                    </div>
+                  )}
 
-                    {/* Contacts List */}
-                    {contacts.length > 0 && <ContactsList contacts={contacts} selectedContacts={selectedContacts} onContactSelect={handleContactSelect} onSelectAll={handleSelectAll} isProcessingBatch={isProcessingBatch} />}
-
-                    {/* Action Button */}
-                    {contacts.length > 0 && <Button onClick={handleBatchProcess} disabled={!selectedAgentId || !selectedPhoneId || selectedContacts.size === 0 || isProcessingBatch} className="w-full py-3 bg-primary hover:bg-primary/90" size="lg">
-                        {isProcessingBatch ? <>
-                            <Phone className="w-4 h-4 mr-2 animate-pulse" />
+                  {/* Action Button */}
+                  {contacts.length > 0 && (
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                      <Button 
+                        onClick={handleBatchProcess} 
+                        disabled={!selectedAgentId || !selectedPhoneId || selectedContacts.size === 0 || isProcessingBatch} 
+                        className="w-full py-4 bg-primary hover:bg-primary/90 text-lg font-medium" 
+                        size="lg"
+                      >
+                        {isProcessingBatch ? (
+                          <>
+                            <Phone className="w-5 h-5 mr-3 animate-pulse" />
                             Se procesează... ({currentProgress}/{totalCalls})
-                          </> : <>
-                            <Phone className="w-4 h-4 mr-2" />
-                            Începe Apelurile Batch ({selectedContacts.size} contacte)
-                          </>}
-                      </Button>}
-                  </div>
+                          </>
+                        ) : (
+                          <>
+                            <Phone className="w-5 h-5 mr-3" />
+                            Începe Apelurile Batch ({selectedContacts.size} contacte selectate)
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
                 </div>
+              </div>
 
-                {/* Status Panel */}
-                {(isProcessingBatch || callStatuses.length > 0) && <BatchStatusPanel isProcessing={isProcessingBatch} currentProgress={currentProgress} totalCalls={totalCalls} callStatuses={callStatuses} startTime={batchStartTime} />}
-              </TabsContent>
-
-              <TabsContent value="history" className="mt-6">
-                <div className="bg-white rounded-lg border border-gray-200">
-                  <CallHistoryTab callHistory={callHistory} isLoading={historyLoading} />
+              {/* Status Panel - Full Width */}
+              {(isProcessingBatch || callStatuses.length > 0) && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                  <BatchStatusPanel 
+                    isProcessing={isProcessingBatch} 
+                    currentProgress={currentProgress} 
+                    totalCalls={totalCalls} 
+                    callStatuses={callStatuses} 
+                    startTime={batchStartTime} 
+                  />
                 </div>
-              </TabsContent>
-            </Tabs>
+              )}
+            </TabsContent>
 
-            <input ref={fileInputRef} type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" />
-          </div>
+            <TabsContent value="history" className="mt-6">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <CallHistoryTab callHistory={callHistory} isLoading={historyLoading} />
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          <input ref={fileInputRef} type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" />
         </div>
       </div>
     </DashboardLayout>;
