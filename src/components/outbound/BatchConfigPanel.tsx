@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AgentSelector } from './AgentSelector';
+import { AgentSelectorElegant } from './AgentSelectorElegant';
 import { PhoneSelector } from './PhoneSelector';
 import { SMSConfigSection } from './SMSConfigSection';
 import { Settings, Users, Phone } from 'lucide-react';
@@ -37,29 +37,29 @@ export const BatchConfigPanel: React.FC<BatchConfigPanelProps> = ({
 }) => {
   return (
     <div className="space-y-6">
+      {/* Agent Selection - New Elegant Style */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-gray-700 flex items-center space-x-2">
+          <span>Agent AI</span>
+          <Badge variant={selectedAgentId ? "default" : "secondary"} className="text-xs">
+            {selectedAgentId ? "Selectat" : "Neselectat"}
+          </Badge>
+        </label>
+        <AgentSelectorElegant
+          selectedAgentId={selectedAgentId}
+          onAgentSelect={onAgentSelect}
+        />
+      </div>
+
+      {/* Phone Number Selection */}
       <Card className="border-2 border-gray-100">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center space-x-2 text-lg">
-            <Settings className="w-5 h-5" />
-            <span>Configurație Batch</span>
+            <Phone className="w-5 h-5" />
+            <span>Configurație Telefon</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Agent Selection */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 flex items-center space-x-2">
-              <span>Agent AI</span>
-              <Badge variant={selectedAgentId ? "default" : "secondary"} className="text-xs">
-                {selectedAgentId ? "Selectat" : "Neselectat"}
-              </Badge>
-            </label>
-            <AgentSelector
-              selectedAgentId={selectedAgentId}
-              onAgentSelect={onAgentSelect}
-            />
-          </div>
-
-          {/* Phone Number Selection */}
+        <CardContent className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 flex items-center space-x-2">
               <span>Număr de Contact</span>
