@@ -221,101 +221,201 @@ const Calls = () => {
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-background">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">Apeluri Outbound</h1>
-              <p className="text-muted-foreground">
-                Gestionați apelurile automate cu monitorizare în timp real prin ElevenLabs API
-              </p>
+        <div className="flex max-w-7xl mx-auto">
+          {/* Sidebar */}
+          <div className="w-64 bg-card border-r border-border p-4">
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-foreground mb-1">Apeluri</h2>
+              <p className="text-sm text-muted-foreground">Gestionează apelurile automate</p>
             </div>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" className="gap-2">
-                <Settings className="w-4 h-4" />
-                Cum funcționează
-              </Button>
-              <Button className="gap-2" onClick={() => setActiveSection('batch')}>
-                <Play className="w-4 h-4" />
-                Începe Apelul
-              </Button>
-            </div>
+            
+            <nav className="space-y-2">
+              <button
+                onClick={() => setActiveSection('batch')}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                  activeSection === 'batch' 
+                    ? 'bg-primary/10 text-primary font-medium' 
+                    : 'text-foreground hover:bg-muted'
+                }`}
+              >
+                <Phone className="w-4 h-4" />
+                Apel în lot
+              </button>
+              
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                  activeSection === 'upload' 
+                    ? 'bg-primary/10 text-primary font-medium' 
+                    : 'text-foreground hover:bg-muted'
+                }`}
+              >
+                <Upload className="w-4 h-4" />
+                Import CSV
+              </button>
+              
+              <button
+                onClick={() => setActiveSection('history')}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                  activeSection === 'history' 
+                    ? 'bg-primary/10 text-primary font-medium' 
+                    : 'text-foreground hover:bg-muted'
+                }`}
+              >
+                <History className="w-4 h-4" />
+                Istoric
+              </button>
+            </nav>
           </div>
 
-          {/* Service Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {serviceCards.map((service, index) => (
-              <Card 
-                key={index} 
-                className="relative cursor-pointer hover:shadow-lg transition-all duration-200 border border-border"
-                onClick={service.onClick}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <service.icon className="w-6 h-6 text-primary" />
+          {/* Main Content */}
+          <div className="flex-1 p-6">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">
+                  {activeSection === 'batch' && 'Apeluri în lot'}
+                  {activeSection === 'history' && 'Istoric apeluri'}
+                  {activeSection === 'contacts' && 'Contacte'}
+                  {!activeSection && 'Apeluri automate'}
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {activeSection === 'batch' && 'Configurează și lansează apeluri către multiple contacte'}
+                  {activeSection === 'history' && 'Vezi toate apelurile efectuate'}
+                  {activeSection === 'contacts' && 'Gestionează contactele încărcate'}
+                  {!activeSection && 'Alege o opțiune din meniul lateral pentru a începe'}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button variant="outline" onClick={downloadTemplate} className="gap-2">
+                  <Upload className="w-4 h-4" />
+                  Template CSV
+                </Button>
+                {activeSection && (
+                  <Button variant="outline" onClick={() => setActiveSection(null)}>
+                    Înapoi
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Content Area */}
+            <div className="bg-card rounded-xl border border-border">
+              {/* Default State */}
+              {!activeSection && (
+                <div className="p-12 text-center">
+                  <div className="max-w-md mx-auto">
+                    <div className="w-20 h-20 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-6">
+                      <Phone className="w-10 h-10 text-primary" />
                     </div>
-                    {service.badge && (
-                      <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
-                        {service.badge}
-                      </span>
+                    <h3 className="text-xl font-semibold text-foreground mb-3">
+                      Începe să automatizezi apelurile
+                    </h3>
+                    <p className="text-muted-foreground mb-8">
+                      Selectează o opțiune din meniul lateral pentru a configura 
+                      și lansa apeluri automate către clienții tăi.
+                    </p>
+                    <div className="flex items-center justify-center gap-4">
+                      <Button variant="outline" onClick={() => setActiveSection('batch')} className="gap-2">
+                        <Phone className="w-4 h-4" />
+                        Configurează apeluri
+                      </Button>
+                      <Button onClick={() => fileInputRef.current?.click()} className="gap-2">
+                        <Upload className="w-4 h-4" />
+                        Încarcă contacte
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Batch Configuration */}
+              {activeSection === 'batch' && (
+                <div className="flex">
+                  {/* Main Content */}
+                  <div className="flex-1 p-6">
+                    {contacts.length === 0 ? (
+                      <div className="border-2 border-dashed border-border rounded-xl p-12 text-center">
+                        <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-foreground mb-2">
+                          Încarcă contacte pentru a începe
+                        </h3>
+                        <p className="text-muted-foreground mb-6">
+                          Selectează un fișier CSV cu contactele tale sau înregistrează audio pentru test
+                        </p>
+                        <div className="flex items-center justify-center gap-4">
+                          <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="gap-2">
+                            <Upload className="w-4 h-4" />
+                            Selectează CSV
+                          </Button>
+                          <span className="text-muted-foreground">sau</span>
+                          <Button variant="outline" onClick={downloadTemplate} className="gap-2">
+                            <Upload className="w-4 h-4" />
+                            Descarcă template
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        <ContactsList 
+                          contacts={contacts}
+                          selectedContacts={selectedContacts}
+                          onContactSelect={handleContactSelect}
+                          onSelectAll={handleSelectAll}
+                          isProcessingBatch={isProcessingBatch}
+                        />
+                        
+                        <div className="pt-4 border-t border-border">
+                          <Button 
+                            onClick={handleBatchProcess}
+                            disabled={!selectedAgentId || !selectedPhoneId || selectedContacts.size === 0 || isProcessingBatch}
+                            className="w-full py-3"
+                            size="lg"
+                          >
+                            {isProcessingBatch ? (
+                              <>
+                                <Phone className="w-4 h-4 mr-2 animate-pulse" />
+                                Se procesează... ({currentProgress}/{totalCalls})
+                              </>
+                            ) : (
+                              <>
+                                <Phone className="w-4 h-4 mr-2" />
+                                Lansează apelurile ({selectedContacts.size} contacte)
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
                     )}
                   </div>
-                  <h3 className="font-semibold text-foreground mb-2">{service.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-3">{service.description}</p>
-                  <p className="text-sm font-medium text-foreground">{service.price}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
 
-          {/* Main Content Area */}
-          {!activeSection && (
-            <Card className="p-8 text-center bg-muted/30">
-              <div className="max-w-md mx-auto">
-                <div className="p-4 rounded-full bg-primary/10 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                  <Phone className="w-8 h-8 text-primary" />
+                  {/* Settings Panel */}
+                  <div className="w-80 border-l border-border p-6 bg-muted/30">
+                    <h3 className="font-semibold text-foreground mb-4">Configurări</h3>
+                    <BatchConfigPanel 
+                      selectedAgentId={selectedAgentId}
+                      onAgentSelect={setSelectedAgentId}
+                      selectedPhoneId={selectedPhoneId}
+                      onPhoneSelect={setSelectedPhoneId}
+                      totalRecipients={contacts.length}
+                      selectedRecipients={selectedContacts.size}
+                      smsConfig={smsConfig}
+                      onSMSConfigChange={setSmsConfig}
+                    />
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-3">
-                  Automatizați apelurile către clienții dumneavoastră
-                </h3>
-                <p className="text-muted-foreground mb-6">
-                  Echipa noastră de experți în AI vă va livra apeluri automate de calitate, 
-                  gata să fie distribuite către audiența dumneavoastră.
-                </p>
-                <div className="flex items-center justify-center gap-4">
-                  <Button variant="outline" onClick={downloadTemplate} className="gap-2">
-                    <Upload className="w-4 h-4" />
-                    Descarcă Template
-                  </Button>
-                  <Button onClick={() => setActiveSection('batch')} className="gap-2">
-                    <Play className="w-4 h-4" />
-                    Începe Apelurile
-                  </Button>
+              )}
+
+              {/* History */}
+              {activeSection === 'history' && (
+                <div className="p-6">
+                  <CallHistoryTab callHistory={callHistory} isLoading={historyLoading} />
                 </div>
-              </div>
-            </Card>
-          )}
+              )}
 
-          {/* Dynamic Content Based on Active Section */}
-          {activeSection === 'batch' && (
-            <div className="space-y-6">
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Configurație Batch</h3>
-                <BatchConfigPanel 
-                  selectedAgentId={selectedAgentId}
-                  onAgentSelect={setSelectedAgentId}
-                  selectedPhoneId={selectedPhoneId}
-                  onPhoneSelect={setSelectedPhoneId}
-                  totalRecipients={contacts.length}
-                  selectedRecipients={selectedContacts.size}
-                  smsConfig={smsConfig}
-                  onSMSConfigChange={setSmsConfig}
-                />
-              </Card>
-
-              {contacts.length > 0 && (
-                <Card className="p-6">
+              {/* Contacts */}
+              {activeSection === 'contacts' && contacts.length > 0 && (
+                <div className="p-6">
                   <ContactsList 
                     contacts={contacts}
                     selectedContacts={selectedContacts}
@@ -323,31 +423,13 @@ const Calls = () => {
                     onSelectAll={handleSelectAll}
                     isProcessingBatch={isProcessingBatch}
                   />
-                  
-                  <div className="mt-6">
-                    <Button 
-                      onClick={handleBatchProcess}
-                      disabled={!selectedAgentId || !selectedPhoneId || selectedContacts.size === 0 || isProcessingBatch}
-                      className="w-full py-3"
-                      size="lg"
-                    >
-                      {isProcessingBatch ? (
-                        <>
-                          <Phone className="w-4 h-4 mr-2 animate-pulse" />
-                          Se procesează... ({currentProgress}/{totalCalls})
-                        </>
-                      ) : (
-                        <>
-                          <Phone className="w-4 h-4 mr-2" />
-                          Începe Apelurile Batch ({selectedContacts.size} contacte)
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </Card>
+                </div>
               )}
+            </div>
 
-              {(isProcessingBatch || callStatuses.length > 0) && (
+            {/* Batch Status Panel */}
+            {(isProcessingBatch || callStatuses.length > 0) && (
+              <div className="mt-6">
                 <BatchStatusPanel 
                   isProcessing={isProcessingBatch}
                   currentProgress={currentProgress}
@@ -355,39 +437,9 @@ const Calls = () => {
                   callStatuses={callStatuses}
                   startTime={batchStartTime}
                 />
-              )}
-            </div>
-          )}
-
-          {activeSection === 'history' && (
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Istoric Apeluri</h3>
-                <Button variant="outline" onClick={() => setActiveSection(null)}>
-                  Înapoi
-                </Button>
               </div>
-              <CallHistoryTab callHistory={callHistory} isLoading={historyLoading} />
-            </Card>
-          )}
-
-          {activeSection === 'contacts' && contacts.length > 0 && (
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Contacte Încărcate</h3>
-                <Button variant="outline" onClick={() => setActiveSection(null)}>
-                  Înapoi
-                </Button>
-              </div>
-              <ContactsList 
-                contacts={contacts}
-                selectedContacts={selectedContacts}
-                onContactSelect={handleContactSelect}
-                onSelectAll={handleSelectAll}
-                isProcessingBatch={isProcessingBatch}
-              />
-            </Card>
-          )}
+            )}
+          </div>
 
           <input 
             ref={fileInputRef} 
