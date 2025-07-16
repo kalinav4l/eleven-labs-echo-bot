@@ -2,3 +2,6 @@ project_id = "pwfczzxwjfxomqzhhwvj"
 
 [functions.web-scraper]
 verify_jwt = false
+
+[functions.get-conversation-audio]
+verify_jwt = false
