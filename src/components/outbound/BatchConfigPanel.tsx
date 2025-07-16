@@ -36,62 +36,40 @@ export const BatchConfigPanel: React.FC<BatchConfigPanelProps> = ({
   onSMSConfigChange,
 }) => {
   return (
-    <div className="space-y-6">
-      <Card className="border-2 border-gray-100">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center space-x-2 text-lg">
-            <Settings className="w-5 h-5" />
-            <span>Configurație Batch</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Agent Selection */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 flex items-center space-x-2">
-              <span>Agent AI</span>
-              <Badge variant={selectedAgentId ? "default" : "secondary"} className="text-xs">
-                {selectedAgentId ? "Selectat" : "Neselectat"}
-              </Badge>
-            </label>
-            <AgentSelector
-              selectedAgentId={selectedAgentId}
-              onAgentSelect={onAgentSelect}
-            />
-          </div>
+    <div className="space-y-4">
+      {/* Agent Selection */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">
+          Agent AI
+        </label>
+        <AgentSelector
+          selectedAgentId={selectedAgentId}
+          onAgentSelect={onAgentSelect}
+        />
+      </div>
 
-          {/* Phone Number Selection */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 flex items-center space-x-2">
-              <span>Număr de Contact</span>
-              <Badge variant={selectedPhoneId ? "default" : "secondary"} className="text-xs">
-                {selectedPhoneId ? "Selectat" : "Neselectat"}
-              </Badge>
-            </label>
-            <PhoneSelector
-              selectedPhoneId={selectedPhoneId}
-              onPhoneSelect={onPhoneSelect}
-            />
-          </div>
+      {/* Phone Number Selection */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">
+          Număr
+        </label>
+        <PhoneSelector
+          selectedPhoneId={selectedPhoneId}
+          onPhoneSelect={onPhoneSelect}
+        />
+      </div>
 
-          {/* Summary */}
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
-            <div className="flex items-center space-x-2">
-              <Users className="w-4 h-4 text-gray-500" />
-              <div>
-                <div className="text-sm font-medium">{totalRecipients}</div>
-                <div className="text-xs text-gray-500">Total Contacte</div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Phone className="w-4 h-4 text-gray-500" />
-              <div>
-                <div className="text-sm font-medium">{selectedRecipients}</div>
-                <div className="text-xs text-gray-500">Selectate</div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Summary */}
+      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+        <div>
+          <div className="text-lg font-medium">{totalRecipients}</div>
+          <div className="text-xs text-gray-500">Total</div>
+        </div>
+        <div>
+          <div className="text-lg font-medium">{selectedRecipients}</div>
+          <div className="text-xs text-gray-500">Selectate</div>
+        </div>
+      </div>
 
       {/* SMS Configuration */}
       <SMSConfigSection
