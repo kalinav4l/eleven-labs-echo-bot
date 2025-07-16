@@ -24,8 +24,8 @@ const ConversationDetail = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('ro-RO', {
+  const formatDate = (unixSeconds: number) => {
+    return new Date(unixSeconds * 1000).toLocaleString('ro-RO', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -33,6 +33,27 @@ const ConversationDetail = () => {
       minute: '2-digit'
     });
   };
+
+  // Extract data from conversation object
+  const getConversationData = () => {
+    if (!conversation) return null;
+    
+    return {
+      startTime: conversation.metadata?.start_time_unix_secs ? formatDate(conversation.metadata.start_time_unix_secs) : 'Nu este disponibil',
+      duration: conversation.metadata?.call_duration_secs ? formatDuration(conversation.metadata.call_duration_secs) : '0:00',
+      cost: conversation.metadata?.cost || 0,
+      status: conversation.status || 'unknown',
+      phoneNumber: conversation.metadata?.phone_call?.external_number || 'Nedisponibil',
+      agentNumber: conversation.metadata?.phone_call?.agent_number || 'Nedisponibil',
+      language: conversation.metadata?.main_language || 'Nedisponibil',
+      terminationReason: conversation.metadata?.termination_reason || 'Nedisponibil',
+      summary: conversation.analysis?.transcript_summary || 'Nu există rezumat disponibil pentru această conversație.',
+      callSuccessful: conversation.analysis?.call_successful || 'unknown',
+      transcript: conversation.transcript || []
+    };
+  };
+
+  const conversationData = getConversationData();
 
   return (
     <DashboardLayout>
@@ -102,7 +123,7 @@ const ConversationDetail = () => {
                     <CardContent>
                       <div className="bg-white p-4 rounded-lg border">
                         <p className="text-gray-700 leading-relaxed">
-                          {conversation.analysis?.summary || 'Nu există rezumat disponibil pentru această conversație.'}
+                          {conversationData?.summary}
                         </p>
                       </div>
                     </CardContent>
@@ -120,12 +141,22 @@ const ConversationDetail = () => {
                       <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
                         <span className="font-medium">Status apel:</span>
                         <Badge className="status-badge bg-gray-900 text-white px-3 py-1">
-                          {conversation.status === 'completed' ? 'Finalizat cu succes' : conversation.status}
+                          {conversationData?.status === 'done' ? 'Finalizat cu succes' : 
+                           conversationData?.status === 'failed' ? 'Eșuat' : 
+                           conversationData?.status}
                         </Badge>
                       </div>
                       <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
                         <span className="font-medium">Cost total:</span>
-                        <span className="text-lg font-bold text-gray-900">{conversation.cost_analysis?.total_cost || 0} credite</span>
+                        <span className="text-lg font-bold text-gray-900">{conversationData?.cost} credite</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                        <span className="font-medium">Durată:</span>
+                        <span className="text-lg font-bold text-gray-900">{conversationData?.duration}</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                        <span className="font-medium">Dată & Oră:</span>
+                        <span className="text-sm text-gray-600">{conversationData?.startTime}</span>
                       </div>
                     </CardContent>
                   </Card>
@@ -171,16 +202,14 @@ const ConversationDetail = () => {
                   <CardContent>
                     <div className="bg-white rounded-lg border p-4">
                       <div className="max-h-[600px] overflow-y-auto">
-                        {conversation.transcript && conversation.transcript.length > 0 ? (
+                        {conversationData?.transcript && conversationData.transcript.length > 0 ? (
                           <div className="space-y-4">
-                            {conversation.transcript.map((entry: any, index: number) => {
-                              const role = entry.role || entry.speaker || entry.type || 'unknown';
-                              const content = entry.content || entry.text || entry.message || '';
-                              const timestamp = entry.timestamp || entry.time || entry.created_at;
-                              const timeDisplay = timestamp ? 
-                                (typeof timestamp === 'string' ? new Date(timestamp).toLocaleTimeString() : new Date(timestamp).toLocaleTimeString())
-                                : `00:${String(index * 5).padStart(2, '0')}`;
-                              const speakerName = role === 'agent' || role === 'assistant' || role === 'ai' ? 'Agent AI' : 'User';
+                            {conversationData.transcript.map((entry: any, index: number) => {
+                              const role = entry.role || 'unknown';
+                              const content = entry.message || entry.content || entry.text || '';
+                              const timeInCall = entry.time_in_call_secs || 0;
+                              const timeDisplay = formatDuration(timeInCall);
+                              const speakerName = role === 'agent' ? 'Agent AI' : 'User';
                               
                               return (
                                 <div key={index} className="py-3 border-b border-gray-100 last:border-b-0">
@@ -226,11 +255,19 @@ const ConversationDetail = () => {
                       <div className="bg-white p-4 rounded-lg border">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-gray-600">Număr telefon:</span>
-                          <span className="text-lg font-bold text-red-600">{conversation.customer_phone || 'Nedisponibil'}</span>
+                          <span className="text-lg font-bold text-red-600">{conversationData?.phoneNumber}</span>
                         </div>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-600">Locație:</span>
-                          <span className="font-medium text-gray-800">{conversation.customer_location || 'Nedisponibilă'}</span>
+                          <span className="text-sm font-medium text-gray-600">Număr agent:</span>
+                          <span className="font-medium text-gray-800">{conversationData?.agentNumber}</span>
+                        </div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-600">Limbă:</span>
+                          <span className="font-medium text-gray-800">{conversationData?.language}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-600">Motiv încheiere:</span>
+                          <span className="font-medium text-gray-800 text-xs">{conversationData?.terminationReason}</span>
                         </div>
                       </div>
                     </CardContent>
@@ -268,22 +305,32 @@ const ConversationDetail = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="bg-white p-4 rounded-lg border space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-600">Tip apel:</span>
-                        <Badge className="status-badge bg-gray-900 text-white">Outbound</Badge>
+                      <div className="bg-white p-4 rounded-lg border space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-600">Tip apel:</span>
+                          <Badge className="status-badge bg-gray-900 text-white">
+                            {conversation.metadata?.phone_call?.direction === 'outbound' ? 'Outbound' : 'Inbound'}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-600">Durata:</span>
+                          <span className="text-lg font-bold text-gray-900">{conversationData?.duration}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-600">Status:</span>
+                          <Badge className="status-badge bg-gray-900 text-white">
+                            {conversationData?.status === 'done' ? 'Finalizat' : 
+                             conversationData?.status === 'failed' ? 'Eșuat' : 
+                             conversationData?.status}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-600">Succes apel:</span>
+                          <Badge className={`status-badge ${conversationData?.callSuccessful === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white`}>
+                            {conversationData?.callSuccessful === 'success' ? 'Succes' : 'Eșuat'}
+                          </Badge>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-600">Durata:</span>
-                        <span className="text-lg font-bold text-gray-900">{formatDuration(conversation.duration || 0)}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-600">Status:</span>
-                        <Badge className="status-badge bg-gray-900 text-white">
-                          {conversation.status === 'completed' ? 'Finalizat' : conversation.status}
-                        </Badge>
-                      </div>
-                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
