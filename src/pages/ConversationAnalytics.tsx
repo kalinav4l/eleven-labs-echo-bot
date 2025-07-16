@@ -21,6 +21,7 @@ const ConversationAnalytics = () => {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
+  const [conversationCosts, setConversationCosts] = useState<Record<string, number>>({});
   
   const {
     callHistory,
@@ -30,10 +31,13 @@ const ConversationAnalytics = () => {
     toast
   } = useToast();
   
-  // Function to get duration from conversation data
-  const getConversationDuration = async (conversationId: string) => {
-    if (!conversationId || conversationDurations[conversationId] !== undefined) {
-      return conversationDurations[conversationId] || 0;
+  // Function to get duration and cost from conversation data
+  const getConversationData = async (conversationId: string) => {
+    if (!conversationId || (conversationDurations[conversationId] !== undefined && conversationCosts[conversationId] !== undefined)) {
+      return {
+        duration: conversationDurations[conversationId] || 0,
+        cost: conversationCosts[conversationId] || 0
+      };
     }
 
     try {
@@ -41,19 +45,27 @@ const ConversationAnalytics = () => {
         body: { conversationId },
       });
       
-      if (data?.duration) {
-        const duration = Math.round(data.duration);
+      if (data?.metadata) {
+        const duration = Math.round(data.metadata.call_duration_secs || 0);
+        const cost = data.metadata.cost || 0;
+        
         setConversationDurations(prev => ({
           ...prev,
           [conversationId]: duration
         }));
-        return duration;
+        
+        setConversationCosts(prev => ({
+          ...prev,
+          [conversationId]: cost
+        }));
+        
+        return { duration, cost };
       }
     } catch (error) {
-      console.error('Error fetching conversation duration:', error);
+      console.error('Error fetching conversation data:', error);
     }
     
-    return 0;
+    return { duration: 0, cost: 0 };
   };
 
   const handleConversationClick = (conversationId: string) => {
@@ -65,22 +77,22 @@ const ConversationAnalytics = () => {
     setSelectedConversationId(null);
   };
   
-  // Load conversation durations when call history changes
+  // Load conversation data when call history changes
   useEffect(() => {
-    const loadDurations = async () => {
+    const loadConversationData = async () => {
       const conversationsToLoad = callHistory.filter(call => 
-        call.conversation_id && conversationDurations[call.conversation_id] === undefined
+        call.conversation_id && (conversationDurations[call.conversation_id] === undefined || conversationCosts[call.conversation_id] === undefined)
       );
       
       for (const call of conversationsToLoad) {
         if (call.conversation_id) {
-          await getConversationDuration(call.conversation_id);
+          await getConversationData(call.conversation_id);
         }
       }
     };
     
     if (callHistory.length > 0) {
-      loadDurations();
+      loadConversationData();
     }
   }, [callHistory.length]); // Only depend on length to avoid infinite loop
 
@@ -133,6 +145,10 @@ const ConversationAnalytics = () => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+  const formatCost = (cost: number) => {
+    if (!cost || cost === 0) return '0 credite';
+    return `${cost} credite`;
   };
   const getUniqueAgents = () => {
     const agents = [...new Set(callHistory.map(call => call.agent_id).filter(Boolean))];
@@ -207,7 +223,12 @@ const ConversationAnalytics = () => {
                           </td>
                           <td className="p-3">
                             <div className="text-sm">
-                              <div className="font-medium">${(call.cost_usd || 0).toFixed(4)}</div>
+                              <div className="font-medium">
+                                {call.conversation_id ? 
+                                  formatCost(conversationCosts[call.conversation_id] || 0) : 
+                                  formatCost(0)
+                                }
+                              </div>
                             </div>
                           </td>
                           <td className="p-3">
