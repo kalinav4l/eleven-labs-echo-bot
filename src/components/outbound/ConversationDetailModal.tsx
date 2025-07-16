@@ -57,61 +57,8 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
           </div>}
 
         {conversation && <div className="space-y-6">
-            {/* Header Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="elevenlabs-card p-4 bg-blue-50 border-blue-100">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-blue-500 rounded-lg">
-                    <Calendar className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-blue-600 font-medium">Data & Ora</p>
-                    <p className="text-sm font-bold text-blue-900">{conversation.start_time ? formatDate(conversation.start_time) : 'Invalid Date'}</p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="elevenlabs-card p-4 bg-green-50 border-green-100">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-green-500 rounded-lg">
-                    <Clock className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-green-600 font-medium">Durată</p>
-                    <p className="text-sm font-bold text-green-900">{formatDuration(conversation.duration || 0)}</p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="elevenlabs-card p-4 bg-purple-50 border-purple-100">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-purple-500 rounded-lg">
-                    <Phone className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-purple-600 font-medium">Credite</p>
-                    <p className="text-sm font-bold text-purple-900">{conversation.cost_analysis?.total_cost || 0}</p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="elevenlabs-card p-4 bg-emerald-50 border-emerald-100">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-emerald-500 rounded-lg">
-                    <CheckCircle className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-emerald-600 font-medium">Status</p>
-                    <Badge className="status-badge status-success">
-                      done
-                    </Badge>
-                  </div>
-                </div>
-              </Card>
-            </div>
-
             {/* Interactive Tabs Section */}
-            <Tabs defaultValue="client-data" className="w-full">
+            <Tabs defaultValue="transcription" className="w-full">
               <TabsList className="grid w-full grid-cols-4 h-12 bg-gray-50 p-1 rounded-xl no-border">
                 <TabsTrigger value="overview" className="flex items-center gap-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm elevenlabs-button-secondary">
                   <MessageSquare className="w-4 h-4" />
@@ -134,15 +81,15 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
               <TabsContent value="overview" className="space-y-6 mt-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Summary Card */}
-                  <Card className="shadow-lg border-0 bg-gradient-to-br from-slate-50 to-gray-100">
+                  <Card className="elevenlabs-card">
                     <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <MessageSquare className="w-5 h-5 text-blue-600" />
+                      <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+                        <MessageSquare className="w-5 h-5" />
                         Rezumat Conversație
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="bg-white p-4 rounded-lg border border-gray-200">
+                      <div className="bg-white p-4 rounded-lg border">
                         <p className="text-gray-700 leading-relaxed">
                           {conversation.analysis?.summary || 'Nu există rezumat disponibil pentru această conversație.'}
                         </p>
@@ -151,38 +98,38 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                   </Card>
 
                   {/* Call Analysis Card */}
-                  <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50 to-indigo-100">
+                  <Card className="elevenlabs-card">
                     <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <CheckCircle className="w-5 h-5 text-green-600" />
+                      <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+                        <CheckCircle className="w-5 h-5" />
                         Status & Rezultat
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
                         <span className="font-medium">Status apel:</span>
-                        <Badge className="bg-green-500 hover:bg-green-600 text-white px-3 py-1">
+                        <Badge className="status-badge bg-gray-900 text-white px-3 py-1">
                           {conversation.status === 'completed' ? 'Finalizat cu succes' : conversation.status}
                         </Badge>
                       </div>
                       <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
                         <span className="font-medium">Cost total:</span>
-                        <span className="text-lg font-bold text-blue-600">{conversation.cost_analysis?.total_cost || 0} credite</span>
+                        <span className="text-lg font-bold text-gray-900">{conversation.cost_analysis?.total_cost || 0} credite</span>
                       </div>
                     </CardContent>
                   </Card>
                 </div>
 
                 {/* Audio Player */}
-                {conversation.recording_url && <Card className="shadow-lg border-0 bg-gradient-to-r from-purple-50 to-pink-50">
+                {conversation.recording_url && <Card className="elevenlabs-card">
                     <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <Volume2 className="w-5 h-5 text-purple-600" />
+                      <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+                        <Volume2 className="w-5 h-5" />
                         Înregistrare Audio
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="bg-white p-6 rounded-lg border border-purple-200">
+                      <div className="bg-white p-6 rounded-lg border">
                         <div className="flex flex-col space-y-4">
                           <audio controls className="w-full" style={{
                         height: '40px'
@@ -191,7 +138,7 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                             Browser-ul tău nu suportă elementul audio.
                           </audio>
                           <div className="flex justify-end">
-                            <Button variant="outline" size="sm" className="hover:bg-purple-50">
+                            <Button variant="outline" size="sm" className="elevenlabs-button-secondary">
                               <Download className="w-4 h-4 mr-2" />
                               Descarcă Audio
                             </Button>
@@ -203,42 +150,52 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
               </TabsContent>
 
               <TabsContent value="transcription" className="space-y-6 mt-6">
-                <Card className="shadow-lg border-0 bg-gradient-to-br from-emerald-50 to-teal-100">
+                <Card className="elevenlabs-card">
                   <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <MessageSquare className="w-5 h-5 text-emerald-600" />
+                    <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+                      <MessageSquare className="w-5 h-5" />
                       Transcript Complet al Conversației
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="bg-white rounded-lg border border-emerald-200 p-2">
-                      <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
-                        {conversation.transcript && conversation.transcript.length > 0 ? conversation.transcript.map((entry: any, index: number) => {
-                        // Handle different possible data structures from ElevenLabs
-                        const role = entry.role || entry.speaker || entry.type || 'unknown';
-                        const content = entry.content || entry.text || entry.message || '';
-                        const timestamp = entry.timestamp || entry.time || entry.created_at;
-                        return <div key={index} className={`p-4 rounded-lg border-l-4 ${role === 'agent' || role === 'assistant' || role === 'ai' ? 'border-blue-500 bg-blue-50 ml-0 mr-8' : 'border-green-500 bg-green-50 ml-8 mr-0'}`}>
-                                <div className="flex items-center gap-3 mb-2">
-                                  <Badge className={role === 'agent' || role === 'assistant' || role === 'ai' ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-green-500 hover:bg-green-600 text-white'}>
-                                    {role === 'agent' || role === 'assistant' || role === 'ai' ? '🤖 Agent AI' : '👤 Client'}
-                                  </Badge>
-                                  {timestamp && <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded">
-                                      {typeof timestamp === 'string' ? formatDate(timestamp) : new Date(timestamp).toLocaleTimeString()}
-                                    </span>}
+                    <div className="bg-white rounded-lg border p-4">
+                      <div className="max-h-[500px] overflow-y-auto">
+                        {conversation.transcript && conversation.transcript.length > 0 ? (
+                          <div className="space-y-4">
+                            {conversation.transcript.map((entry: any, index: number) => {
+                              const role = entry.role || entry.speaker || entry.type || 'unknown';
+                              const content = entry.content || entry.text || entry.message || '';
+                              const timestamp = entry.timestamp || entry.time || entry.created_at;
+                              const timeDisplay = timestamp ? 
+                                (typeof timestamp === 'string' ? new Date(timestamp).toLocaleTimeString() : new Date(timestamp).toLocaleTimeString())
+                                : `00:${String(index * 5).padStart(2, '0')}`;
+                              const speakerName = role === 'agent' || role === 'assistant' || role === 'ai' ? 'Agent AI' : 'User';
+                              
+                              return (
+                                <div key={index} className="py-2 border-b border-gray-100 last:border-b-0">
+                                  <div className="flex gap-3">
+                                    <div className="text-xs text-gray-500 font-mono w-12 flex-shrink-0 mt-1">
+                                      {timeDisplay}
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="text-sm font-medium text-gray-900 mb-1">
+                                        {speakerName}
+                                      </div>
+                                      <div className="text-sm text-gray-700 leading-relaxed">
+                                        {content || 'Mesaj fără conținut'}
+                                      </div>
+                                    </div>
+                                  </div>
                                 </div>
-                                <p className="text-gray-800 leading-relaxed font-medium">
-                                  {content || 'Mesaj fără conținut'}
-                                </p>
-                              </div>;
-                      }) : <div className="text-center py-8">
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8">
                             <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                             <p className="text-gray-500">Nu există transcript disponibil pentru această conversație.</p>
-                            {/* Debug info */}
-                            <div className="mt-4 text-xs text-gray-400">
-                              <p>Structura datelor: {JSON.stringify(conversation.transcript || 'No transcript', null, 2)}</p>
-                            </div>
-                          </div>}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
