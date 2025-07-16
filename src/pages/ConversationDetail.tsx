@@ -1,16 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Phone, MessageSquare, Volume2, Download, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Loader2, Phone, MessageSquare, Volume2, Download, CheckCircle, ArrowLeft, Play } from 'lucide-react';
 import { useConversationById } from '@/hooks/useConversationById';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const ConversationDetail = () => {
   const { conversationId } = useParams<{ conversationId: string }>();
   const navigate = useNavigate();
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  const { toast } = useToast();
   
   const {
     data: conversation,
@@ -32,6 +37,104 @@ const ConversationDetail = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  // Function to get audio URL from ElevenLabs
+  const getAudioUrl = async (conversationId: string) => {
+    if (!conversationId) return null;
+    
+    try {
+      setIsLoadingAudio(true);
+      
+      // Get the audio data from our edge function
+      const { data, error } = await supabase.functions.invoke('get-conversation-audio', {
+        body: { conversationId },
+      });
+
+      if (error) {
+        console.error('Error fetching audio:', error);
+        toast({
+          title: "Eroare la încărcare",
+          description: "Nu s-a putut încărca audio-ul",
+          variant: "destructive"
+        });
+        return null;
+      }
+
+      if (data?.audioData) {
+        // Convert base64 audio data to blob URL
+        const binaryString = atob(data.audioData);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setAudioUrl(audioUrl);
+        return audioUrl;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error fetching audio:', error);
+      toast({
+        title: "Eroare la încărcare",
+        description: "Nu s-a putut încărca audio-ul",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setIsLoadingAudio(false);
+    }
+  };
+
+  // Function to download audio
+  const downloadAudio = async () => {
+    if (!conversationId) return;
+    
+    try {
+      setIsLoadingAudio(true);
+      
+      const { data, error } = await supabase.functions.invoke('get-conversation-audio', {
+        body: { conversationId },
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data?.audioData) {
+        // Convert base64 audio data to blob
+        const binaryString = atob(data.audioData);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
+        const url = URL.createObjectURL(audioBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `conversation-${conversationId}.mp3`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        toast({
+          title: "Audio descărcat",
+          description: "Fișierul audio a fost descărcat cu succes"
+        });
+      }
+    } catch (error) {
+      console.error('Error downloading audio:', error);
+      toast({
+        title: "Eroare la descărcare",
+        description: "Nu s-a putut descărca audio-ul",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingAudio(false);
+    }
   };
 
   // Extract data from conversation object
@@ -163,7 +266,7 @@ const ConversationDetail = () => {
                 </div>
 
                 {/* Audio Player */}
-                {conversation.recording_url && (
+                {conversation.has_audio && (
                   <Card className="elevenlabs-card">
                     <CardHeader className="pb-3">
                       <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
@@ -174,12 +277,36 @@ const ConversationDetail = () => {
                     <CardContent>
                       <div className="bg-white p-6 rounded-lg border">
                         <div className="flex flex-col space-y-4">
-                          <audio controls className="w-full" style={{ height: '40px' }}>
-                            <source src={conversation.recording_url} type="audio/mpeg" />
-                            Browser-ul tău nu suportă elementul audio.
-                          </audio>
-                          <div className="flex justify-end">
-                            <Button variant="outline" size="sm" className="elevenlabs-button-secondary">
+                          {isLoadingAudio && (
+                            <div className="flex items-center justify-center py-4">
+                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                              <span className="text-sm text-gray-600">Se încarcă audio...</span>
+                            </div>
+                          )}
+                          
+                          {audioUrl && (
+                            <audio controls className="w-full" style={{ height: '40px' }}>
+                              <source src={audioUrl} type="audio/mpeg" />
+                              Browser-ul tău nu suportă elementul audio.
+                            </audio>
+                          )}
+                          
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => getAudioUrl(conversation.conversation_id)}
+                              disabled={isLoadingAudio}
+                            >
+                              <Play className="w-4 h-4 mr-2" />
+                              Încarcă Audio
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={downloadAudio}
+                              disabled={isLoadingAudio}
+                            >
                               <Download className="w-4 h-4 mr-2" />
                               Descarcă Audio
                             </Button>
@@ -192,6 +319,58 @@ const ConversationDetail = () => {
               </TabsContent>
 
               <TabsContent value="transcription" className="space-y-6 mt-6">
+                {/* Audio Player Section */}
+                {conversation.has_audio && (
+                  <Card className="elevenlabs-card">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+                        <Volume2 className="w-5 h-5" />
+                        Audio Conversație
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="bg-white p-4 rounded-lg border">
+                        <div className="flex flex-col space-y-4">
+                          {isLoadingAudio && (
+                            <div className="flex items-center justify-center py-4">
+                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                              <span className="text-sm text-gray-600">Se încarcă audio...</span>
+                            </div>
+                          )}
+                          
+                          {audioUrl && (
+                            <audio controls className="w-full" style={{ height: '40px' }}>
+                              <source src={audioUrl} type="audio/mpeg" />
+                              Browser-ul tău nu suportă elementul audio.
+                            </audio>
+                          )}
+                          
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => getAudioUrl(conversation.conversation_id)}
+                              disabled={isLoadingAudio}
+                            >
+                              <Play className="w-4 h-4 mr-2" />
+                              Încarcă Audio
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={downloadAudio}
+                              disabled={isLoadingAudio}
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              Descarcă Audio
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 <Card className="elevenlabs-card">
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
