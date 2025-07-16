@@ -41,7 +41,13 @@ const ConversationDetail = () => {
 
   // Function to get audio URL from ElevenLabs
   const getAudioUrl = async (conversationId: string) => {
-    if (!conversationId) return null;
+    if (!conversationId) {
+      console.error('No conversation ID provided to getAudioUrl');
+      return null;
+    }
+    
+    console.log('Getting audio for conversation ID:', conversationId);
+    console.log('Full conversation object:', conversation);
     
     try {
       setIsLoadingAudio(true);

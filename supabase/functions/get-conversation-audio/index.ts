@@ -16,6 +16,7 @@ serve(async (req) => {
     const { conversationId } = await req.json();
     
     if (!conversationId) {
+      console.error('No conversation ID provided');
       return new Response(JSON.stringify({ error: 'Conversation ID is required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -26,6 +27,7 @@ serve(async (req) => {
 
     const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY');
     if (!elevenLabsApiKey) {
+      console.error('ElevenLabs API key not found');
       return new Response(JSON.stringify({ error: 'ElevenLabs API key not configured' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -33,15 +35,25 @@ serve(async (req) => {
     }
 
     // Get audio from ElevenLabs
-    const response = await fetch(`https://api.elevenlabs.io/v1/convai/conversations/${conversationId}/audio`, {
+    const audioUrl = `https://api.elevenlabs.io/v1/convai/conversations/${conversationId}/audio`;
+    console.log('Fetching audio from:', audioUrl);
+    
+    const response = await fetch(audioUrl, {
       headers: {
         'xi-api-key': elevenLabsApiKey,
       },
     });
 
+    console.log('ElevenLabs response status:', response.status);
+    console.log('ElevenLabs response headers:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
-      console.error('ElevenLabs API error:', response.status, response.statusText);
-      return new Response(JSON.stringify({ error: 'Failed to fetch audio from ElevenLabs' }), {
+      const errorText = await response.text();
+      console.error('ElevenLabs API error:', response.status, response.statusText, errorText);
+      return new Response(JSON.stringify({ 
+        error: 'Failed to fetch audio from ElevenLabs', 
+        details: `Status: ${response.status}, Message: ${errorText}` 
+      }), {
         status: response.status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
