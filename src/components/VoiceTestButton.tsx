@@ -69,11 +69,27 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
     },
     onError: (error) => {
       console.error('❌ Eroare conversație:', error);
+      console.error('❌ Tip eroare:', typeof error === 'object' && error ? (error as any).name : 'N/A');
+      console.error('❌ Detalii eroare:', typeof error === 'object' && error ? (error as any).message : error);
+      console.error('❌ Stack trace:', typeof error === 'object' && error ? (error as any).stack : 'N/A');
       setIsActive(false);
       setIsConnecting(false);
+      
+      let errorMessage = "A apărut o eroare la conectarea cu agentul.";
+      
+      const errorString = typeof error === 'string' ? error : (typeof error === 'object' && error ? (error as any).message : '');
+      
+      if (errorString?.includes('microphone') || errorString?.includes('permission')) {
+        errorMessage = "Agentul nu poate accesa microfonul. Verifică permisiunile browserului și agentului.";
+      } else if (errorString?.includes('agent')) {
+        errorMessage = "Agentul nu este disponibil sau configurarea este incorectă.";
+      } else if (errorString?.includes('network') || errorString?.includes('connection')) {
+        errorMessage = "Problemă de conexiune. Verifică internetul.";
+      }
+      
       toast({
         title: "Eroare",
-        description: "A apărut o eroare la conectarea cu agentul. Verifică permisiunile microfonului.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -185,11 +201,18 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
         console.log('✅ Microfon obținut cu succes:', stream);
         stream.getTracks().forEach(track => track.stop()); // Stop the test stream
         
-        setHasPermission(true);
-        console.log('🟢 Încep conversația cu agentul:', agentId);
-        const sessionId = await conversation.startSession({ agentId });
-        setCurrentConversationId(sessionId);
-        console.log('📞 Conversație inițiată cu ID:', sessionId);
+         setHasPermission(true);
+         console.log('🟢 Încep conversația cu agentul:', agentId);
+         console.log('🔧 Verific dacă agentul există și este activ...');
+         
+         // Verifică dacă agentId este valid
+         if (!agentId.startsWith('agent_')) {
+           throw new Error('ID agent invalid: ' + agentId);
+         }
+         
+         const sessionId = await conversation.startSession({ agentId });
+         setCurrentConversationId(sessionId);
+         console.log('📞 Conversație inițiată cu ID:', sessionId);
       } catch (error) {
         console.error('❌ Eroare detaliată la pornirea conversației:', error);
         console.error('❌ Tip eroare:', error.name);
