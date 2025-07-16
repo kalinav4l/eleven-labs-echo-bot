@@ -82,7 +82,7 @@ export const useCallHistory = () => {
       return mappedData;
     },
     enabled: !!user,
-    refetchInterval: 10000, // Auto-refresh every 10 seconds
+    refetchInterval: 300000, // Auto-refresh every 5 minutes
   });
 
   const saveCallResults = useMutation({

@@ -27,5 +27,6 @@ export const useConversationById = (conversationId?: string) => {
       return data;
     },
     enabled: !!user && !!conversationId,
+    refetchInterval: 300000, // Auto-refresh every 5 minutes
   });
 };
