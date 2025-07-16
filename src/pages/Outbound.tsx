@@ -19,19 +19,20 @@ import { useCallHistory } from '@/hooks/useCallHistory';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
+import { LiveCampaignCard } from '@/components/outbound/LiveCampaignCard';
 
 interface Campaign {
   id: string;
   name: string;
-  description?: string;
-  agent_id?: string;
-  sms_enabled: boolean;
-  sms_message?: string;
-  status: 'draft' | 'active' | 'paused' | 'completed';
-  total_contacts: number;
-  called_contacts: number;
-  successful_calls: number;
-  failed_calls: number;
+  description: string | null;
+  agent_id: string | null;
+  sms_enabled: boolean | null;
+  sms_message: string | null;
+  status: string | null;
+  total_contacts: number | null;
+  called_contacts: number | null;
+  successful_calls: number | null;
+  failed_calls: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -607,11 +608,44 @@ const Outbound = () => {
             <CSVUploadSection onFileSelect={handleFileSelect} onDownloadTemplate={downloadTemplate} />
           </div>
         );
+      case 'live':
+        return renderLiveCallsTab();
       case 'history':
         return <CallHistoryTab callHistory={callHistory} isLoading={isLoading} />;
       default:
         return renderCampaignsTab();
     }
+  };
+
+  const renderLiveCallsTab = () => {
+    const activeCampaigns = campaigns.filter(c => c.status === 'active');
+
+    if (activeCampaigns.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12">
+          <Phone className="h-16 w-16 text-muted-foreground mb-4" />
+          <h3 className="text-xl font-semibold mb-2">Nicio Campanie Activă</h3>
+          <p className="text-muted-foreground text-center max-w-md">
+            Nu există campanii active în acest moment. Mergi la tab-ul "Campanii" pentru a activa o campanie.
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h3 className="text-xl font-semibold">Apeluri Live</h3>
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+            {activeCampaigns.length} campanii active
+          </Badge>
+        </div>
+
+        {activeCampaigns.map((campaign) => (
+          <LiveCampaignCard key={campaign.id} campaign={campaign} />
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -665,6 +699,7 @@ const Outbound = () => {
                   <div className="flex space-x-2 border-b border-border/50 pb-4">
                     {[
                       { id: 'campaigns', label: 'Campanii', icon: FileText },
+                      { id: 'live', label: 'Apeluri Live', icon: Phone },
                       { id: 'import', label: 'Import CSV', icon: Upload },
                       { id: 'history', label: 'Istoric Apeluri', icon: History },
                     ].map((tab) => (
