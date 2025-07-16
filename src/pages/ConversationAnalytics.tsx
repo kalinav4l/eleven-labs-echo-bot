@@ -175,9 +175,9 @@ const ConversationAnalytics = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Date</th>
+                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Contact Number</th>
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Agent</th>
-                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Phone</th>
+                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Date</th>
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Evaluation result</th>
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Actions</th>
                   </tr>
@@ -195,9 +195,9 @@ const ConversationAnalytics = () => {
                     onDoubleClick={() => call.conversation_id && navigate(`/account/conversation-analytics/${call.conversation_id}`)}
                   >
                           <td className="p-3">
-                            <div className="text-sm">
-                              <div className="font-medium">{dateTime.date}</div>
-                              <div className="text-muted-foreground text-xs">{dateTime.time}</div>
+                            <div className="flex items-center text-sm">
+                              <Phone className="w-3 h-3 mr-1 text-muted-foreground" />
+                              {call.phone_number}
                             </div>
                           </td>
                           <td className="p-3">
@@ -206,9 +206,9 @@ const ConversationAnalytics = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="flex items-center text-sm">
-                              <Phone className="w-3 h-3 mr-1 text-muted-foreground" />
-                              {call.phone_number}
+                            <div className="text-sm">
+                              <div className="font-medium">{dateTime.date}</div>
+                              <div className="text-muted-foreground text-xs">{dateTime.time}</div>
                             </div>
                           </td>
                           <td className="p-3">
