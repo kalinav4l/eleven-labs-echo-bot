@@ -5,7 +5,6 @@ import { AgentSelector } from './AgentSelector';
 import { PhoneSelector } from './PhoneSelector';
 import { SMSConfigSection } from './SMSConfigSection';
 import { Settings, Users, Phone } from 'lucide-react';
-
 interface SMSConfig {
   enabled: boolean;
   apiToken: string;
@@ -13,7 +12,6 @@ interface SMSConfig {
   message: string;
   delay: number;
 }
-
 interface BatchConfigPanelProps {
   selectedAgentId: string;
   onAgentSelect: (agentId: string) => void;
@@ -24,7 +22,6 @@ interface BatchConfigPanelProps {
   smsConfig: SMSConfig;
   onSMSConfigChange: (config: SMSConfig) => void;
 }
-
 export const BatchConfigPanel: React.FC<BatchConfigPanelProps> = ({
   selectedAgentId,
   onAgentSelect,
@@ -33,19 +30,13 @@ export const BatchConfigPanel: React.FC<BatchConfigPanelProps> = ({
   totalRecipients,
   selectedRecipients,
   smsConfig,
-  onSMSConfigChange,
+  onSMSConfigChange
 }) => {
-  return (
-    <div className="space-y-4">
+  return <div className="space-y-4">
       {/* Agent Selection */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">
-          Agent AI
-        </label>
-        <AgentSelector
-          selectedAgentId={selectedAgentId}
-          onAgentSelect={onAgentSelect}
-        />
+        
+        <AgentSelector selectedAgentId={selectedAgentId} onAgentSelect={onAgentSelect} />
       </div>
 
       {/* Phone Number Selection */}
@@ -53,10 +44,7 @@ export const BatchConfigPanel: React.FC<BatchConfigPanelProps> = ({
         <label className="text-sm font-medium text-gray-700">
           Număr
         </label>
-        <PhoneSelector
-          selectedPhoneId={selectedPhoneId}
-          onPhoneSelect={onPhoneSelect}
-        />
+        <PhoneSelector selectedPhoneId={selectedPhoneId} onPhoneSelect={onPhoneSelect} />
       </div>
 
       {/* Summary */}
@@ -72,10 +60,6 @@ export const BatchConfigPanel: React.FC<BatchConfigPanelProps> = ({
       </div>
 
       {/* SMS Configuration */}
-      <SMSConfigSection
-        config={smsConfig}
-        onConfigChange={onSMSConfigChange}
-      />
-    </div>
-  );
+      <SMSConfigSection config={smsConfig} onConfigChange={onSMSConfigChange} />
+    </div>;
 };
