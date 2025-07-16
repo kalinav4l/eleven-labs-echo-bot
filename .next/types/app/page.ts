@@ -1,4 +1,4 @@
-// File: /Users/gabrielvasilachi/VS_Code_Projects/FAILED_VERSION_1---Lovable kalina-airy-landing-main/src/app/page.tsx
+// File: /Users/gabrielvasilachi/VS_Code_Projects/Kalina AI/src/app/page.tsx
 import * as entry from '../../../src/app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

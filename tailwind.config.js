@@ -5,30 +5,10 @@ module.exports = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
-  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        // Light theme palette
-        white: '#FFFFFF',
-        gray: {
-          50: '#F9FAFB',
-          100: '#F2F4F7',
-          200: '#E5E7EB',
-          700: '#444444',
-          900: '#111111',
-        },
-        cyan: {
-          600: '#38BDF8',
-          700: '#0EA5E9',
-        },
-        emerald: {
-          500: '#34D399',
-        },
-        indigo: {
-          600: '#4F46E5',
-        },
-        // Legacy brand palette (preserved for dark mode)
+        // New cool-gray brand palette
         brand: {
           100: '#EAEFEF', // Lightest
           200: '#B8CFCE',
@@ -84,9 +64,6 @@ module.exports = {
           800: '#166534',
           900: '#14532d',
         },
-      },
-      boxShadow: {
-        'soft': '0 2px 4px rgba(0,0,0,0.06)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

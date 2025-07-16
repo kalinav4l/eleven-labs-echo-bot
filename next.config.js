@@ -1,9 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'export',
+  trailingSlash: true,
+  basePath: process.env.NODE_ENV === 'production' ? '/Kalina-AI' : '',
+  assetPrefix: process.env.NODE_ENV === 'production' ? '/Kalina-AI/' : '',
   experimental: {
     appDir: true,
   },
   images: {
+    unoptimized: true,
     domains: ['images.unsplash.com', 'assets.kalina.ai'],
   },
   webpack: (config) => {

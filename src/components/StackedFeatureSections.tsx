@@ -1,8 +1,85 @@
 'use client'
 
 import { useScrollReveal } from '@/hooks/useScrollReveal'
-import { useState } from 'react'
-import { Button } from '@/components/ui/Button'
+import { useState, useEffect, useRef } from 'react'
+
+// Reusable grid background component
+interface GridBackgroundProps {
+  top?: string
+  left?: string
+  right?: string
+  bottom?: string
+  width?: string
+  height?: string
+  className?: string
+  sectionRef?: React.RefObject<HTMLElement>
+}
+
+function GridBackground({ top, left, right, bottom, width = '100%', height = '100%', className = '', sectionRef }: GridBackgroundProps) {
+  const [scrollY, setScrollY] = useState(0)
+  const [sectionBounds, setSectionBounds] = useState({ top: 0, bottom: 0 })
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (typeof window !== 'undefined') {
+        setScrollY(window.scrollY)
+      }
+    }
+    const handleResize = () => {
+      if (sectionRef?.current && typeof window !== 'undefined') {
+        const rect = sectionRef.current.getBoundingClientRect()
+        setSectionBounds({
+          top: window.scrollY + rect.top,
+          bottom: window.scrollY + rect.bottom
+        })
+      }
+    }
+    // Set initial bounds
+    handleResize()
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('scroll', handleScroll, { passive: true })
+      window.addEventListener('resize', handleResize)
+    }
+    
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('scroll', handleScroll)
+        window.removeEventListener('resize', handleResize)
+      }
+    }
+  }, [sectionRef])
+
+  // Calculate if grid should be visible (within section bounds)
+  const isInSection = typeof window !== 'undefined' 
+    ? scrollY >= sectionBounds.top + 800 - window.innerHeight &&
+      scrollY <= sectionBounds.bottom - 800
+    : false
+
+  return (
+    <div
+      className={`pointer-events-none fixed ${className}`}
+      style={{
+        top: '20vh',
+        left: '60%',
+        width: '35vw',
+        height: '60vh',
+        zIndex: 10,
+        opacity: isInSection ? 1 : 0,
+        transition: 'opacity 3s cubic-bezier(0.19, 1, 0.22, 1)',
+      }}
+    >
+      <svg width="100%" height="100%" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        <defs>
+          <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+            <path d="M 30 0 L 30 30 M 0 30 L 30 30" fill="none" stroke="#000" strokeWidth="0.7" opacity="0.1" />
+          </pattern>
+        </defs>
+        <rect width="200" height="200" fill="url(#grid)" opacity="1" />
+      </svg>
+    </div>
+  )
+}
 
 interface FeatureCardProps {
   title: string
@@ -19,44 +96,52 @@ function FeatureCard({ title, body, imgSrc, imgAlt, index }: FeatureCardProps) {
   return (
     <div 
       ref={cardReveal.ref}
-      className={`bg-white border border-gray-200 rounded-xl p-8 lg:p-12 transition-all duration-700 hover:-translate-y-1 hover:shadow-md ${cardReveal.classes}`}
+      className={`feature-card glass-card rounded-3xl p-8 lg:p-12 transition-all duration-700 ${cardReveal.classes}`}
       style={{ 
         transitionDelay: `${index * 150}ms`,
-        boxShadow: isHovered ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' : 'var(--shadow-soft)'
+        transform: isHovered ? 'translateY(-12px) scale(1.02)' : 'translateY(0) scale(1)'
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Image */}
-      <div className="mb-8">
-        <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 p-4 group">
-          <img 
-            src={imgSrc}
-            alt={imgAlt}
-            className="w-full h-auto object-cover rounded-lg shadow-lg transition-transform duration-700 group-hover:scale-105"
-          />
+      <div className="grid lg:grid-cols-2 gap-8 items-center">
+        {/* Image */}
+        <div className={`${index % 2 === 0 ? 'order-1' : 'order-1 lg:order-2'}`}>
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-200/20 to-brand-400/20 p-1 group">
+            <div className="relative overflow-hidden rounded-xl bg-white/5 group-hover:bg-white/10 transition-all duration-500">
+              <img 
+                src={imgSrc}
+                alt={imgAlt}
+                className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110 group-hover:rotate-1"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-brand-400/30 to-transparent group-hover:from-brand-400/20 transition-all duration-500"></div>
+              
+              {/* Animated overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+            </div>
+          </div>
         </div>
-      </div>
-      
-      {/* Content */}
-      <div className="space-y-6">
-        <div className="inline-flex items-center gap-2 bg-cyan-50 px-4 py-2 rounded-full">
-          <div className="w-2 h-2 bg-cyan-600 rounded-full animate-pulse"></div>
-          <span className="text-sm font-medium text-cyan-600">Feature {index + 1}</span>
+        
+        {/* Content */}
+        <div className={`space-y-6 ${index % 2 === 0 ? 'order-2' : 'order-2 lg:order-1'}`}>
+          <div className="inline-flex items-center gap-2 bg-brand-300/20 px-4 py-2 rounded-full animate-pulse-glow">
+            <div className="w-2 h-2 bg-brand-300 rounded-full animate-pulse loading-dots"></div>
+            <span className="text-sm font-medium text-brand-300">Feature {index + 1}</span>
+          </div>
+          
+          <h3 className="text-3xl lg:text-4xl font-bold text-brand-400 leading-tight text-glow">
+            {title}
+          </h3>
+          
+          <p className="text-lg text-brand-300 leading-relaxed">
+            {body}
+          </p>
+          
+          <button className="btn-secondary btn-magnetic group inline-flex items-center gap-2">
+            Learn More
+            <span className="ml-2 transition-transform duration-300 group-hover:translate-x-2 group-hover:scale-110"></span>
+          </button>
         </div>
-        
-        <h3 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
-          {title}
-        </h3>
-        
-        <p className="text-lg text-gray-700 leading-relaxed">
-          {body}
-        </p>
-        
-        <Button variant="secondary" className="group">
-          Learn More
-          <span className="ml-2 transition-transform duration-300 group-hover:translate-x-2">→</span>
-        </Button>
       </div>
     </div>
   )
@@ -64,6 +149,7 @@ function FeatureCard({ title, body, imgSrc, imgAlt, index }: FeatureCardProps) {
 
 export function StackedFeatureSections() {
   const titleReveal = useScrollReveal('up', 0.3)
+  const sectionRef = useRef<HTMLElement>(null)
   
   const features = [
     {
@@ -93,39 +179,35 @@ export function StackedFeatureSections() {
   ]
 
   return (
-    <section className="relative px-6 py-20 overflow-hidden">
-      <div className="container mx-auto relative z-10">
-        {/* Section Header */}
-        <div 
-          ref={titleReveal.ref}
-          className={`text-center mb-20 ${titleReveal.classes}`}
-        >
-          <div className="inline-flex items-center gap-2 bg-cyan-50 px-6 py-3 rounded-full text-base text-cyan-600 mb-6">
-            <span className="text-cyan-600 animate-pulse">⚡</span>
-            Advanced AI Features
-          </div>
-          
-          <h2 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6">
-            Cutting-Edge Technology
-          </h2>
-          
-          <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-            Discover the powerful features that make Kalina AI the most advanced voice communication platform in the world.
-          </p>
-        </div>
+    <section ref={sectionRef} className="section-padding bg-gradient-to-b from-transparent via-brand-100/5 to-transparent relative overflow-hidden">
+      {/* Grid background - positioned at center-left and follows scroll */}
+      <GridBackground
+        sectionRef={sectionRef}
+        className="opacity-100"
+      />
+      {/* Animated background elements */}
+      <div className="absolute inset-0 opacity-20 z-10">
+        <div className="absolute top-20 left-10 w-40 h-40 bg-gradient-to-br from-brand-200/30 to-brand-300/30 rounded-full morphing-shape animate-float"></div>
+        <div className="absolute bottom-40 right-20 w-32 h-32 bg-gradient-to-br from-brand-300/20 to-brand-400/20 rounded-full morphing-shape animate-float" style={{ animationDelay: '2s' }}></div>
+      </div>
 
-        {/* Feature Cards Grid */}
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2">
-          {features.map((feature, index) => (
-            <FeatureCard
-              key={index}
-              index={index}
-              title={feature.title}
-              body={feature.body}
-              imgSrc={feature.imgSrc}
-              imgAlt={feature.imgAlt}
-            />
-          ))}
+      <div className="container-width relative z-10">
+        <div className="grid lg:grid-cols-12 gap-16 items-start">
+          {/* Left Side - Feature Cards */}
+          <div className="lg:col-span-7">
+            <div className="space-y-16 lg:space-y-24">
+              {features.map((feature, index) => (
+                <FeatureCard
+                  key={index}
+                  index={index}
+                  title={feature.title}
+                  body={feature.body}
+                  imgSrc={feature.imgSrc}
+                  imgAlt={feature.imgAlt}
+                />
+              ))}
+            </div>
+          </div>        
         </div>
       </div>
     </section>

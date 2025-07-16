@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useScrollReveal } from '@/hooks/useScrollReveal'
-import { Button } from '@/components/ui/Button'
 
 export function FAQ() {
   const { ref, classes, isVisible } = useScrollReveal('up')
@@ -10,36 +9,36 @@ export function FAQ() {
   
   const faqs = [
     {
-      question: "What is the latency of your calls?",
-      answer: "Our AI-enhanced infrastructure delivers sub-100ms latency globally, ensuring real-time conversations.",
-      icon: "⚡"
+      question: "Care este latența apelurilor voastre?",
+      answer: "Infrastructura noastră cu AI oferă latență sub 100ms la nivel global, asigurând conversații în timp real."
     },
     {
-      question: "How secure are the calls?",
-      answer: "All calls use end-to-end encryption with military-grade security protocols to protect your communications.",
-      icon: "🔒"
+      question: "Cât de sigure sunt apelurile?",
+      answer: "Toate apelurile folosesc criptare end-to-end cu protocoale de securitate de nivel militar pentru a vă proteja comunicațiile."
     },
     {
-      question: "What countries do you support?",
-      answer: "We provide reliable coverage in 120+ countries with local infrastructure for optimal performance.",
-      icon: "🌍"
+      question: "Ce țări sunt suportate?",
+      answer: "Oferim acoperire fiabilă în peste 120 de țări cu infrastructură locală pentru performanță optimă."
     },
     {
-      question: "Can I integrate with my existing systems?",
-      answer: "Yes, we offer comprehensive APIs and SDKs for seamless integration with your current infrastructure.",
-      icon: "🔧"
+      question: "Pot integra cu sistemele mele existente?",
+      answer: "Da, oferim API-uri și SDK-uri complete pentru integrare fără probleme cu infrastructura actuală."
     }
   ]
 
   return (
-    <section className="px-6 py-20 relative overflow-hidden">
-      <div className="container mx-auto" ref={ref}>
+    <section className="section-padding relative overflow-hidden">
+      {/* Morphing background elements */}
+      <div className="morph-shape-2 absolute top-40 left-10 opacity-20"></div>
+      <div className="morph-shape-3 absolute bottom-20 right-20 opacity-30"></div>
+      
+      <div className="container-width" ref={ref}>
         <div className={`text-center mb-16 ${classes}`}>
-          <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-            Frequently Asked Questions
+          <h2 className="text-4xl lg:text-5xl font-bold text-brand-400 mb-6 text-shimmer">
+            Întrebări Frecvente
           </h2>
-          <p className="text-xl text-gray-700 max-w-2xl mx-auto">
-            Everything you need to know about our AI-enhanced calling platform
+          <p className="text-xl text-brand-300 max-w-2xl mx-auto animate-fade-in-up delay-200">
+            Tot ce trebuie să știi despre platforma noastră de apeluri cu AI
           </p>
         </div>
         
@@ -47,7 +46,7 @@ export function FAQ() {
           {faqs.map((faq, index) => (
             <div 
               key={index} 
-              className={`bg-white border border-gray-200 rounded-xl overflow-hidden transition-all duration-700 ${
+              className={`glass-card rounded-2xl overflow-hidden magnetic-hover transition-all duration-700 ${
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'
               }`}
               style={{
@@ -55,19 +54,18 @@ export function FAQ() {
               }}
             >
               <button
-                className="w-full py-4 border-b border-gray-200 text-left focus:outline-none group hover:bg-gray-50 transition-colors"
+                className="w-full p-6 text-left focus:outline-none group"
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
               >
-                <div className="flex items-center justify-between px-6">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <span className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                      {faq.icon}
                     </span>
-                    <h3 className="text-xl font-semibold text-gray-900">
+                    <h3 className="text-xl font-semibold text-gray-800 group-hover:text-brand-50 transition-colors text-glow">
                       {faq.question}
                     </h3>
                   </div>
-                  <div className={`text-cyan-600 text-2xl transition-transform duration-300 ${
+                  <div className={`text-brand-400 text-2xl transition-transform duration-300 ${
                     openIndex === index ? 'rotate-45' : 'rotate-0'
                   }`}>
                     +
@@ -78,10 +76,12 @@ export function FAQ() {
               <div className={`transition-all duration-500 ease-in-out overflow-hidden ${
                 openIndex === index ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'
               }`}>
-                <div className="bg-gray-50 rounded-lg p-4 mx-6 mb-4">
-                  <p className="text-gray-700 leading-relaxed">
-                    {faq.answer}
-                  </p>
+                <div className="px-6 pb-6">
+                  <div className="pl-12">
+                    <p className="text-brand-400 leading-relaxed">
+                      {faq.answer}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -92,17 +92,17 @@ export function FAQ() {
         <div className={`mt-12 text-center transition-all duration-1000 delay-700 ${
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'
         }`}>
-          <div className="bg-white border border-gray-200 rounded-xl p-8 max-w-md mx-auto shadow-soft">
+          <div className="glass-card rounded-2xl p-8 max-w-md mx-auto magnetic-hover">
             <div className="text-4xl mb-4">💬</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Still have questions?
+            <h3 className="text-xl font-semibold text-brand-400 mb-2 text-glow">
+              Încă ai întrebări?
             </h3>
-            <p className="text-gray-700 mb-6">
-              Our support team is here to help 24/7
+            <p className="text-brand-400 mb-6">
+              Echipa noastră de suport este aici să te ajute 24/7
             </p>
-            <Button variant="primary">
-              Contact Support
-            </Button>
+            <button className="btn-primary btn-magnetic animate-pulse-glow">
+              Contactează Suportul
+            </button>
           </div>
         </div>
       </div>

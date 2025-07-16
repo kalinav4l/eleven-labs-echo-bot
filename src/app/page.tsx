@@ -13,7 +13,9 @@ import { SmoothScrollProvider } from '@/components/providers/SmoothScrollProvide
 export default function HomePage() {
   return (
     <SmoothScrollProvider>
-      <div className="relative min-h-screen bg-gradient-to-b from-white to-gray-50">
+      <div className="relative min-h-screen bg-white">
+        {/* Background Effects removed for pure white */}
+        
         {/* Navigation */}
         <Header />
         

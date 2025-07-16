@@ -11,23 +11,19 @@ export function Features() {
   const features = [
     {
       title: "Ultra-Low Latency",
-      description: "Sub-100ms latency for real-time conversations",
-      icon: "⚡"
+      description: "Sub-100ms latency for real-time conversations"
     },
     {
       title: "AI Enhancement",
-      description: "Crystal-clear audio with noise cancellation",
-      icon: "🎯"
+      description: "Crystal-clear audio with noise cancellation"
     },
     {
       title: "Global Coverage",
-      description: "Reliable connections in 120+ countries",
-      icon: "🌍"
+      description: "Reliable connections in 120+ countries"
     },
     {
       title: "End-to-End Encryption",
-      description: "Military-grade security for all calls",
-      icon: "🔒"
+      description: "Military-grade security for all calls"
     }
   ]
 
@@ -74,7 +70,7 @@ export function Features() {
           >
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 glass px-6 py-3 rounded-full text-base text-brand-400 magnetic-hover animate-pulse-glow">
-                <span className="text-brand-300 animate-pulse">✨</span>
+                <span className="text-brand-300 animate-pulse"></span>
                 Core Features
               </div>
               
@@ -121,12 +117,11 @@ export function Features() {
                   <div className="flex items-start gap-6">
                     <div className="flex-shrink-0">
                       <div className="w-16 h-16 bg-gradient-to-br from-brand-200/20 to-brand-400/20 rounded-2xl flex items-center justify-center text-2xl animate-float morphing-shape">
-                        {feature.icon}
                       </div>
                     </div>
                     
                     <div className="flex-1 space-y-3">
-                      <h3 className="text-2xl font-semibold text-brand-100 text-glow">
+                      <h3 className="text-2xl font-semibold text-brand-400 text-glow">
                         {feature.title}
                       </h3>
                       <p className="text-brand-300 leading-relaxed">
