@@ -20,6 +20,7 @@ import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { LiveCampaignCard } from '@/components/outbound/LiveCampaignCard';
+import { BatchCallingPage } from '@/components/outbound/BatchCallingPage';
 
 interface Campaign {
   id: string;
@@ -608,6 +609,8 @@ const Outbound = () => {
             <CSVUploadSection onFileSelect={handleFileSelect} onDownloadTemplate={downloadTemplate} />
           </div>
         );
+      case 'batch':
+        return <BatchCallingPage />;
       case 'live':
         return renderLiveCallsTab();
       case 'history':
@@ -699,6 +702,7 @@ const Outbound = () => {
                   <div className="flex space-x-2 border-b border-border/50 pb-4">
                     {[
                       { id: 'campaigns', label: 'Campanii', icon: FileText },
+                      { id: 'batch', label: 'Batch Calling', icon: Phone },
                       { id: 'live', label: 'Apeluri Live', icon: Phone },
                       { id: 'import', label: 'Import CSV', icon: Upload },
                       { id: 'history', label: 'Istoric Apeluri', icon: History },
