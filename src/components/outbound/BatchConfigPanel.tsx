@@ -32,11 +32,8 @@ export const BatchConfigPanel: React.FC<BatchConfigPanelProps> = ({
   smsConfig,
   onSMSConfigChange
 }) => {
-  return (
-    <Card className="p-6">
-      <CardHeader className="px-0 pt-0">
-        <CardTitle>Configurații</CardTitle>
-      </CardHeader>
+  return <Card className="p-6">
+      
       <CardContent className="px-0 space-y-6">
         {/* Agent Selection */}
         <div className="space-y-2">
@@ -51,6 +48,5 @@ export const BatchConfigPanel: React.FC<BatchConfigPanelProps> = ({
         {/* SMS Configuration */}
         <SMSConfigSection config={smsConfig} onConfigChange={onSMSConfigChange} />
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
