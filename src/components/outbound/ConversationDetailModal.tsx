@@ -221,32 +221,47 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                   <CardContent>
                     <div className="bg-white rounded-lg border border-emerald-200 p-2">
                       <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
-                        {conversation.transcript?.map((entry: any, index: number) => (
-                          <div key={index} className={`p-4 rounded-lg border-l-4 ${
-                            entry.role === 'agent' 
-                              ? 'border-blue-500 bg-blue-50 ml-0 mr-8' 
-                              : 'border-green-500 bg-green-50 ml-8 mr-0'
-                          }`}>
-                            <div className="flex items-center gap-3 mb-2">
-                              <Badge className={
-                                entry.role === 'agent' 
-                                  ? 'bg-blue-500 hover:bg-blue-600 text-white' 
-                                  : 'bg-green-500 hover:bg-green-600 text-white'
-                              }>
-                                {entry.role === 'agent' ? '🤖 Agent AI' : '👤 Client'}
-                              </Badge>
-                              {entry.timestamp && (
-                                <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded">
-                                  {formatDate(entry.timestamp)}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-gray-800 leading-relaxed font-medium">{entry.content}</p>
-                          </div>
-                        )) || (
+                        {conversation.transcript && conversation.transcript.length > 0 ? (
+                          conversation.transcript.map((entry: any, index: number) => {
+                            // Handle different possible data structures from ElevenLabs
+                            const role = entry.role || entry.speaker || entry.type || 'unknown';
+                            const content = entry.content || entry.text || entry.message || '';
+                            const timestamp = entry.timestamp || entry.time || entry.created_at;
+                            
+                            return (
+                              <div key={index} className={`p-4 rounded-lg border-l-4 ${
+                                role === 'agent' || role === 'assistant' || role === 'ai'
+                                  ? 'border-blue-500 bg-blue-50 ml-0 mr-8' 
+                                  : 'border-green-500 bg-green-50 ml-8 mr-0'
+                              }`}>
+                                <div className="flex items-center gap-3 mb-2">
+                                  <Badge className={
+                                    role === 'agent' || role === 'assistant' || role === 'ai'
+                                      ? 'bg-blue-500 hover:bg-blue-600 text-white' 
+                                      : 'bg-green-500 hover:bg-green-600 text-white'
+                                  }>
+                                    {role === 'agent' || role === 'assistant' || role === 'ai' ? '🤖 Agent AI' : '👤 Client'}
+                                  </Badge>
+                                  {timestamp && (
+                                    <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded">
+                                      {typeof timestamp === 'string' ? formatDate(timestamp) : new Date(timestamp).toLocaleTimeString()}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-gray-800 leading-relaxed font-medium">
+                                  {content || 'Mesaj fără conținut'}
+                                </p>
+                              </div>
+                            );
+                          })
+                        ) : (
                           <div className="text-center py-8">
                             <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                             <p className="text-gray-500">Nu există transcript disponibil pentru această conversație.</p>
+                            {/* Debug info */}
+                            <div className="mt-4 text-xs text-gray-400">
+                              <p>Structura datelor: {JSON.stringify(conversation.transcript || 'No transcript', null, 2)}</p>
+                            </div>
                           </div>
                         )}
                       </div>
