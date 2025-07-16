@@ -6,7 +6,11 @@ export const metadata = {
   description: 'Experience ultra-low latency voice calls with AI-enhanced quality, end-to-end encryption, and global coverage for seamless communication.',
   keywords: 'AI calls, voice communication, low latency, encryption, global coverage',
   authors: [{ name: 'Kalina AI Team' }],
-  viewport: 'width=device-width, initial-scale=1',
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
   themeColor: '#333446',
 }
 

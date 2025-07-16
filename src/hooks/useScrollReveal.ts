@@ -2,41 +2,46 @@
 
 import { useRef, useState, useEffect } from 'react'
 
-type RevealDirection = 'left' | 'right'
+type RevealDirection = 'left' | 'right' | 'up' | 'down'
 
-export function useScrollReveal(direction: RevealDirection) {
+export function useScrollReveal(direction: RevealDirection = 'up', threshold: number = 0.15) {
   const ref = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
-    console.log('Setting up IntersectionObserver for direction:', direction)
-    
     const observer = new IntersectionObserver(
       ([entry]) => {
-        console.log('Intersection detected:', entry.isIntersecting, 'ratio:', entry.intersectionRatio)
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.1) {
+        if (entry.isIntersecting && !isVisible) {
           setIsVisible(true)
-          console.log('Setting visible to true for direction:', direction)
         }
       },
-      { threshold: 0.1 }
+      { threshold, rootMargin: '50px' }
     )
 
     if (ref.current) {
       observer.observe(ref.current)
-      console.log('Observer attached to element')
     }
 
-    return () => {
-      observer.disconnect()
-      console.log('Observer disconnected')
-    }
-  }, [direction])
+    return () => observer.disconnect()
+  }, [isVisible, threshold])
 
-  const baseClasses = direction === 'left' ? 'reveal-left' : 'reveal-right'
+  const getBaseClasses = () => {
+    switch (direction) {
+      case 'left':
+        return 'reveal-left'
+      case 'right':
+        return 'reveal-right'
+      case 'up':
+        return 'reveal-up'
+      case 'down':
+        return 'reveal-down'
+      default:
+        return 'reveal-up'
+    }
+  }
+
+  const baseClasses = getBaseClasses()
   const classes = isVisible ? `${baseClasses} reveal-show` : baseClasses
-
-  console.log('Generated classes:', classes, 'for direction:', direction, 'visible:', isVisible)
 
   return { ref, classes, isVisible }
 }
