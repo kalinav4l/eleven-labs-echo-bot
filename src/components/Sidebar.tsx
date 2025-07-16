@@ -80,7 +80,7 @@ const Sidebar = ({
               </Link>
 
               <Link to="/account/test-call" className={`${location.pathname === '/account/test-call' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
-                <TestTube className="mr-3 h-4 w-4" />
+                <Phone className="mr-3 h-4 w-4" />
                 <span>Test Call</span>
               </Link>
             </div>
