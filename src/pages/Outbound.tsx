@@ -193,156 +193,240 @@ const Outbound = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-background">
-        <div className="flex max-w-7xl mx-auto">
-          {/* Sidebar */}
-          <div className="w-64 bg-card border-r border-border p-4">
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-foreground mb-1">Apeluri</h2>
-              <p className="text-sm text-muted-foreground">Gestionează apelurile automate</p>
-            </div>
-            
-            <nav className="space-y-2">
-              <button
-                onClick={() => setActiveSection('batch')}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                  activeSection === 'batch' 
-                    ? 'bg-primary/10 text-primary font-medium' 
-                    : 'text-foreground hover:bg-muted'
-                }`}
-              >
-                <Phone className="w-4 h-4" />
-                Apel în lot
-              </button>
-              
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                  activeSection === 'upload' 
-                    ? 'bg-primary/10 text-primary font-medium' 
-                    : 'text-foreground hover:bg-muted'
-                }`}
-              >
-                <Upload className="w-4 h-4" />
-                Import CSV
-              </button>
-              
-              <button
-                onClick={() => setActiveSection('history')}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                  activeSection === 'history' 
-                    ? 'bg-primary/10 text-primary font-medium' 
-                    : 'text-foreground hover:bg-muted'
-                }`}
-              >
-                <History className="w-4 h-4" />
-                Istoric
-              </button>
-            </nav>
-          </div>
-
-          {/* Main Content */}
-          <div className="flex-1 p-6">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+      <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+        <div className="max-w-7xl mx-auto p-6">
+          {/* Modern Header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-foreground">
-                  {activeSection === 'batch' && 'Apeluri în lot'}
-                  {activeSection === 'history' && 'Istoric apeluri'}
-                  {activeSection === 'contacts' && 'Contacte'}
-                  {!activeSection && 'Apeluri automate'}
+                <h1 className="text-3xl font-bold text-foreground mb-2">
+                  Apeluri Automate
                 </h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {activeSection === 'batch' && 'Configurează și lansează apeluri către multiple contacte'}
-                  {activeSection === 'history' && 'Vezi toate apelurile efectuate'}
-                  {activeSection === 'contacts' && 'Gestionează contactele încărcate'}
-                  {!activeSection && 'Alege o opțiune din meniul lateral pentru a începe'}
+                <p className="text-muted-foreground text-lg">
+                  Gestionează și lansează apeluri în lot către clienții tăi
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex gap-3">
                 <Button variant="outline" onClick={downloadTemplate} className="gap-2">
                   <Upload className="w-4 h-4" />
-                  Template CSV
+                  Template
                 </Button>
-                {activeSection && (
-                  <Button variant="outline" onClick={() => setActiveSection(null)}>
-                    Înapoi
-                  </Button>
-                )}
+                <Button className="gap-2 bg-gradient-to-r from-primary to-primary/80">
+                  <Play className="w-4 h-4" />
+                  Începe
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-12 gap-6">
+            {/* Left Column - Actions */}
+            <div className="col-span-3 space-y-4">
+              <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
+                <h3 className="font-semibold text-foreground mb-4">Acțiuni Rapide</h3>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setActiveSection('batch')}
+                    className={`w-full p-4 rounded-xl text-left transition-all duration-200 ${
+                      activeSection === 'batch'
+                        ? 'bg-primary text-primary-foreground shadow-md'
+                        : 'bg-muted/50 hover:bg-muted text-foreground'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        activeSection === 'batch' ? 'bg-white/20' : 'bg-primary/10'
+                      }`}>
+                        <Phone className={`w-5 h-5 ${activeSection === 'batch' ? 'text-white' : 'text-primary'}`} />
+                      </div>
+                      <div>
+                        <div className="font-medium">Apeluri în Lot</div>
+                        <div className={`text-sm ${activeSection === 'batch' ? 'text-white/80' : 'text-muted-foreground'}`}>
+                          Configurează și lansează
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full p-4 rounded-xl text-left transition-all duration-200 bg-muted/50 hover:bg-muted text-foreground"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                        <Upload className="w-5 h-5 text-emerald-500" />
+                      </div>
+                      <div>
+                        <div className="font-medium">Import CSV</div>
+                        <div className="text-sm text-muted-foreground">Încarcă contacte</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveSection('history')}
+                    className={`w-full p-4 rounded-xl text-left transition-all duration-200 ${
+                      activeSection === 'history'
+                        ? 'bg-primary text-primary-foreground shadow-md'
+                        : 'bg-muted/50 hover:bg-muted text-foreground'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        activeSection === 'history' ? 'bg-white/20' : 'bg-blue-500/10'
+                      }`}>
+                        <History className={`w-5 h-5 ${activeSection === 'history' ? 'text-white' : 'text-blue-500'}`} />
+                      </div>
+                      <div>
+                        <div className="font-medium">Istoric</div>
+                        <div className={`text-sm ${activeSection === 'history' ? 'text-white/80' : 'text-muted-foreground'}`}>
+                          Vezi apelurile
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick Stats */}
+              <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
+                <h3 className="font-semibold text-foreground mb-4">Statistici</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Contacte încărcate</span>
+                    <span className="font-medium text-foreground">{contacts.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Contacte selectate</span>
+                    <span className="font-medium text-primary">{selectedContacts.size}</span>
+                  </div>
+                  {isProcessingBatch && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Progres</span>
+                      <span className="font-medium text-emerald-500">{currentProgress}/{totalCalls}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Content Area */}
-            <div className="bg-card rounded-xl border border-border">
-              {/* Default State */}
-              {!activeSection && (
-                <div className="p-12 text-center">
-                  <div className="max-w-md mx-auto">
-                    <div className="w-20 h-20 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-6">
-                      <Phone className="w-10 h-10 text-primary" />
+            {/* Center Column - Main Content */}
+            <div className="col-span-6">
+              <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+                {!activeSection && (
+                  <div className="p-12 text-center">
+                    <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                      <Phone className="w-12 h-12 text-primary" />
                     </div>
-                    <h3 className="text-xl font-semibold text-foreground mb-3">
-                      Începe să automatizezi apelurile
+                    <h3 className="text-2xl font-bold text-foreground mb-3">
+                      Automatizează apelurile
                     </h3>
-                    <p className="text-muted-foreground mb-8">
-                      Selectează o opțiune din meniul lateral pentru a configura 
-                      și lansa apeluri automate către clienții tăi.
+                    <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+                      Lansează apeluri automate către multiple contacte simultan cu AI-ul nostru avansat
                     </p>
                     <div className="flex items-center justify-center gap-4">
-                      <Button variant="outline" onClick={() => setActiveSection('batch')} className="gap-2">
-                        <Phone className="w-4 h-4" />
-                        Configurează apeluri
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setActiveSection('batch')} 
+                        className="gap-2"
+                      >
+                        <Settings className="w-4 h-4" />
+                        Configurează
                       </Button>
-                      <Button onClick={() => fileInputRef.current?.click()} className="gap-2">
+                      <Button 
+                        onClick={() => fileInputRef.current?.click()} 
+                        className="gap-2 bg-gradient-to-r from-primary to-primary/80"
+                      >
                         <Upload className="w-4 h-4" />
-                        Încarcă contacte
+                        Începe cu CSV
                       </Button>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Batch Configuration */}
-              {activeSection === 'batch' && (
-                <div className="flex">
-                  {/* Main Content */}
-                  <div className="flex-1 p-6">
+                {activeSection === 'batch' && (
+                  <div className="p-6">
                     {contacts.length === 0 ? (
-                      <div className="border-2 border-dashed border-border rounded-xl p-12 text-center">
-                        <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                      <div className="border-2 border-dashed border-border rounded-2xl p-12 text-center">
+                        <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+                          <Upload className="w-8 h-8 text-muted-foreground" />
+                        </div>
                         <h3 className="text-lg font-semibold text-foreground mb-2">
-                          Încarcă contacte pentru a începe
+                          Încarcă contactele tale
                         </h3>
                         <p className="text-muted-foreground mb-6">
-                          Selectează un fișier CSV cu contactele tale sau înregistrează audio pentru test
+                          Selectează un fișier CSV cu contactele pentru a începe procesul de apeluri automate
                         </p>
-                        <div className="flex items-center justify-center gap-4">
-                          <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="gap-2">
+                        <div className="flex items-center justify-center gap-3">
+                          <Button 
+                            variant="outline" 
+                            onClick={() => fileInputRef.current?.click()} 
+                            className="gap-2"
+                          >
                             <Upload className="w-4 h-4" />
                             Selectează CSV
                           </Button>
-                          <span className="text-muted-foreground">sau</span>
-                          <Button variant="outline" onClick={downloadTemplate} className="gap-2">
+                          <Button 
+                            variant="ghost" 
+                            onClick={downloadTemplate} 
+                            className="gap-2"
+                          >
                             <Upload className="w-4 h-4" />
-                            Descarcă template
+                            Template
                           </Button>
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-6">
-                        <ContactsList 
-                          contacts={contacts}
-                          selectedContacts={selectedContacts}
-                          onContactSelect={handleContactSelect}
-                          onSelectAll={handleSelectAll}
-                          isProcessingBatch={isProcessingBatch}
-                        />
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-semibold text-foreground">
+                            Contacte Încărcate ({contacts.length})
+                          </h3>
+                          <Button
+                            variant="outline"
+                            onClick={handleSelectAll}
+                            size="sm"
+                            className="gap-2"
+                          >
+                            {selectedContacts.size === contacts.length ? 'Deselectează Tot' : 'Selectează Tot'}
+                          </Button>
+                        </div>
                         
+                        <div className="max-h-96 overflow-y-auto space-y-2">
+                          {contacts.map((contact) => (
+                            <div
+                              key={contact.id}
+                              className={`p-4 rounded-xl border transition-all duration-200 ${
+                                selectedContacts.has(contact.id)
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-border hover:border-muted-foreground'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedContacts.has(contact.id)}
+                                  onChange={(e) => handleContactSelect(contact.id, e.target.checked)}
+                                  className="w-4 h-4 rounded border-border"
+                                />
+                                <div className="flex-1">
+                                  <div className="font-medium text-foreground">{contact.name}</div>
+                                  <div className="text-sm text-muted-foreground">{contact.phone}</div>
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {contact.country}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
                         <div className="pt-4 border-t border-border">
                           <Button 
                             onClick={handleBatchProcess}
                             disabled={!selectedAgentId || !selectedPhoneId || selectedContacts.size === 0 || isProcessingBatch}
-                            className="w-full py-3"
+                            className="w-full py-3 bg-gradient-to-r from-primary to-primary/80"
                             size="lg"
                           >
                             {isProcessingBatch ? (
@@ -353,7 +437,7 @@ const Outbound = () => {
                             ) : (
                               <>
                                 <Phone className="w-4 h-4 mr-2" />
-                                Lansează apelurile ({selectedContacts.size} contacte)
+                                Lansează Apelurile ({selectedContacts.size})
                               </>
                             )}
                           </Button>
@@ -361,48 +445,38 @@ const Outbound = () => {
                       </div>
                     )}
                   </div>
+                )}
 
-                  {/* Settings Panel */}
-                  <div className="w-80 border-l border-border p-6 bg-muted/30">
-                    <h3 className="font-semibold text-foreground mb-4">Configurări</h3>
-                    <BatchConfigPanel 
-                      selectedAgentId={selectedAgentId}
-                      onAgentSelect={setSelectedAgentId}
-                      selectedPhoneId={selectedPhoneId}
-                      onPhoneSelect={setSelectedPhoneId}
-                      totalRecipients={contacts.length}
-                      selectedRecipients={selectedContacts.size}
-                      smsConfig={smsConfig}
-                      onSMSConfigChange={setSmsConfig}
-                    />
+                {activeSection === 'history' && (
+                  <div className="p-6">
+                    <CallHistoryTab callHistory={callHistory} isLoading={historyLoading} />
                   </div>
-                </div>
-              )}
-
-              {/* History */}
-              {activeSection === 'history' && (
-                <div className="p-6">
-                  <CallHistoryTab callHistory={callHistory} isLoading={historyLoading} />
-                </div>
-              )}
-
-              {/* Contacts */}
-              {activeSection === 'contacts' && contacts.length > 0 && (
-                <div className="p-6">
-                  <ContactsList 
-                    contacts={contacts}
-                    selectedContacts={selectedContacts}
-                    onContactSelect={handleContactSelect}
-                    onSelectAll={handleSelectAll}
-                    isProcessingBatch={isProcessingBatch}
-                  />
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
-            {/* Batch Status Panel */}
-            {(isProcessingBatch || callStatuses.length > 0) && (
-              <div className="mt-6">
+            {/* Right Column - Configuration */}
+            <div className="col-span-3">
+              <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
+                <h3 className="font-semibold text-foreground mb-6">Configurații</h3>
+                <BatchConfigPanel 
+                  selectedAgentId={selectedAgentId}
+                  onAgentSelect={setSelectedAgentId}
+                  selectedPhoneId={selectedPhoneId}
+                  onPhoneSelect={setSelectedPhoneId}
+                  totalRecipients={contacts.length}
+                  selectedRecipients={selectedContacts.size}
+                  smsConfig={smsConfig}
+                  onSMSConfigChange={setSmsConfig}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Status Panel - Full Width at Bottom */}
+          {(isProcessingBatch || callStatuses.length > 0) && (
+            <div className="mt-8">
+              <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
                 <BatchStatusPanel 
                   isProcessing={isProcessingBatch}
                   currentProgress={currentProgress}
@@ -411,8 +485,8 @@ const Outbound = () => {
                   startTime={batchStartTime}
                 />
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           <input 
             ref={fileInputRef} 
