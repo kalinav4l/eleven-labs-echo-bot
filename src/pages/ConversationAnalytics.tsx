@@ -123,20 +123,23 @@ const ConversationAnalytics = () => {
                   <tr className="border-b">
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Date</th>
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Agent</th>
-                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Duration</th>
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Phone</th>
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Evaluation result</th>
-                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Conversation ID</th>
+                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredCalls.length === 0 ? <tr>
-                      <td colSpan={6} className="text-center p-8 text-muted-foreground">
+                      <td colSpan={5} className="text-center p-8 text-muted-foreground">
                         Nu sunt conversații disponibile
                       </td>
                     </tr> : filteredCalls.map(call => {
                   const dateTime = formatDate(call.call_date);
-                  return <tr key={call.id} className="border-b hover:bg-muted/50">
+                  return <tr 
+                    key={call.id} 
+                    className="border-b hover:bg-muted/50 cursor-pointer"
+                    onDoubleClick={() => call.conversation_id && handleConversationClick(call.conversation_id)}
+                  >
                           <td className="p-3">
                             <div className="text-sm">
                               <div className="font-medium">{dateTime.date}</div>
@@ -146,12 +149,6 @@ const ConversationAnalytics = () => {
                           <td className="p-3">
                             <div className="text-sm">
                               {call.agent_name || 'Agent necunoscut'}
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div className="flex items-center text-sm">
-                              <Clock className="w-3 h-3 mr-1 text-muted-foreground" />
-                              {formatDuration(call.duration_seconds || 0)}
                             </div>
                           </td>
                           <td className="p-3">
@@ -170,20 +167,28 @@ const ConversationAnalytics = () => {
                                'Unknown'}
                             </Badge>
                           </td>
-                           <td className="p-3">
-                             {call.conversation_id ? <div className="flex items-center space-x-2">
-                                 <code className="text-xs bg-muted px-2 py-1 rounded cursor-pointer hover:bg-blue-100 transition-colors flex items-center gap-1" onClick={() => handleConversationClick(call.conversation_id)}>
-                                   <ExternalLink className="w-3 h-3" />
-                                   {call.conversation_id.slice(0, 12)}...
-                                 </code>
-                                 <Button variant="ghost" size="sm" onClick={e => {
-                          e.stopPropagation();
-                          copyToClipboard(call.conversation_id);
-                        }} className="h-6 w-6 p-0">
-                                   <Copy className="w-3 h-3" />
-                                 </Button>
-                               </div> : <span className="text-muted-foreground text-sm">N/A</span>}
-                           </td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center text-sm text-muted-foreground">
+                                <Clock className="w-3 h-3 mr-1" />
+                                {formatDuration(call.duration_seconds || 0)}
+                              </div>
+                              {call.conversation_id && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleConversationClick(call.conversation_id);
+                                  }}
+                                  className="h-6 text-xs"
+                                >
+                                  <MessageSquare className="w-3 h-3 mr-1" />
+                                  Detalii
+                                </Button>
+                              )}
+                            </div>
+                          </td>
                         </tr>;
                 })}
                 </tbody>
