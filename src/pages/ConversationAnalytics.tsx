@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useCallHistory } from '@/hooks/useCallHistory';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,12 +9,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, Clock, Phone, MessageSquare, Copy, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ConversationDetailModal } from '@/components/outbound/ConversationDetailModal';
+import { useConversationById } from '@/hooks/useConversationById';
+import { supabase } from '@/integrations/supabase/client';
+
 const ConversationAnalytics = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAgent, setSelectedAgent] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
+  
   const {
     callHistory,
     isLoading
@@ -22,6 +27,33 @@ const ConversationAnalytics = () => {
   const {
     toast
   } = useToast();
+  
+  // Function to get duration from conversation data
+  const getConversationDuration = async (conversationId: string) => {
+    if (!conversationId || conversationDurations[conversationId] !== undefined) {
+      return conversationDurations[conversationId] || 0;
+    }
+
+    try {
+      const { data } = await supabase.functions.invoke('get-elevenlabs-conversation', {
+        body: { conversationId },
+      });
+      
+      if (data?.duration) {
+        const duration = Math.round(data.duration);
+        setConversationDurations(prev => ({
+          ...prev,
+          [conversationId]: duration
+        }));
+        return duration;
+      }
+    } catch (error) {
+      console.error('Error fetching conversation duration:', error);
+    }
+    
+    return 0;
+  };
+
   const handleConversationClick = (conversationId: string) => {
     setSelectedConversationId(conversationId);
     setIsModalOpen(true);
@@ -30,6 +62,26 @@ const ConversationAnalytics = () => {
     setIsModalOpen(false);
     setSelectedConversationId(null);
   };
+  
+  // Load conversation durations when call history changes
+  useEffect(() => {
+    const loadDurations = async () => {
+      const conversationsToLoad = callHistory.filter(call => 
+        call.conversation_id && conversationDurations[call.conversation_id] === undefined
+      );
+      
+      for (const call of conversationsToLoad) {
+        if (call.conversation_id) {
+          await getConversationDuration(call.conversation_id);
+        }
+      }
+    };
+    
+    if (callHistory.length > 0) {
+      loadDurations();
+    }
+  }, [callHistory.length]); // Only depend on length to avoid infinite loop
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({
@@ -171,7 +223,10 @@ const ConversationAnalytics = () => {
                             <div className="flex items-center gap-2">
                               <div className="flex items-center text-sm text-muted-foreground">
                                 <Clock className="w-3 h-3 mr-1" />
-                                {formatDuration(call.duration_seconds || 0)}
+                                {call.conversation_id ? 
+                                  formatDuration(conversationDurations[call.conversation_id] || 0) : 
+                                  formatDuration(call.duration_seconds || 0)
+                                }
                               </div>
                               {call.conversation_id && (
                                 <Button 
