@@ -158,7 +158,7 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="bg-white rounded-lg border p-4">
+                    <div className="bg-gray-50 rounded-lg p-4">
                       <div className="max-h-[500px] overflow-y-auto">
                         {conversation.transcript && conversation.transcript.length > 0 ? (
                           <div className="space-y-4">
@@ -169,19 +169,29 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                               const timeDisplay = timestamp ? 
                                 (typeof timestamp === 'string' ? new Date(timestamp).toLocaleTimeString() : new Date(timestamp).toLocaleTimeString())
                                 : `00:${String(index * 5).padStart(2, '0')}`;
-                              const speakerName = role === 'agent' || role === 'assistant' || role === 'ai' ? 'Agent AI' : 'User';
+                              const isAgent = role === 'agent' || role === 'assistant' || role === 'ai';
                               
                               return (
-                                <div key={index} className="py-2 border-b border-gray-100 last:border-b-0">
-                                  <div className="flex gap-3">
-                                    <div className="text-xs text-gray-500 font-mono w-12 flex-shrink-0 mt-1">
-                                      {timeDisplay}
-                                    </div>
-                                    <div className="flex-1">
-                                      <div className="text-sm font-medium text-gray-900 mb-1">
-                                        {speakerName}
+                                <div key={index} className={`flex ${isAgent ? 'justify-start' : 'justify-end'} mb-4`}>
+                                  <div className={`max-w-[70%] ${isAgent ? 'ml-0 mr-auto' : 'ml-auto mr-0'}`}>
+                                    <div className={`rounded-lg px-4 py-3 ${
+                                      isAgent 
+                                        ? 'bg-white border border-gray-200 text-gray-900' 
+                                        : 'bg-blue-500 text-white'
+                                    }`}>
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className={`text-xs font-medium ${
+                                          isAgent ? 'text-gray-600' : 'text-blue-100'
+                                        }`}>
+                                          {isAgent ? 'Agent AI' : 'User'}
+                                        </span>
+                                        <span className={`text-xs ${
+                                          isAgent ? 'text-gray-400' : 'text-blue-100'
+                                        }`}>
+                                          {timeDisplay}
+                                        </span>
                                       </div>
-                                      <div className="text-sm text-gray-700 leading-relaxed">
+                                      <div className="text-sm leading-relaxed">
                                         {content || 'Mesaj fără conținut'}
                                       </div>
                                     </div>
