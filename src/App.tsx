@@ -24,6 +24,7 @@ import Construction from "./pages/Construction";
 import Documentation from "./pages/Documentation";
 import PhoneNumbers from "./pages/PhoneNumbers";
 import TestCall from "./pages/TestCall";
+import ConversationDetail from "./pages/ConversationDetail";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ function App() {
             <Route path="/account/agent-consultant" element={<AgentConsultant />} />
             
             <Route path="/account/conversation-analytics" element={<ConversationAnalytics />} />
+            <Route path="/account/conversation-analytics/:conversationId" element={<ConversationDetail />} />
             <Route path="/account/transcript" element={<Transcript />} />
             <Route path="/account/outbound" element={<Outbound />} />
             <Route path="/account/calls" element={<Calls />} />

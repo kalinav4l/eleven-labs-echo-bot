@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useCallHistory } from '@/hooks/useCallHistory';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +14,7 @@ import { useConversationById } from '@/hooks/useConversationById';
 import { supabase } from '@/integrations/supabase/client';
 
 const ConversationAnalytics = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAgent, setSelectedAgent] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -190,7 +192,7 @@ const ConversationAnalytics = () => {
                   return <tr 
                     key={call.id} 
                     className="border-b hover:bg-muted/50 cursor-pointer"
-                    onDoubleClick={() => call.conversation_id && handleConversationClick(call.conversation_id)}
+                    onDoubleClick={() => call.conversation_id && navigate(`/account/conversation-analytics/${call.conversation_id}`)}
                   >
                           <td className="p-3">
                             <div className="text-sm">
@@ -228,20 +230,20 @@ const ConversationAnalytics = () => {
                                   formatDuration(call.duration_seconds || 0)
                                 }
                               </div>
-                              {call.conversation_id && (
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleConversationClick(call.conversation_id);
-                                  }}
-                                  className="h-6 text-xs"
-                                >
-                                  <MessageSquare className="w-3 h-3 mr-1" />
-                                  Detalii
-                                </Button>
-                              )}
+                               {call.conversation_id && (
+                                 <Button 
+                                   variant="outline" 
+                                   size="sm"
+                                   onClick={(e) => {
+                                     e.stopPropagation();
+                                     navigate(`/account/conversation-analytics/${call.conversation_id}`);
+                                   }}
+                                   className="h-6 text-xs"
+                                 >
+                                   <MessageSquare className="w-3 h-3 mr-1" />
+                                   Detalii
+                                 </Button>
+                               )}
                             </div>
                           </td>
                         </tr>;
