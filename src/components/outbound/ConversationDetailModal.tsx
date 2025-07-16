@@ -6,28 +6,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Phone, Clock, Calendar, MessageSquare, Volume2, Download, CheckCircle, AlertCircle } from 'lucide-react';
 import { useConversationById } from '@/hooks/useConversationById';
-
 interface ConversationDetailModalProps {
   conversationId: string | null;
   isOpen: boolean;
   onClose: () => void;
 }
-
 export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = ({
   conversationId,
   isOpen,
-  onClose,
+  onClose
 }) => {
-  const { data: conversation, isLoading, error } = useConversationById(conversationId || undefined);
-
+  const {
+    data: conversation,
+    isLoading,
+    error
+  } = useConversationById(conversationId || undefined);
   if (!conversationId) return null;
-
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('ro-RO', {
       day: '2-digit',
@@ -37,9 +36,7 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
       minute: '2-digit'
     });
   };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+  return <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-7xl max-h-[90vh] w-[95vw] overflow-hidden">
         <DialogHeader className="pb-4 border-b">
           <DialogTitle className="flex items-center gap-3 text-xl">
@@ -49,22 +46,17 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
         </DialogHeader>
         <div className="overflow-y-auto max-h-[calc(90vh-100px)] pr-2">
 
-        {isLoading && (
-          <div className="flex items-center justify-center py-8">
+        {isLoading && <div className="flex items-center justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin mr-2" />
             <span>Se încarcă conversația...</span>
-          </div>
-        )}
+          </div>}
 
-        {error && (
-          <div className="text-center py-8">
+        {error && <div className="text-center py-8">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
             <p className="text-red-600">Eroare la încărcarea conversației</p>
-          </div>
-        )}
+          </div>}
 
-        {conversation && (
-          <div className="space-y-8">
+        {conversation && <div className="space-y-8">
             {/* Header Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
@@ -182,8 +174,7 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                 </div>
 
                 {/* Audio Player */}
-                {conversation.recording_url && (
-                  <Card className="shadow-lg border-0 bg-gradient-to-r from-purple-50 to-pink-50">
+                {conversation.recording_url && <Card className="shadow-lg border-0 bg-gradient-to-r from-purple-50 to-pink-50">
                     <CardHeader className="pb-3">
                       <CardTitle className="flex items-center gap-2 text-lg">
                         <Volume2 className="w-5 h-5 text-purple-600" />
@@ -193,7 +184,9 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                     <CardContent>
                       <div className="bg-white p-6 rounded-lg border border-purple-200">
                         <div className="flex flex-col space-y-4">
-                          <audio controls className="w-full" style={{ height: '40px' }}>
+                          <audio controls className="w-full" style={{
+                        height: '40px'
+                      }}>
                             <source src={conversation.recording_url} type="audio/mpeg" />
                             Browser-ul tău nu suportă elementul audio.
                           </audio>
@@ -206,8 +199,7 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                         </div>
                       </div>
                     </CardContent>
-                  </Card>
-                )}
+                  </Card>}
               </TabsContent>
 
               <TabsContent value="transcription" className="space-y-6 mt-6">
@@ -221,49 +213,32 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                   <CardContent>
                     <div className="bg-white rounded-lg border border-emerald-200 p-2">
                       <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
-                        {conversation.transcript && conversation.transcript.length > 0 ? (
-                          conversation.transcript.map((entry: any, index: number) => {
-                            // Handle different possible data structures from ElevenLabs
-                            const role = entry.role || entry.speaker || entry.type || 'unknown';
-                            const content = entry.content || entry.text || entry.message || '';
-                            const timestamp = entry.timestamp || entry.time || entry.created_at;
-                            
-                            return (
-                              <div key={index} className={`p-4 rounded-lg border-l-4 ${
-                                role === 'agent' || role === 'assistant' || role === 'ai'
-                                  ? 'border-blue-500 bg-blue-50 ml-0 mr-8' 
-                                  : 'border-green-500 bg-green-50 ml-8 mr-0'
-                              }`}>
+                        {conversation.transcript && conversation.transcript.length > 0 ? conversation.transcript.map((entry: any, index: number) => {
+                        // Handle different possible data structures from ElevenLabs
+                        const role = entry.role || entry.speaker || entry.type || 'unknown';
+                        const content = entry.content || entry.text || entry.message || '';
+                        const timestamp = entry.timestamp || entry.time || entry.created_at;
+                        return <div key={index} className={`p-4 rounded-lg border-l-4 ${role === 'agent' || role === 'assistant' || role === 'ai' ? 'border-blue-500 bg-blue-50 ml-0 mr-8' : 'border-green-500 bg-green-50 ml-8 mr-0'}`}>
                                 <div className="flex items-center gap-3 mb-2">
-                                  <Badge className={
-                                    role === 'agent' || role === 'assistant' || role === 'ai'
-                                      ? 'bg-blue-500 hover:bg-blue-600 text-white' 
-                                      : 'bg-green-500 hover:bg-green-600 text-white'
-                                  }>
+                                  <Badge className={role === 'agent' || role === 'assistant' || role === 'ai' ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-green-500 hover:bg-green-600 text-white'}>
                                     {role === 'agent' || role === 'assistant' || role === 'ai' ? '🤖 Agent AI' : '👤 Client'}
                                   </Badge>
-                                  {timestamp && (
-                                    <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded">
+                                  {timestamp && <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded">
                                       {typeof timestamp === 'string' ? formatDate(timestamp) : new Date(timestamp).toLocaleTimeString()}
-                                    </span>
-                                  )}
+                                    </span>}
                                 </div>
                                 <p className="text-gray-800 leading-relaxed font-medium">
                                   {content || 'Mesaj fără conținut'}
                                 </p>
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <div className="text-center py-8">
+                              </div>;
+                      }) : <div className="text-center py-8">
                             <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                             <p className="text-gray-500">Nu există transcript disponibil pentru această conversație.</p>
                             {/* Debug info */}
                             <div className="mt-4 text-xs text-gray-400">
                               <p>Structura datelor: {JSON.stringify(conversation.transcript || 'No transcript', null, 2)}</p>
                             </div>
-                          </div>
-                        )}
+                          </div>}
                       </div>
                     </div>
                   </CardContent>
@@ -314,10 +289,7 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                           <span className="text-sm font-medium text-gray-600">Canal:</span>
                           <span className="font-medium">Outbound Call</span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-600">Agent ID:</span>
-                          <code className="text-xs bg-gray-100 px-2 py-1 rounded">{conversation.agent_id || 'N/A'}</code>
-                        </div>
+                        
                       </div>
                     </CardContent>
                   </Card>
@@ -407,10 +379,8 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                 </div>
               </TabsContent>
             </Tabs>
-          </div>
-        )}
+          </div>}
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
