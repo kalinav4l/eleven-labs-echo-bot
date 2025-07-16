@@ -193,104 +193,119 @@ const Outbound = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-background">
-        <div className="max-w-7xl mx-auto p-6">
-          {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-foreground mb-1">
-              Apeluri în Lot
-            </h1>
-            <p className="text-muted-foreground">
-              Configurează și lansează apeluri automate către mai multe contacte
-            </p>
-          </div>
+      <div className="h-screen bg-background flex flex-col">
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 border-b">
+          <h1 className="text-2xl font-bold text-foreground mb-1">
+            Apeluri în Lot
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Configurează și lansează apeluri automate către mai multe contacte
+          </p>
+        </div>
 
-          {/* Main Layout */}
-          <div className="grid grid-cols-12 gap-6 h-[calc(100vh-200px)]">
-            {/* Left Sidebar - Quick Actions */}
-            <div className="col-span-3 space-y-4">
-              {/* Quick Actions Card */}
-              <div className="bg-card rounded-lg border p-4">
-                <h3 className="font-semibold text-foreground mb-3 text-sm">Acțiuni Rapide</h3>
-                <div className="space-y-2">
-                  <button
-                    onClick={() => setActiveSection('batch')}
-                    className={`w-full p-3 rounded-lg text-left transition-all text-sm ${
-                      activeSection === 'batch'
-                        ? 'bg-accent text-accent-foreground'
-                        : 'hover:bg-muted/50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4" />
-                      <div>
-                        <div className="font-medium">Apeluri în Lot</div>
-                        <div className="text-xs text-muted-foreground">Configurează și lansează</div>
-                      </div>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full p-3 rounded-lg text-left transition-all text-sm hover:bg-muted/50"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Upload className="w-4 h-4 text-emerald-500" />
-                      <div>
-                        <div className="font-medium">Import CSV</div>
-                        <div className="text-xs text-muted-foreground">Încarcă contacte</div>
-                      </div>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => setActiveSection('history')}
-                    className={`w-full p-3 rounded-lg text-left transition-all text-sm ${
-                      activeSection === 'history'
-                        ? 'bg-accent text-accent-foreground'
-                        : 'hover:bg-muted/50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <History className="w-4 h-4 text-blue-500" />
-                      <div>
-                        <div className="font-medium">Istoric</div>
-                        <div className="text-xs text-muted-foreground">Vezi apelurile</div>
-                      </div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Statistics */}
-              <div className="bg-card rounded-lg border p-4">
-                <h3 className="font-semibold text-foreground mb-3 text-sm">Statistici</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Contacte încărcate</span>
-                    <span className="font-medium">{contacts.length}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Contacte selectate</span>
-                    <span className="font-medium text-primary">{selectedContacts.size}</span>
-                  </div>
-                  {isProcessingBatch && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Progres</span>
-                      <span className="font-medium text-emerald-500">{currentProgress}/{totalCalls}</span>
-                    </div>
-                  )}
-                </div>
+        {/* Main Content */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Left Panel - Actions & Config */}
+          <div className="w-80 border-r bg-card/50 flex flex-col">
+            {/* Quick Actions */}
+            <div className="p-4 border-b">
+              <h3 className="font-semibold text-foreground mb-3 text-sm">Acțiuni</h3>
+              <div className="space-y-2">
+                <Button
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  size="sm"
+                  className="w-full justify-start"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Import CSV
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={downloadTemplate}
+                  size="sm"
+                  className="w-full justify-start"
+                >
+                  Template CSV
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setActiveSection('history')}
+                  size="sm"
+                  className="w-full justify-start"
+                >
+                  <History className="w-4 h-4 mr-2" />
+                  Istoric Apeluri
+                </Button>
               </div>
             </div>
 
-            {/* Center Column - Contact List */}
-            <div className="col-span-6">
-              <div className="bg-card rounded-lg border h-full flex flex-col">
-                <div className="p-4 border-b">
+            {/* Configuration */}
+            <div className="flex-1 p-4 overflow-y-auto">
+              <h3 className="font-semibold text-foreground mb-3 text-sm">Configurații</h3>
+              <BatchConfigPanel 
+                selectedAgentId={selectedAgentId}
+                onAgentSelect={setSelectedAgentId}
+                selectedPhoneId={selectedPhoneId}
+                onPhoneSelect={setSelectedPhoneId}
+                totalRecipients={contacts.length}
+                selectedRecipients={selectedContacts.size}
+                smsConfig={smsConfig}
+                onSMSConfigChange={setSmsConfig}
+              />
+            </div>
+
+            {/* Process Button */}
+            <div className="p-4 border-t">
+              <div className="space-y-3">
+                {/* Statistics */}
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="text-center p-2 bg-muted/50 rounded">
+                    <div className="font-medium">{contacts.length}</div>
+                    <div className="text-muted-foreground">Total</div>
+                  </div>
+                  <div className="text-center p-2 bg-primary/10 rounded">
+                    <div className="font-medium text-primary">{selectedContacts.size}</div>
+                    <div className="text-muted-foreground">Selectate</div>
+                  </div>
+                </div>
+                
+                <Button 
+                  onClick={handleBatchProcess}
+                  disabled={!selectedAgentId || !selectedPhoneId || selectedContacts.size === 0 || isProcessingBatch}
+                  className="w-full"
+                  size="sm"
+                >
+                  {isProcessingBatch ? (
+                    <>
+                      <Phone className="w-4 h-4 mr-2 animate-pulse" />
+                      Procesează... ({currentProgress}/{totalCalls})
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 mr-2" />
+                      Lansează Apeluri ({selectedContacts.size})
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Panel - Contact List */}
+          <div className="flex-1 flex flex-col">
+            {activeSection === 'history' ? (
+              <div className="p-6 overflow-y-auto">
+                <CallHistoryTab callHistory={callHistory} isLoading={historyLoading} />
+              </div>
+            ) : (
+              <>
+                {/* Contact List Header */}
+                <div className="p-4 border-b bg-card/50">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-foreground">
-                      Contacte încărcate ({contacts.length})
+                      Lista Contacte ({contacts.length})
                     </h3>
                     {contacts.length > 0 && (
                       <Button
@@ -305,146 +320,87 @@ const Outbound = () => {
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-hidden">
+                {/* Contact List Content */}
+                <div className="flex-1 overflow-y-auto">
                   {contacts.length === 0 ? (
                     <div className="h-full flex items-center justify-center p-8">
-                      <div className="text-center">
+                      <div className="text-center max-w-sm">
                         <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4">
                           <Upload className="w-8 h-8 text-muted-foreground" />
                         </div>
                         <h3 className="font-semibold text-foreground mb-2">
-                          Încarcă contactele tale
+                          Încarcă contactele
                         </h3>
                         <p className="text-muted-foreground text-sm mb-4">
-                          Selectează un fișier CSV cu contactele
+                          Selectează un fișier CSV cu contactele pentru a începe
                         </p>
-                        <div className="space-y-2">
-                          <Button 
-                            onClick={() => fileInputRef.current?.click()} 
-                            size="sm"
-                            className="w-full"
-                          >
-                            <Upload className="w-4 h-4 mr-2" />
-                            Selectează CSV
-                          </Button>
-                          <Button 
-                            variant="outline"
-                            onClick={downloadTemplate} 
-                            size="sm"
-                            className="w-full"
-                          >
-                            Template
-                          </Button>
-                        </div>
+                        <Button 
+                          onClick={() => fileInputRef.current?.click()} 
+                          size="sm"
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Selectează CSV
+                        </Button>
                       </div>
                     </div>
                   ) : (
-                     <div className="h-full overflow-y-auto p-4 space-y-2">
-                       {contacts.map((contact) => (
-                         <div
-                           key={contact.id}
-                           className={`p-3 rounded-lg border transition-all cursor-pointer ${
-                             selectedContacts.has(contact.id)
-                               ? 'border-primary bg-primary/5'
-                               : 'border-border hover:border-muted-foreground'
-                           }`}
-                           onClick={() => handleContactSelect(contact.id, !selectedContacts.has(contact.id))}
-                         >
-                           <div className="flex items-center gap-3">
-                             <input
-                               type="checkbox"
-                               checked={selectedContacts.has(contact.id)}
-                               onChange={() => {}}
-                               className="w-4 h-4 rounded border-border pointer-events-none"
-                             />
-                             <div className="flex-1 min-w-0">
-                               <div className="font-medium text-foreground text-sm truncate">{contact.name}</div>
-                               <div className="text-sm text-muted-foreground">{contact.phone}</div>
-                             </div>
-                             <div className="text-xs text-muted-foreground">
-                               {contact.country}
-                             </div>
-                           </div>
-                         </div>
-                       ))}
-                     </div>
-                   )}
-                 </div>
-
-                 {activeSection === 'history' && (
-                   <div className="p-6">
-                     <CallHistoryTab callHistory={callHistory} isLoading={historyLoading} />
-                   </div>
-                 )}
-               </div>
-             </div>
-
-             {/* Right Column - Configuration */}
-             <div className="col-span-3">
-               <div className="bg-card rounded-lg border p-4">
-                 <h3 className="font-semibold text-foreground mb-4 text-sm">Configurații</h3>
-                 <BatchConfigPanel 
-                   selectedAgentId={selectedAgentId}
-                   onAgentSelect={setSelectedAgentId}
-                   selectedPhoneId={selectedPhoneId}
-                   onPhoneSelect={setSelectedPhoneId}
-                   totalRecipients={contacts.length}
-                   selectedRecipients={selectedContacts.size}
-                   smsConfig={smsConfig}
-                   onSMSConfigChange={setSmsConfig}
-                 />
-
-                 {/* Process Button */}
-                 {selectedContacts.size > 0 && (
-                   <div className="mt-6 pt-4 border-t">
-                     <Button 
-                       onClick={handleBatchProcess}
-                       disabled={!selectedAgentId || !selectedPhoneId || selectedContacts.size === 0 || isProcessingBatch}
-                       className="w-full"
-                       size="sm"
-                     >
-                       {isProcessingBatch ? (
-                         <>
-                           <Phone className="w-4 h-4 mr-2 animate-pulse" />
-                           Se procesează... ({currentProgress}/{totalCalls})
-                         </>
-                       ) : (
-                         <>
-                           <Phone className="w-4 h-4 mr-2" />
-                           Lansează Apelurile ({selectedContacts.size})
-                         </>
-                       )}
-                     </Button>
-                   </div>
-                 )}
-               </div>
-             </div>
+                    <div className="p-4 space-y-2">
+                      {contacts.map((contact) => (
+                        <div
+                          key={contact.id}
+                          className={`p-3 rounded-lg border transition-all cursor-pointer ${
+                            selectedContacts.has(contact.id)
+                              ? 'border-primary bg-primary/5'
+                              : 'border-border hover:border-muted-foreground'
+                          }`}
+                          onClick={() => handleContactSelect(contact.id, !selectedContacts.has(contact.id))}
+                        >
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={selectedContacts.has(contact.id)}
+                              onChange={() => {}}
+                              className="w-4 h-4 rounded border-border pointer-events-none"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-foreground text-sm truncate">{contact.name}</div>
+                              <div className="text-sm text-muted-foreground">{contact.phone}</div>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {contact.country}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
-
-          {/* Status Panel - Full Width at Bottom */}
-          {(isProcessingBatch || callStatuses.length > 0) && (
-            <div className="mt-8">
-              <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-                <BatchStatusPanel 
-                  isProcessing={isProcessingBatch}
-                  currentProgress={currentProgress}
-                  totalCalls={totalCalls}
-                  callStatuses={callStatuses}
-                  startTime={batchStartTime}
-                />
-              </div>
-            </div>
-          )}
-
-          <input 
-            ref={fileInputRef} 
-            type="file" 
-            accept=".csv" 
-            onChange={handleCSVUpload} 
-            className="hidden" 
-          />
         </div>
+
+        {/* Status Panel - Bottom */}
+        {(isProcessingBatch || callStatuses.length > 0) && (
+          <div className="border-t bg-card/50">
+            <BatchStatusPanel 
+              isProcessing={isProcessingBatch}
+              currentProgress={currentProgress}
+              totalCalls={totalCalls}
+              callStatuses={callStatuses}
+              startTime={batchStartTime}
+            />
+          </div>
+        )}
       </div>
+
+      <input 
+        ref={fileInputRef} 
+        type="file" 
+        accept=".csv" 
+        onChange={handleCSVUpload} 
+        className="hidden" 
+      />
     </DashboardLayout>
   );
 };
