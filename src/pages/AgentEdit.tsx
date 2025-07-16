@@ -345,79 +345,38 @@ const AgentEdit = () => {
           </Button>
         </div>
 
-        {/* Configurare de Bază */}
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-              <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center">
-                <Bot className="w-4 h-4 text-accent" />
-              </div>
-              Configurare de Bază
-            </h2>
-            <p className="text-sm text-muted-foreground">Setează informațiile principale ale agentului</p>
-          </div>
-          
-          <div className="grid grid-cols-1 gap-4 lg:gap-6">
-            <AgentGeneralInfo agentData={agentData} setAgentData={setAgentData} />
-            <AgentSystemPrompt agentData={agentData} setAgentData={setAgentData} />
-          </div>
+        {/* Main Content - Mobile optimized grid */}
+        <div className="grid grid-cols-1 gap-4 lg:gap-6">
+          {/* General Information */}
+          <AgentGeneralInfo agentData={agentData} setAgentData={setAgentData} />
+
+          {/* System Prompt */}
+          <AgentSystemPrompt agentData={agentData} setAgentData={setAgentData} />
         </div>
 
-        {/* Mesaje și Limbi */}
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-              <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center">
-                <FileText className="w-4 h-4 text-accent" />
-              </div>
-              Mesaje și Limbi
-            </h2>
-            <p className="text-sm text-muted-foreground">Configurează mesajele și limbile suportate</p>
-          </div>
-          
-          <div className="space-y-4">
-            <AgentFirstMessage 
-              agentData={agentData} 
-              setAgentData={setAgentData} 
-              additionalLanguages={additionalLanguages}
-              onOpenMultilingualModal={openMultilingualModal}
-            />
-            
-            <AdditionalLanguagesSection 
-              selectedLanguages={additionalLanguages} 
-              onLanguagesChange={handleAdditionalLanguagesChange}
-              currentLanguage={agentData.conversation_config?.agent?.language} 
-            />
-          </div>
-        </div>
+        {/* First Message Section - Mobile optimized */}
+        <AgentFirstMessage 
+          agentData={agentData} 
+          setAgentData={setAgentData} 
+          additionalLanguages={additionalLanguages}
+          onOpenMultilingualModal={openMultilingualModal}
+        />
 
-        {/* Baza de Cunoștințe */}
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-              <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center">
-                <Database className="w-4 h-4 text-accent" />
-              </div>
-              Baza de Cunoștințe
-            </h2>
-            <p className="text-sm text-muted-foreground">Adaugă documente pentru ca agentul să aibă informații specifice</p>
-          </div>
+        {/* Additional Languages Section */}
+        <AdditionalLanguagesSection 
+          selectedLanguages={additionalLanguages} 
+          onLanguagesChange={handleAdditionalLanguagesChange}
+          currentLanguage={agentData.conversation_config?.agent?.language} 
+        />
 
-          <Card className="liquid-glass">
-            <CardHeader>
-              <div className="space-y-3">
-                <CardTitle className="text-foreground text-lg">Documente și Informații</CardTitle>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-accent rounded-full"></div>
-                    <span className="text-sm font-medium text-foreground">Retrieval-Augmented Generation (RAG)</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground pl-4">
-                    Agentul va accesa automat informațiile relevante din documentele încărcate pentru a răspunde mai precis la întrebări.
-                  </p>
-                </div>
-              </div>
-            </CardHeader>
+        {/* Enhanced Knowledge Base Section - Mobile optimized */}
+        <Card className="liquid-glass">
+          <CardHeader>
+            <CardTitle className="text-foreground">Knowledge Base</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Oferă LLM-ului informații specifice domeniului pentru a-l ajuta să răspundă mai precis la întrebări.
+            </p>
+          </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-4">
               <div className="space-y-1">
@@ -563,7 +522,6 @@ const AgentEdit = () => {
             )}
           </CardContent>
         </Card>
-        </div>
 
         {/* Bottom Action Buttons - Mobile optimized */}
         <div className="flex flex-col space-y-2 lg:flex-row lg:justify-end lg:gap-4 lg:space-y-0 sticky bottom-4 bg-background/95 backdrop-blur-sm p-4 -mx-4 border-t">
