@@ -7,12 +7,13 @@ export interface CallHistoryRecord {
   id: string;
   phone_number: string;
   contact_name: string;
-  call_status: 'success' | 'failed' | 'busy' | 'no-answer' | 'unknown' | 'initiated';
+  call_status: 'success' | 'failed' | 'busy' | 'no-answer' | 'unknown' | 'initiated' | 'done';
   summary: string;
   dialog_json: string;
   call_date: string;
   cost_usd: number;
   agent_id?: string;
+  agent_name?: string;
   language?: string;
   conversation_id?: string;
   elevenlabs_history_id?: string;
@@ -30,9 +31,23 @@ export const useCallHistory = () => {
       
       console.log('Fetching call history for user:', user.id);
       
+      // First, get all agents for this user
+      const { data: agents, error: agentsError } = await supabase
+        .from('kalina_agents')
+        .select('agent_id, name')
+        .eq('user_id', user.id);
+
+      if (agentsError) {
+        console.error('Error fetching agents:', agentsError);
+      }
+
+      // Create a map of agent_id to agent_name for quick lookup
+      const agentMap = new Map(agents?.map(agent => [agent.agent_id, agent.name]) || []);
+
       const { data, error } = await supabase
         .from('call_history')
         .select('*')
+        .eq('user_id', user.id)
         .order('call_date', { ascending: false });
 
       if (error) {
@@ -55,6 +70,7 @@ export const useCallHistory = () => {
           call_date: record.call_date ? new Date(record.call_date).toLocaleString('ro-RO') : '',
           cost_usd: record.cost_usd ? Number(record.cost_usd) : 0,
           agent_id: record.agent_id,
+          agent_name: agentMap.get(record.agent_id) || record.agent_id || 'Agent necunoscut',
           language: record.language,
           conversation_id: record.conversation_id,
           elevenlabs_history_id: record.elevenlabs_history_id,
@@ -142,7 +158,7 @@ export const useCallHistory = () => {
           user_id: user.id,
           phone_number: phoneNumber,
           contact_name: phoneNumber || 'Necunoscut',
-          call_status: status === 'done' || status === 'completed' ? 'success' : 'failed',
+          call_status: status === 'done' || status === 'completed' ? 'done' : status,
           summary: summary,
           dialog_json: dialogJson,
           call_date: callDate,

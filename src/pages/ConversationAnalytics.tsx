@@ -46,6 +46,7 @@ const ConversationAnalytics = () => {
     switch (status.toLowerCase()) {
       case 'success':
       case 'completed':
+      case 'done':
         return 'bg-green-100 text-green-800';
       case 'failed':
       case 'error':
@@ -144,7 +145,7 @@ const ConversationAnalytics = () => {
                           </td>
                           <td className="p-3">
                             <div className="text-sm">
-                              {call.agent_id ? call.agent_id.slice(0, 12) + '...' : 'N/A'}
+                              {call.agent_name || 'Agent necunoscut'}
                             </div>
                           </td>
                           <td className="p-3">
@@ -161,7 +162,12 @@ const ConversationAnalytics = () => {
                           </td>
                           <td className="p-3">
                             <Badge className={getStatusColor(call.call_status)} variant="secondary">
-                              {call.call_status === 'success' ? 'Successful' : call.call_status === 'initiated' ? 'Initiated' : call.call_status === 'busy' ? 'Busy' : call.call_status === 'failed' ? 'Error' : 'Unknown'}
+                              {call.call_status === 'done' ? 'Done' : 
+                               call.call_status === 'initiated' ? 'Initiated' : 
+                               call.call_status === 'busy' ? 'Busy' : 
+                               call.call_status === 'failed' ? 'Error' : 
+                               call.call_status === 'success' ? 'Success' : 
+                               'Unknown'}
                             </Badge>
                           </td>
                            <td className="p-3">
