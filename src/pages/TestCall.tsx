@@ -4,10 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Phone, PlayCircle, Loader2, MessageSquare, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
+import { useUserAgents } from '@/hooks/useUserAgents';
 import TestCallHistory from '@/components/TestCallHistory';
 import { useTestCallHistory } from '@/hooks/useTestCallHistory';
 const TestCall = () => {
@@ -19,6 +21,7 @@ const TestCall = () => {
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { data: userAgents = [] } = useUserAgents();
   const { history, addToHistory, updateHistoryItem, clearHistory } = useTestCallHistory();
   const handleTestCall = async () => {
     if (!agentId || !phoneNumber) {
@@ -249,9 +252,20 @@ const TestCall = () => {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="agentId">ID Agent</Label>
-              <Input id="agentId" placeholder="Introduceți ID-ul agentului ElevenLabs" value={agentId} onChange={e => setAgentId(e.target.value)} disabled={isLoading} />
+              <Select value={agentId} onValueChange={setAgentId} disabled={isLoading}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selectează agentul din contul tău" />
+                </SelectTrigger>
+                <SelectContent>
+                  {userAgents.map((agent) => (
+                    <SelectItem key={agent.id} value={agent.elevenlabs_agent_id || agent.agent_id}>
+                      {agent.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <p className="text-sm text-gray-500">
-                ID-ul agentului din ElevenLabs pe care doriți să îl testați
+                Selectează unul din agenții tăi pentru test
               </p>
             </div>
 
