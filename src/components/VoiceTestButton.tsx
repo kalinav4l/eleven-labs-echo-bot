@@ -160,7 +160,19 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
       setIsConnecting(true);
       try {
         console.log('🎤 Cer permisiuni microfon...');
-        await navigator.mediaDevices.getUserMedia({ 
+        
+        // Check if HTTPS is required
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+          throw new Error('HTTPS este necesar pentru acces la microfon');
+        }
+        
+        // Check if getUserMedia is available
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('Browserul nu suportă accesul la microfon');
+        }
+        
+        console.log('🔍 Verific permisiunile...');
+        const stream = await navigator.mediaDevices.getUserMedia({ 
           audio: {
             sampleRate: 24000,
             channelCount: 1,
@@ -170,18 +182,36 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
           } 
         });
         
+        console.log('✅ Microfon obținut cu succes:', stream);
+        stream.getTracks().forEach(track => track.stop()); // Stop the test stream
+        
         setHasPermission(true);
         console.log('🟢 Încep conversația cu agentul:', agentId);
         const sessionId = await conversation.startSession({ agentId });
         setCurrentConversationId(sessionId);
         console.log('📞 Conversație inițiată cu ID:', sessionId);
       } catch (error) {
-        console.error('❌ Eroare la pornirea conversației:', error);
+        console.error('❌ Eroare detaliată la pornirea conversației:', error);
+        console.error('❌ Tip eroare:', error.name);
+        console.error('❌ Mesaj eroare:', error.message);
         setIsConnecting(false);
         setHasPermission(false);
+        
+        let errorMessage = "Pentru a testa agentul vocal, trebuie să permiți accesul la microfon.";
+        
+        if (error.name === 'NotAllowedError') {
+          errorMessage = "Accesul la microfon a fost refuzat. Te rog permite accesul din setările browserului.";
+        } else if (error.name === 'NotFoundError') {
+          errorMessage = "Nu s-a găsit niciun microfon. Verifică că ai un microfon conectat.";
+        } else if (error.name === 'NotSupportedError') {
+          errorMessage = "Browserul nu suportă accesul la microfon.";
+        } else if (error.message.includes('HTTPS')) {
+          errorMessage = "Site-ul trebuie să fie pe HTTPS pentru acces la microfon.";
+        }
+        
         toast({
           title: "Eroare acces microfon",
-          description: "Pentru a testa agentul vocal, trebuie să permiți accesul la microfon.",
+          description: errorMessage,
           variant: "destructive",
         });
       }
