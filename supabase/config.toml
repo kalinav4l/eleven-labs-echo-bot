@@ -2,6 +2,3 @@ project_id = "pwfczzxwjfxomqzhhwvj"
 
 [functions.web-scraper]
 verify_jwt = false
-
-[functions.update-call-history-data]
-# Keep jwt verification enabled for security

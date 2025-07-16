@@ -78,36 +78,6 @@ export const useCallHistory = () => {
         };
       }) || [];
 
-      // Schedule updates for new calls (those without proper cost/duration data)
-      mappedData.forEach(call => {
-        if (call.conversation_id && (!call.cost_usd || call.cost_usd === 0) && (!call.duration_seconds || call.duration_seconds === 0)) {
-          const callAge = Date.now() - new Date(call.call_date).getTime();
-          const tenMinutes = 10 * 60 * 1000;
-          
-          // Only schedule if the call is less than 10 minutes old
-          if (callAge < tenMinutes) {
-            const remainingTime = tenMinutes - callAge;
-            console.log(`Scheduling update for call ${call.id} in ${remainingTime}ms`);
-            
-            setTimeout(async () => {
-              try {
-                const { data: updateResult } = await supabase.functions.invoke('update-call-history-data', {
-                  body: {
-                    callHistoryId: call.id,
-                    conversationId: call.conversation_id
-                  }
-                });
-                console.log(`Updated call history data for ${call.id}:`, updateResult);
-                // Refetch data after update
-                queryClient.invalidateQueries({ queryKey: ['call-history', user?.id] });
-              } catch (error) {
-                console.error('Error updating call history:', error);
-              }
-            }, remainingTime);
-          }
-        }
-      });
-
       console.log('Mapped call history data:', mappedData);
       return mappedData;
     },

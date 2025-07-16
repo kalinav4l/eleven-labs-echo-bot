@@ -20,6 +20,9 @@ const ConversationAnalytics = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
+  const [conversationCosts, setConversationCosts] = useState<Record<string, number>>({});
+  
   const {
     callHistory,
     isLoading
@@ -27,6 +30,43 @@ const ConversationAnalytics = () => {
   const {
     toast
   } = useToast();
+  
+  // Function to get duration and cost from conversation data
+  const getConversationData = async (conversationId: string) => {
+    if (!conversationId || (conversationDurations[conversationId] !== undefined && conversationCosts[conversationId] !== undefined)) {
+      return {
+        duration: conversationDurations[conversationId] || 0,
+        cost: conversationCosts[conversationId] || 0
+      };
+    }
+
+    try {
+      const { data } = await supabase.functions.invoke('get-elevenlabs-conversation', {
+        body: { conversationId },
+      });
+      
+      if (data?.metadata) {
+        const duration = Math.round(data.metadata.call_duration_secs || 0);
+        const cost = data.metadata.cost || 0;
+        
+        setConversationDurations(prev => ({
+          ...prev,
+          [conversationId]: duration
+        }));
+        
+        setConversationCosts(prev => ({
+          ...prev,
+          [conversationId]: cost
+        }));
+        
+        return { duration, cost };
+      }
+    } catch (error) {
+      console.error('Error fetching conversation data:', error);
+    }
+    
+    return { duration: 0, cost: 0 };
+  };
 
   const handleConversationClick = (conversationId: string) => {
     setSelectedConversationId(conversationId);
@@ -36,6 +76,25 @@ const ConversationAnalytics = () => {
     setIsModalOpen(false);
     setSelectedConversationId(null);
   };
+  
+  // Load conversation data when call history changes
+  useEffect(() => {
+    const loadConversationData = async () => {
+      const conversationsToLoad = callHistory.filter(call => 
+        call.conversation_id && (conversationDurations[call.conversation_id] === undefined || conversationCosts[call.conversation_id] === undefined)
+      );
+      
+      for (const call of conversationsToLoad) {
+        if (call.conversation_id) {
+          await getConversationData(call.conversation_id);
+        }
+      }
+    };
+    
+    if (callHistory.length > 0) {
+      loadConversationData();
+    }
+  }, [callHistory.length]); // Only depend on length to avoid infinite loop
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -89,7 +148,7 @@ const ConversationAnalytics = () => {
   };
   const formatCost = (cost: number) => {
     if (!cost || cost === 0) return '0 credite';
-    return `${Math.round(cost)} credite`;
+    return `${cost} credite`;
   };
   const getUniqueAgents = () => {
     const agents = [...new Set(callHistory.map(call => call.agent_id).filter(Boolean))];
@@ -165,7 +224,10 @@ const ConversationAnalytics = () => {
                           <td className="p-3">
                             <div className="text-sm">
                               <div className="font-medium">
-                                {formatCost(call.cost_usd || 0)}
+                                {call.conversation_id ? 
+                                  formatCost(conversationCosts[call.conversation_id] || 0) : 
+                                  formatCost(0)
+                                }
                               </div>
                             </div>
                           </td>
@@ -183,7 +245,10 @@ const ConversationAnalytics = () => {
                             <div className="text-sm">
                               <div className="font-medium">Durată:</div>
                               <div className="text-muted-foreground">
-                                {formatDuration(call.duration_seconds || 0)}
+                                {call.conversation_id ? 
+                                  formatDuration(conversationDurations[call.conversation_id] || 0) : 
+                                  formatDuration(call.duration_seconds || 0)
+                                }
                               </div>
                             </div>
                           </td>
