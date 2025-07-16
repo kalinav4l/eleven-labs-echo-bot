@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
 import TestCallHistory from '@/components/TestCallHistory';
 import { useTestCallHistory } from '@/hooks/useTestCallHistory';
+import { AgentSelector } from '@/components/outbound/AgentSelector';
 const TestCall = () => {
   const [agentId, setAgentId] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -248,10 +249,13 @@ const TestCall = () => {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="agentId">ID Agent</Label>
-              <Input id="agentId" placeholder="Introduceți ID-ul agentului ElevenLabs" value={agentId} onChange={e => setAgentId(e.target.value)} disabled={isLoading} />
+              <Label htmlFor="agentId">Selectează Agent</Label>
+              <AgentSelector
+                selectedAgentId={agentId}
+                onAgentSelect={setAgentId}
+              />
               <p className="text-sm text-gray-500">
-                ID-ul agentului din ElevenLabs pe care doriți să îl testați
+                Selectați agentul din contul dvs. pe care doriți să îl testați
               </p>
             </div>
 

@@ -176,6 +176,107 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_contacts: {
+        Row: {
+          call_attempts: number | null
+          call_status: string | null
+          campaign_id: string
+          contact_name: string | null
+          conversation_id: string | null
+          created_at: string
+          id: string
+          last_call_attempt: string | null
+          notes: string | null
+          phone_number: string
+          updated_at: string
+        }
+        Insert: {
+          call_attempts?: number | null
+          call_status?: string | null
+          campaign_id: string
+          contact_name?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          last_call_attempt?: string | null
+          notes?: string | null
+          phone_number: string
+          updated_at?: string
+        }
+        Update: {
+          call_attempts?: number | null
+          call_status?: string | null
+          campaign_id?: string
+          contact_name?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          last_call_attempt?: string | null
+          notes?: string | null
+          phone_number?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_contacts_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          agent_id: string | null
+          called_contacts: number | null
+          created_at: string
+          description: string | null
+          failed_calls: number | null
+          id: string
+          name: string
+          sms_enabled: boolean | null
+          sms_message: string | null
+          status: string | null
+          successful_calls: number | null
+          total_contacts: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_id?: string | null
+          called_contacts?: number | null
+          created_at?: string
+          description?: string | null
+          failed_calls?: number | null
+          id?: string
+          name: string
+          sms_enabled?: boolean | null
+          sms_message?: string | null
+          status?: string | null
+          successful_calls?: number | null
+          total_contacts?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string | null
+          called_contacts?: number | null
+          created_at?: string
+          description?: string | null
+          failed_calls?: number | null
+          id?: string
+          name?: string
+          sms_enabled?: boolean | null
+          sms_message?: string | null
+          status?: string | null
+          successful_calls?: number | null
+          total_contacts?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           agent_id: string
