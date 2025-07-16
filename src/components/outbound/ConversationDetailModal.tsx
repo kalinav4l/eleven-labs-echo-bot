@@ -204,15 +204,15 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
 
               <TabsContent value="client-data" className="space-y-6 mt-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <Card className="elevenlabs-card bg-orange-50 border-orange-100">
+                  <Card className="elevenlabs-card">
                     <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <Phone className="w-5 h-5 text-orange-600" />
+                      <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+                        <Phone className="w-5 h-5" />
                         Informații Client
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="bg-white p-4 rounded-lg border border-orange-200">
+                      <div className="bg-white p-4 rounded-lg border">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-gray-600">Număr telefon:</span>
                           <span className="text-lg font-bold text-red-600">{conversation.customer_phone || 'Nedisponibil'}</span>
@@ -225,18 +225,18 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                     </CardContent>
                   </Card>
 
-                  <Card className="elevenlabs-card bg-indigo-50 border-indigo-100">
+                  <Card className="elevenlabs-card">
                     <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <MessageSquare className="w-5 h-5 text-indigo-600" />
+                      <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+                        <MessageSquare className="w-5 h-5" />
                         Detalii Suplimentare
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="bg-white p-4 rounded-lg border border-indigo-200 space-y-3">
+                      <div className="bg-white p-4 rounded-lg border space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium text-gray-600">Tip interacțiune:</span>
-                          <Badge className="status-badge bg-indigo-500 text-white">Apel vocal</Badge>
+                          <Badge className="status-badge bg-gray-900 text-white">Apel vocal</Badge>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium text-gray-600">Canal:</span>
