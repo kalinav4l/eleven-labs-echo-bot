@@ -32,23 +32,25 @@ export const BatchConfigPanel: React.FC<BatchConfigPanelProps> = ({
   smsConfig,
   onSMSConfigChange
 }) => {
-  return <div className="space-y-4">
-      {/* Agent Selection */}
-      <div className="space-y-2">
-        
-        <AgentSelector selectedAgentId={selectedAgentId} onAgentSelect={onAgentSelect} />
-      </div>
+  return (
+    <Card className="p-6">
+      <CardHeader className="px-0 pt-0">
+        <CardTitle>Configurații</CardTitle>
+      </CardHeader>
+      <CardContent className="px-0 space-y-6">
+        {/* Agent Selection */}
+        <div className="space-y-2">
+          <AgentSelector selectedAgentId={selectedAgentId} onAgentSelect={onAgentSelect} />
+        </div>
 
-      {/* Phone Number Selection */}
-      <div className="space-y-2">
-        
-        <PhoneSelector selectedPhoneId={selectedPhoneId} onPhoneSelect={onPhoneSelect} />
-      </div>
+        {/* Phone Number Selection */}
+        <div className="space-y-2">
+          <PhoneSelector selectedPhoneId={selectedPhoneId} onPhoneSelect={onPhoneSelect} />
+        </div>
 
-      {/* Summary */}
-      
-
-      {/* SMS Configuration */}
-      <SMSConfigSection config={smsConfig} onConfigChange={onSMSConfigChange} />
-    </div>;
+        {/* SMS Configuration */}
+        <SMSConfigSection config={smsConfig} onConfigChange={onSMSConfigChange} />
+      </CardContent>
+    </Card>
+  );
 };
