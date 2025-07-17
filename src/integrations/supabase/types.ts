@@ -828,6 +828,7 @@ export type Database = {
           priority: string | null
           scheduled_datetime: string
           status: string | null
+          task_type: string | null
           updated_at: string
           user_id: string
         }
@@ -843,6 +844,7 @@ export type Database = {
           priority?: string | null
           scheduled_datetime: string
           status?: string | null
+          task_type?: string | null
           updated_at?: string
           user_id: string
         }
@@ -858,6 +860,7 @@ export type Database = {
           priority?: string | null
           scheduled_datetime?: string
           status?: string | null
+          task_type?: string | null
           updated_at?: string
           user_id?: string
         }

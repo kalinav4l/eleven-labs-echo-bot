@@ -23,6 +23,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import CalendarAITaskDialog from '@/components/CalendarAITaskDialog';
 import IntelligentCampaignCreator from '@/components/IntelligentCampaignCreator';
+import { useUserPhoneNumbers } from '@/hooks/useUserPhoneNumbers';
 
 interface ScheduledCall {
   id: string;
@@ -140,6 +141,9 @@ const Calendar = () => {
     },
     enabled: !!user,
   });
+
+  // Fetch user's phone numbers
+  const { data: userPhoneNumbers = [] } = useUserPhoneNumbers();
 
   // Fetch scheduled calls and tasks
   const { data: scheduledCalls = [], isLoading } = useQuery({
@@ -849,12 +853,47 @@ const Calendar = () => {
                     </div>
                     <div>
                       <Label htmlFor="phone_number">Numărul de Telefon</Label>
-                      <Input
-                        id="phone_number"
-                        value={formData.phone_number}
-                        onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
-                        placeholder="Ex: +373xxxxxxxx"
-                      />
+                      {userPhoneNumbers.length > 0 ? (
+                        <Select value={formData.phone_number} onValueChange={(value) => setFormData(prev => ({ ...prev, phone_number: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selectează un număr" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {userPhoneNumbers.map((phoneNumber) => (
+                              <SelectItem key={phoneNumber.id} value={phoneNumber.phone_number}>
+                                <div className="flex items-center">
+                                  <Phone className="h-4 w-4 mr-2 text-gray-600" />
+                                  <div>
+                                    <div className="font-medium">{phoneNumber.phone_number}</div>
+                                    <div className="text-xs text-gray-500">{phoneNumber.label}</div>
+                                  </div>
+                                </div>
+                              </SelectItem>
+                            ))}
+                            <SelectItem value="custom">
+                              <div className="flex items-center">
+                                <Plus className="h-4 w-4 mr-2 text-gray-600" />
+                                Introduce manual
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          id="phone_number"
+                          value={formData.phone_number}
+                          onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
+                          placeholder="Ex: +373xxxxxxxx"
+                        />
+                      )}
+                      {formData.phone_number === 'custom' && (
+                        <Input
+                          className="mt-2"
+                          value={formData.phone_number === 'custom' ? '' : formData.phone_number}
+                          onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
+                          placeholder="Introdu numărul manual"
+                        />
+                      )}
                     </div>
                   </div>
                   
