@@ -56,6 +56,7 @@ const Calendar = () => {
   const [formData, setFormData] = useState({
     client_name: '',
     phone_number: '',
+    caller_number: '',
     scheduled_datetime: '',
     description: '',
     priority: 'medium' as 'low' | 'medium' | 'high',
@@ -215,6 +216,7 @@ const Calendar = () => {
       setFormData({
         client_name: '',
         phone_number: '',
+        caller_number: '',
         scheduled_datetime: '',
         description: '',
         priority: 'medium',
@@ -532,7 +534,10 @@ const Calendar = () => {
       return;
     }
 
-    createCallMutation.mutate(formData as Omit<ScheduledCall, 'id'>);
+    createCallMutation.mutate({
+      ...formData,
+      status: 'scheduled' as const
+    });
   };
 
   const calendarDays = getCalendarDays();
@@ -852,17 +857,17 @@ const Calendar = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phone_number">Numărul de Telefon</Label>
+                      <Label htmlFor="caller_number">Sună din numărul</Label>
                       {userPhoneNumbers.length > 0 ? (
-                        <Select value={formData.phone_number} onValueChange={(value) => setFormData(prev => ({ ...prev, phone_number: value }))}>
+                        <Select value={formData.caller_number || ''} onValueChange={(value) => setFormData(prev => ({ ...prev, caller_number: value }))}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selectează un număr" />
+                            <SelectValue placeholder="Selectează numărul tău" />
                           </SelectTrigger>
                           <SelectContent>
                             {userPhoneNumbers.map((phoneNumber) => (
                               <SelectItem key={phoneNumber.id} value={phoneNumber.phone_number}>
                                 <div className="flex items-center">
-                                  <Phone className="h-4 w-4 mr-2 text-gray-600" />
+                                  <Phone className="h-4 w-4 mr-2 text-blue-600" />
                                   <div>
                                     <div className="font-medium">{phoneNumber.phone_number}</div>
                                     <div className="text-xs text-gray-500">{phoneNumber.label}</div>
@@ -870,30 +875,22 @@ const Calendar = () => {
                                 </div>
                               </SelectItem>
                             ))}
-                            <SelectItem value="custom">
-                              <div className="flex items-center">
-                                <Plus className="h-4 w-4 mr-2 text-gray-600" />
-                                Introduce manual
-                              </div>
-                            </SelectItem>
                           </SelectContent>
                         </Select>
                       ) : (
-                        <Input
-                          id="phone_number"
-                          value={formData.phone_number}
-                          onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
-                          placeholder="Ex: +373xxxxxxxx"
-                        />
+                        <div className="text-sm text-gray-500 p-2 border rounded">
+                          Nu ai numere salvate. Adaugă numere în secțiunea Phone Numbers.
+                        </div>
                       )}
-                      {formData.phone_number === 'custom' && (
-                        <Input
-                          className="mt-2"
-                          value={formData.phone_number === 'custom' ? '' : formData.phone_number}
-                          onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
-                          placeholder="Introdu numărul manual"
-                        />
-                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="phone_number">Sună către numărul</Label>
+                      <Input
+                        id="phone_number"
+                        value={formData.phone_number}
+                        onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
+                        placeholder="Ex: +373xxxxxxxx"
+                      />
                     </div>
                   </div>
                   
