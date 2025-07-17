@@ -50,22 +50,21 @@ const Account = () => {
   const totalAgents = userAgents?.length || 0;
   const totalCalls = callHistory?.length || 0;
   
-  // Calculate total consumed credits from all sources
-  const creditsFromConversations = recentConversations?.reduce((total, conv) => total + (conv.credits_used || 0), 0) || 0;
-  const creditsFromCallHistory = callHistory?.reduce((total, call) => {
-    // Extract cost from ElevenLabs or use cost_usd field
-    const cost = call.cost_usd || 0;
-    // Convert USD cost to credits (assuming 1 USD = 1000 credits or similar ratio)
-    const credits = Math.round(cost * 1000);
+  // Calculate total consumed credits from ElevenLabs data - prioritize ElevenLabs when available
+  const totalConsumedCredits = callHistory?.reduce((total, call) => {
+    // Use ElevenLabs conversation credits if available, otherwise fallback to cost_usd
+    const credits = call.conversation_id && conversationCredits[call.conversation_id] !== undefined
+      ? conversationCredits[call.conversation_id]
+      : Math.round((call.cost_usd || 0) * 1000); // Convert USD to credits
+    
     return total + credits;
   }, 0) || 0;
-  
-  const totalConsumedCredits = creditsFromConversations + creditsFromCallHistory;
   const totalConversations = userStats?.total_conversations || 0;
   const totalTranscripts = savedTranscripts?.length || 0;
   
   // State for enhanced analytics data
   const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
+  const [conversationCredits, setConversationCredits] = useState<Record<string, number>>({});
   
   // Function to get conversation data from ElevenLabs
   const getConversationData = async (conversationId: string) => {
@@ -80,10 +79,23 @@ const Account = () => {
       
       if (data?.metadata) {
         const duration = Math.round(data.metadata.call_duration_secs || 0);
+        // Extract credits/cost from ElevenLabs metadata
+        const cost = data.metadata.cost || 0;
+        const llmCharge = data.metadata.charging?.llm_charge || 0;
+        const callCharge = data.metadata.charging?.call_charge || 0;
+        
+        // Calculate total credits (convert USD to credits, 1 USD = 1000 credits)
+        const totalCost = cost || (llmCharge + callCharge);
+        const credits = Math.round(totalCost * 1000);
         
         setConversationDurations(prev => ({
           ...prev,
           [conversationId]: duration
+        }));
+        
+        setConversationCredits(prev => ({
+          ...prev,
+          [conversationId]: credits
         }));
         
         return duration;
