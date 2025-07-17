@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import { useUserStats } from '@/hooks/useUserStats';
 import { useUserConversations } from '@/hooks/useUserConversations';
 import { useCallHistory } from '@/hooks/useCallHistory';
 import { useTranscripts } from '@/hooks/useTranscripts';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Bot, 
   Phone, 
@@ -53,9 +54,64 @@ const Account = () => {
   const totalConversations = userStats?.total_conversations || 0;
   const totalTranscripts = savedTranscripts?.length || 0;
   
-  // Calculate total minutes from call history duration_seconds
+  // State for enhanced analytics data
+  const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
+  
+  // Function to get conversation data from ElevenLabs
+  const getConversationData = async (conversationId: string) => {
+    if (!conversationId || conversationDurations[conversationId] !== undefined) {
+      return conversationDurations[conversationId] || 0;
+    }
+
+    try {
+      const { data } = await supabase.functions.invoke('get-elevenlabs-conversation', {
+        body: { conversationId },
+      });
+      
+      if (data?.metadata) {
+        const duration = Math.round(data.metadata.call_duration_secs || 0);
+        
+        setConversationDurations(prev => ({
+          ...prev,
+          [conversationId]: duration
+        }));
+        
+        return duration;
+      }
+    } catch (error) {
+      console.error('Error fetching conversation data:', error);
+    }
+    
+    return 0;
+  };
+
+  // Load detailed conversation data
+  useEffect(() => {
+    const loadDetailedAnalytics = async () => {
+      const conversationsToLoad = callHistory?.filter(call => 
+        call.conversation_id && conversationDurations[call.conversation_id] === undefined
+      ) || [];
+      
+      for (const call of conversationsToLoad) {
+        if (call.conversation_id) {
+          await getConversationData(call.conversation_id);
+        }
+      }
+    };
+    
+    if (callHistory && callHistory.length > 0) {
+      loadDetailedAnalytics();
+    }
+  }, [callHistory?.length]);
+
+  // Calculate total minutes from both sources - prioritize ElevenLabs data when available
   const totalMinutesFromCalls = callHistory?.reduce((total, call) => {
-    return total + (call.duration_seconds ? Math.round(call.duration_seconds / 60) : 0);
+    // Use ElevenLabs conversation duration if available, otherwise fallback to duration_seconds
+    const duration = call.conversation_id && conversationDurations[call.conversation_id] !== undefined
+      ? conversationDurations[call.conversation_id]
+      : (call.duration_seconds || 0);
+    
+    return total + Math.round(duration / 60);
   }, 0) || 0;
   
   const totalMinutes = totalMinutesFromCalls;
