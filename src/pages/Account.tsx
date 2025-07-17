@@ -104,18 +104,26 @@ const Account = () => {
     }
   }, [callHistory?.length]);
 
-  // Calculate total minutes from both sources - prioritize ElevenLabs data when available
-  const totalMinutesFromCalls = callHistory?.reduce((total, call) => {
+  // Calculate total seconds from both sources - prioritize ElevenLabs data when available
+  const totalSecondsFromCalls = callHistory?.reduce((total, call) => {
     // Use ElevenLabs conversation duration if available, otherwise fallback to duration_seconds
     const duration = call.conversation_id && conversationDurations[call.conversation_id] !== undefined
       ? conversationDurations[call.conversation_id]
       : (call.duration_seconds || 0);
     
-    return total + Math.round(duration / 60);
+    return total + duration;
   }, 0) || 0;
   
-  const totalMinutes = totalMinutesFromCalls;
-  const averageCallDuration = totalCalls > 0 ? Math.round(totalMinutes / totalCalls) : 0;
+  // Format total time as minutes:seconds
+  const formatTotalTime = (totalSeconds: number) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+  
+  const totalTimeFormatted = formatTotalTime(totalSecondsFromCalls);
+  const averageCallDurationSecs = totalCalls > 0 ? Math.round(totalSecondsFromCalls / totalCalls) : 0;
+  const averageCallDurationFormatted = formatTotalTime(averageCallDurationSecs);
 
   const quickStats = [
     { label: 'Agenți Activi', value: totalAgents.toString(), icon: Bot, color: 'text-gray-600' },
@@ -123,7 +131,7 @@ const Account = () => {
     { label: 'Rată Succes', value: `${successRate}%`, icon: TrendingUp, color: 'text-gray-600' },
     { label: 'Conversații', value: totalConversations.toString(), icon: MessageSquare, color: 'text-gray-600' },
     { label: 'Transcripturi', value: totalTranscripts.toString(), icon: FileText, color: 'text-gray-600' },
-    { label: 'Minute Vorbite', value: totalMinutes.toString(), icon: Clock, color: 'text-gray-600' },
+    { label: 'Timp Vorbire', value: totalTimeFormatted, icon: Clock, color: 'text-gray-600' },
   ];
 
   // Recent activity from actual user data
@@ -236,8 +244,8 @@ const Account = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-semibold text-gray-900">{averageCallDuration}min</p>
-                    <p className="text-xs text-gray-500">Total: {totalMinutes}min</p>
+                    <p className="text-lg font-semibold text-gray-900">{averageCallDurationFormatted}</p>
+                    <p className="text-xs text-gray-500">Total: {totalTimeFormatted}</p>
                   </div>
                 </div>
 
@@ -361,11 +369,11 @@ const Account = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Durată Medie</span>
-                    <span className="font-medium text-gray-900">{averageCallDuration}min</span>
+                    <span className="font-medium text-gray-900">{averageCallDurationFormatted}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Total Minute</span>
-                    <span className="font-medium text-gray-900">{totalMinutes}min</span>
+                    <span className="text-sm text-gray-600">Total Timp</span>
+                    <span className="font-medium text-gray-900">{totalTimeFormatted}</span>
                   </div>
                 </div>
               </div>
