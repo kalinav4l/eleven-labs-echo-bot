@@ -49,7 +49,6 @@ const Account = () => {
   // Calculate real stats from user data
   const totalAgents = userAgents?.length || 0;
   const totalCalls = callHistory?.length || 0;
-  const successfulCalls = callHistory?.filter(call => call.call_status === 'success')?.length || 0;
   // Calculate total consumed credits from conversations
   const totalConsumedCredits = recentConversations?.reduce((total, conv) => total + (conv.credits_used || 0), 0) || 0;
   const totalConversations = userStats?.total_conversations || 0;
@@ -365,8 +364,8 @@ const Account = () => {
                     <span className="font-medium text-gray-900">{totalCalls}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Apeluri Reușite</span>
-                    <span className="font-medium text-gray-900">{successfulCalls}</span>
+                    <span className="text-sm text-gray-600">Credite Consumate</span>
+                    <span className="font-medium text-gray-900">{totalConsumedCredits}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Durată Medie</span>
