@@ -194,6 +194,7 @@ const Calendar = () => {
           user_id: user.id,
           client_name: callData.client_name,
           phone_number: callData.phone_number,
+          caller_number: callData.caller_number,
           scheduled_datetime: callData.scheduled_datetime,
           description: callData.description,
           priority: callData.priority,
@@ -507,11 +508,10 @@ const Calendar = () => {
     const hours = String(currentTime.getHours()).padStart(2, '0');
     const minutes = String(currentTime.getMinutes()).padStart(2, '0');
     
-    // Convertim ora locală în format ISO pentru salvare
-    const localDateTime = new Date(year, parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes));
-    const isoDateTime = localDateTime.toISOString();
+    // Păstrăm ora locală fără conversie la UTC
+    const selectedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
     
-    setFormData(prev => ({ ...prev, scheduled_datetime: isoDateTime }));
+    setFormData(prev => ({ ...prev, scheduled_datetime: selectedDateTime }));
     setIsDialogOpen(true);
   };
 
