@@ -432,9 +432,12 @@ const Calls = () => {
               <div className="mt-6">
                 <BatchStatusPanel 
                   isProcessing={isProcessingBatch}
+                  isPaused={false}
+                  isStopped={false}
                   currentProgress={currentProgress}
                   totalCalls={totalCalls}
                   callStatuses={callStatuses}
+                  currentCallStatus={''}
                   startTime={batchStartTime}
                 />
               </div>

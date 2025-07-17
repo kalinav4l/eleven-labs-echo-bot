@@ -57,9 +57,15 @@ const Outbound = () => {
   const {
     processBatchCalls,
     isProcessingBatch,
+    isPaused,
+    isStopped,
     currentProgress,
     totalCalls,
-    callStatuses
+    callStatuses,
+    currentCallStatus,
+    pauseBatch,
+    resumeBatch,
+    stopBatch
   } = useCallInitiation({
     agentId: selectedAgentId,
     phoneNumber: '',
@@ -371,10 +377,16 @@ const Outbound = () => {
             {(isProcessingBatch || currentProgress > 0) && (
               <BatchStatusPanel 
                 isProcessing={isProcessingBatch}
+                isPaused={isPaused}
+                isStopped={isStopped}
                 currentProgress={currentProgress}
                 totalCalls={totalCalls}
                 callStatuses={callStatuses}
+                currentCallStatus={currentCallStatus}
                 startTime={batchStartTime}
+                onPause={pauseBatch}
+                onResume={resumeBatch}
+                onStop={stopBatch}
               />
             )}
           </div>

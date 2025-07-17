@@ -1,6 +1,7 @@
 import React from 'react';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, CheckCircle, Clock, PhoneCall, Mic, AlertCircle, Phone } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Loader2, CheckCircle, Clock, PhoneCall, Mic, AlertCircle, Phone, Pause, Play, Square } from 'lucide-react';
 
 interface CallStatus {
   contactId: string;
@@ -18,6 +19,12 @@ interface BatchCallProgressProps {
   totalCalls: number;
   currentCallStatus: string;
   callStatuses: CallStatus[];
+  isProcessing: boolean;
+  isPaused: boolean;
+  isStopped: boolean;
+  onPause?: () => void;
+  onResume?: () => void;
+  onStop?: () => void;
 }
 
 export const BatchCallProgress: React.FC<BatchCallProgressProps> = ({
@@ -25,6 +32,12 @@ export const BatchCallProgress: React.FC<BatchCallProgressProps> = ({
   totalCalls,
   currentCallStatus,
   callStatuses,
+  isProcessing,
+  isPaused,
+  isStopped,
+  onPause,
+  onResume,
+  onStop,
 }) => {
   const progressPercentage = totalCalls > 0 ? (currentProgress / totalCalls) * 100 : 0;
 
@@ -93,10 +106,57 @@ export const BatchCallProgress: React.FC<BatchCallProgressProps> = ({
         </div>
         <Progress value={progressPercentage} className="h-3 mb-3" />
         
+        {/* Control Buttons */}
+        {isProcessing && (
+          <div className="flex gap-2 mb-3">
+            {!isPaused && !isStopped && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onPause}
+                className="flex items-center gap-2"
+              >
+                <Pause className="w-4 h-4" />
+                Pauză
+              </Button>
+            )}
+            
+            {isPaused && !isStopped && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onResume}
+                className="flex items-center gap-2"
+              >
+                <Play className="w-4 h-4" />
+                Continuă
+              </Button>
+            )}
+            
+            {!isStopped && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={onStop}
+                className="flex items-center gap-2"
+              >
+                <Square className="w-4 h-4" />
+                Oprește
+              </Button>
+            )}
+          </div>
+        )}
+        
         {/* Current Status */}
         {currentCallStatus && (
           <div className="flex items-center gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-            <Loader2 className="w-4 h-4 animate-spin text-gray-600 flex-shrink-0" />
+            {isPaused ? (
+              <Pause className="w-4 h-4 text-orange-600 flex-shrink-0" />
+            ) : isStopped ? (
+              <Square className="w-4 h-4 text-red-600 flex-shrink-0" />
+            ) : (
+              <Loader2 className="w-4 h-4 animate-spin text-gray-600 flex-shrink-0" />
+            )}
             <span className="text-sm font-medium text-gray-800">{currentCallStatus}</span>
           </div>
         )}

@@ -1,8 +1,9 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle2, Clock, AlertCircle, Users } from 'lucide-react';
+import { CheckCircle2, Clock, AlertCircle, Users, Pause, Play, Square } from 'lucide-react';
 
 interface CallStatus {
   contactId: string;
@@ -17,18 +18,30 @@ interface CallStatus {
 
 interface BatchStatusPanelProps {
   isProcessing: boolean;
+  isPaused: boolean;
+  isStopped: boolean;
   currentProgress: number;
   totalCalls: number;
   callStatuses: CallStatus[];
+  currentCallStatus: string;
   startTime?: Date;
+  onPause?: () => void;
+  onResume?: () => void;
+  onStop?: () => void;
 }
 
 export const BatchStatusPanel: React.FC<BatchStatusPanelProps> = ({
   isProcessing,
+  isPaused,
+  isStopped,
   currentProgress,
   totalCalls,
   callStatuses,
+  currentCallStatus,
   startTime,
+  onPause,
+  onResume,
+  onStop,
 }) => {
   const completedCalls = callStatuses.filter(call => call.status === 'completed').length;
   const failedCalls = callStatuses.filter(call => call.status === 'failed').length;
@@ -117,6 +130,63 @@ export const BatchStatusPanel: React.FC<BatchStatusPanelProps> = ({
           </div>
           <Progress value={progressPercentage} className="h-2" />
         </div>
+
+        {/* Control Buttons */}
+        {isProcessing && (
+          <div className="flex gap-2 justify-center">
+            {!isPaused && !isStopped && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onPause}
+                className="flex items-center gap-2"
+              >
+                <Pause className="w-4 h-4" />
+                Pauză
+              </Button>
+            )}
+            
+            {isPaused && !isStopped && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onResume}
+                className="flex items-center gap-2"
+              >
+                <Play className="w-4 h-4" />
+                Continuă
+              </Button>
+            )}
+            
+            {!isStopped && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={onStop}
+                className="flex items-center gap-2"
+              >
+                <Square className="w-4 h-4" />
+                Oprește
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* Current Status Display */}
+        {currentCallStatus && (
+          <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+            <div className="flex items-center gap-2">
+              {isPaused ? (
+                <Pause className="w-4 h-4 text-orange-600" />
+              ) : isStopped ? (
+                <Square className="w-4 h-4 text-red-600" />
+              ) : (
+                <Clock className="w-4 h-4 animate-pulse text-blue-600" />
+              )}
+              <span>{currentCallStatus}</span>
+            </div>
+          </div>
+        )}
 
         {/* Time Info */}
         {startTime && (

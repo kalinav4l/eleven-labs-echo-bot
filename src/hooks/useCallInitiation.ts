@@ -46,6 +46,8 @@ export const useCallInitiation = ({
   const { scheduleSMS } = useSMSService();
   const [isInitiating, setIsInitiating] = useState(false);
   const [isProcessingBatch, setIsProcessingBatch] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isStopped, setIsStopped] = useState(false);
   const [currentProgress, setCurrentProgress] = useState(0);
   const [totalCalls, setTotalCalls] = useState(0);
   const [currentContact, setCurrentContact] = useState<string>('');
@@ -314,6 +316,8 @@ export const useCallInitiation = ({
     }
 
     setIsProcessingBatch(true);
+    setIsPaused(false);
+    setIsStopped(false);
     setTotalCalls(contacts.length);
     setCurrentProgress(0);
     setCurrentCallStatus('Inițiere procesare optimizată...');
@@ -329,6 +333,26 @@ export const useCallInitiation = ({
     try {
       // Process contacts ONE BY ONE with detailed logging
       for (let i = 0; i < contacts.length; i++) {
+        // Check if batch is stopped
+        if (isStopped) {
+          logStep('BATCH PROCESSING: STOPPED by user');
+          setCurrentCallStatus('🛑 Procesare oprită de utilizator');
+          break;
+        }
+
+        // Check if batch is paused
+        while (isPaused && !isStopped) {
+          setCurrentCallStatus('⏸️ Procesare în pauză...');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        // Check again if stopped after pause
+        if (isStopped) {
+          logStep('BATCH PROCESSING: STOPPED by user after pause');
+          setCurrentCallStatus('🛑 Procesare oprită de utilizator');
+          break;
+        }
+
         const contact = contacts[i];
         const callStartTime = new Date();
         
@@ -536,9 +560,24 @@ export const useCallInitiation = ({
       });
     } finally {
       setIsProcessingBatch(false);
-      setCurrentProgress(0);
-      setTotalCalls(0);
-      setCurrentContact('');
+      setIsPaused(false);
+      
+      if (isStopped) {
+        setCurrentCallStatus('🛑 Procesare oprită de utilizator');
+        logStep('BATCH PROCESSING: STOPPED AND FINALIZED');
+      } else {
+        setCurrentCallStatus('✅ Procesare finalizată cu succes');
+        logStep('BATCH PROCESSING: COMPLETED AND FINALIZED');
+      }
+      
+      // Reset progress after showing final status
+      setTimeout(() => {
+        setCurrentProgress(0);
+        setTotalCalls(0);
+        setCurrentContact('');
+        setCurrentCallStatus('');
+        setIsStopped(false);
+      }, 3000);
     }
   }, [user?.id, agentId]);
 
@@ -633,16 +672,50 @@ export const useCallInitiation = ({
     }
   }, [initiateCall, agentId, phoneNumber]);
 
+  // Control functions for batch processing
+  const pauseBatch = useCallback(() => {
+    setIsPaused(true);
+    logStep('BATCH PROCESSING: PAUSED by user');
+    toast({
+      title: "Pauză",
+      description: "Procesarea a fost pusă în pauză",
+    });
+  }, []);
+
+  const resumeBatch = useCallback(() => {
+    setIsPaused(false);
+    logStep('BATCH PROCESSING: RESUMED by user');
+    toast({
+      title: "Reluare",
+      description: "Procesarea a fost reluată",
+    });
+  }, []);
+
+  const stopBatch = useCallback(() => {
+    setIsStopped(true);
+    setIsPaused(false);
+    logStep('BATCH PROCESSING: STOPPED by user');
+    toast({
+      title: "Oprire",
+      description: "Procesarea a fost oprită",
+    });
+  }, []);
+
   return {
     initiateCall,
     processBatchCalls,
     isInitiating,
     isProcessingBatch,
+    isPaused,
+    isStopped,
     currentProgress,
     totalCalls,
     currentContact,
     callStatuses,
     currentCallStatus,
     handleInitiateCall,
+    pauseBatch,
+    resumeBatch,
+    stopBatch,
   };
 };

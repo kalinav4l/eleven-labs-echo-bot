@@ -91,6 +91,9 @@ export const BatchTab: React.FC<BatchTabProps> = ({
               totalCalls={totalCalls}
               currentCallStatus={currentCallStatus}
               callStatuses={callStatuses}
+              isProcessing={isProcessingBatch}
+              isPaused={false}
+              isStopped={false}
             />
           )}
 
