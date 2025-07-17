@@ -50,7 +50,8 @@ const Account = () => {
   const totalAgents = userAgents?.length || 0;
   const totalCalls = callHistory?.length || 0;
   const successfulCalls = callHistory?.filter(call => call.call_status === 'success')?.length || 0;
-  const successRate = totalCalls > 0 ? Math.round((successfulCalls / totalCalls) * 100) : 0;
+  // Calculate total consumed credits from conversations
+  const totalConsumedCredits = recentConversations?.reduce((total, conv) => total + (conv.credits_used || 0), 0) || 0;
   const totalConversations = userStats?.total_conversations || 0;
   const totalTranscripts = savedTranscripts?.length || 0;
   
@@ -128,7 +129,7 @@ const Account = () => {
   const quickStats = [
     { label: 'Agenți Activi', value: totalAgents.toString(), icon: Bot, color: 'text-gray-600' },
     { label: 'Apeluri Luna Aceasta', value: totalCalls.toString(), icon: Phone, color: 'text-gray-600' },
-    { label: 'Rată Succes', value: `${successRate}%`, icon: TrendingUp, color: 'text-gray-600' },
+    { label: 'Credite Consumate', value: totalConsumedCredits.toString(), icon: Zap, color: 'text-gray-600' },
     { label: 'Conversații', value: totalConversations.toString(), icon: MessageSquare, color: 'text-gray-600' },
     { label: 'Transcripturi', value: totalTranscripts.toString(), icon: FileText, color: 'text-gray-600' },
     { label: 'Timp Vorbire', value: totalTimeFormatted, icon: Clock, color: 'text-gray-600' },
@@ -220,16 +221,16 @@ const Account = () => {
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <TrendingUp className="w-4 h-4 text-blue-600" />
+                      <Zap className="w-4 h-4 text-blue-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Rată de Succes</p>
-                      <p className="text-xs text-gray-500">Apeluri reușite</p>
+                      <p className="text-sm font-medium text-gray-900">Credite Consumate</p>
+                      <p className="text-xs text-gray-500">Total utilizate</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-semibold text-gray-900">{successRate}%</p>
-                    <p className="text-xs text-gray-500">{successfulCalls}/{totalCalls} apeluri</p>
+                    <p className="text-lg font-semibold text-gray-900">{totalConsumedCredits}</p>
+                    <p className="text-xs text-gray-500">credite</p>
                   </div>
                 </div>
                 
