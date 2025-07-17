@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Phone, MessageSquare, Volume2, Download, CheckCircle, ArrowLeft, Play } from 'lucide-react';
+import { Loader2, Phone, MessageSquare, Volume2, Download, CheckCircle, ArrowLeft, Play, Languages } from 'lucide-react';
 import { useConversationById } from '@/hooks/useConversationById';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +15,8 @@ const ConversationDetail = () => {
   const navigate = useNavigate();
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  const [translatedSummary, setTranslatedSummary] = useState<string>('');
+  const [isTranslating, setIsTranslating] = useState(false);
   const { toast } = useToast();
   
   const {
@@ -91,6 +93,51 @@ const ConversationDetail = () => {
       return null;
     } finally {
       setIsLoadingAudio(false);
+    }
+  };
+
+  // Function to translate summary using GPT
+  const translateSummary = async () => {
+    if (!conversationData?.summary) {
+      toast({
+        title: "Eroare",
+        description: "Nu există rezumat de tradus",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsTranslating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('translate-text', {
+        body: {
+          text: conversationData.summary,
+          targetLanguage: 'ro', // Translate to Romanian
+          sourceLanguage: 'auto'
+        }
+      });
+
+      if (error) {
+        console.error('Translation error:', error);
+        throw error;
+      }
+
+      if (data?.translatedText) {
+        setTranslatedSummary(data.translatedText);
+        toast({
+          title: "Succes!",
+          description: "Rezumatul a fost tradus cu succes"
+        });
+      }
+    } catch (error) {
+      console.error('Error translating summary:', error);
+      toast({
+        title: "Eroare",
+        description: "Nu s-a putut traduce rezumatul",
+        variant: "destructive"
+      });
+    } finally {
+      setIsTranslating(false);
     }
   };
 
@@ -227,13 +274,43 @@ const ConversationDetail = () => {
                       <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
                         <MessageSquare className="w-5 h-5" />
                         Rezumat Conversație
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => translateSummary()}
+                          disabled={isTranslating}
+                          className="ml-auto"
+                        >
+                          {isTranslating ? (
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          ) : (
+                            <Languages className="w-4 h-4 mr-2" />
+                          )}
+                          Traduce
+                        </Button>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="bg-white p-4 rounded-lg border">
                         <p className="text-gray-700 leading-relaxed">
-                          {conversationData?.summary}
+                          {translatedSummary || conversationData?.summary}
                         </p>
+                        {translatedSummary && (
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <p className="text-sm text-gray-500 mb-2">Text original:</p>
+                            <p className="text-gray-600 text-sm italic">
+                              {conversationData?.summary}
+                            </p>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => setTranslatedSummary('')}
+                              className="mt-2"
+                            >
+                              Arată originalul
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
