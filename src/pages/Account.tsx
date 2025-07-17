@@ -46,6 +46,10 @@ const Account = () => {
     }
   };
 
+  // State for enhanced analytics data
+  const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
+  const [conversationCredits, setConversationCredits] = useState<Record<string, number>>({});
+
   // Calculate real stats from user data
   const totalAgents = userAgents?.length || 0;
   const totalCalls = callHistory?.length || 0;
@@ -61,10 +65,6 @@ const Account = () => {
   }, 0) || 0;
   const totalConversations = userStats?.total_conversations || 0;
   const totalTranscripts = savedTranscripts?.length || 0;
-  
-  // State for enhanced analytics data
-  const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
-  const [conversationCredits, setConversationCredits] = useState<Record<string, number>>({});
   
   // Function to get conversation data from ElevenLabs
   const getConversationData = async (conversationId: string) => {
