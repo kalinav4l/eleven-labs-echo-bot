@@ -52,7 +52,13 @@ const Account = () => {
   const successRate = totalCalls > 0 ? Math.round((successfulCalls / totalCalls) * 100) : 0;
   const totalConversations = userStats?.total_conversations || 0;
   const totalTranscripts = savedTranscripts?.length || 0;
-  const totalMinutes = userStats?.total_minutes_talked || 0;
+  
+  // Calculate total minutes from call history duration_seconds
+  const totalMinutesFromCalls = callHistory?.reduce((total, call) => {
+    return total + (call.duration_seconds ? Math.round(call.duration_seconds / 60) : 0);
+  }, 0) || 0;
+  
+  const totalMinutes = totalMinutesFromCalls;
   const averageCallDuration = totalCalls > 0 ? Math.round(totalMinutes / totalCalls) : 0;
 
   const quickStats = [
