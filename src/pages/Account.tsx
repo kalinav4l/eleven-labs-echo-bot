@@ -49,8 +49,18 @@ const Account = () => {
   // Calculate real stats from user data
   const totalAgents = userAgents?.length || 0;
   const totalCalls = callHistory?.length || 0;
-  // Calculate total consumed credits from conversations
-  const totalConsumedCredits = recentConversations?.reduce((total, conv) => total + (conv.credits_used || 0), 0) || 0;
+  
+  // Calculate total consumed credits from all sources
+  const creditsFromConversations = recentConversations?.reduce((total, conv) => total + (conv.credits_used || 0), 0) || 0;
+  const creditsFromCallHistory = callHistory?.reduce((total, call) => {
+    // Extract cost from ElevenLabs or use cost_usd field
+    const cost = call.cost_usd || 0;
+    // Convert USD cost to credits (assuming 1 USD = 1000 credits or similar ratio)
+    const credits = Math.round(cost * 1000);
+    return total + credits;
+  }, 0) || 0;
+  
+  const totalConsumedCredits = creditsFromConversations + creditsFromCallHistory;
   const totalConversations = userStats?.total_conversations || 0;
   const totalTranscripts = savedTranscripts?.length || 0;
   
