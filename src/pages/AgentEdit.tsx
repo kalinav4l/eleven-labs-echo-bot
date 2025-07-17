@@ -18,6 +18,7 @@ import AgentSystemPrompt from '@/components/agent/AgentSystemPrompt';
 import AgentFirstMessage from '@/components/agent/AgentFirstMessage';
 import {AgentResponse, LanguagePreset} from "@/types/dtos.ts";
 import {ElevenLabsController} from "@/controllers/ElevenLabsController.ts";
+import { supabase } from '@/integrations/supabase/client';
 
 const AgentEdit = () => {
   const { agentId } = useParams<{ agentId: string }>();
@@ -161,6 +162,18 @@ const AgentEdit = () => {
       const updatePayload = ElevenLabsController.prepareUpdatePayload(agentData, multilingualMessages);
       const data = await ElevenLabsController.updateAgent(agentId, updatePayload);
       handleAgentDataRefresh(data)
+      
+      // Update agent name in database if it was changed
+      if (agentData.name) {
+        const { error: updateError } = await supabase
+          .from('kalina_agents')
+          .update({ name: agentData.name })
+          .eq('elevenlabs_agent_id', agentId);
+        
+        if (updateError) {
+          console.error('Error updating agent name in database:', updateError);
+        }
+      }
       
       if (documents.length > 0) {
         await updateAgentKnowledgeBase(true);
