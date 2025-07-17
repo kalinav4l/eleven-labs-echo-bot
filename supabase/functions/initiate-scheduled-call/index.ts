@@ -13,9 +13,9 @@ serve(async (req) => {
   }
 
   try {
-    const { agent_id, phone_number, contact_name, user_id, batch_processing } = await req.json()
+    const { agent_id, phone_number, contact_name, user_id, batch_processing, caller_number } = await req.json()
 
-    console.log('Received request:', { agent_id, phone_number, contact_name, user_id, batch_processing })
+    console.log('Received request:', { agent_id, phone_number, contact_name, user_id, batch_processing, caller_number })
 
     if (!agent_id || !phone_number || !user_id) {
       console.error('Missing required fields:', { agent_id: !!agent_id, phone_number: !!phone_number, user_id: !!user_id })

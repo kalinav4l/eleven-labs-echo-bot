@@ -29,6 +29,7 @@ interface ScheduledCall {
   id: string;
   client_name: string;
   phone_number: string;
+  caller_number?: string;
   scheduled_datetime: string;
   description: string;
   priority: 'low' | 'medium' | 'high';
@@ -265,13 +266,22 @@ const Calendar = () => {
 
   // Execute scheduled call using the corrected edge function
   const executeCallMutation = useMutation({
-    mutationFn: async ({ agentId, phoneNumber }: { agentId: string; phoneNumber: string }) => {
-      console.log('Executing call with:', { agentId, phoneNumber });
+    mutationFn: async ({ agentId, phoneNumber, callerNumber, contactName, userId }: { 
+      agentId: string; 
+      phoneNumber: string; 
+      callerNumber?: string | null;
+      contactName?: string;
+      userId?: string;
+    }) => {
+      console.log('Executing call with:', { agentId, phoneNumber, callerNumber, contactName, userId });
       
       const { data, error } = await supabase.functions.invoke('initiate-scheduled-call', {
         body: {
           agent_id: agentId,
-          phone_number: phoneNumber
+          phone_number: phoneNumber,
+          caller_number: callerNumber,
+          contact_name: contactName,
+          user_id: userId
         }
       });
 
@@ -497,9 +507,11 @@ const Calendar = () => {
     const hours = String(currentTime.getHours()).padStart(2, '0');
     const minutes = String(currentTime.getMinutes()).padStart(2, '0');
     
-    const selectedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+    // Convertim ora locală în format ISO pentru salvare
+    const localDateTime = new Date(year, parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes));
+    const isoDateTime = localDateTime.toISOString();
     
-    setFormData(prev => ({ ...prev, scheduled_datetime: selectedDateTime }));
+    setFormData(prev => ({ ...prev, scheduled_datetime: isoDateTime }));
     setIsDialogOpen(true);
   };
 
@@ -519,7 +531,10 @@ const Calendar = () => {
 
     executeCallMutation.mutate({
       agentId: call.agent_id,
-      phoneNumber: call.phone_number
+      phoneNumber: call.phone_number,
+      callerNumber: call.caller_number || null,
+      contactName: call.client_name,
+      userId: user?.id
     });
   };
 
