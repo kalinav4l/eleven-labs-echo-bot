@@ -819,6 +819,7 @@ export type Database = {
         Row: {
           agent_id: string | null
           call_duration_minutes: number | null
+          caller_number: string | null
           client_name: string
           created_at: string
           description: string | null
@@ -835,6 +836,7 @@ export type Database = {
         Insert: {
           agent_id?: string | null
           call_duration_minutes?: number | null
+          caller_number?: string | null
           client_name: string
           created_at?: string
           description?: string | null
@@ -851,6 +853,7 @@ export type Database = {
         Update: {
           agent_id?: string | null
           call_duration_minutes?: number | null
+          caller_number?: string | null
           client_name?: string
           created_at?: string
           description?: string | null
