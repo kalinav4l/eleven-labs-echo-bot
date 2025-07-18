@@ -253,7 +253,7 @@ const ConversationAnalytics = () => {
                       </td>
                     </tr> : filteredCalls.map(call => {
                   const dateTime = formatDate(call.call_date);
-                  return <tr key={call.id} className="hover:bg-gray-50 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:z-10 relative" onDoubleClick={() => call.conversation_id && navigate(`/account/conversation-analytics/${call.conversation_id}`)}>
+                  return <tr key={call.id} className="hover:bg-gray-50 cursor-pointer transition-all duration-200 hover:bg-opacity-75 hover:shadow-sm" onDoubleClick={() => call.conversation_id && navigate(`/account/conversation-analytics/${call.conversation_id}`)}>
                           <td className="p-3">
                             <div className="flex items-center text-sm">
                               <Phone className="w-3 h-3 mr-1 text-muted-foreground" />
