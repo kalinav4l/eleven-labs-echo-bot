@@ -18,6 +18,8 @@ const ConversationAnalytics = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAgent, setSelectedAgent] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [dateAfter, setDateAfter] = useState('');
+  const [dateBefore, setDateBefore] = useState('');
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
@@ -106,7 +108,14 @@ const ConversationAnalytics = () => {
   const filteredCalls = callHistory.filter(call => {
     const matchesSearch = call.phone_number.includes(searchTerm) || call.contact_name?.toLowerCase().includes(searchTerm.toLowerCase()) || call.summary && call.summary.toLowerCase().includes(searchTerm.toLowerCase()) || call.conversation_id && call.conversation_id.includes(searchTerm);
     const matchesStatus = statusFilter === 'all' || call.call_status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesAgent = selectedAgent === 'all' || call.agent_id === selectedAgent;
+    
+    // Date filtering
+    const callDate = new Date(call.call_date);
+    const matchesDateAfter = !dateAfter || callDate >= new Date(dateAfter);
+    const matchesDateBefore = !dateBefore || callDate <= new Date(dateBefore + 'T23:59:59');
+    
+    return matchesSearch && matchesStatus && matchesAgent && matchesDateAfter && matchesDateBefore;
   });
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -167,24 +176,113 @@ const ConversationAnalytics = () => {
   return <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
-        
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Analytics Conversații</h1>
+        </div>
 
-        {/* Search Bar */}
-        
+        {/* Search and Filters */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Filtre și Căutare</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                type="text"
+                placeholder="Caută după număr telefon, nume contact, sau conversation ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
 
-        {/* Filters */}
-        
+            {/* Filter Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Date After Filter */}
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-muted-foreground">Data de la:</label>
+                <Input
+                  type="date"
+                  value={dateAfter}
+                  onChange={(e) => setDateAfter(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Date Before Filter */}
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-muted-foreground">Data până la:</label>
+                <Input
+                  type="date"
+                  value={dateBefore}
+                  onChange={(e) => setDateBefore(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Status Filter */}
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-muted-foreground">Status apel:</label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Toate statusurile" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toate statusurile</SelectItem>
+                    <SelectItem value="success">Success</SelectItem>
+                    <SelectItem value="done">Done</SelectItem>
+                    <SelectItem value="failed">Failed</SelectItem>
+                    <SelectItem value="busy">Busy</SelectItem>
+                    <SelectItem value="initiated">Initiated</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Agent Filter */}
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-muted-foreground">Agent:</label>
+                <Select value={selectedAgent} onValueChange={setSelectedAgent}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Toți agenții" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toți agenții</SelectItem>
+                    {getUniqueAgents().map(agentId => (
+                      <SelectItem key={agentId} value={agentId}>
+                        {agentId}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Clear Filters Button */}
+            {(searchTerm || statusFilter !== 'all' || selectedAgent !== 'all' || dateAfter || dateBefore) && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  setSearchTerm('');
+                  setStatusFilter('all');
+                  setSelectedAgent('all');
+                  setDateAfter('');
+                  setDateBefore('');
+                }}
+              >
+                Șterge toate filtrele
+              </Button>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Call History Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Call History</CardTitle>
-            <div className="flex gap-2 text-sm">
-              <Button variant="outline" size="sm">+ Date After</Button>
-              <Button variant="outline" size="sm">+ Date Before</Button>
-              <Button variant="outline" size="sm">+ Evaluation</Button>
-              <Button variant="outline" size="sm">+ Agent</Button>
-            </div>
+            <CardTitle>Istoric Apeluri</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
