@@ -28,7 +28,7 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
     error
   } = useConversationById(conversationId || undefined);
 
-  // Function to get audio URL from ElevenLabs
+  // Function to get audio URL
   const getAudioUrl = async (conversationId: string) => {
     if (!conversationId) return null;
     

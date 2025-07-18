@@ -161,7 +161,7 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
           {/* Existing Documents Selection */}
           {existingDocuments.length > 0 && (
             <div className="p-4 border border-gray-200 rounded-lg space-y-3">
-              <Label className="text-foreground font-medium">Documente Existente în ElevenLabs</Label>
+              <Label className="text-foreground font-medium">Documente Existente</Label>
               <div className="flex gap-2">
                 <Select 
                   value={selectedExistingDocId} 
@@ -243,7 +243,7 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
                     </h4>
                     {doc.elevenLabsId && (
                       <p className="text-xs text-blue-600 mt-1">
-                        ElevenLabs ID: {doc.elevenLabsId}
+                        ID: {doc.elevenLabsId}
                       </p>
                     )}
                   </div>
@@ -272,7 +272,7 @@ export const Step3AgentEditing: React.FC<Step3Props> = ({
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  Actualizează Knowledge Base în ElevenLabs
+                  Actualizează Knowledge Base
                 </>
               )}
             </button>

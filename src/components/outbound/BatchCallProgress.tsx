@@ -232,7 +232,7 @@ export const BatchCallProgress: React.FC<BatchCallProgressProps> = ({
           <p>• <strong>Verificare status final:</strong> Așteaptă statusurile Successful, Error sau Failed</p>
           <p>• <strong>Salvare garantată:</strong> Orice conversație găsită se salvează imediat</p>
           <p>• <strong>Eficiență maximă:</strong> Timeout optimizat la 2.5 minute per apel</p>
-          <p>• <strong>Exactitate:</strong> Funcționează identic cu logica ElevenLabs</p>
+          <p>• <strong>Exactitate:</strong> Funcționează cu o logică avansată</p>
         </div>
       </div>
     </div>

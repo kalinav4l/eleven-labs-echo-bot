@@ -14,7 +14,7 @@ const ElevenLabsChart: React.FC = () => {
         <CardHeader className="p-6 border-b border-gray-200">
           <CardTitle className="font-semibold text-gray-900 text-lg flex items-center">
             <div className="w-2 h-2 bg-gray-900 rounded-full mr-3 animate-pulse" />
-            Statistici ElevenLabs
+            Statistici Apeluri
             <TrendingUp className="w-5 h-5 ml-2 text-gray-600" />
           </CardTitle>
         </CardHeader>
@@ -31,7 +31,7 @@ const ElevenLabsChart: React.FC = () => {
         <CardHeader className="p-6 border-b border-gray-200">
           <CardTitle className="font-semibold text-gray-900 text-lg flex items-center">
             <div className="w-2 h-2 bg-gray-900 rounded-full mr-3 animate-pulse" />
-            Statistici ElevenLabs
+            Statistici Apeluri
             <TrendingUp className="w-5 h-5 ml-2 text-gray-600" />
           </CardTitle>
         </CardHeader>
@@ -65,7 +65,7 @@ const ElevenLabsChart: React.FC = () => {
       <CardHeader className="p-6 border-b border-gray-200">
         <CardTitle className="font-semibold text-gray-900 text-lg flex items-center">
           <div className="w-2 h-2 bg-gray-900 rounded-full mr-3 animate-pulse" />
-          Statistici ElevenLabs
+          Statistici Apeluri
           <TrendingUp className="w-5 h-5 ml-2 text-gray-600" />
         </CardTitle>
       </CardHeader>

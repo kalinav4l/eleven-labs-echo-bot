@@ -36,7 +36,7 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
 
   const conversation = useConversation({
     onConnect: () => {
-      console.log('✅ Conectat la ElevenLabs agent');
+      console.log('✅ Conectat la agent vocal');
       setIsConnecting(false);
       setIsActive(true);
       setConversationStart(new Date());
@@ -46,7 +46,7 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
       });
     },
     onDisconnect: () => {
-      console.log('❌ Deconectat de la ElevenLabs agent');
+      console.log('❌ Deconectat de la agent vocal');
       handleConversationEnd();
       setIsActive(false);
       setIsConnecting(false);

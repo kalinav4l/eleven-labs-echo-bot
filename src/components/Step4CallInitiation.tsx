@@ -138,13 +138,13 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-foreground">
           <Phone className="w-5 h-5 text-accent" />
-          Pas 4: Inițiere Apeluri ElevenLabs
+          Pas 4: Inițiere Apeluri
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div>
           <Label htmlFor="final-agent-id" className="text-foreground">
-            ID Agent ElevenLabs
+            ID Agent Vocal
           </Label>
           <Input 
             id="final-agent-id" 
@@ -154,7 +154,7 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
             className="glass-input font-mono" 
           />
           <p className="text-xs text-muted-foreground mt-1">
-            Agent-ul tău dedicat din ElevenLabs
+            Agent-ul tău vocal dedicat
           </p>
         </div>
 
@@ -255,7 +255,7 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
                     </p>
                   </div>
                   <p className="text-sm text-green-700 mt-1">
-                    Fiecare apel este monitorizat prin API-ul ElevenLabs până la finalizare. 
+                    Fiecare apel este monitorizat până la finalizare. 
                     Statusul se actualizează automat la fiecare 5 secunde.
                   </p>
                 </div>
@@ -364,7 +364,7 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
         {finalAgentId && (
           <div className="p-3 bg-muted/50 rounded-lg">
             <p className="text-sm text-muted-foreground">
-              Agent ElevenLabs: <span className="font-mono text-foreground">{finalAgentId}</span>
+              Agent Vocal: <span className="font-mono text-foreground">{finalAgentId}</span>
             </p>
           </div>
         )}
@@ -372,7 +372,7 @@ export const Step4CallInitiation: React.FC<Step4Props> = ({
         {/* Status Info */}
         <div className="text-xs text-muted-foreground space-y-1">
           <p>• Apelurile batch se procesează secvențial cu monitorizare în timp real</p>
-          <p>• Statusul fiecărui apel se verifică la 5 secunde prin API-ul ElevenLabs</p>
+          <p>• Statusul fiecărui apel se verifică la 5 secunde</p>
           <p>• Următorul apel începe doar după finalizarea celui anterior</p>
           <p>• Toate informațiile complete (transcript, cost, durată) sunt salvate automat</p>
         </div>
