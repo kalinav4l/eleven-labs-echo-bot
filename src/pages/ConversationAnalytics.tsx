@@ -113,22 +113,22 @@ const ConversationAnalytics = () => {
     const matchesDateBefore = !dateBefore || callDate <= new Date(dateBefore + 'T23:59:59');
     return matchesSearch && matchesStatus && matchesAgent && matchesDateAfter && matchesDateBefore;
   });
-  const getStatusColor = (status: string) => {
+  const getStatusStyle = (status: string) => {
     switch (status.toLowerCase()) {
       case 'success':
       case 'completed':
       case 'done':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-500 text-white shadow-lg shadow-green-500/30 rounded-full px-4 py-1.5 font-semibold text-xs border-2 border-green-400';
       case 'failed':
       case 'error':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-500 text-white shadow-lg shadow-red-500/30 rounded-lg px-4 py-1.5 font-semibold text-xs border-2 border-red-400';
       case 'initiated':
       case 'in_progress':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-500 text-white shadow-lg shadow-blue-500/30 rounded-md px-4 py-1.5 font-semibold text-xs border-2 border-blue-400';
       case 'busy':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-blue-400 text-white shadow-lg shadow-blue-400/30 rounded-lg px-4 py-1.5 font-semibold text-xs border-2 border-blue-300';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-500 text-white shadow-lg shadow-gray-500/30 rounded-md px-4 py-1.5 font-semibold text-xs border-2 border-gray-400';
     }
   };
   const formatDate = (dateString: string) => {
@@ -181,21 +181,21 @@ const ConversationAnalytics = () => {
           {/* Search Bar */}
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input type="text" placeholder="Caută..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 h-9 text-sm bg-white border-gray-200" />
+            <Input type="text" placeholder="Caută..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 h-9 text-sm bg-white border-0" />
           </div>
 
           {/* Date Range */}
           <div className="flex items-center gap-2">
             
-            <Input type="date" value={dateBefore} onChange={e => setDateBefore(e.target.value)} className="h-9 w-36 text-sm bg-white border-gray-200" />
+            <Input type="date" value={dateBefore} onChange={e => setDateBefore(e.target.value)} className="h-9 w-36 text-sm bg-white border-0" />
           </div>
 
           {/* Status Filter */}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-9 w-28 text-sm bg-white border-gray-200">
+            <SelectTrigger className="h-9 w-28 text-sm bg-white border-0">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
-            <SelectContent className="bg-white">
+            <SelectContent className="bg-white border-0">
               <SelectItem value="all">Toate</SelectItem>
               <SelectItem value="success">Success</SelectItem>
               <SelectItem value="done">Done</SelectItem>
@@ -206,10 +206,10 @@ const ConversationAnalytics = () => {
 
           {/* Agent Filter */}
           <Select value={selectedAgent} onValueChange={setSelectedAgent}>
-            <SelectTrigger className="h-9 w-28 text-sm bg-white border-gray-200">
+            <SelectTrigger className="h-9 w-28 text-sm bg-white border-0">
               <SelectValue placeholder="Agent" />
             </SelectTrigger>
-            <SelectContent className="bg-white">
+            <SelectContent className="bg-white border-0">
               <SelectItem value="all">Toți</SelectItem>
               {getUniqueAgents().map(agentName => <SelectItem key={agentName} value={agentName}>
                   {agentName}
@@ -231,14 +231,14 @@ const ConversationAnalytics = () => {
 
         {/* Analytics Table */}
         <div className="bg-white rounded-lg overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100">
+          <div className="px-6 py-4">
             <h2 className="text-lg font-medium text-gray-900">Istoric Conversații</h2>
           </div>
           <div className="bg-white">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b">
+                  <tr>
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Contact Number</th>
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Agent</th>
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Cost total:</th>
@@ -253,7 +253,7 @@ const ConversationAnalytics = () => {
                       </td>
                     </tr> : filteredCalls.map(call => {
                   const dateTime = formatDate(call.call_date);
-                  return <tr key={call.id} className="border-b hover:bg-muted/50 cursor-pointer" onDoubleClick={() => call.conversation_id && navigate(`/account/conversation-analytics/${call.conversation_id}`)}>
+                  return <tr key={call.id} className="hover:bg-gray-50 cursor-pointer transition-colors duration-200" onDoubleClick={() => call.conversation_id && navigate(`/account/conversation-analytics/${call.conversation_id}`)}>
                           <td className="p-3">
                             <div className="flex items-center text-sm">
                               <Phone className="w-3 h-3 mr-1 text-muted-foreground" />
@@ -273,9 +273,9 @@ const ConversationAnalytics = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            <Badge className={getStatusColor(call.call_status)} variant="secondary">
-                              {call.call_status === 'done' ? 'Done' : call.call_status === 'initiated' ? 'Initiated' : call.call_status === 'busy' ? 'Busy' : call.call_status === 'failed' ? 'Error' : call.call_status === 'success' ? 'Success' : 'Unknown'}
-                            </Badge>
+                            <div className={getStatusStyle(call.call_status)}>
+                              {call.call_status === 'done' ? '✓ Done' : call.call_status === 'initiated' ? '⚡ Initiated' : call.call_status === 'busy' ? '⏳ Busy' : call.call_status === 'failed' ? '✕ Error' : call.call_status === 'success' ? '✓ Success' : '? Unknown'}
+                            </div>
                           </td>
                           <td className="p-3">
                             <div className="text-sm">
@@ -291,7 +291,7 @@ const ConversationAnalytics = () => {
               </table>
             </div>
             
-            {filteredCalls.length > 0 && <div className="px-6 py-4 text-sm text-gray-500 border-t border-gray-100">
+            {filteredCalls.length > 0 && <div className="px-6 py-4 text-sm text-gray-500">
                 Afișând {filteredCalls.length} din {callHistory.length} conversații
               </div>}
           </div>
