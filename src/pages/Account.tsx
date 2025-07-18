@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -28,6 +27,10 @@ import {
   Zap,
   Target
 } from 'lucide-react';
+import StatCard from '@/components/StatCard';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import AnimatedCounter from '@/components/AnimatedCounter';
+import SkeletonCard from '@/components/SkeletonCard';
 
 const Account = () => {
   const { user, signOut } = useAuth();
@@ -178,10 +181,51 @@ const Account = () => {
   if (profileLoading || agentsLoading || statsLoading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Loading...</p>
+        <div className="min-h-screen bg-white">
+          {/* Header with loading animation */}
+          <div className="bg-white border-b border-gray-200">
+            <div className="px-6 py-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-3">
+                  <div className="h-8 bg-gray-200 rounded-lg w-64 animate-pulse" />
+                  <div className="h-4 bg-gray-200 rounded w-48 animate-pulse" />
+                </div>
+                <div className="h-10 w-20 bg-gray-200 rounded animate-pulse" />
+              </div>
+            </div>
+          </div>
+
+          <div className="px-6 py-8">
+            {/* Loading animation with elegant spinner */}
+            <div className="flex flex-col items-center justify-center py-20">
+              <LoadingSpinner size="lg" className="mb-6" />
+              <div className="text-center space-y-2">
+                <h3 className="text-lg font-semibold text-gray-900 animate-pulse">
+                  Se încarcă datele...
+                </h3>
+                <p className="text-gray-600 animate-pulse">
+                  Calculăm statisticile tale
+                </p>
+              </div>
+              
+              {/* Animated dots */}
+              <div className="flex space-x-1 mt-4">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: `${i * 0.2}s` }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Skeleton cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
           </div>
         </div>
       </DashboardLayout>
@@ -191,22 +235,22 @@ const Account = () => {
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-white">
-        {/* Header */}
+        {/* Animated Header */}
         <div className="bg-white border-b border-gray-200">
           <div className="px-6 py-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between animate-fade-in">
               <div>
-                <h1 className="text-2xl font-semibold text-gray-900">
+                <h1 className="text-2xl font-semibold text-gray-900 animate-[slideInLeft_0.6s_ease-out]">
                   Bun venit, {displayName}!
                 </h1>
-                <p className="text-gray-600 mt-1 text-sm">
+                <p className="text-gray-600 mt-1 text-sm animate-[slideInLeft_0.6s_ease-out_0.2s_both]">
                   Gestionează agenții tăi AI și urmărește performanțele
                 </p>
               </div>
               <Button
                 onClick={handleSignOut}
                 variant="outline"
-                className="border-gray-300 hover:border-gray-400 text-gray-700"
+                className="border-gray-300 hover:border-gray-400 text-gray-700 animate-[slideInRight_0.6s_ease-out] hover:scale-105 transition-transform"
               >
                 Ieșire
               </Button>
@@ -215,88 +259,91 @@ const Account = () => {
         </div>
 
         <div className="px-6 py-8">
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          {/* Animated Quick Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {quickStats.map((stat, index) => (
-              <div key={index} className="p-4 border border-gray-200 rounded-lg bg-white hover:border-gray-300 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">{stat.label}</p>
-                    <p className="text-xl font-semibold text-gray-900">{stat.value}</p>
-                  </div>
-                  <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
-                    <stat.icon className={`w-4 h-4 ${stat.color}`} />
-                  </div>
-                </div>
-              </div>
+              <StatCard
+                key={index}
+                label={stat.label}
+                value={stat.value}
+                icon={stat.icon}
+                delay={index * 100}
+              />
             ))}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Performance Overview */}
-            <div className="border border-gray-200 rounded-lg bg-white">
-              <div className="p-4 border-b border-gray-200">
-                <h2 className="font-medium text-gray-900">Performanță Generală</h2>
+            {/* Enhanced Performance Overview */}
+            <div className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-all duration-300 animate-[slideInUp_0.8s_ease-out]">
+              <div className="p-6 border-b border-gray-200">
+                <h2 className="font-semibold text-gray-900 text-lg flex items-center">
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mr-3 animate-pulse" />
+                  Performanță Generală
+                </h2>
               </div>
-              <div className="p-4 space-y-4">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <Zap className="w-4 h-4 text-blue-600" />
+              <div className="p-6 space-y-4">
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-300 hover:scale-[1.02]">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-50 rounded-xl flex items-center justify-center">
+                      <Zap className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Credite Consumate</p>
+                      <p className="font-medium text-gray-900">Credite Consumate</p>
                       <p className="text-xs text-gray-500">Total utilizate</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-semibold text-gray-900">{totalConsumedCredits}</p>
+                    <p className="text-xl font-bold text-gray-900">
+                      <AnimatedCounter target={totalConsumedCredits} />
+                    </p>
                     <p className="text-xs text-gray-500">credite</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                      <Clock className="w-4 h-4 text-green-600" />
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-300 hover:scale-[1.02]">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-green-50 rounded-xl flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-green-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Durată Medie</p>
+                      <p className="font-medium text-gray-900">Durată Medie</p>
                       <p className="text-xs text-gray-500">Pe apel</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-semibold text-gray-900">{averageCallDurationFormatted}</p>
+                    <p className="text-xl font-bold text-gray-900">{averageCallDurationFormatted}</p>
                     <p className="text-xs text-gray-500">Total: {totalTimeFormatted}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <Bot className="w-4 h-4 text-purple-600" />
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-300 hover:scale-[1.02]">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-purple-50 rounded-xl flex items-center justify-center">
+                      <Bot className="w-5 h-5 text-purple-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Agenți Activi</p>
+                      <p className="font-medium text-gray-900">Agenți Activi</p>
                       <p className="text-xs text-gray-500">În utilizare</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-semibold text-gray-900">{totalAgents}</p>
+                    <p className="text-xl font-bold text-gray-900">
+                      <AnimatedCounter target={totalAgents} />
+                    </p>
                     <p className="text-xs text-gray-500">agenți creați</p>
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-gray-200">
-                  <div className="flex space-x-2">
+                <div className="pt-4 border-t border-gray-100">
+                  <div className="flex space-x-3">
                     <Link to="/account/kalina-agents" className="flex-1">
-                      <Button variant="outline" size="sm" className="w-full">
+                      <Button variant="outline" size="sm" className="w-full hover:scale-105 transition-transform">
                         <Bot className="w-4 h-4 mr-2" />
                         Agenți
                       </Button>
                     </Link>
                     <Link to="/account/conversation-analytics" className="flex-1">
-                      <Button variant="outline" size="sm" className="w-full">
+                      <Button variant="outline" size="sm" className="w-full hover:scale-105 transition-transform">
                         <BarChart3 className="w-4 h-4 mr-2" />
                         Analytics
                       </Button>
@@ -306,20 +353,27 @@ const Account = () => {
               </div>
             </div>
 
-            {/* Recent Activity */}
-            <div className="border border-gray-200 rounded-lg bg-white">
-              <div className="p-4 border-b border-gray-200">
-                <h2 className="font-medium text-gray-900">Activitate Recentă</h2>
+            {/* Enhanced Recent Activity */}
+            <div className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-all duration-300 animate-[slideInUp_0.8s_ease-out_0.2s_both]">
+              <div className="p-6 border-b border-gray-200">
+                <h2 className="font-semibold text-gray-900 text-lg flex items-center">
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mr-3 animate-pulse" />
+                  Activitate Recentă
+                </h2>
               </div>
-              <div className="p-4">
+              <div className="p-6">
                 <div className="space-y-3">
                   {recentActivity.length > 0 ? recentActivity.map((activity, index) => (
-                    <div key={index} className="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                        <activity.icon className="w-3 h-3 text-gray-600" />
+                    <div 
+                      key={index} 
+                      className="flex items-start space-x-4 p-3 rounded-xl hover:bg-gray-50 transition-all duration-300 hover:scale-[1.02] cursor-pointer group"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center flex-shrink-0 group-hover:from-gray-200 group-hover:to-gray-100 transition-all duration-300">
+                        <activity.icon className="w-4 h-4 text-gray-600 group-hover:text-gray-900 transition-colors duration-300" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900 font-medium">
+                        <p className="text-sm text-gray-900 font-medium group-hover:text-gray-700 transition-colors duration-300">
                           {activity.action}
                         </p>
                         <p className="text-xs text-gray-500 mt-1 flex items-center">
@@ -329,7 +383,12 @@ const Account = () => {
                       </div>
                     </div>
                   )) : (
-                    <p className="text-gray-500 text-center py-4 text-sm">Nu există activitate recentă</p>
+                    <div className="text-center py-8">
+                      <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                        <Activity className="w-8 h-8 text-gray-400" />
+                      </div>
+                      <p className="text-gray-500 text-sm">Nu există activitate recentă</p>
+                    </div>
                   )}
                 </div>
               </div>
