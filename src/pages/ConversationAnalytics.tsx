@@ -118,17 +118,17 @@ const ConversationAnalytics = () => {
       case 'success':
       case 'completed':
       case 'done':
-        return 'bg-green-500 text-white shadow-lg shadow-green-500/30 rounded-full px-4 py-1.5 font-semibold text-xs border-2 border-green-400';
+        return 'bg-green-400 text-white shadow-sm px-3 py-1 font-medium text-xs rounded-full border border-green-300';
       case 'failed':
       case 'error':
-        return 'bg-red-500 text-white shadow-lg shadow-red-500/30 rounded-lg px-4 py-1.5 font-semibold text-xs border-2 border-red-400';
+        return 'bg-red-400 text-white shadow-sm px-3 py-1 font-medium text-xs rounded-md border border-red-300';
       case 'initiated':
       case 'in_progress':
-        return 'bg-green-500 text-white shadow-lg shadow-green-500/30 rounded-md px-4 py-1.5 font-semibold text-xs border-2 border-green-400';
+        return 'bg-green-400 text-white shadow-sm px-3 py-1 font-medium text-xs rounded-md border border-green-300';
       case 'busy':
-        return 'bg-blue-500 text-white shadow-lg shadow-blue-500/30 rounded-lg px-4 py-1.5 font-semibold text-xs border-2 border-blue-400';
+        return 'bg-blue-400 text-white shadow-sm px-3 py-1 font-medium text-xs rounded-md border border-blue-300';
       default:
-        return 'bg-gray-500 text-white shadow-lg shadow-gray-500/30 rounded-md px-4 py-1.5 font-semibold text-xs border-2 border-gray-400';
+        return 'bg-gray-400 text-white shadow-sm px-3 py-1 font-medium text-xs rounded-md border border-gray-300';
     }
   };
   const formatDate = (dateString: string) => {
@@ -198,9 +198,8 @@ const ConversationAnalytics = () => {
             </SelectTrigger>
             <SelectContent className="bg-white border-0 z-50">
               <SelectItem value="all">Toate</SelectItem>
-              <SelectItem value="success">Success</SelectItem>
-              <SelectItem value="done">Done</SelectItem>
-              <SelectItem value="failed">Failed</SelectItem>
+              <SelectItem value="initiated">Initiated</SelectItem>
+              <SelectItem value="failed">Error</SelectItem>
               <SelectItem value="busy">Busy</SelectItem>
             </SelectContent>
           </Select>
