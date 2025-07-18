@@ -1,98 +1,128 @@
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CSVUploadSection } from './CSVUploadSection';
-import { BatchConfigPanel } from './BatchConfigPanel';
-import { BatchStatusPanel } from './BatchStatusPanel';
-import { useAutoRedial } from '@/hooks/useAutoRedial';
 
-export const BatchTab: React.FC = () => {
-  const { addToRedialQueue } = useAutoRedial();
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Phone, Loader2 } from 'lucide-react';
+import { CSVUploadSection } from './CSVUploadSection';
+import { ContactsList } from './ContactsList';
+import { BatchCallProgress } from './BatchCallProgress';
+
+interface Contact {
+  id: string;
+  name: string;
+  phone: string;
+  country: string;
+  location: string;
+}
+
+interface CallStatus {
+  contactId: string;
+  contactName: string;
+  status: 'waiting' | 'calling' | 'in-progress' | 'processing' | 'completed' | 'failed';
+  conversationId?: string;
+  startTime?: Date;
+  endTime?: Date;
+  duration?: number;
+  cost?: number;
+}
+
+interface BatchTabProps {
+  contacts: Contact[];
+  selectedContacts: Set<string>;
+  onContactSelect: (contactId: string, checked: boolean) => void;
+  onSelectAll: () => void;
+  onFileSelect: () => void;
+  onDownloadTemplate: () => void;
+  onBatchProcess: () => void;
+  agentId: string;
+  isProcessingBatch: boolean;
+  currentProgress: number;
+  totalCalls: number;
+  currentCallStatus: string;
+  callStatuses: CallStatus[];
+}
+
+export const BatchTab: React.FC<BatchTabProps> = ({
+  contacts,
+  selectedContacts,
+  onContactSelect,
+  onSelectAll,
+  onFileSelect,
+  onDownloadTemplate,
+  onBatchProcess,
+  agentId,
+  isProcessingBatch,
+  currentProgress,
+  totalCalls,
+  currentCallStatus,
+  callStatuses,
+}) => {
+  // Check if we can process batch calls
+  const canProcessBatch = agentId.trim() !== '' && selectedContacts.size > 0 && !isProcessingBatch;
+
+  console.log('BatchTab - Debug info:', {
+    agentId: agentId,
+    agentIdTrimmed: agentId.trim(),
+    selectedContactsSize: selectedContacts.size,
+    isProcessingBatch: isProcessingBatch,
+    canProcessBatch: canProcessBatch
+  });
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>CSV Upload</CardTitle>
-            <CardDescription>
-              Upload your contacts list to start batch calling
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CSVUploadSection 
-              onFileSelect={() => document.getElementById('csv-input')?.click()} 
-              onDownloadTemplate={() => {
-                // Download template logic
-                const csvContent = "nume,telefon,tara,locatie\nJohn Doe,+40712345678,Romania,Bucuresti\nJane Smith,+40798765432,Romania,Cluj";
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                const url = URL.createObjectURL(blob);
-                link.setAttribute('href', url);
-                link.setAttribute('download', 'template_contacte.csv');
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-              }}
-            />
-          </CardContent>
-        </Card>
+    <div className="space-y-6">
+      <CSVUploadSection
+        onFileSelect={onFileSelect}
+        onDownloadTemplate={onDownloadTemplate}
+      />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Batch Status</CardTitle>
-            <CardDescription>
-              Monitor your batch calling progress
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <BatchStatusPanel 
-              isProcessing={false}
+      {contacts.length > 0 && (
+        <div className="space-y-4">
+          <ContactsList
+            contacts={contacts}
+            selectedContacts={selectedContacts}
+            onContactSelect={onContactSelect}
+            onSelectAll={onSelectAll}
+            isProcessingBatch={isProcessingBatch}
+          />
+
+          {/* Enhanced Real-time Status Display */}
+          {isProcessingBatch && (
+            <BatchCallProgress
+              currentProgress={currentProgress}
+              totalCalls={totalCalls}
+              currentCallStatus={currentCallStatus}
+              callStatuses={callStatuses}
+              isProcessing={isProcessingBatch}
               isPaused={false}
               isStopped={false}
-              currentProgress={0}
-              totalCalls={0}
-              callStatuses={[]}
-              currentCallStatus=""
-              onPause={() => {}}
-              onResume={() => {}}
-              onStop={() => {}}
             />
-          </CardContent>
-        </Card>
-      </div>
+          )}
 
-      <div className="space-y-6">
-        <BatchConfigPanel
-          selectedAgentId=""
-          onAgentSelect={() => {}}
-          selectedPhoneId=""
-          onPhoneSelect={() => {}}
-          totalRecipients={0}
-          selectedRecipients={0}
-          smsConfig={{
-            enabled: false,
-            apiToken: '',
-            senderId: 'aichat',
-            message: '',
-            delay: 2
-          }}
-          onSMSConfigChange={() => {}}
-        />
-      </div>
+          <Button
+            onClick={onBatchProcess}
+            disabled={!canProcessBatch}
+            className="w-full bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isProcessingBatch ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Monitorizează... ({currentProgress}/{totalCalls})
+              </>
+            ) : (
+              <>
+                <Phone className="w-4 h-4 mr-2" />
+                Procesează cu Monitorizare ({selectedContacts.size} contacte)
+              </>
+            )}
+          </Button>
 
-      <input
-        id="csv-input"
-        type="file"
-        accept=".csv"
-        className="hidden"
-        onChange={(e) => {
-          // Handle CSV upload
-          const file = e.target.files?.[0];
-          if (file) {
-            console.log('CSV file selected:', file.name);
-          }
-        }}
-      />
+          {/* Debug Info */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded">
+              Debug: Agent ID: "{agentId}" | Selected: {selectedContacts.size} | Processing: {isProcessingBatch.toString()}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
