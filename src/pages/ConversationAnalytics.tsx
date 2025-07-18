@@ -108,7 +108,7 @@ const ConversationAnalytics = () => {
   const filteredCalls = callHistory.filter(call => {
     const matchesSearch = call.phone_number.includes(searchTerm) || call.contact_name?.toLowerCase().includes(searchTerm.toLowerCase()) || call.summary && call.summary.toLowerCase().includes(searchTerm.toLowerCase()) || call.conversation_id && call.conversation_id.includes(searchTerm);
     const matchesStatus = statusFilter === 'all' || call.call_status === statusFilter;
-    const matchesAgent = selectedAgent === 'all' || call.agent_id === selectedAgent;
+    const matchesAgent = selectedAgent === 'all' || call.agent_name === selectedAgent;
     
     // Date filtering
     const callDate = new Date(call.call_date);
@@ -160,8 +160,8 @@ const ConversationAnalytics = () => {
     return `${cost} credite`;
   };
   const getUniqueAgents = () => {
-    const agents = [...new Set(callHistory.map(call => call.agent_id).filter(Boolean))];
-    return agents;
+    const agentNames = [...new Set(callHistory.map(call => call.agent_name).filter(Boolean))];
+    return agentNames;
   };
   if (isLoading) {
     return <DashboardLayout>
@@ -250,9 +250,9 @@ const ConversationAnalytics = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Toți agenții</SelectItem>
-                    {getUniqueAgents().map(agentId => (
-                      <SelectItem key={agentId} value={agentId}>
-                        {agentId}
+                    {getUniqueAgents().map(agentName => (
+                      <SelectItem key={agentName} value={agentName}>
+                        {agentName}
                       </SelectItem>
                     ))}
                   </SelectContent>

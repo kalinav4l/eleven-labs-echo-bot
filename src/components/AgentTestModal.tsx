@@ -247,7 +247,7 @@ const AgentTestModal: React.FC<AgentTestModalProps> = ({ agent, isOpen, onClose 
         {/* Bottom Actions */}
         <div className="flex justify-between items-center pt-4 border-t border-gray-100">
           <div className="text-xs text-gray-400">
-            Agent ID: {agent.agent_id || agent.id}
+            Agent: {agent.name}
           </div>
           <div className="flex gap-3">
             {messages.length > 0 && (

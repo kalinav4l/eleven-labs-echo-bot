@@ -55,10 +55,10 @@ const AgentGeneralInfo: React.FC<AgentGeneralInfoProps> = ({ agentData, setAgent
         </div>
 
         <div>
-          <Label className="text-foreground">Agent ID</Label>
+          <Label className="text-foreground">Nume Agent</Label>
           <div className="flex items-center gap-2">
-            <Input value={agentData.agent_id || ''} readOnly className="glass-input bg-muted/50" />
-            <Button variant="outline" size="sm" onClick={() => copyToClipboard(agentData.agent_id)} className="glass-button border-border">
+            <Input value={agentData.name || ''} readOnly className="glass-input bg-muted/50" />
+            <Button variant="outline" size="sm" onClick={() => copyToClipboard(agentData.name)} className="glass-button border-border">
               <Copy className="w-4 h-4" />
             </Button>
           </div>

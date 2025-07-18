@@ -49,7 +49,6 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
             <div className="flex items-center justify-between w-full">
               <div className="flex flex-col">
                 <span className="font-medium">{agent.name}</span>
-                <span className="text-xs text-gray-500">{agent.agent_id}</span>
               </div>
               <div className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
                 agent.is_active 

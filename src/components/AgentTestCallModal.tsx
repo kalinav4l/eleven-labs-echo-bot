@@ -74,8 +74,8 @@ export const AgentTestCallModal: React.FC<AgentTestCallModalProps> = ({
           </div>
 
           <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <p className="text-sm text-gray-900 font-medium">Agent ID:</p>
-            <p className="text-xs text-gray-600 font-mono">{agent.agent_id}</p>
+            <p className="text-sm text-gray-900 font-medium">Agent:</p>
+            <p className="text-xs text-gray-600">{agent.name}</p>
           </div>
 
           <div className="flex gap-2 pt-4">
