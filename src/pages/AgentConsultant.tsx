@@ -72,7 +72,10 @@ const AgentConsultant: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen p-4 md:p-6">
+      <div className="min-h-screen p-4 md:p-6" style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        minHeight: '100vh'
+      }}>
         <div className="max-w-2xl mx-auto pt-16">
           {/* Header */}
           <div className="text-center mb-8 animate-fade-in">
