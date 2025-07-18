@@ -170,52 +170,53 @@ const ConversationAnalytics = () => {
       </DashboardLayout>;
   }
   return <DashboardLayout>
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="container mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Analytics Conversații</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Analytics Conversații</h1>
         </div>
 
-        {/* Minimal Filters */}
-        <div className="flex flex-wrap items-center gap-3 py-3 hover:bg-gray-50 transition-colors duration-200 rounded-lg px-3">
+        {/* Mobile-Responsive Filters */}
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 py-3 hover:bg-gray-50 transition-colors duration-200 rounded-lg px-3">
           {/* Search Bar */}
-          <div className="relative flex-1 min-w-[200px]">
+          <div className="relative flex-1 min-w-0 sm:min-w-[200px]">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input type="text" placeholder="Caută..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 h-9 text-sm bg-white border-0" />
           </div>
 
-          {/* Date Range */}
-          <div className="flex items-center gap-2">
-            <Input type="date" value={dateAfter} onChange={e => setDateAfter(e.target.value)} className="h-9 w-36 text-sm bg-white border-0" placeholder="De la" />
-            <span className="text-muted-foreground text-sm">până la</span>
-            <Input type="date" value={dateBefore} onChange={e => setDateBefore(e.target.value)} className="h-9 w-36 text-sm bg-white border-0" placeholder="Până la" />
+          {/* Date Range - Stacked on mobile */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <Input type="date" value={dateAfter} onChange={e => setDateAfter(e.target.value)} className="h-9 w-full sm:w-36 text-sm bg-white border-0" placeholder="De la" />
+            <span className="text-muted-foreground text-sm text-center sm:text-left">până la</span>
+            <Input type="date" value={dateBefore} onChange={e => setDateBefore(e.target.value)} className="h-9 w-full sm:w-36 text-sm bg-white border-0" placeholder="Până la" />
           </div>
 
-          {/* Status Filter */}
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-9 w-28 text-sm bg-white border-0">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent className="bg-white border-0 z-50">
-              <SelectItem value="all">Toate</SelectItem>
-              <SelectItem value="initiated">Initiated</SelectItem>
-              <SelectItem value="failed">Error</SelectItem>
-              <SelectItem value="busy">Busy</SelectItem>
-            </SelectContent>
-          </Select>
+          {/* Filters - Full width on mobile */}
+          <div className="flex gap-2">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-9 flex-1 sm:w-28 text-sm bg-white border-0">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border-0 z-50">
+                <SelectItem value="all">Toate</SelectItem>
+                <SelectItem value="initiated">Initiated</SelectItem>
+                <SelectItem value="failed">Error</SelectItem>
+                <SelectItem value="busy">Busy</SelectItem>
+              </SelectContent>
+            </Select>
 
-          {/* Agent Filter */}
-          <Select value={selectedAgent} onValueChange={setSelectedAgent}>
-            <SelectTrigger className="h-9 w-28 text-sm bg-white border-0">
-              <SelectValue placeholder="Agent" />
-            </SelectTrigger>
-            <SelectContent className="bg-white border-0 z-50">
-              <SelectItem value="all">Toți</SelectItem>
-              {getUniqueAgents().map(agentName => <SelectItem key={agentName} value={agentName}>
-                  {agentName}
-                </SelectItem>)}
-            </SelectContent>
-          </Select>
+            <Select value={selectedAgent} onValueChange={setSelectedAgent}>
+              <SelectTrigger className="h-9 flex-1 sm:w-28 text-sm bg-white border-0">
+                <SelectValue placeholder="Agent" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border-0 z-50">
+                <SelectItem value="all">Toți</SelectItem>
+                {getUniqueAgents().map(agentName => <SelectItem key={agentName} value={agentName}>
+                    {agentName}
+                  </SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Clear Button */}
           {(searchTerm || statusFilter !== 'all' || selectedAgent !== 'all' || dateAfter || dateBefore) && <Button variant="ghost" size="sm" onClick={() => {
@@ -229,13 +230,50 @@ const ConversationAnalytics = () => {
             </Button>}
         </div>
 
-        {/* Analytics Table */}
+        {/* Analytics Table - Mobile Responsive */}
         <div className="bg-white rounded-lg overflow-hidden">
-          <div className="px-6 py-4">
-            <h2 className="text-lg font-medium text-gray-900">Istoric Conversații</h2>
+          <div className="px-3 sm:px-6 py-4">
+            <h2 className="text-base sm:text-lg font-medium text-gray-900">Istoric Conversații</h2>
           </div>
           <div className="bg-white">
-            <div className="overflow-x-auto">
+            {/* Mobile Card Layout */}
+            <div className="block sm:hidden space-y-3 p-3">
+              {filteredCalls.length === 0 ? (
+                <div className="text-center p-8 text-muted-foreground">
+                  Nu sunt conversații disponibile
+                </div>
+              ) : (
+                filteredCalls.map(call => {
+                  const dateTime = formatDate(call.call_date);
+                  return (
+                    <div key={call.id} className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer" onDoubleClick={() => call.conversation_id && navigate(`/account/conversation-analytics/${call.conversation_id}`)}>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center text-sm">
+                          <Phone className="w-3 h-3 mr-1 text-muted-foreground" />
+                          {call.phone_number}
+                        </div>
+                        <div className={getStatusStyle(call.call_status)}>
+                          {call.call_status === 'done' ? '✓ Done' : call.call_status === 'initiated' ? '⚡ Initiated' : call.call_status === 'busy' ? '⏳ Busy' : call.call_status === 'failed' ? '✕ Error' : call.call_status === 'success' ? '✓ Success' : '? Unknown'}
+                        </div>
+                      </div>
+                      <div className="text-sm font-medium mb-1">
+                        {call.contact_name || 'Necunoscut'}
+                      </div>
+                      <div className="text-xs text-gray-500 mb-2">
+                        Agent: {call.agent_name || 'Agent necunoscut'}
+                      </div>
+                      <div className="flex justify-between items-center text-xs text-gray-500">
+                        <span>Cost: {call.conversation_id ? formatCost(conversationCosts[call.conversation_id] || 0) : formatCost(0)}</span>
+                        <span>Durată: {call.conversation_id ? formatDuration(conversationDurations[call.conversation_id] || 0) : formatDuration(call.duration_seconds || 0)}</span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Desktop Table Layout */}
+            <div className="hidden sm:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr>
@@ -297,7 +335,7 @@ const ConversationAnalytics = () => {
               </table>
             </div>
             
-            {filteredCalls.length > 0 && <div className="px-6 py-4 text-sm text-gray-500">
+            {filteredCalls.length > 0 && <div className="px-3 sm:px-6 py-4 text-sm text-gray-500">
                 Afișând {filteredCalls.length} din {callHistory.length} conversații
               </div>}
           </div>

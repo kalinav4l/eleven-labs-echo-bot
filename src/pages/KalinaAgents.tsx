@@ -82,14 +82,14 @@ const KalinaAgents = () => {
     </DashboardLayout>;
   }
   return <DashboardLayout>
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Agenții Kalina</h1>
-          <p className="text-gray-600 text-sm mt-1">Gestionează agenții tăi AI pentru diverse scenarii</p>
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Agenții Kalina</h1>
+          <p className="text-gray-600 text-xs sm:text-sm mt-1">Gestionează agenții tăi AI pentru diverse scenarii</p>
         </div>
         <Link to="/account/agent-consultant">
-          <Button className="bg-black hover:bg-gray-800 text-white">
+          <Button className="bg-black hover:bg-gray-800 text-white w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" />
             Agent Nou
           </Button>
@@ -97,7 +97,7 @@ const KalinaAgents = () => {
       </div>
 
       {/* Search Input */}
-      <div className="relative max-w-md">
+      <div className="relative w-full sm:max-w-md">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
         <Input placeholder="Caută agenți..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400" />
       </div>
@@ -221,8 +221,8 @@ const KalinaAgents = () => {
         name: ''
       }} />
 
-      {/* Voice Test Modal - Minimalist Design */}
-      {voiceTestAgent && <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+      {/* Voice Test Modal - Mobile Responsive */}
+      {voiceTestAgent && <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
           <div className="relative w-full max-w-lg mx-auto">
             {/* Close button */}
             <Button variant="ghost" size="sm" onClick={() => setVoiceTestAgent(null)} className="absolute -top-12 right-0 h-10 w-10 p-0 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/20">
@@ -230,27 +230,27 @@ const KalinaAgents = () => {
             </Button>
             
             {/* Main modal content */}
-            <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+            <div className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-white/20 overflow-hidden max-w-sm sm:max-w-lg w-full">
               {/* Header with gradient */}
-              <div className="bg-gradient-to-br from-accent/10 to-primary/10 p-8 text-center border-b border-gray-100/50">
-                <h3 className="text-2xl font-light text-gray-800 mb-2">
+              <div className="bg-gradient-to-br from-accent/10 to-primary/10 p-4 sm:p-8 text-center border-b border-gray-100/50">
+                <h3 className="text-lg sm:text-2xl font-light text-gray-800 mb-2">
                   Test Audio
                 </h3>
-                <p className="text-sm text-gray-500 font-medium">
+                <p className="text-xs sm:text-sm text-gray-500 font-medium truncate">
                   {voiceTestAgent.name}
                 </p>
               </div>
               
               {/* Voice test area */}
-              <div className="p-12 flex flex-col items-center min-h-[300px] justify-center">
+              <div className="p-6 sm:p-12 flex flex-col items-center min-h-[200px] sm:min-h-[300px] justify-center">
                 <VoiceTestButton agentId={voiceTestAgent.agent_id} agentName={voiceTestAgent.name} />
               </div>
               
               {/* Agent ID footer */}
-              <div className="bg-gray-50/50 px-8 py-6 border-t border-gray-100/50">
-                <div className="flex items-center justify-center gap-3">
+              <div className="bg-gray-50/50 px-4 sm:px-8 py-4 sm:py-6 border-t border-gray-100/50">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
                   <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Agent ID</span>
-                  <code className="text-xs text-gray-700 bg-white/80 px-3 py-1.5 rounded-full border font-mono shadow-sm">
+                  <code className="text-xs text-gray-700 bg-white/80 px-3 py-1.5 rounded-full border font-mono shadow-sm break-all">
                     {voiceTestAgent.agent_id}
                   </code>
                 </div>

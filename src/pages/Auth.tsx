@@ -126,7 +126,7 @@ const Auth = () => {
         <div className="absolute bottom-1/3 right-1/3 w-72 h-72 bg-gradient-to-r from-blue-200/30 to-cyan-200/30 rounded-full blur-3xl"></div>
       </div>
 
-      <Card className="w-full max-w-md liquid-glass relative z-10 animate-fade-in">
+      <Card className="w-full max-w-md mx-4 sm:mx-0 liquid-glass relative z-10 animate-fade-in">
         <CardHeader className="text-center">
           <CardTitle className="text-foreground text-2xl font-semibold">
             {isLogin ? 'Conectare' : 'Înregistrare'}

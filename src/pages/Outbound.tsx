@@ -200,29 +200,29 @@ const Outbound = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+      <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
+        {/* Mobile Responsive Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Apeluri Automate</h1>
-            <p className="text-gray-600 mt-1">Automatizează conversațiile cu clienții tăi</p>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Apeluri Automate</h1>
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">Automatizează conversațiile cu clienții tăi</p>
           </div>
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={downloadTemplate} className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button variant="outline" onClick={downloadTemplate} className="flex items-center justify-center gap-2 w-full sm:w-auto">
               <Upload className="w-4 h-4" />
               Template
             </Button>
-            <Button className="flex items-center gap-2 bg-black text-white hover:bg-gray-800">
+            <Button className="flex items-center justify-center gap-2 bg-black text-white hover:bg-gray-800 w-full sm:w-auto">
               <Play className="w-4 h-4" />
               Începe
             </Button>
           </div>
         </div>
 
-        {/* Main Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content - Takes 2/3 of the width */}
-          <div className="lg:col-span-2">
+        {/* Mobile Responsive Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+          {/* Main Content - Full width on mobile, 2/3 on desktop */}
+          <div className="lg:col-span-2 order-2 lg:order-1">
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
               {!activeSection && (
                 <div className="text-center py-16 px-8">
@@ -355,8 +355,8 @@ const Outbound = () => {
             </div>
           </div>
 
-          {/* Sidebar - Takes 1/3 of the width */}
-          <div className="space-y-4">
+          {/* Sidebar - Full width on mobile, 1/3 on desktop */}
+          <div className="space-y-4 order-1 lg:order-2">
             {/* Quick Actions */}
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <h3 className="font-semibold text-gray-900 mb-4">Acțiuni Rapide</h3>
