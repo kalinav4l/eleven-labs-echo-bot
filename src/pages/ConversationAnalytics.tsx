@@ -124,9 +124,9 @@ const ConversationAnalytics = () => {
         return 'bg-red-500 text-white shadow-lg shadow-red-500/30 rounded-lg px-4 py-1.5 font-semibold text-xs border-2 border-red-400';
       case 'initiated':
       case 'in_progress':
-        return 'bg-blue-500 text-white shadow-lg shadow-blue-500/30 rounded-md px-4 py-1.5 font-semibold text-xs border-2 border-blue-400';
+        return 'bg-green-500 text-white shadow-lg shadow-green-500/30 rounded-md px-4 py-1.5 font-semibold text-xs border-2 border-green-400';
       case 'busy':
-        return 'bg-blue-400 text-white shadow-lg shadow-blue-400/30 rounded-lg px-4 py-1.5 font-semibold text-xs border-2 border-blue-300';
+        return 'bg-blue-500 text-white shadow-lg shadow-blue-500/30 rounded-lg px-4 py-1.5 font-semibold text-xs border-2 border-blue-400';
       default:
         return 'bg-gray-500 text-white shadow-lg shadow-gray-500/30 rounded-md px-4 py-1.5 font-semibold text-xs border-2 border-gray-400';
     }
@@ -177,7 +177,7 @@ const ConversationAnalytics = () => {
         </div>
 
         {/* Minimal Filters */}
-        <div className="flex flex-wrap items-center gap-3 py-3">
+        <div className="flex flex-wrap items-center gap-3 py-3 hover:bg-gray-50 transition-colors duration-200 rounded-lg px-3">
           {/* Search Bar */}
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -186,8 +186,9 @@ const ConversationAnalytics = () => {
 
           {/* Date Range */}
           <div className="flex items-center gap-2">
-            
-            <Input type="date" value={dateBefore} onChange={e => setDateBefore(e.target.value)} className="h-9 w-36 text-sm bg-white border-0" />
+            <Input type="date" value={dateAfter} onChange={e => setDateAfter(e.target.value)} className="h-9 w-36 text-sm bg-white border-0" placeholder="De la" />
+            <span className="text-muted-foreground text-sm">până la</span>
+            <Input type="date" value={dateBefore} onChange={e => setDateBefore(e.target.value)} className="h-9 w-36 text-sm bg-white border-0" placeholder="Până la" />
           </div>
 
           {/* Status Filter */}
@@ -195,7 +196,7 @@ const ConversationAnalytics = () => {
             <SelectTrigger className="h-9 w-28 text-sm bg-white border-0">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
-            <SelectContent className="bg-white border-0">
+            <SelectContent className="bg-white border-0 z-50">
               <SelectItem value="all">Toate</SelectItem>
               <SelectItem value="success">Success</SelectItem>
               <SelectItem value="done">Done</SelectItem>
@@ -209,7 +210,7 @@ const ConversationAnalytics = () => {
             <SelectTrigger className="h-9 w-28 text-sm bg-white border-0">
               <SelectValue placeholder="Agent" />
             </SelectTrigger>
-            <SelectContent className="bg-white border-0">
+            <SelectContent className="bg-white border-0 z-50">
               <SelectItem value="all">Toți</SelectItem>
               {getUniqueAgents().map(agentName => <SelectItem key={agentName} value={agentName}>
                   {agentName}
