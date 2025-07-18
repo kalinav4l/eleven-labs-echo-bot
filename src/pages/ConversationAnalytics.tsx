@@ -180,8 +180,8 @@ const ConversationAnalytics = () => {
           <h1 className="text-3xl font-bold">Analytics Conversații</h1>
         </div>
 
-        {/* Compact Filters */}
-        <div className="flex flex-wrap items-center gap-3 p-4 bg-muted/30 rounded-lg border">
+        {/* Minimal Filters */}
+        <div className="flex flex-wrap items-center gap-3 py-3">
           {/* Search Bar */}
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -190,34 +190,32 @@ const ConversationAnalytics = () => {
               placeholder="Caută..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-8 text-sm"
+              className="pl-10 h-9 text-sm bg-white border-gray-200"
             />
           </div>
 
-          {/* Compact Filters */}
+          {/* Date Range */}
           <div className="flex items-center gap-2">
             <Input
               type="date"
               value={dateAfter}
               onChange={(e) => setDateAfter(e.target.value)}
-              className="h-8 w-32 text-xs"
-              placeholder="De la"
+              className="h-9 w-36 text-sm bg-white border-gray-200"
             />
-            <span className="text-xs text-muted-foreground">-</span>
             <Input
               type="date"
               value={dateBefore}
               onChange={(e) => setDateBefore(e.target.value)}
-              className="h-8 w-32 text-xs"
-              placeholder="Până la"
+              className="h-9 w-36 text-sm bg-white border-gray-200"
             />
           </div>
 
+          {/* Status Filter */}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-8 w-32 text-xs">
+            <SelectTrigger className="h-9 w-28 text-sm bg-white border-gray-200">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white">
               <SelectItem value="all">Toate</SelectItem>
               <SelectItem value="success">Success</SelectItem>
               <SelectItem value="done">Done</SelectItem>
@@ -226,11 +224,12 @@ const ConversationAnalytics = () => {
             </SelectContent>
           </Select>
 
+          {/* Agent Filter */}
           <Select value={selectedAgent} onValueChange={setSelectedAgent}>
-            <SelectTrigger className="h-8 w-32 text-xs">
+            <SelectTrigger className="h-9 w-28 text-sm bg-white border-gray-200">
               <SelectValue placeholder="Agent" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white">
               <SelectItem value="all">Toți</SelectItem>
               {getUniqueAgents().map(agentName => (
                 <SelectItem key={agentName} value={agentName}>
@@ -240,7 +239,7 @@ const ConversationAnalytics = () => {
             </SelectContent>
           </Select>
 
-          {/* Clear Filters */}
+          {/* Clear Button */}
           {(searchTerm || statusFilter !== 'all' || selectedAgent !== 'all' || dateAfter || dateBefore) && (
             <Button 
               variant="ghost" 
@@ -252,19 +251,19 @@ const ConversationAnalytics = () => {
                 setDateAfter('');
                 setDateBefore('');
               }}
-              className="h-8 px-2 text-xs"
+              className="h-9 px-3 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-50"
             >
-              ✕
+              Clear
             </Button>
           )}
         </div>
 
-        {/* Call History Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Istoric Apeluri</CardTitle>
-          </CardHeader>
-          <CardContent>
+        {/* Analytics Table */}
+        <div className="bg-white rounded-lg overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100">
+            <h2 className="text-lg font-medium text-gray-900">Istoric Conversații</h2>
+          </div>
+          <div className="bg-white">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -336,11 +335,11 @@ const ConversationAnalytics = () => {
               </table>
             </div>
             
-            {filteredCalls.length > 0 && <div className="mt-4 text-sm text-muted-foreground">
+            {filteredCalls.length > 0 && <div className="px-6 py-4 text-sm text-gray-500 border-t border-gray-100">
                 Afișând {filteredCalls.length} din {callHistory.length} conversații
               </div>}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
       
       <ConversationDetailModal conversationId={selectedConversationId} isOpen={isModalOpen} onClose={handleCloseModal} />
