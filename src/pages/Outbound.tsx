@@ -204,39 +204,51 @@ const Outbound = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Apeluri Automate</h1>
-            <p className="text-muted-foreground">Automatizează conversațiile cu clienții tăi</p>
+            <h1 className="text-3xl font-bold text-gray-900">Apeluri Automate</h1>
+            <p className="text-gray-600 mt-1">Automatizează conversațiile cu clienții tăi</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={downloadTemplate}>
-              <Upload className="w-4 h-4 mr-2" />
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={downloadTemplate} className="flex items-center gap-2">
+              <Upload className="w-4 h-4" />
               Template
             </Button>
-            <Button>
-              <Play className="w-4 h-4 mr-2" />
+            <Button className="flex items-center gap-2 bg-black text-white hover:bg-gray-800">
+              <Play className="w-4 h-4" />
               Începe
             </Button>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Main Content Area */}
-          <div className="lg:col-span-3">
-            <div className="bg-card rounded-lg border p-6">
+        {/* Main Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Content - Takes 2/3 of the width */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
               {!activeSection && (
-                <div className="text-center py-12">
-                  <Phone className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">Automatizează apelurile</h3>
-                  <p className="text-muted-foreground mb-6">
+                <div className="text-center py-16 px-8">
+                  {/* Phone Icon */}
+                  <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Phone className="w-10 h-10 text-blue-600" />
+                  </div>
+                  
+                  <h2 className="text-2xl font-bold text-gray-900 mb-3">Automatizează apelurile</h2>
+                  <p className="text-gray-500 mb-8 max-w-md mx-auto">
                     Automatizează conversațiile cu multiple contacte simultan
                   </p>
-                  <div className="flex justify-center gap-3">
-                    <Button onClick={() => setActiveSection('batch')}>
+                  
+                  <div className="flex justify-center gap-4">
+                    <Button 
+                      onClick={() => setActiveSection('batch')}
+                      className="bg-black text-white hover:bg-gray-800 px-6 py-2"
+                    >
                       <Settings className="w-4 h-4 mr-2" />
                       Configurează
                     </Button>
-                    <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="border-gray-300 px-6 py-2"
+                    >
                       <Upload className="w-4 h-4 mr-2" />
                       Încarcă CSV
                     </Button>
@@ -244,150 +256,199 @@ const Outbound = () => {
                 </div>
               )}
 
+              {/* Configuration Section */}
               {activeSection === 'batch' && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Configurare Apeluri</h3>
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold text-gray-900">Configurare Campanie</h2>
+                    <Button variant="outline" size="sm" onClick={() => setActiveSection(null)}>
+                      ← Înapoi
+                    </Button>
+                  </div>
+
                   {contacts.length === 0 ? (
-                    <CSVUploadSection 
-                      onFileSelect={() => fileInputRef.current?.click()} 
-                      onDownloadTemplate={downloadTemplate}
-                    />
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium">Contacte ({contacts.length})</h4>
-                        <Button variant="outline" size="sm" onClick={handleSelectAll}>
-                          {selectedContacts.size === contacts.length ? 'Deselectează tot' : 'Selectează tot'}
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                      <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Încarcă Lista de Contacte</h3>
+                      <p className="text-gray-500 mb-4">Selectează un fișier CSV cu contactele pentru apeluri</p>
+                      <div className="flex justify-center gap-3">
+                        <Button onClick={() => fileInputRef.current?.click()}>
+                          Selectează CSV
+                        </Button>
+                        <Button variant="outline" onClick={downloadTemplate}>
+                          Descarcă Template
                         </Button>
                       </div>
-                      
-                      <div className="max-h-64 overflow-y-auto space-y-2">
-                        {contacts.map((contact) => (
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {/* Contacts Overview */}
+                      <div className="bg-blue-50 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-medium text-gray-900">Lista Contacte</h3>
+                            <p className="text-sm text-gray-600">{contacts.length} contacte încărcate</p>
+                          </div>
+                          <Button variant="outline" size="sm" onClick={handleSelectAll}>
+                            {selectedContacts.size === contacts.length ? 'Deselectează tot' : 'Selectează tot'}
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Contacts List */}
+                      <div className="border rounded-lg max-h-64 overflow-y-auto">
+                        {contacts.map((contact, index) => (
                           <div
                             key={contact.id}
-                            className={`p-3 rounded-lg border transition-colors ${
-                              selectedContacts.has(contact.id) ? 'border-primary bg-primary/5' : 'border-border'
+                            className={`p-4 flex items-center gap-3 transition-colors ${
+                              index !== contacts.length - 1 ? 'border-b' : ''
+                            } ${
+                              selectedContacts.has(contact.id) ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
                             }`}
                           >
-                            <div className="flex items-center gap-3">
-                              <input
-                                type="checkbox"
-                                checked={selectedContacts.has(contact.id)}
-                                onChange={(e) => handleContactSelect(contact.id, e.target.checked)}
-                                className="w-4 h-4"
-                              />
-                              <div>
-                                <div className="font-medium text-sm">{contact.name}</div>
-                                <div className="text-xs text-muted-foreground">{contact.phone}</div>
-                              </div>
+                            <input
+                              type="checkbox"
+                              checked={selectedContacts.has(contact.id)}
+                              onChange={(e) => handleContactSelect(contact.id, e.target.checked)}
+                              className="w-4 h-4 text-blue-600 rounded border-gray-300"
+                            />
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-900">{contact.name}</div>
+                              <div className="text-sm text-gray-500">{contact.phone}</div>
                             </div>
+                            <div className="text-xs text-gray-400">{contact.country}</div>
                           </div>
                         ))}
                       </div>
                       
-                      {selectedContacts.size > 0 && (
-                        <Button onClick={handleBatchProcess} className="w-full">
-                          Începe apelurile ({selectedContacts.size} contacte)
+                      {/* Start Campaign Button */}
+                      {selectedContacts.size > 0 && selectedAgentId && selectedPhoneId && (
+                        <Button onClick={handleBatchProcess} className="w-full bg-green-600 hover:bg-green-700 text-white py-3">
+                          🚀 Începe Campania ({selectedContacts.size} contacte)
                         </Button>
+                      )}
+                      
+                      {selectedContacts.size > 0 && (!selectedAgentId || !selectedPhoneId) && (
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                          <p className="text-amber-800 text-sm">
+                            ⚠️ Configurează agentul și numărul de telefon în panoul din dreapta pentru a începe campania
+                          </p>
+                        </div>
                       )}
                     </div>
                   )}
                 </div>
               )}
 
+              {/* History Section */}
               {activeSection === 'history' && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Istoric Apeluri</h3>
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold text-gray-900">Istoric Apeluri</h2>
+                    <Button variant="outline" size="sm" onClick={() => setActiveSection(null)}>
+                      ← Înapoi
+                    </Button>
+                  </div>
                   <CallHistoryTab callHistory={callHistory} isLoading={historyLoading} />
                 </div>
               )}
             </div>
           </div>
 
-          {/* Sidebar */}
+          {/* Sidebar - Takes 1/3 of the width */}
           <div className="space-y-4">
             {/* Quick Actions */}
-            <div className="bg-card rounded-lg border p-4">
-              <h3 className="font-medium mb-3">Acțiuni Rapide</h3>
+            <div className="bg-white rounded-xl border border-gray-200 p-5">
+              <h3 className="font-semibold text-gray-900 mb-4">Acțiuni Rapide</h3>
               <div className="space-y-2">
                 <button
                   onClick={() => setActiveSection('batch')}
-                  className={`w-full p-3 rounded-lg text-left transition-colors ${
-                    activeSection === 'batch' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                  className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${
+                    activeSection === 'batch' 
+                      ? 'bg-blue-600 text-white shadow-md' 
+                      : 'hover:bg-gray-50 border border-gray-200'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <Phone className="w-4 h-4" />
-                    <span className="text-sm">Apeluri în Lot</span>
+                    <span className="text-sm font-medium">Apeluri în Lot</span>
                   </div>
                 </button>
                 
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full p-3 rounded-lg text-left hover:bg-muted transition-colors"
+                  className="w-full p-3 rounded-lg text-left hover:bg-gray-50 border border-gray-200 transition-all duration-200"
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <Upload className="w-4 h-4" />
-                    <span className="text-sm">Import CSV</span>
+                    <span className="text-sm font-medium">Import CSV</span>
                   </div>
                 </button>
                 
                 <button
                   onClick={() => setActiveSection('history')}
-                  className={`w-full p-3 rounded-lg text-left transition-colors ${
-                    activeSection === 'history' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                  className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${
+                    activeSection === 'history' 
+                      ? 'bg-blue-600 text-white shadow-md' 
+                      : 'hover:bg-gray-50 border border-gray-200'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <History className="w-4 h-4" />
-                    <span className="text-sm">Istoric</span>
+                    <span className="text-sm font-medium">Istoric</span>
                   </div>
                 </button>
               </div>
             </div>
 
             {/* Configuration Panel */}
-            <BatchConfigPanel
-              selectedAgentId={selectedAgentId}
-              onAgentSelect={setSelectedAgentId}
-              selectedPhoneId={selectedPhoneId}
-              onPhoneSelect={setSelectedPhoneId}
-              totalRecipients={contacts.length}
-              selectedRecipients={selectedContacts.size}
-              smsConfig={smsConfig}
-              onSMSConfigChange={setSmsConfig}
-            />
+            <div className="bg-white rounded-xl border border-gray-200 p-5">
+              <h3 className="font-semibold text-gray-900 mb-4">Configurare</h3>
+              <BatchConfigPanel
+                selectedAgentId={selectedAgentId}
+                onAgentSelect={setSelectedAgentId}
+                selectedPhoneId={selectedPhoneId}
+                onPhoneSelect={setSelectedPhoneId}
+                totalRecipients={contacts.length}
+                selectedRecipients={selectedContacts.size}
+                smsConfig={smsConfig}
+                onSMSConfigChange={setSmsConfig}
+              />
+            </div>
 
             {/* Statistics */}
-            <div className="bg-card rounded-lg border p-4">
-              <h3 className="font-medium mb-3">Statistici</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Contacte încărcate</span>
-                  <span>{contacts.length}</span>
+            <div className="bg-white rounded-xl border border-gray-200 p-5">
+              <h3 className="font-semibold text-gray-900 mb-4">Statistici</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-sm text-gray-600">Contacte încărcate</span>
+                  <span className="font-semibold text-gray-900">{contacts.length}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Contacte selectate</span>
-                  <span>{selectedContacts.size}</span>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-sm text-gray-600">Contacte selectate</span>
+                  <span className="font-semibold text-blue-600">{selectedContacts.size}</span>
                 </div>
               </div>
             </div>
 
             {/* Batch Status */}
             {(isProcessingBatch || currentProgress > 0) && (
-              <BatchStatusPanel 
-                isProcessing={isProcessingBatch}
-                isPaused={isPaused}
-                isStopped={isStopped}
-                currentProgress={currentProgress}
-                totalCalls={totalCalls}
-                callStatuses={callStatuses}
-                currentCallStatus={currentCallStatus}
-                startTime={batchStartTime}
-                onPause={pauseBatch}
-                onResume={resumeBatch}
-                onStop={stopBatch}
-              />
+              <div className="bg-white rounded-xl border border-gray-200 p-5">
+                <h3 className="font-semibold text-gray-900 mb-4">Status Campanie</h3>
+                <BatchStatusPanel 
+                  isProcessing={isProcessingBatch}
+                  isPaused={isPaused}
+                  isStopped={isStopped}
+                  currentProgress={currentProgress}
+                  totalCalls={totalCalls}
+                  callStatuses={callStatuses}
+                  currentCallStatus={currentCallStatus}
+                  startTime={batchStartTime}
+                  onPause={pauseBatch}
+                  onResume={resumeBatch}
+                  onStop={stopBatch}
+                />
+              </div>
             )}
           </div>
         </div>
