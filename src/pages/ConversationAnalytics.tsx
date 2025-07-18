@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useCallHistory } from '@/hooks/useCallHistory';
-import { useCachedConversations } from '@/hooks/useCachedConversations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Phone, Copy, ExternalLink, Save, Database } from 'lucide-react';
+import { Search, Phone, Copy, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ConversationDetailModal } from '@/components/outbound/ConversationDetailModal';
 import { useConversationById } from '@/hooks/useConversationById';
@@ -29,16 +28,10 @@ const ConversationAnalytics = () => {
     isLoading
   } = useCallHistory();
   const {
-    cachedConversations,
-    isSaving,
-    getConversationDataBatch,
-    saveAllConversationsToCache
-  } = useCachedConversations();
-  const {
     toast
   } = useToast();
 
-  // Function to get duration and cost from cached conversations or API
+  // Function to get duration and cost from conversation data
   const getConversationData = async (conversationId: string) => {
     if (!conversationId || conversationDurations[conversationId] !== undefined && conversationCosts[conversationId] !== undefined) {
       return {
@@ -46,25 +39,6 @@ const ConversationAnalytics = () => {
         cost: conversationCosts[conversationId] || 0
       };
     }
-
-    // Check cache first
-    const cached = cachedConversations.find(c => c.conversation_id === conversationId);
-    if (cached) {
-      setConversationDurations(prev => ({
-        ...prev,
-        [conversationId]: cached.duration_seconds
-      }));
-      setConversationCosts(prev => ({
-        ...prev,
-        [conversationId]: cached.cost_credits
-      }));
-      return {
-        duration: cached.duration_seconds,
-        cost: cached.cost_credits
-      };
-    }
-
-    // Fallback to API call
     try {
       const {
         data
@@ -97,11 +71,6 @@ const ConversationAnalytics = () => {
       cost: 0
     };
   };
-
-  // Handle save all conversations to cache
-  const handleSaveToCache = async () => {
-    await saveAllConversationsToCache(callHistory);
-  };
   const handleConversationClick = (conversationId: string) => {
     setSelectedConversationId(conversationId);
     setIsModalOpen(true);
@@ -111,35 +80,20 @@ const ConversationAnalytics = () => {
     setSelectedConversationId(null);
   };
 
-  // Load conversation data when call history or cache changes
+  // Load conversation data when call history changes
   useEffect(() => {
     const loadConversationData = async () => {
-      const conversationsToLoad = callHistory.filter(call => 
-        call.conversation_id && 
-        (conversationDurations[call.conversation_id] === undefined || 
-         conversationCosts[call.conversation_id] === undefined)
-      );
-      
-      // Use batch loading for efficiency
-      const conversationIds = conversationsToLoad.map(call => call.conversation_id).filter(Boolean);
-      if (conversationIds.length > 0) {
-        const batchData = await getConversationDataBatch(conversationIds);
-        const newDurations: Record<string, number> = {};
-        const newCosts: Record<string, number> = {};
-        
-        Object.entries(batchData).forEach(([id, data]) => {
-          newDurations[id] = data.duration;
-          newCosts[id] = data.cost;
-        });
-        
-        setConversationDurations(prev => ({ ...prev, ...newDurations }));
-        setConversationCosts(prev => ({ ...prev, ...newCosts }));
+      const conversationsToLoad = callHistory.filter(call => call.conversation_id && (conversationDurations[call.conversation_id] === undefined || conversationCosts[call.conversation_id] === undefined));
+      for (const call of conversationsToLoad) {
+        if (call.conversation_id) {
+          await getConversationData(call.conversation_id);
+        }
       }
     };
     if (callHistory.length > 0) {
       loadConversationData();
     }
-  }, [callHistory.length, cachedConversations.length]); // Depend on both call history and cache
+  }, [callHistory.length]); // Only depend on length to avoid infinite loop
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -220,21 +174,6 @@ const ConversationAnalytics = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Analytics Conversații</h1>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Database className="w-4 h-4" />
-              {cachedConversations.length} în cache
-            </div>
-            <Button 
-              onClick={handleSaveToCache}
-              disabled={isSaving}
-              variant="default"
-              className="flex items-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              {isSaving ? 'Se salvează...' : 'Salvează Analytics'}
-            </Button>
-          </div>
         </div>
 
         {/* Minimal Filters */}

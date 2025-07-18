@@ -277,63 +277,6 @@ export type Database = {
         }
         Relationships: []
       }
-      conversation_analytics_cache: {
-        Row: {
-          agent_id: string | null
-          agent_name: string | null
-          analysis: Json | null
-          call_date: string | null
-          call_status: string | null
-          contact_name: string | null
-          conversation_id: string
-          cost_credits: number | null
-          created_at: string
-          duration_seconds: number | null
-          id: string
-          metadata: Json | null
-          phone_number: string | null
-          transcript: Json | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          agent_id?: string | null
-          agent_name?: string | null
-          analysis?: Json | null
-          call_date?: string | null
-          call_status?: string | null
-          contact_name?: string | null
-          conversation_id: string
-          cost_credits?: number | null
-          created_at?: string
-          duration_seconds?: number | null
-          id?: string
-          metadata?: Json | null
-          phone_number?: string | null
-          transcript?: Json | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          agent_id?: string | null
-          agent_name?: string | null
-          analysis?: Json | null
-          call_date?: string | null
-          call_status?: string | null
-          contact_name?: string | null
-          conversation_id?: string
-          cost_credits?: number | null
-          created_at?: string
-          duration_seconds?: number | null
-          id?: string
-          metadata?: Json | null
-          phone_number?: string | null
-          transcript?: Json | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       conversations: {
         Row: {
           agent_id: string
