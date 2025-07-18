@@ -295,11 +295,12 @@ export const useCallInitiation = ({
     }
   };
 
-  // Enhanced batch processing with detailed logging
-  const processBatchCalls = useCallback(async (contacts: Contact[], targetAgentId: string) => {
+  // Enhanced batch processing with detailed logging and auto-redial integration
+  const processBatchCalls = useCallback(async (contacts: Contact[], targetAgentId: string, enableAutoRedial: boolean = false) => {
     logStep('START: Batch processing initiated', { 
       contactCount: contacts.length,
-      targetAgentId 
+      targetAgentId,
+      autoRedialEnabled: enableAutoRedial
     });
 
     if (!targetAgentId || contacts.length === 0) {
