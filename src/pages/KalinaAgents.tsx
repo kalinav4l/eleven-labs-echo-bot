@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -13,7 +12,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { AgentTestCallModal } from '@/components/AgentTestCallModal';
 import VoiceTestButton from '@/components/VoiceTestButton';
-
 const KalinaAgents = () => {
   const {
     data: userAgents,
@@ -40,13 +38,8 @@ const KalinaAgents = () => {
   const filteredAgents = useMemo(() => {
     if (!userAgents) return [];
     if (!searchQuery.trim()) return userAgents;
-    return userAgents.filter(agent =>
-        agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        agent.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        agent.agent_id.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    return userAgents.filter(agent => agent.name.toLowerCase().includes(searchQuery.toLowerCase()) || agent.description?.toLowerCase().includes(searchQuery.toLowerCase()) || agent.agent_id.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [userAgents, searchQuery]);
-
   const handleToggleAgentStatus = (agent: any) => {
     if (agent.is_active) {
       deactivateAgent({
@@ -60,7 +53,6 @@ const KalinaAgents = () => {
       });
     }
   };
-
   const handleDeleteAgent = (agent: any) => {
     deleteAgent({
       id: agent.id,
@@ -68,23 +60,18 @@ const KalinaAgents = () => {
     });
     setSelectedAgentForDeletion(null);
   };
-
   const handleDuplicateAgent = (agent: any) => {
     duplicateAgent(agent);
   };
-
   const handleEditAgent = (agentId: string) => {
     navigate(`/account/agent-edit/${agentId}`);
   };
-
   const handleCopyAgentId = async (agentId: string) => {
     await copyToClipboard(agentId);
   };
-
   const handleTestCall = (agent: any) => {
     setTestCallAgent(agent);
   };
-
   if (isLoading) {
     return <DashboardLayout>
       <div className="p-6 space-y-6">
@@ -94,7 +81,6 @@ const KalinaAgents = () => {
       </div>
     </DashboardLayout>;
   }
-
   return <DashboardLayout>
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -113,22 +99,12 @@ const KalinaAgents = () => {
       {/* Search Input */}
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-        <Input
-            placeholder="Caută agenți..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="pl-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400"
-        />
+        <Input placeholder="Caută agenți..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400" />
       </div>
 
       {/* Agents List - Vertical Layout like ElevenLabs */}
       <div className="space-y-3">
-        {filteredAgents && filteredAgents.length > 0 ? filteredAgents.map(agent =>
-            <div 
-              key={agent.id} 
-              className="bg-white rounded-lg p-4 transition-all duration-200 hover:bg-gray-50/50 cursor-pointer"
-              onClick={() => handleEditAgent(agent.agent_id)}
-            >
+        {filteredAgents && filteredAgents.length > 0 ? filteredAgents.map(agent => <div key={agent.id} className="bg-white rounded-lg p-4 transition-all duration-200 hover:bg-gray-50/50 cursor-pointer" onClick={() => handleEditAgent(agent.agent_id)}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4 flex-1">
                   <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -140,11 +116,7 @@ const KalinaAgents = () => {
                       <h3 className="text-sm font-medium text-gray-900 truncate">
                         {agent.name}
                       </h3>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        agent.is_active 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${agent.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
                         {agent.is_active ? 'Activ' : 'Inactiv'}
                       </span>
                     </div>
@@ -155,113 +127,61 @@ const KalinaAgents = () => {
                       </p>
                     </div>
                     
-                    <div className="flex items-center gap-6 mt-2">
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-gray-400">Provider:</span>
-                        <span className="text-xs font-medium text-gray-600">{agent.provider}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-400">Agent ID:</span>
-                        <span className="text-xs font-mono text-gray-600 max-w-[120px] truncate" title={agent.agent_id}>
-                          {agent.agent_id}
-                        </span>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCopyAgentId(agent.agent_id);
-                            }}
-                            className="h-5 w-5 p-0 hover:bg-gray-100"
-                        >
-                          <Copy className="w-3 h-3 text-gray-400" />
-                        </Button>
-                      </div>
-                    </div>
+                    
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Button 
-                    size="sm" 
-                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 px-3" 
-                    disabled={!agent.is_active}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setVoiceTestAgent(agent);
-                    }}
-                  >
+                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 px-3" disabled={!agent.is_active} onClick={e => {
+                e.stopPropagation();
+                setVoiceTestAgent(agent);
+              }}>
                     <Mic className="w-3 h-3 mr-1" />
                     Test Audio
                   </Button>
                   
-                  <Button 
-                    size="sm" 
-                    className="bg-black hover:bg-gray-800 text-white text-xs h-8 px-3" 
-                    disabled={!agent.is_active}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleTestCall(agent);
-                    }}
-                  >
+                  <Button size="sm" className="bg-black hover:bg-gray-800 text-white text-xs h-8 px-3" disabled={!agent.is_active} onClick={e => {
+                e.stopPropagation();
+                handleTestCall(agent);
+              }}>
                     <Phone className="w-3 h-3 mr-1" />
                     Test Apel
                   </Button>
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8 p-0 hover:bg-gray-100"
-                        onClick={(e) => e.stopPropagation()}
-                      >
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-100" onClick={e => e.stopPropagation()}>
                         <Settings className="w-4 h-4 text-gray-500" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleAgentStatus(agent);
-                        }}
-                        className="cursor-pointer"
-                      >
-                        {agent.is_active ? (
-                          <>
+                      <DropdownMenuItem onClick={e => {
+                    e.stopPropagation();
+                    handleToggleAgentStatus(agent);
+                  }} className="cursor-pointer">
+                        {agent.is_active ? <>
                             <PowerOff className="w-4 h-4 mr-2" />
                             Dezactivează
-                          </>
-                        ) : (
-                          <>
+                          </> : <>
                             <Power className="w-4 h-4 mr-2" />
                             Activează
-                          </>
-                        )}
+                          </>}
                       </DropdownMenuItem>
                       
-                      <DropdownMenuItem 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDuplicateAgent(agent);
-                        }}
-                        className="cursor-pointer"
-                        disabled={isDuplicating}
-                      >
+                      <DropdownMenuItem onClick={e => {
+                    e.stopPropagation();
+                    handleDuplicateAgent(agent);
+                  }} className="cursor-pointer" disabled={isDuplicating}>
                         <Copy className="w-4 h-4 mr-2" />
                         Duplică Agent
                       </DropdownMenuItem>
                       
                       <DropdownMenuSeparator />
                       
-                      <DropdownMenuItem 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedAgentForDeletion(agent);
-                        }}
-                        className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
+                      <DropdownMenuItem onClick={e => {
+                    e.stopPropagation();
+                    setSelectedAgentForDeletion(agent);
+                  }} className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50">
                         <Trash2 className="w-4 h-4 mr-2" />
                         Șterge Agent
                       </DropdownMenuItem>
@@ -269,9 +189,7 @@ const KalinaAgents = () => {
                   </DropdownMenu>
                 </div>
               </div>
-            </div>
-        ) : searchQuery.trim() ? (
-            <div className="bg-white rounded-lg p-12 text-center">
+            </div>) : searchQuery.trim() ? <div className="bg-white rounded-lg p-12 text-center">
               <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <Search className="w-6 h-6 text-gray-400" />
               </div>
@@ -282,9 +200,7 @@ const KalinaAgents = () => {
               <Button variant="outline" onClick={() => setSearchQuery('')} className="bg-white border-gray-200 hover:bg-gray-50 text-gray-700">
                 Șterge căutarea
               </Button>
-            </div>
-        ) : (
-            <div className="bg-white rounded-lg p-12 text-center">
+            </div> : <div className="bg-white rounded-lg p-12 text-center">
               <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <Plus className="w-6 h-6 text-gray-400" />
               </div>
@@ -295,28 +211,21 @@ const KalinaAgents = () => {
                   Creează Agent Nou
                 </Button>
               </Link>
-            </div>
-        )}
+            </div>}
       </div>
 
       {/* Agent Test Call Modal */}
-      <AgentTestCallModal
-        isOpen={!!testCallAgent}
-        onClose={() => setTestCallAgent(null)}
-        agent={testCallAgent || { id: '', agent_id: '', name: '' }}
-      />
+      <AgentTestCallModal isOpen={!!testCallAgent} onClose={() => setTestCallAgent(null)} agent={testCallAgent || {
+        id: '',
+        agent_id: '',
+        name: ''
+      }} />
 
       {/* Voice Test Modal - Minimalist Design */}
-      {voiceTestAgent && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+      {voiceTestAgent && <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
           <div className="relative w-full max-w-lg mx-auto">
             {/* Close button */}
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setVoiceTestAgent(null)}
-              className="absolute -top-12 right-0 h-10 w-10 p-0 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/20"
-            >
+            <Button variant="ghost" size="sm" onClick={() => setVoiceTestAgent(null)} className="absolute -top-12 right-0 h-10 w-10 p-0 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/20">
               ×
             </Button>
             
@@ -334,10 +243,7 @@ const KalinaAgents = () => {
               
               {/* Voice test area */}
               <div className="p-12 flex flex-col items-center min-h-[300px] justify-center">
-                <VoiceTestButton 
-                  agentId={voiceTestAgent.agent_id}
-                  agentName={voiceTestAgent.name}
-                />
+                <VoiceTestButton agentId={voiceTestAgent.agent_id} agentName={voiceTestAgent.name} />
               </div>
               
               {/* Agent ID footer */}
@@ -351,10 +257,9 @@ const KalinaAgents = () => {
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>}
 
-      <AlertDialog open={!!selectedAgentForDeletion} onOpenChange={(open) => {
+      <AlertDialog open={!!selectedAgentForDeletion} onOpenChange={open => {
         if (!open) setSelectedAgentForDeletion(null);
       }}>
         <AlertDialogContent className="bg-white border-gray-200">
@@ -367,10 +272,7 @@ const KalinaAgents = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50">Anulează</AlertDialogCancel>
-            <AlertDialogAction
-                onClick={() => selectedAgentForDeletion && handleDeleteAgent(selectedAgentForDeletion)}
-                className="bg-red-600 text-white hover:bg-red-700"
-            >
+            <AlertDialogAction onClick={() => selectedAgentForDeletion && handleDeleteAgent(selectedAgentForDeletion)} className="bg-red-600 text-white hover:bg-red-700">
               {isDeleting ? 'Se șterge...' : 'Șterge'}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -379,5 +281,4 @@ const KalinaAgents = () => {
     </div>
   </DashboardLayout>;
 };
-
 export default KalinaAgents;
