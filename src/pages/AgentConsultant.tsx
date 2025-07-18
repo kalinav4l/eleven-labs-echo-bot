@@ -2,29 +2,26 @@ import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
-import { DEFAULT_VALUES } from '../constants/constants';
+import { DEFAULT_VALUES, VOICES, LANGUAGES } from '../constants/constants';
 import { usePromptGeneration } from '../hooks/usePromptGeneration';
 import { useAgentCreation } from '../hooks/useAgentCreation';
-import { StepIndicator } from '../components/StepIndicator';
-import { Step1PromptGeneration } from '../components/Step1PromptGeneration';
-import { Step2AgentCreation } from '../components/Step2AgentCreation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, Globe, Bot, Copy, Wand2 } from 'lucide-react';
 
 const AgentConsultant: React.FC = () => {
   const { user } = useAuth();
 
-  // Step management
-  const [currentStep, setCurrentStep] = useState(1);
-  const stepTitles = ['Prompt', 'Agent'];
-
-  // Step 1 - Prompt Generation
+  // Form state
   const [websiteUrl, setWebsiteUrl] = useState('');
-  const [additionalPrompt, setAdditionalPrompt] = useState('');
   const [generatedPrompt, setGeneratedPrompt] = useState('');
-
-  // Step 2 - Agent Creation
   const [agentName, setAgentName] = useState('');
-  const [agentLanguage, setAgentLanguage] = useState(DEFAULT_VALUES.LANGUAGE);
-  const [selectedVoice, setSelectedVoice] = useState(DEFAULT_VALUES.VOICE_ID);
+  const [agentLanguage, setAgentLanguage] = useState<string>(DEFAULT_VALUES.LANGUAGE);
+  const [selectedVoice, setSelectedVoice] = useState<string>(DEFAULT_VALUES.VOICE_ID);
 
   // Custom hooks
   const {
@@ -39,7 +36,7 @@ const AgentConsultant: React.FC = () => {
     handleCopyAgentId
   } = useAgentCreation({
     websiteUrl,
-    additionalPrompt,
+    additionalPrompt: '', // Nu mai folosim prompt adiţional
     agentName,
     agentLanguage,
     selectedVoice,
@@ -51,12 +48,12 @@ const AgentConsultant: React.FC = () => {
     return <Navigate to="/auth" replace />;
   }
 
-  // Step handlers
+  // Handlers
   const handleGeneratePrompt = async () => {
     const prompt = await generatePrompt({
       websiteUrl,
-      agentRole: '',  // Nu mai e nevoie de agentRole
-      additionalPrompt
+      agentRole: '',
+      additionalPrompt: ''
     });
     if (prompt) {
       setGeneratedPrompt(prompt);
@@ -65,86 +62,191 @@ const AgentConsultant: React.FC = () => {
 
   const handleCreateAgentWithPrompt = async () => {
     await handleCreateAgent();
-    // Agent creation hook will automatically redirect to edit page
   };
 
-  const handleStep1Next = () => {
-    setCurrentStep(2);
-  };
-
-  const renderCurrentStep = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <Step1PromptGeneration
-            websiteUrl={websiteUrl}
-            setWebsiteUrl={setWebsiteUrl}
-            additionalPrompt={additionalPrompt}
-            setAdditionalPrompt={setAdditionalPrompt}
-            generatedPrompt={generatedPrompt}
-            setGeneratedPrompt={setGeneratedPrompt}
-            onGeneratePrompt={handleGeneratePrompt}
-            onNextStep={handleStep1Next}
-            isGenerating={isGeneratingPrompt}
-          />
-        );
-      case 2:
-        return (
-          <Step2AgentCreation
-            agentName={agentName}
-            setAgentName={setAgentName}
-            agentLanguage={agentLanguage}
-            setAgentLanguage={setAgentLanguage}
-            selectedVoice={selectedVoice}
-            setSelectedVoice={setSelectedVoice}
-            createdAgentId={createdAgentId}
-            onCreateAgent={handleCreateAgentWithPrompt}
-            onCopyAgentId={handleCopyAgentId}
-            onNextStep={() => {}} // Not needed anymore
-            isCreating={isCreatingAgent}
-          />
-        );
-      default:
-        return null;
-    }
-  };
+  const canGeneratePrompt = websiteUrl.trim() !== '';
+  const canCreateAgent = websiteUrl.trim() !== '' && generatedPrompt.trim() !== '' && agentName.trim() !== '';
 
   return (
     <DashboardLayout>
-      <div className="p-6 my-[60px]">
-        <div className="max-w-4xl mx-auto space-y-8">
+      <div className="p-4 md:p-6 my-[60px]">
+        <div className="max-w-4xl mx-auto space-y-6">
           {/* Header */}
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
+          <div className="text-center">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
               Agent Consultant AI
             </h1>
             <p className="text-muted-foreground">
-              Creează automat un agent consultant pentru orice site web în 2 pași simpli
+              Creează automat un agent consultant pentru orice site web
             </p>
           </div>
 
-          {/* Step Indicator */}
-          <StepIndicator 
-            currentStep={currentStep} 
-            totalSteps={2} 
-            stepTitles={stepTitles} 
-            onStepClick={setCurrentStep} 
-          />
+          {/* Combined Form */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Pas 1: Configurare Website & Prompt */}
+            <Card className="h-fit">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <Globe className="w-5 h-5 text-primary" />
+                  Configurare Website & Prompt
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="website-url" className="text-foreground font-medium">
+                    URL Site Web *
+                  </Label>
+                  <Input
+                    id="website-url"
+                    value={websiteUrl}
+                    onChange={(e) => setWebsiteUrl(e.target.value)}
+                    placeholder="https://example.com"
+                    className="mt-1"
+                  />
+                </div>
 
-          {/* Current Step */}
-          {renderCurrentStep()}
+                <div>
+                  <Label htmlFor="generated-prompt" className="text-foreground font-medium">
+                    Prompt Agent
+                  </Label>
+                  <Textarea
+                    id="generated-prompt"
+                    value={generatedPrompt}
+                    onChange={(e) => setGeneratedPrompt(e.target.value)}
+                    placeholder="Prompt-ul generat va apărea aici sau poți scrie unul manual..."
+                    className="mt-1"
+                    rows={4}
+                  />
+                </div>
 
-          {/* Navigation */}
-          {currentStep > 1 && (
-            <div className="flex justify-center">
-              <button 
-                onClick={() => setCurrentStep(currentStep - 1)} 
-                className="text-accent hover:text-accent/80 font-medium"
-              >
-                ← Înapoi la pasul anterior
-              </button>
-            </div>
-          )}
+                <Button
+                  onClick={handleGeneratePrompt}
+                  disabled={!canGeneratePrompt || isGeneratingPrompt}
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                  size="lg"
+                >
+                  {isGeneratingPrompt ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Se Generează...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-4 h-4 mr-2" />
+                      Generează Prompt Automat
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Pas 2: Creare Agent */}
+            <Card className="h-fit">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <Bot className="w-5 h-5 text-primary" />
+                  Configurare Agent
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="agent-name" className="text-foreground font-medium">
+                    Numele Agentului *
+                  </Label>
+                  <Input
+                    id="agent-name"
+                    value={agentName}
+                    onChange={(e) => setAgentName(e.target.value)}
+                    placeholder="Agent Consultant Site"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="agent-language" className="text-foreground font-medium">
+                    Limba
+                  </Label>
+                  <Select value={agentLanguage} onValueChange={(value) => setAgentLanguage(value)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LANGUAGES.map((language) => (
+                        <SelectItem key={language.value} value={language.value}>
+                          {language.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="voice-select" className="text-foreground font-medium">
+                    Vocea Agentului
+                  </Label>
+                  <Select value={selectedVoice} onValueChange={(value) => setSelectedVoice(value)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {VOICES.map((voice) => (
+                        <SelectItem key={voice.id} value={voice.id}>
+                          {voice.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button
+                  onClick={handleCreateAgentWithPrompt}
+                  disabled={!canCreateAgent || isCreatingAgent}
+                  className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                  size="lg"
+                >
+                  {isCreatingAgent ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Se Creează Agent...
+                    </>
+                  ) : (
+                    <>
+                      <Bot className="w-4 h-4 mr-2" />
+                      Creează Agent
+                    </>
+                  )}
+                </Button>
+
+                {createdAgentId && (
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-green-800 font-medium">
+                          ✅ Agent creat cu succes!
+                        </p>
+                        <p className="text-sm text-green-600 mt-1">
+                          ID Agent: {createdAgentId}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={handleCopyAgentId}
+                        variant="outline"
+                        size="sm"
+                        className="border-green-300 text-green-700 hover:bg-green-100"
+                      >
+                        <Copy className="w-4 h-4 mr-1" />
+                        Copiază
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center text-sm text-muted-foreground">
+            <p>* Câmpurile marcate sunt obligatorii</p>
+          </div>
         </div>
       </div>
     </DashboardLayout>
