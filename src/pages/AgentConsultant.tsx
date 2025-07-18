@@ -89,26 +89,8 @@ const AgentConsultant: React.FC = () => {
 
           {/* Main Form */}
           <div className="space-y-6">
-            {/* Website URL Section */}
-            <Card className="liquid-glass animate-slide-in-up">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-black">
-                  <Globe className="w-5 h-5 text-gray-600" />
-                  Website URL
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Input
-                  value={websiteUrl}
-                  onChange={(e) => setWebsiteUrl(e.target.value)}
-                  placeholder="https://example.com"
-                  className="glass-input text-black placeholder:text-gray-400"
-                />
-              </CardContent>
-            </Card>
-
             {/* Prompt Configuration Section */}
-            <Card className="liquid-glass animate-slide-in-up" style={{ animationDelay: '0.1s' }}>
+            <Card className="liquid-glass animate-slide-in-up">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-black">
                   <Edit3 className="w-5 h-5 text-gray-600" />
@@ -139,24 +121,35 @@ const AgentConsultant: React.FC = () => {
                 </div>
 
                 {promptMode === 'generate' && (
-                  <Button
-                    onClick={handleGeneratePrompt}
-                    disabled={!canGeneratePrompt || isGeneratingPrompt}
-                    className="w-full glass-button text-black hover:text-black"
-                    size="lg"
-                  >
-                    {isGeneratingPrompt ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Se generează...
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 className="w-4 h-4 mr-2" />
-                        Generează Prompt Automat
-                      </>
-                    )}
-                  </Button>
+                  <div className="space-y-4 animate-slide-in-up">
+                    <div>
+                      <Label className="text-black block mb-2">URL Site Web</Label>
+                      <Input
+                        value={websiteUrl}
+                        onChange={(e) => setWebsiteUrl(e.target.value)}
+                        placeholder="https://example.com"
+                        className="glass-input text-black placeholder:text-gray-400"
+                      />
+                    </div>
+                    <Button
+                      onClick={handleGeneratePrompt}
+                      disabled={!canGeneratePrompt || isGeneratingPrompt}
+                      className="w-full glass-button text-black hover:text-black"
+                      size="lg"
+                    >
+                      {isGeneratingPrompt ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Se generează...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="w-4 h-4 mr-2" />
+                          Generează Prompt Automat
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 )}
 
                 {shouldShowPromptField && (
@@ -181,7 +174,7 @@ const AgentConsultant: React.FC = () => {
             </Card>
 
             {/* Agent Configuration Section */}
-            <Card className="liquid-glass animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
+            <Card className="liquid-glass animate-slide-in-up" style={{ animationDelay: '0.1s' }}>
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-black">
                   <Bot className="w-5 h-5 text-gray-600" />
@@ -234,7 +227,7 @@ const AgentConsultant: React.FC = () => {
             </Card>
 
             {/* Create Agent Button */}
-            <div className="animate-slide-in-up" style={{ animationDelay: '0.3s' }}>
+            <div className="animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
               <Button
                 onClick={handleCreateAgentWithPrompt}
                 disabled={!canCreateAgent || isCreatingAgent}
