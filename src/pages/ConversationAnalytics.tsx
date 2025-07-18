@@ -122,17 +122,17 @@ const ConversationAnalytics = () => {
       case 'success':
       case 'completed':
       case 'done':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-500 text-white font-medium';
       case 'failed':
       case 'error':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-500 text-white font-medium';
       case 'initiated':
       case 'in_progress':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-500 text-white font-medium';
       case 'busy':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-amber-500 text-white font-medium';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-500 text-white font-medium';
     }
   };
   const formatDate = (dateString: string) => {
@@ -181,7 +181,12 @@ const ConversationAnalytics = () => {
         </div>
 
         {/* Minimal Filters */}
-        <div className="flex flex-wrap items-center gap-3 py-3">
+        <div className="flex flex-wrap items-center gap-3 py-3 bg-gradient-to-r from-blue-50/30 via-purple-50/20 to-cyan-50/30 rounded-lg px-4 border border-gray-100/50 bg-white backdrop-blur-sm animate-gradient-x"
+             style={{
+               background: 'linear-gradient(-45deg, rgba(239,246,255,0.4), rgba(245,243,255,0.4), rgba(236,254,255,0.4), rgba(254,249,195,0.4))',
+               backgroundSize: '400% 400%',
+               animation: 'gradient 8s ease infinite'
+             }}>
           {/* Search Bar */}
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -259,7 +264,11 @@ const ConversationAnalytics = () => {
         </div>
 
         {/* Analytics Table */}
-        <div className="bg-white rounded-lg overflow-hidden">
+        <div className="bg-white rounded-lg overflow-hidden border border-gray-100/50 bg-gradient-to-br from-gray-50/20 via-white to-blue-50/10"
+             style={{
+               background: 'linear-gradient(135deg, rgba(249,250,251,0.6), rgba(255,255,255,1), rgba(239,246,255,0.3))',
+               boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+             }}>
           <div className="px-6 py-4 border-b border-gray-100">
             <h2 className="text-lg font-medium text-gray-900">Istoric Conversații</h2>
           </div>
@@ -284,7 +293,7 @@ const ConversationAnalytics = () => {
                   const dateTime = formatDate(call.call_date);
                   return <tr 
                     key={call.id} 
-                    className="border-b hover:bg-muted/50 cursor-pointer"
+                    className="border-b hover:bg-gray-50/80 cursor-pointer transition-colors duration-200"
                     onDoubleClick={() => call.conversation_id && navigate(`/account/conversation-analytics/${call.conversation_id}`)}
                   >
                           <td className="p-3">
