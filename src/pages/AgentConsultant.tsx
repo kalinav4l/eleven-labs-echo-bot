@@ -67,7 +67,7 @@ const AgentConsultant: React.FC = () => {
   };
 
   const canGeneratePrompt = websiteUrl.trim() !== '';
-  const canCreateAgent = websiteUrl.trim() !== '' && generatedPrompt.trim() !== '' && agentName.trim() !== '';
+  const canCreateAgent = agentName.trim() !== ''; // Doar numele este obligatoriu
   const shouldShowPromptField = promptMode === 'manual' || generatedPrompt;
 
   return (
@@ -155,7 +155,7 @@ const AgentConsultant: React.FC = () => {
                 {shouldShowPromptField && (
                   <div className="animate-slide-in-up">
                     <Label className="text-black block mb-2">
-                      {promptMode === 'generate' ? 'Prompt Generat' : 'Prompt Personalizat'}
+                      {promptMode === 'generate' ? 'Prompt Generat' : 'Prompt Personalizat (Opțional)'}
                     </Label>
                     <Textarea
                       value={generatedPrompt}
@@ -163,7 +163,7 @@ const AgentConsultant: React.FC = () => {
                       placeholder={
                         promptMode === 'generate' 
                           ? "Prompt-ul generat va apărea aici..." 
-                          : "Scrie prompt-ul pentru agent aici..."
+                          : "Scrie prompt-ul pentru agent aici... (opțional)"
                       }
                       className="glass-input text-black placeholder:text-gray-400"
                       rows={5}
@@ -183,13 +183,14 @@ const AgentConsultant: React.FC = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label className="text-black block mb-2">Numele Agentului</Label>
+                  <Label className="text-black block mb-2">Numele Agentului *</Label>
                   <Input
                     value={agentName}
                     onChange={(e) => setAgentName(e.target.value)}
                     placeholder="Agent Consultant Site"
                     className="glass-input text-black placeholder:text-gray-400"
                   />
+                  <p className="text-xs text-gray-500 mt-1">* Doar numele este obligatoriu pentru a crea agentul</p>
                 </div>
 
                 <div>
