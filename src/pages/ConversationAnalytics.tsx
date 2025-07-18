@@ -198,9 +198,8 @@ const ConversationAnalytics = () => {
             </SelectTrigger>
             <SelectContent className="bg-white border-0 z-50">
               <SelectItem value="all">Toate</SelectItem>
-              <SelectItem value="success">Success</SelectItem>
-              <SelectItem value="done">Done</SelectItem>
-              <SelectItem value="failed">Failed</SelectItem>
+              <SelectItem value="initiated">Initiated</SelectItem>
+              <SelectItem value="failed">Error</SelectItem>
               <SelectItem value="busy">Busy</SelectItem>
             </SelectContent>
           </Select>
