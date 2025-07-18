@@ -240,6 +240,7 @@ const ConversationAnalytics = () => {
                 <thead>
                   <tr>
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Contact Number</th>
+                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Nume Contact</th>
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Agent</th>
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Cost total:</th>
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Evaluation result</th>
@@ -248,7 +249,7 @@ const ConversationAnalytics = () => {
                 </thead>
                 <tbody>
                   {filteredCalls.length === 0 ? <tr>
-                      <td colSpan={5} className="text-center p-8 text-muted-foreground">
+                      <td colSpan={6} className="text-center p-8 text-muted-foreground">
                         Nu sunt conversații disponibile
                       </td>
                     </tr> : filteredCalls.map(call => {
@@ -258,6 +259,11 @@ const ConversationAnalytics = () => {
                             <div className="flex items-center text-sm">
                               <Phone className="w-3 h-3 mr-1 text-muted-foreground" />
                               {call.phone_number}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="text-sm font-medium">
+                              {call.contact_name || 'Necunoscut'}
                             </div>
                           </td>
                           <td className="p-3">
