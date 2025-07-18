@@ -1,4 +1,3 @@
-
 (function() {
   'use strict';
 
@@ -10,17 +9,26 @@
   // Configuration
   const SUPABASE_URL = 'https://pwfczzxwjfxomqzhhwvj.supabase.co';
   const CHAT_ENDPOINT = `${SUPABASE_URL}/functions/v1/kalina-chat`;
+  const AUTO_SAVE_INTERVAL = 15 * 60 * 1000; // 15 minutes
+
+  // Generate unique ID
+  function generateId() {
+    return 'conv_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+  }
 
   // Widget class
   class KalinaWidget {
     constructor(element) {
       this.element = element;
       this.agentId = element.getAttribute('agent-id');
+      this.conversationId = generateId();
       this.isOpen = false;
       this.isTyping = false;
       this.conversation = [];
       this.audioQueue = [];
       this.currentAudio = null;
+      this.autoSaveTimer = null;
+      this.lastSaveTime = 0;
       
       if (!this.agentId) {
         console.error('Kalina Widget: agent-id attribute is required');
@@ -28,12 +36,98 @@
       }
 
       this.init();
+      this.startAutoSave();
     }
 
     init() {
       this.createStyles();
       this.createWidget();
       this.attachEventListeners();
+      this.recoverConversation();
+    }
+
+    startAutoSave() {
+      this.resetAutoSaveTimer();
+    }
+
+    resetAutoSaveTimer() {
+      if (this.autoSaveTimer) {
+        clearTimeout(this.autoSaveTimer);
+      }
+      
+      this.autoSaveTimer = setTimeout(() => {
+        this.performAutoSave();
+      }, AUTO_SAVE_INTERVAL);
+    }
+
+    async performAutoSave() {
+      if (this.conversation.length === 0) return;
+
+      try {
+        const autoSaveData = {
+          conversationId: this.conversationId,
+          agentId: this.agentId,
+          conversation: this.conversation,
+          timestamp: Date.now()
+        };
+
+        // Save to localStorage
+        localStorage.setItem(`kalina_autosave_${this.conversationId}`, JSON.stringify(autoSaveData));
+        
+        // Save to backend
+        await this.saveToBackend();
+        
+        this.lastSaveTime = Date.now();
+        console.log('Auto-save completed for conversation:', this.conversationId);
+        
+        // Reset timer for next auto-save
+        this.resetAutoSaveTimer();
+      } catch (error) {
+        console.error('Auto-save failed:', error);
+        // Retry in 5 minutes on failure
+        setTimeout(() => this.resetAutoSaveTimer(), 5 * 60 * 1000);
+      }
+    }
+
+    async saveToBackend() {
+      const conversationData = {
+        conversation_id: this.conversationId,
+        agent_id: this.agentId,
+        messages: this.conversation,
+        auto_save: true,
+        timestamp: new Date().toISOString()
+      };
+
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/save-conversation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(conversationData)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Save failed: ${response.status}`);
+      }
+    }
+
+    recoverConversation() {
+      try {
+        const saved = localStorage.getItem(`kalina_autosave_${this.conversationId}`);
+        if (saved) {
+          const data = JSON.parse(saved);
+          this.conversation = data.conversation || [];
+          
+          // Restore messages in UI
+          this.conversation.forEach(msg => {
+            this.addMessageToUI(msg.role, msg.content, false);
+          });
+          
+          console.log('Recovered conversation:', this.conversationId);
+        }
+      } catch (error) {
+        console.error('Recovery failed:', error);
+      }
     }
 
     createStyles() {
@@ -379,7 +473,99 @@
 
       this.input.addEventListener('input', () => {
         this.autoResize();
+        // Reset auto-save timer on user activity
+        this.resetAutoSaveTimer();
       });
+
+      // Handle page unload
+      window.addEventListener('beforeunload', () => {
+        this.performAutoSave();
+      });
+    }
+
+    async sendMessage() {
+      const message = this.input.value.trim();
+      if (!message || this.isTyping) return;
+
+      // Add user message to conversation and UI
+      this.addMessage('user', message);
+      
+      // Clear input
+      this.input.value = '';
+      this.autoResize();
+      
+      // Show typing indicator
+      this.showTypingIndicator();
+      
+      // Reset auto-save timer due to activity
+      this.resetAutoSaveTimer();
+      
+      try {
+        // Send to backend with conversation ID
+        const response = await fetch(CHAT_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            agent_id: this.agentId,
+            message: message,
+            conversation_id: this.conversationId,
+            conversation_history: this.conversation.slice(-10) // Keep last 10 messages for context
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Hide typing indicator
+        this.hideTypingIndicator();
+        
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        // Add assistant response
+        this.addMessage('assistant', data.text || data.message || 'Ne pare rău, nu am putut genera un răspuns.');
+        
+        // Play audio if available
+        if (data.audio) {
+          this.playAudio(data.audio);
+        }
+
+      } catch (error) {
+        console.error('Error sending message:', error);
+        this.hideTypingIndicator();
+        this.addMessage('assistant', 'Ne pare rău, a apărut o eroare. Te rog să încerci din nou.');
+      }
+    }
+
+    addMessage(role, content) {
+      // Add to conversation array
+      this.conversation.push({ role, content, timestamp: new Date().toISOString() });
+      
+      // Add to UI
+      this.addMessageToUI(role, content);
+    }
+
+    addMessageToUI(role, content, scroll = true) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `kalina-widget-message ${role}`;
+      
+      const avatar = role === 'user' ? '👤' : '🤖';
+      
+      messageDiv.innerHTML = `
+        <div class="kalina-widget-message-avatar">${avatar}</div>
+        <div class="kalina-widget-message-content">${this.escapeHtml(content)}</div>
+      `;
+      
+      this.messagesContainer.appendChild(messageDiv);
+      if (scroll) {
+        this.scrollToBottom();
+      }
     }
 
     autoResize() {
@@ -404,79 +590,8 @@
     closeChat() {
       this.isOpen = false;
       this.chatWindow.classList.remove('open');
-    }
-
-    async sendMessage() {
-      const message = this.input.value.trim();
-      if (!message || this.isTyping) return;
-
-      // Add user message to conversation
-      this.addMessage('user', message);
-      this.conversation.push({ role: 'user', content: message });
-      
-      // Clear input
-      this.input.value = '';
-      this.autoResize();
-      
-      // Show typing indicator
-      this.showTypingIndicator();
-      
-      try {
-        // Send to backend
-        const response = await fetch(CHAT_ENDPOINT, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            agent_id: this.agentId,
-            message: message,
-            conversation_history: this.conversation.slice(-10) // Keep last 10 messages for context
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        
-        // Hide typing indicator
-        this.hideTypingIndicator();
-        
-        if (data.error) {
-          throw new Error(data.error);
-        }
-
-        // Add assistant response
-        this.addMessage('assistant', data.text || data.message || 'Ne pare rău, nu am putut genera un răspuns.');
-        this.conversation.push({ role: 'assistant', content: data.text || data.message });
-        
-        // Play audio if available
-        if (data.audio) {
-          this.playAudio(data.audio);
-        }
-
-      } catch (error) {
-        console.error('Error sending message:', error);
-        this.hideTypingIndicator();
-        this.addMessage('assistant', 'Ne pare rău, a apărut o eroare. Te rog să încerci din nou.');
-      }
-    }
-
-    addMessage(role, content) {
-      const messageDiv = document.createElement('div');
-      messageDiv.className = `kalina-widget-message ${role}`;
-      
-      const avatar = role === 'user' ? '👤' : '🤖';
-      
-      messageDiv.innerHTML = `
-        <div class="kalina-widget-message-avatar">${avatar}</div>
-        <div class="kalina-widget-message-content">${this.escapeHtml(content)}</div>
-      `;
-      
-      this.messagesContainer.appendChild(messageDiv);
-      this.scrollToBottom();
+      // Perform auto-save when closing
+      this.performAutoSave();
     }
 
     showTypingIndicator() {

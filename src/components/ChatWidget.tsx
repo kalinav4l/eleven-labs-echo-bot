@@ -1,11 +1,21 @@
-
 import React, { useState, useEffect } from 'react';
 import { useConversation } from '@11labs/react';
 import { cn } from '@/utils/utils.ts';
 import { Phone } from 'lucide-react';
+import { useAutoSaveConversation } from '@/hooks/useAutoSaveConversation';
+import { v4 as uuidv4 } from 'uuid';
+
+interface ChatMessage {
+  id: string;
+  text: string;
+  sender: 'user' | 'agent';
+  timestamp: Date;
+}
 
 const ChatWidget = () => {
   const [isActive, setIsActive] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [conversationId] = useState(() => uuidv4());
   
   const conversation = useConversation({
     onConnect: () => {
@@ -15,14 +25,43 @@ const ChatWidget = () => {
     onDisconnect: () => {
       console.log('Disconnected from chat widget agent');
       setIsActive(false);
+      // Perform final save on disconnect
+      manualSave();
     },
     onMessage: (message) => {
       console.log('Chat widget message received:', message);
+      const newMessage: ChatMessage = {
+        id: uuidv4(),
+        text: message.message || '',
+        sender: 'agent',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, newMessage]);
     },
     onError: (error) => {
       console.error('Chat widget conversation error:', error);
     }
   });
+
+  const { manualSave, recoverConversation } = useAutoSaveConversation(
+    conversationId,
+    'agent_01jwvb1kq9f2wss361kfwj0p5n',
+    'Chat Assistant',
+    messages,
+    isActive
+  );
+
+  // Recovery on component mount
+  useEffect(() => {
+    const recovered = recoverConversation();
+    if (recovered && recovered.messages.length > 0) {
+      setMessages(recovered.messages.map(msg => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp)
+      })));
+      console.log('Recovered conversation:', recovered.conversationId);
+    }
+  }, [recoverConversation]);
 
   // Persist conversation state across route changes
   useEffect(() => {
@@ -55,17 +94,21 @@ const ChatWidget = () => {
         conversation.endSession();
       }
       sessionStorage.removeItem('chatWidgetActive');
+      // Perform final save before unload
+      manualSave();
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [conversation]);
+  }, [conversation, manualSave]);
 
   const handleStartConversation = async () => {
     if (conversation.status === 'connected') {
       await conversation.endSession();
       setIsActive(false);
       sessionStorage.removeItem('chatWidgetActive');
+      // Final save before ending
+      manualSave();
     } else {
       try {
         setIsActive(true);
