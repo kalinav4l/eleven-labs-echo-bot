@@ -14,7 +14,7 @@ export interface ConversationData {
   elevenlabs_history_id?: string;
   conversation_id?: string;
   transcript?: any[];
-  status?: 'success' | 'failed' | 'busy' | 'no-answer' | 'active';
+  status?: 'success' | 'failed' | 'busy' | 'no-answer';
 }
 
 export const useConversationTracking = () => {
