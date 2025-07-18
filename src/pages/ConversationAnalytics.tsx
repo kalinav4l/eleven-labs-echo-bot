@@ -180,104 +180,84 @@ const ConversationAnalytics = () => {
           <h1 className="text-3xl font-bold">Analytics Conversații</h1>
         </div>
 
-        {/* Search and Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Filtre și Căutare</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Search Bar */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                type="text"
-                placeholder="Caută după număr telefon, nume contact, sau conversation ID..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+        {/* Compact Filters */}
+        <div className="flex flex-wrap items-center gap-3 p-4 bg-muted/30 rounded-lg border">
+          {/* Search Bar */}
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              type="text"
+              placeholder="Caută..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 h-8 text-sm"
+            />
+          </div>
 
-            {/* Filter Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Date After Filter */}
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-muted-foreground">Data de la:</label>
-                <Input
-                  type="date"
-                  value={dateAfter}
-                  onChange={(e) => setDateAfter(e.target.value)}
-                  className="w-full"
-                />
-              </div>
+          {/* Compact Filters */}
+          <div className="flex items-center gap-2">
+            <Input
+              type="date"
+              value={dateAfter}
+              onChange={(e) => setDateAfter(e.target.value)}
+              className="h-8 w-32 text-xs"
+              placeholder="De la"
+            />
+            <span className="text-xs text-muted-foreground">-</span>
+            <Input
+              type="date"
+              value={dateBefore}
+              onChange={(e) => setDateBefore(e.target.value)}
+              className="h-8 w-32 text-xs"
+              placeholder="Până la"
+            />
+          </div>
 
-              {/* Date Before Filter */}
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-muted-foreground">Data până la:</label>
-                <Input
-                  type="date"
-                  value={dateBefore}
-                  onChange={(e) => setDateBefore(e.target.value)}
-                  className="w-full"
-                />
-              </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-8 w-32 text-xs">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toate</SelectItem>
+              <SelectItem value="success">Success</SelectItem>
+              <SelectItem value="done">Done</SelectItem>
+              <SelectItem value="failed">Failed</SelectItem>
+              <SelectItem value="busy">Busy</SelectItem>
+            </SelectContent>
+          </Select>
 
-              {/* Status Filter */}
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-muted-foreground">Status apel:</label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Toate statusurile" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Toate statusurile</SelectItem>
-                    <SelectItem value="success">Success</SelectItem>
-                    <SelectItem value="done">Done</SelectItem>
-                    <SelectItem value="failed">Failed</SelectItem>
-                    <SelectItem value="busy">Busy</SelectItem>
-                    <SelectItem value="initiated">Initiated</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          <Select value={selectedAgent} onValueChange={setSelectedAgent}>
+            <SelectTrigger className="h-8 w-32 text-xs">
+              <SelectValue placeholder="Agent" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toți</SelectItem>
+              {getUniqueAgents().map(agentName => (
+                <SelectItem key={agentName} value={agentName}>
+                  {agentName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-              {/* Agent Filter */}
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-muted-foreground">Agent:</label>
-                <Select value={selectedAgent} onValueChange={setSelectedAgent}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Toți agenții" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Toți agenții</SelectItem>
-                    {getUniqueAgents().map(agentName => (
-                      <SelectItem key={agentName} value={agentName}>
-                        {agentName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Clear Filters Button */}
-            {(searchTerm || statusFilter !== 'all' || selectedAgent !== 'all' || dateAfter || dateBefore) && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  setSearchTerm('');
-                  setStatusFilter('all');
-                  setSelectedAgent('all');
-                  setDateAfter('');
-                  setDateBefore('');
-                }}
-              >
-                Șterge toate filtrele
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+          {/* Clear Filters */}
+          {(searchTerm || statusFilter !== 'all' || selectedAgent !== 'all' || dateAfter || dateBefore) && (
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+                setSelectedAgent('all');
+                setDateAfter('');
+                setDateBefore('');
+              }}
+              className="h-8 px-2 text-xs"
+            >
+              ✕
+            </Button>
+          )}
+        </div>
 
         {/* Call History Table */}
         <Card>
