@@ -17,6 +17,8 @@ import StatCard from '@/components/StatCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AnimatedCounter from '@/components/AnimatedCounter';
 import SkeletonCard from '@/components/SkeletonCard';
+import ElevenLabsChart from '@/components/ElevenLabsChart';
+
 const Account = () => {
   const {
     user,
@@ -45,6 +47,11 @@ const Account = () => {
   const {
     savedTranscripts
   } = useTranscripts();
+
+  // State for enhanced analytics data
+  const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
+  const [conversationCredits, setConversationCredits] = useState<Record<string, number>>({});
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -52,10 +59,6 @@ const Account = () => {
       console.error('Error signing out:', error);
     }
   };
-
-  // State for enhanced analytics data
-  const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
-  const [conversationCredits, setConversationCredits] = useState<Record<string, number>>({});
 
   // Calculate real stats from user data
   const totalAgents = userAgents?.length || 0;
@@ -187,6 +190,7 @@ const Account = () => {
     time: new Date(conv.created_at).toLocaleDateString('ro-RO'),
     icon: Activity
   })) || [])].slice(0, 4);
+
   if (profileLoading || agentsLoading || statsLoading) {
     return <DashboardLayout>
         <div className="min-h-screen bg-white">
@@ -234,6 +238,7 @@ const Account = () => {
         </div>
       </DashboardLayout>;
   }
+
   return <DashboardLayout>
       <div className="min-h-screen bg-white">
         {/* Animated Header */}
@@ -261,7 +266,7 @@ const Account = () => {
             {quickStats.map((stat, index) => <StatCard key={index} label={stat.label} value={stat.value} icon={stat.icon} delay={index * 100} />)}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             {/* Enhanced Performance Overview */}
             <div className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-all duration-300 animate-[slideInUp_0.8s_ease-out]">
               <div className="p-6 border-b border-gray-200">
@@ -378,6 +383,9 @@ const Account = () => {
             </div>
           </div>
 
+          {/* ElevenLabs Chart */}
+          <ElevenLabsChart />
+
           {/* Agent Overview */}
           <div className="border border-gray-200 rounded-lg bg-white mt-8">
             <div className="p-4 border-b border-gray-200">
@@ -407,11 +415,9 @@ const Account = () => {
                 </div>}
             </div>
           </div>
-
-          {/* Performance Insights */}
-          
         </div>
       </div>
     </DashboardLayout>;
 };
+
 export default Account;
