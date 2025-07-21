@@ -54,10 +54,17 @@ export function Header() {
     } style={{overflow: 'visible'}}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-50">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className={`text-2xl font-bold hover:scale-105 transition-all duration-300 text-shimmer animate-gradient ${
-            isOverDemo ? 'text-white' : 'text-primary'
-          }`}>
-            Kalina AI
+          <Link to="/" className="flex items-center hover:scale-105 transition-all duration-300">
+            <img 
+              src="/lovable-uploads/822d4d5f-7855-47c0-9d97-db7e06136296.png" 
+              alt="Kalina AI Logo" 
+              className="h-8 w-auto"
+            />
+            <span className={`ml-3 text-xl font-bold text-shimmer animate-gradient ${
+              isOverDemo ? 'text-white' : 'text-primary'
+            }`}>
+              Kalina AI
+            </span>
           </Link>
           
           <nav className="hidden md:flex items-center space-x-8 z-[100]">
