@@ -1,8 +1,11 @@
+
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { AnimatedSection } from '@/components/landing/AnimatedSection';
+import { AnimatedCard } from '@/components/landing/AnimatedCard';
+import { WaveSeparator } from '@/components/landing/WaveSeperator';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { 
   Bot, 
@@ -218,9 +221,11 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section 
-        className="relative min-h-screen flex items-center justify-center overflow-hidden"
+      {/* Hero Section - White */}
+      <AnimatedSection 
+        variant="light" 
+        direction="up" 
+        className="min-h-screen flex items-center justify-center"
         data-section="0"
       >
         <motion.div 
@@ -320,10 +325,17 @@ const Landing = () => {
         >
           <ChevronDown className="h-6 w-6 text-gray-400" />
         </motion.div>
-      </section>
+      </AnimatedSection>
 
-      {/* Overview Section */}
-      <section className="py-20 bg-white" data-section="1">
+      <WaveSeparator variant="light-to-dark" />
+
+      {/* Overview Section - Black */}
+      <AnimatedSection 
+        variant="dark" 
+        direction="left" 
+        className="py-20"
+        data-section="1"
+      >
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -331,10 +343,10 @@ const Landing = () => {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-black mb-8">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-8">
               Deblochează Potențialul Comunicării Tale
             </h2>
-            <p className="text-xl text-gray-600 mb-16">
+            <p className="text-xl text-gray-300 mb-16">
               Optimizarea apelurilor, analiza datelor și automatizarea sarcinilor - totul într-o singură platformă puternică.
             </p>
           </motion.div>
@@ -357,27 +369,34 @@ const Landing = () => {
                 description: "Automatizarea proceselor pentru eficiență maximă"
               }
             ].map((item, index) => (
-              <motion.div
+              <AnimatedCard
                 key={index}
-                className="text-center p-8"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: index * 0.2 }}
-                viewport={{ once: true }}
+                variant="light"
+                delay={0.2}
+                index={index}
+                className="p-8 text-center"
               >
-                <div className="w-16 h-16 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-                  <item.icon className="h-8 w-8 text-gray-700" />
+                <div className="w-16 h-16 mx-auto mb-6 bg-black rounded-full flex items-center justify-center">
+                  <item.icon className="h-8 w-8 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold mb-4 text-black">{item.title}</h3>
                 <p className="text-gray-600">{item.description}</p>
-              </motion.div>
+              </AnimatedCard>
             ))}
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
-      {/* Features Section */}
-      <section id="features" className="py-20 bg-gray-50" data-section="2">
+      <WaveSeparator variant="dark-to-light" />
+
+      {/* Features Section - White */}
+      <AnimatedSection 
+        variant="light" 
+        direction="right" 
+        className="py-20"
+        id="features"
+        data-section="2"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             className="text-center mb-16"
@@ -406,27 +425,45 @@ const Landing = () => {
                 <h3 className="text-2xl font-bold text-black mb-8 text-center">{category.category}</h3>
                 <div className="grid md:grid-cols-2 gap-8">
                   {category.items.map((item, itemIndex) => (
-                    <Card key={itemIndex} className="p-8 bg-white border border-gray-200 hover:shadow-lg transition-shadow">
+                    <AnimatedCard 
+                      key={itemIndex} 
+                      variant={itemIndex % 2 === 0 ? "dark" : "light"}
+                      delay={0.1}
+                      index={itemIndex}
+                      className="p-8"
+                    >
                       <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <item.icon className="h-6 w-6 text-gray-700" />
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                          itemIndex % 2 === 0 ? 'bg-white' : 'bg-black'
+                        }`}>
+                          <item.icon className={`h-6 w-6 ${
+                            itemIndex % 2 === 0 ? 'text-black' : 'text-white'
+                          }`} />
                         </div>
                         <div>
-                          <h4 className="text-xl font-semibold text-black mb-3">{item.title}</h4>
-                          <p className="text-gray-600 leading-relaxed">{item.description}</p>
+                          <h4 className="text-xl font-semibold mb-3">{item.title}</h4>
+                          <p className="leading-relaxed">{item.description}</p>
                         </div>
                       </div>
-                    </Card>
+                    </AnimatedCard>
                   ))}
                 </div>
               </motion.div>
             ))}
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
-      {/* Benefits Section */}
-      <section id="benefits" className="py-20 bg-white" data-section="3">
+      <WaveSeparator variant="light-to-dark" />
+
+      {/* Benefits Section - Black */}
+      <AnimatedSection 
+        variant="dark" 
+        direction="up" 
+        className="py-20"
+        id="benefits"
+        data-section="3"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             className="text-center mb-16"
@@ -435,37 +472,44 @@ const Landing = () => {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-black mb-8">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-8">
               De Ce Să Alegi Kalina AI?
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               Beneficiile care fac diferența în comunicațiile tale de afaceri.
             </p>
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {benefits.map((benefit, index) => (
-              <motion.div
+              <AnimatedCard
                 key={index}
+                variant="light"
+                delay={0.1}
+                index={index}
                 className="text-center p-6"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: index * 0.1 }}
-                viewport={{ once: true }}
               >
-                <div className="w-16 h-16 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-                  <benefit.icon className="h-8 w-8 text-gray-700" />
+                <div className="w-16 h-16 mx-auto mb-6 bg-black rounded-full flex items-center justify-center">
+                  <benefit.icon className="h-8 w-8 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold mb-4 text-black">{benefit.title}</h3>
                 <p className="text-gray-600">{benefit.description}</p>
-              </motion.div>
+              </AnimatedCard>
             ))}
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
-      {/* Testimonials Section */}
-      <section id="testimonials" className="py-20 bg-gray-50" data-section="4">
+      <WaveSeparator variant="dark-to-light" />
+
+      {/* Testimonials Section - White */}
+      <AnimatedSection 
+        variant="light" 
+        direction="down" 
+        className="py-20"
+        id="testimonials"
+        data-section="4"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             className="text-center mb-16"
@@ -484,36 +528,41 @@ const Landing = () => {
 
           <div className="grid md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <motion.div
+              <AnimatedCard
                 key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: index * 0.2 }}
-                viewport={{ once: true }}
+                variant="dark"
+                delay={0.2}
+                index={index}
+                className="p-8 h-full"
               >
-                <Card className="p-8 bg-white border border-gray-200 h-full">
-                  <div className="flex items-center mb-4">
-                    <Quote className="h-8 w-8 text-gray-400 mr-3" />
-                    <div className="flex text-yellow-400">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="h-4 w-4 fill-current" />
-                      ))}
-                    </div>
+                <div className="flex items-center mb-4">
+                  <Quote className="h-8 w-8 text-white mr-3" />
+                  <div className="flex text-yellow-400">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="h-4 w-4 fill-current" />
+                    ))}
                   </div>
-                  <p className="text-gray-600 mb-6 italic">"{testimonial.quote}"</p>
-                  <div className="border-t pt-4">
-                    <p className="font-semibold text-black">{testimonial.author}</p>
-                    <p className="text-sm text-gray-500">{testimonial.position}, {testimonial.company}</p>
-                  </div>
-                </Card>
-              </motion.div>
+                </div>
+                <p className="text-gray-300 mb-6 italic">"{testimonial.quote}"</p>
+                <div className="border-t border-white/20 pt-4">
+                  <p className="font-semibold text-white">{testimonial.author}</p>
+                  <p className="text-sm text-gray-400">{testimonial.position}, {testimonial.company}</p>
+                </div>
+              </AnimatedCard>
             ))}
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
-      {/* Final CTA Section */}
-      <section className="py-20 bg-black text-white" data-section="5">
+      <WaveSeparator variant="light-to-dark" />
+
+      {/* Final CTA Section - Black */}
+      <AnimatedSection 
+        variant="dark" 
+        direction="up" 
+        className="py-20"
+        data-section="5"
+      >
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -521,7 +570,7 @@ const Landing = () => {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-8">
+            <h2 className="text-4xl md:text-5xl font-bold mb-8 text-white">
               Ești Gata Să Duci Comunicațiile<br />La Următorul Nivel?
             </h2>
             <p className="text-xl text-gray-300 mb-12">
@@ -545,7 +594,7 @@ const Landing = () => {
             </div>
           </motion.div>
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* Footer */}
       <footer className="bg-black text-white py-16">
