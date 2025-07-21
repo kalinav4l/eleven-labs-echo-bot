@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
 import { ThreadsBackground } from '@/components/landing/ThreadsBackground';
+import { TrustedBy } from '@/components/landing/TrustedBy';
 import { Mic, Settings, MessageCircle, Link as LinkIcon, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
@@ -191,21 +192,8 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Join Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <p className="text-gray-600 mb-8">
-            Join thousands of developers and companies building the future of voice AI
-          </p>
-          <div className="flex justify-center items-center space-x-12 opacity-50">
-            <span>OpenAI</span>
-            <span>Google</span>
-            <span>Microsoft</span>
-            <span>Amazon</span>
-            <span>Meta</span>
-          </div>
-        </div>
-      </section>
+      {/* TrustedBy Section */}
+      <TrustedBy />
 
       {/* Stats Section */}
       <motion.section 
