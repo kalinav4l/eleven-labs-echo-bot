@@ -34,7 +34,7 @@ const Auth = () => {
   }, []);
 
   if (user) {
-    return <Navigate to="/account" replace />;
+    return <Navigate to="/" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
