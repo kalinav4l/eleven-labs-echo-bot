@@ -1,7 +1,8 @@
 import React from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { Header } from '@/components/landing/Header';
+import { Hero } from '@/components/landing/Hero';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Landing = () => {
@@ -13,78 +14,49 @@ const Landing = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-background/90 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Glass Effects */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-secondary/20 to-primary/20 rounded-full blur-3xl"></div>
-      </div>
+    <div className="min-h-screen bg-background">
+      <Header />
+      <Hero />
+      
+      {/* Features Section */}
+      <section className="py-16 bg-background/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-3 gap-6">
+            <Card className="border border-border bg-card hover:shadow-lg transition-all duration-300 hover:scale-105">
+              <CardHeader>
+                <CardTitle className="text-xl text-card-foreground">Agenți AI</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-muted-foreground">
+                  Creează și gestionează agenți AI performanți pentru afacerea ta
+                </CardDescription>
+              </CardContent>
+            </Card>
 
-      <div className="relative z-10 max-w-6xl mx-auto text-center">
-        {/* Hero Section */}
-        <div className="mb-12">
-          <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6 animate-fade-in">
-            Bine ai venit
-          </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto animate-fade-in">
-            Platforma ta pentru agenți AI avansați
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in">
-            <Button 
-              size="lg"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg"
-              onClick={() => window.location.href = '/auth'}
-            >
-              Începe acum
-            </Button>
-            <Button 
-              variant="outline" 
-              size="lg"
-              className="px-8 py-4 text-lg"
-              onClick={() => window.location.href = '/auth'}
-            >
-              Conectează-te
-            </Button>
+            <Card className="border border-border bg-card hover:shadow-lg transition-all duration-300 hover:scale-105">
+              <CardHeader>
+                <CardTitle className="text-xl text-card-foreground">Analize Avansate</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-muted-foreground">
+                  Monitorizează și optimizează performanța agenților tăi
+                </CardDescription>
+              </CardContent>
+            </Card>
+
+            <Card className="border border-border bg-card hover:shadow-lg transition-all duration-300 hover:scale-105">
+              <CardHeader>
+                <CardTitle className="text-xl text-card-foreground">Integrări</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-muted-foreground">
+                  Conectează-te cu toate platformele și serviciile tale
+                </CardDescription>
+              </CardContent>
+            </Card>
           </div>
         </div>
-
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-6 mt-16">
-          <Card className="liquid-glass animate-fade-in">
-            <CardHeader>
-              <CardTitle className="text-xl text-foreground">Agenți AI</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-muted-foreground">
-                Creează și gestionează agenți AI performanți pentru afacerea ta
-              </CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card className="liquid-glass animate-fade-in">
-            <CardHeader>
-              <CardTitle className="text-xl text-foreground">Analize Avansate</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-muted-foreground">
-                Monitorizează și optimizează performanța agenților tăi
-              </CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card className="liquid-glass animate-fade-in">
-            <CardHeader>
-              <CardTitle className="text-xl text-foreground">Integrări</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-muted-foreground">
-                Conectează-te cu toate platformele și serviciile tale
-              </CardDescription>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      </section>
     </div>
   );
 };
