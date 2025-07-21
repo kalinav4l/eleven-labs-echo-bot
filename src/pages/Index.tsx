@@ -5,13 +5,21 @@ import { Button } from '@/components/ui/button';
 import { Bot, Phone, TrendingUp, MessageSquare, Plus, BarChart3, PhoneCall } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useUserStats } from '@/hooks/useUserStats';
+
 const Index = () => {
-  const {
-    user
-  } = useAuth();
-  const {
-    data: stats
-  } = useUserStats();
+  const { user, loading } = useAuth();
+  const { data: stats } = useUserStats();
+
+  // Show loading spinner while auth is loading
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  // Redirect to landing if not authenticated
   if (!user) {
     return <Navigate to="/" replace />;
   }

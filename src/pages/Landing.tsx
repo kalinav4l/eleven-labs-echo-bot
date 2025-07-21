@@ -12,11 +12,20 @@ import { motion } from 'framer-motion';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 
 const Landing = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { ref: statsRef, isVisible: statsVisible } = useScrollReveal('up', 0.2);
   const { ref: featuresRef, isVisible: featuresVisible } = useScrollReveal('up', 0.3);
   const { ref: howItWorksRef, isVisible: howItWorksVisible } = useScrollReveal('up', 0.4);
   const { ref: faqRef, isVisible: faqVisible } = useScrollReveal('up', 0.5);
+
+  // Show loading spinner while auth is loading
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   // Redirect authenticated users to dashboard
   if (user) {
