@@ -7,6 +7,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Input } from '@/components/ui/input';
 import { ThreadsBackground } from '@/components/landing/ThreadsBackground';
 import { TrustedBy } from '@/components/landing/TrustedBy';
+import SpeechBot from '@/components/SpeechBot';
 import { Mic, Settings, MessageCircle, Link as LinkIcon, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
@@ -203,6 +204,9 @@ const Landing = () => {
 
       {/* TrustedBy Section */}
       <TrustedBy />
+      
+      {/* Speech Bot Section */}
+      <SpeechBot />
 
       {/* Stats Section */}
       <motion.section 
