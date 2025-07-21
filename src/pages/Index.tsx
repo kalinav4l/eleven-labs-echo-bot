@@ -25,7 +25,7 @@ const Index = () => {
   }
   const statCards = [{
     title: "Total Agents",
-    value: stats?.agents_used || 1,
+    value: stats?.agents_used || 0,
     icon: Bot,
     color: "text-blue-600"
   }, {
