@@ -1,24 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { Play } from 'lucide-react';
 
-export function Hero() {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  
-  const titleRef = useRef(null);
-  const descRef = useRef(null);
-  const buttonsRef = useRef(null);
-  
-  const titleInView = useInView(titleRef, { once: true, margin: "-100px" });
-  const descInView = useInView(descRef, { once: true, margin: "-100px" });
-  const buttonsInView = useInView(buttonsRef, { once: true, margin: "-100px" });
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({
-        x: e.clientX / window.innerWidth - 0.5,
         y: e.clientY / window.innerHeight - 0.5,
       });
     };
