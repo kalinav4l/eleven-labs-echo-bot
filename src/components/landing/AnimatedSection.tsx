@@ -9,6 +9,8 @@ interface AnimatedSectionProps {
   direction?: 'left' | 'right' | 'up' | 'down';
   delay?: number;
   className?: string;
+  id?: string;
+  'data-section'?: string;
 }
 
 export const AnimatedSection: React.FC<AnimatedSectionProps> = ({
@@ -16,7 +18,9 @@ export const AnimatedSection: React.FC<AnimatedSectionProps> = ({
   variant,
   direction = 'up',
   delay = 0,
-  className = ''
+  className = '',
+  id,
+  'data-section': dataSection
 }) => {
   const { ref, isVisible } = useScrollReveal(direction, delay);
 
@@ -36,6 +40,8 @@ export const AnimatedSection: React.FC<AnimatedSectionProps> = ({
   return (
     <motion.section
       ref={ref}
+      id={id}
+      data-section={dataSection}
       className={`relative overflow-hidden ${baseClasses} ${className}`}
       initial={{
         opacity: 0,
