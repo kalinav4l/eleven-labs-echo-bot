@@ -19,19 +19,22 @@ const Auth = () => {
   const [success, setSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  // Load saved credentials on component mount
-  React.useEffect(() => {
-    const savedCredentials = localStorage.getItem('lastLoginCredentials');
-    if (savedCredentials) {
-      try {
-        const { email: savedEmail, password: savedPassword } = JSON.parse(savedCredentials);
-        if (savedEmail) setEmail(savedEmail);
-        if (savedPassword) setPassword(savedPassword);
-      } catch (err) {
-        console.error('Error parsing saved credentials:', err);
-      }
+  // Password validation
+  const validatePassword = (password: string): string | null => {
+    if (password.length < 8) {
+      return 'Parola trebuie să aibă cel puțin 8 caractere';
     }
-  }, []);
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+      return 'Parola trebuie să conțină cel puțin o literă mare, o literă mică și o cifră';
+    }
+    return null;
+  };
+
+  // Email validation
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -44,6 +47,13 @@ const Auth = () => {
     setSuccess('');
 
     try {
+      // Input validation
+      if (!validateEmail(email)) {
+        setError('Vă rugăm să introduceți o adresă de email validă');
+        setLoading(false);
+        return;
+      }
+
       let result;
       if (isLogin) {
         console.log('Attempting login for:', email);
@@ -62,27 +72,26 @@ const Auth = () => {
           
           setError(errorMessage);
         } else {
-          // Save successful login credentials
-          localStorage.setItem('lastLoginCredentials', JSON.stringify({
-            email: email,
-            password: password
-          }));
+          // Force page refresh for clean state
+          window.location.href = '/';
         }
       } else {
-        // Validation for sign up
+        // Enhanced validation for sign up
         if (!firstName.trim() || !lastName.trim()) {
           setError('Prenumele și numele sunt obligatorii');
           setLoading(false);
           return;
         }
         
-        if (password.length < 6) {
-          setError('Parola trebuie să aibă cel puțin 6 caractere');
+        const passwordError = validatePassword(password);
+        if (passwordError) {
+          setError(passwordError);
           setLoading(false);
           return;
         }
 
         console.log('Attempting signup for:', email, 'with name:', firstName, lastName);
+        const redirectUrl = `${window.location.origin}/`;
         result = await signUp(email, password, firstName, lastName);
         
         if (result.error) {
@@ -92,7 +101,7 @@ const Auth = () => {
           if (result.error.message?.includes('User already registered')) {
             errorMessage = 'Un utilizator cu acest email există deja';
           } else if (result.error.message?.includes('Password should be at least')) {
-            errorMessage = 'Parola trebuie să aibă cel puțin 6 caractere';
+            errorMessage = 'Parola trebuie să aibă cel puțin 8 caractere și să conțină litere mari, mici și cifre';
           } else if (result.error.message?.includes('Database error')) {
             errorMessage = 'Eroare de bază de date. Vă rugăm să încercați din nou.';
           } else if (result.error.message) {

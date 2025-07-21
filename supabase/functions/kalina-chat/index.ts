@@ -13,17 +13,50 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY');
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
+// Input validation helpers
+const validateInput = (data: any) => {
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid request body');
+  }
+  
+  const { agent_id, message, conversation_history = [] } = data;
+  
+  // Validate agent_id
+  if (!agent_id || typeof agent_id !== 'string' || agent_id.length > 100) {
+    throw new Error('Invalid or missing agent_id');
+  }
+  
+  // Validate message
+  if (!message || typeof message !== 'string' || message.length === 0 || message.length > 5000) {
+    throw new Error('Invalid message: must be 1-5000 characters');
+  }
+  
+  // Validate conversation history
+  if (!Array.isArray(conversation_history) || conversation_history.length > 50) {
+    throw new Error('Invalid conversation history: max 50 messages');
+  }
+  
+  // Validate each message in history
+  conversation_history.forEach((msg: any, index: number) => {
+    if (!msg || typeof msg !== 'object' || !msg.role || !msg.content) {
+      throw new Error(`Invalid message at index ${index}`);
+    }
+    if (typeof msg.content !== 'string' || msg.content.length > 2000) {
+      throw new Error(`Message content too long at index ${index}`);
+    }
+  });
+  
+  return { agent_id, message, conversation_history };
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { agent_id, message, conversation_history = [] } = await req.json();
-
-    if (!agent_id || !message) {
-      throw new Error('Agent ID and message are required');
-    }
+    const requestData = await req.json();
+    const { agent_id, message, conversation_history } = validateInput(requestData);
 
     console.log(`Processing chat request for agent: ${agent_id}`);
 

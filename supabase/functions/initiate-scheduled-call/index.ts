@@ -7,29 +7,61 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Input validation helpers
+const validatePhoneNumber = (phone: string): boolean => {
+  // Basic international phone number validation
+  const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+  return phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''));
+};
+
+const validateInput = (data: any) => {
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid request body');
+  }
+  
+  const { agent_id, phone_number, contact_name, user_id, batch_processing, caller_number } = data;
+  
+  // Validate required fields
+  if (!agent_id || typeof agent_id !== 'string' || agent_id.length > 100) {
+    throw new Error('Invalid agent ID');
+  }
+  
+  if (!phone_number || typeof phone_number !== 'string') {
+    throw new Error('Phone number is required');
+  }
+  
+  if (!user_id || typeof user_id !== 'string') {
+    throw new Error('User ID is required');
+  }
+  
+  // Validate phone number format
+  const cleanPhone = phone_number.replace(/[\s\-\(\)]/g, '');
+  if (!validatePhoneNumber(cleanPhone)) {
+    throw new Error('Invalid phone number format');
+  }
+  
+  // Validate optional fields
+  if (contact_name && (typeof contact_name !== 'string' || contact_name.length > 200)) {
+    throw new Error('Contact name too long');
+  }
+  
+  if (caller_number && typeof caller_number !== 'string') {
+    throw new Error('Invalid caller number');
+  }
+  
+  return { agent_id, phone_number: cleanPhone, contact_name, user_id, batch_processing, caller_number };
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { agent_id, phone_number, contact_name, user_id, batch_processing, caller_number } = await req.json()
+    const requestData = await req.json();
+    const { agent_id, phone_number, contact_name, user_id, batch_processing, caller_number } = validateInput(requestData);
 
     console.log('Received request:', { agent_id, phone_number, contact_name, user_id, batch_processing, caller_number })
-
-    if (!agent_id || !phone_number || !user_id) {
-      console.error('Missing required fields:', { agent_id: !!agent_id, phone_number: !!phone_number, user_id: !!user_id })
-      return new Response(
-        JSON.stringify({ 
-          error: 'Agent ID, numărul de telefon și user ID sunt obligatorii',
-          success: false
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      )
-    }
 
     // Initialize Supabase client
     const supabase = createClient(

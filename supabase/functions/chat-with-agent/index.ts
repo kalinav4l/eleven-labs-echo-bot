@@ -12,6 +12,38 @@ const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
+// Input validation helpers
+const validateInput = (data: any) => {
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid request body');
+  }
+  
+  const { message, userId, model = 'gpt-4o-mini', agentId, systemPrompt } = data;
+  
+  // Validate message
+  if (!message || typeof message !== 'string' || message.length === 0 || message.length > 5000) {
+    throw new Error('Invalid message: must be 1-5000 characters');
+  }
+  
+  // Validate model
+  const allowedModels = ['gpt-4o-mini', 'gpt-4o'];
+  if (model && !allowedModels.includes(model)) {
+    throw new Error('Invalid model specified');
+  }
+  
+  // Validate agentId if provided
+  if (agentId && (typeof agentId !== 'string' || agentId.length > 100)) {
+    throw new Error('Invalid agentId');
+  }
+  
+  // Validate systemPrompt if provided
+  if (systemPrompt && (typeof systemPrompt !== 'string' || systemPrompt.length > 10000)) {
+    throw new Error('System prompt too long');
+  }
+  
+  return { message, userId, model, agentId, systemPrompt };
+};
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 serve(async (req) => {
@@ -21,11 +53,8 @@ serve(async (req) => {
   }
 
   try {
-    const { message, userId, model = 'gpt-4o-mini', agentId, systemPrompt } = await req.json();
-
-    if (!message) {
-      throw new Error('Message is required');
-    }
+    const requestData = await req.json();
+    const { message, userId, model, agentId, systemPrompt } = validateInput(requestData);
 
     console.log('Processing chat message:', { message, userId, model, agentId });
 
