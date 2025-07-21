@@ -620,45 +620,6 @@ export type Database = {
         }
         Relationships: []
       }
-      loading_videos: {
-        Row: {
-          created_at: string
-          description: string | null
-          duration_seconds: number | null
-          file_size_mb: number | null
-          id: string
-          is_active: boolean
-          title: string
-          updated_at: string
-          video_path: string
-          video_url: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          duration_seconds?: number | null
-          file_size_mb?: number | null
-          id?: string
-          is_active?: boolean
-          title: string
-          updated_at?: string
-          video_path: string
-          video_url: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          duration_seconds?: number | null
-          file_size_mb?: number | null
-          id?: string
-          is_active?: boolean
-          title?: string
-          updated_at?: string
-          video_path?: string
-          video_url?: string
-        }
-        Relationships: []
-      }
       order_items: {
         Row: {
           created_at: string
