@@ -105,7 +105,7 @@ export function Hero() {
                 whileTap={{ scale: 0.95 }}
               >
                 <Play className="w-5 h-5" />
-                Vizualizează Demo
+                banana
               </motion.button>
             </motion.div>
           </div>
