@@ -37,20 +37,7 @@ const Landing = () => {
   const yBg = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0.5]);
 
-  // Show loading spinner while auth is loading
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
-  // Redirect authenticated users to dashboard
-  if (user) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
+  // Move useEffect to top before any early returns
   useEffect(() => {
     const handleScroll = () => {
       const sections = document.querySelectorAll('section[data-section]');
@@ -66,6 +53,20 @@ const Landing = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Show loading spinner while auth is loading
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  // Redirect authenticated users to dashboard
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const companies = [
     "TechCorp", "InnovateCo", "FutureNext", "GlobalTech", "SmartBiz"
