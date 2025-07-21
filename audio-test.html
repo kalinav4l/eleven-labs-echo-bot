@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Audio Kalina AI</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px;
+            background: #111;
+            color: white;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+        }
+        .button:hover { background: #0056b3; }
+        .button:disabled { background: #666; cursor: not-allowed; }
+        .status {
+            background: #333;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .success { color: #4CAF50; }
+        .error { color: #f44336; }
+        .info { color: #2196F3; }
+    </style>
+</head>
+<body>
+    <h1>🎵 Test Audio Kalina AI</h1>
+    <p>Acest test va verifica fiecare pas al procesului audio:</p>
+    
+    <div class="status" id="status">
+        Pregătit pentru test...
+    </div>
+    
+    <button class="button" onclick="testBrowserAudio()">1. Test Audio Browser</button>
+    <button class="button" onclick="testElevenLabsAudio()">2. Test Audio ElevenLabs</button>
+    <button class="button" onclick="testSocketAudio()">3. Test Socket Audio</button>
+    <button class="button" onclick="testFullConversation()">4. Test Conversație Completă</button>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let audioContext = null;
+        let status = document.getElementById('status');
+        
+        function log(message, type = 'info') {
+            console.log(message);
+            const time = new Date().toLocaleTimeString();
+            status.innerHTML += `<div class="${type}">[${time}] ${message}</div>`;
+            status.scrollTop = status.scrollHeight;
+        }
+        
+        // Test 1: Browser audio capabilities
+        async function testBrowserAudio() {
+            log('🧪 Testez capacitățile audio ale browserului...', 'info');
+            
+            try {
+                // Test AudioContext
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                log('✅ AudioContext creat cu success', 'success');
+                log(`   Sample rate: ${audioContext.sampleRate}Hz`, 'info');
+                log(`   State: ${audioContext.state}`, 'info');
+                
+                // Resume if suspended
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                    log('✅ AudioContext resumed', 'success');
+                }
+                
+                // Test oscillator (beep sound)
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 440; // A note
+                gainNode.gain.value = 0.1; // Low volume
+                
+                oscillator.start();
+                log('🔊 Redând sunet test (440Hz beep)...', 'info');
+                
+                setTimeout(() => {
+                    oscillator.stop();
+                    log('✅ Sunet test terminat. Ai auzit beep-ul?', 'success');
+                }, 1000);
+                
+            } catch (error) {
+                log(`❌ Eroare audio browser: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 2: ElevenLabs audio direct
+        async function testElevenLabsAudio() {
+            log('🧪 Testez audio direct de la ElevenLabs API...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:8081/api/text-to-speech', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: 'Salut, aceasta este o testare a vocii mele.',
+                        voiceId: 'hnrrfdVZhpEHlvvBppOW'
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const audioBuffer = await response.arrayBuffer();
+                log(`✅ Audio primit: ${audioBuffer.byteLength} bytes`, 'success');
+                
+                // Decode and play
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+                
+                const decodedBuffer = await audioContext.decodeAudioData(audioBuffer);
+                log(`✅ Audio decodat: ${decodedBuffer.duration.toFixed(2)}s`, 'success');
+                
+                const source = audioContext.createBufferSource();
+                source.buffer = decodedBuffer;
+                source.connect(audioContext.destination);
+                source.start();
+                
+                log('🔊 Redând audio ElevenLabs...', 'info');
+                
+                source.onended = () => {
+                    log('✅ Audio ElevenLabs terminat. Ai auzit vocea?', 'success');
+                };
+                
+            } catch (error) {
+                log(`❌ Eroare ElevenLabs: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 3: Socket audio
+        async function testSocketAudio() {
+            log('🧪 Testez audio prin Socket.IO...', 'info');
+            
+            try {
+                // Start conversation
+                const convResponse = await fetch('http://localhost:8081/api/start-conversation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ voiceId: 'hnrrfdVZhpEHlvvBppOW' })
+                });
+                
+                const convData = await convResponse.json();
+                log(`✅ Conversație începută: ${convData.conversation_id}`, 'success');
+                
+                // Connect socket
+                const socket = io('http://localhost:8081');
+                
+                socket.on('connect', () => {
+                    log(`✅ Socket conectat: ${socket.id}`, 'success');
+                    
+                    socket.emit('join-conversation', {
+                        conversationId: convData.conversation_id,
+                        voiceId: 'hnrrfdVZhpEHlvvBppOW'
+                    });
+                });
+                
+                socket.on('conversation-ready', (data) => {
+                    log('✅ Conversație gata pentru test', 'success');
+                    
+                    // Send test audio
+                    const testAudio = btoa('test audio data');
+                    socket.emit('send-audio', { audioData: testAudio });
+                    log('📤 Audio test trimis...', 'info');
+                });
+                
+                socket.on('ai-message', async (data) => {
+                    log(`📨 Mesaj AI primit:`, 'info');
+                    log(`   Tip: ${data.type}`, 'info');
+                    log(`   Agent: ${data.agent}`, 'info');
+                    log(`   Mesaj: ${data.message}`, 'info');
+                    log(`   Are audio: ${!!data.audio_data}`, 'info');
+                    
+                    if (data.audio_data) {
+                        log(`   Lungime audio: ${data.audio_data.length} chars`, 'info');
+                        
+                        try {
+                            // Decode base64
+                            const binaryString = atob(data.audio_data);
+                            const audioArray = new Uint8Array(binaryString.length);
+                            for (let i = 0; i < binaryString.length; i++) {
+                                audioArray[i] = binaryString.charCodeAt(i);
+                            }
+                            
+                            log(`✅ Audio decodat: ${audioArray.byteLength} bytes`, 'success');
+                            
+                            // Create audio context if needed
+                            if (!audioContext) {
+                                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                            }
+                            
+                            if (audioContext.state === 'suspended') {
+                                await audioContext.resume();
+                                log('✅ AudioContext resumed pentru Socket', 'success');
+                            }
+                            
+                            // Decode audio
+                            const audioBuffer = await audioContext.decodeAudioData(audioArray.buffer);
+                            log(`✅ Socket audio decodat: ${audioBuffer.duration.toFixed(2)}s`, 'success');
+                            
+                            // Play audio
+                            const source = audioContext.createBufferSource();
+                            source.buffer = audioBuffer;
+                            source.connect(audioContext.destination);
+                            
+                            source.onended = () => {
+                                log('✅ Socket audio terminat. Ai auzit răspunsul AI?', 'success');
+                                socket.disconnect();
+                            };
+                            
+                            source.start();
+                            log('🔊 Redând socket audio...', 'info');
+                            
+                        } catch (audioError) {
+                            log(`❌ Eroare decodare socket audio: ${audioError.message}`, 'error');
+                            socket.disconnect();
+                        }
+                    } else {
+                        log('❌ Nu a fost primit audio în răspuns', 'error');
+                        socket.disconnect();
+                    }
+                });
+                
+                socket.on('conversation-error', (error) => {
+                    log(`❌ Eroare conversație: ${error.error}`, 'error');
+                });
+                
+            } catch (error) {
+                log(`❌ Eroare Socket test: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 4: Full conversation simulation
+        async function testFullConversation() {
+            log('🧪 Testez conversație completă cu microfon...', 'info');
+            
+            try {
+                // Request microphone access
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                log('✅ Acces microfon obținut', 'success');
+                
+                // Create audio context
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+                
+                // Set up audio analysis
+                const analyser = audioContext.createAnalyser();
+                const source = audioContext.createMediaStreamSource(stream);
+                source.connect(analyser);
+                
+                log('✅ Analiza audio configurată', 'success');
+                log('🎤 Vorbește acum pentru 3 secunde...', 'info');
+                
+                // Record for 3 seconds
+                const mediaRecorder = new MediaRecorder(stream);
+                const audioChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    log(`✅ Audio înregistrat: ${audioBlob.size} bytes`, 'success');
+                    
+                    // Convert to base64
+                    const arrayBuffer = await audioBlob.arrayBuffer();
+                    const uint8Array = new Uint8Array(arrayBuffer);
+                    let binary = '';
+                    for (let i = 0; i < uint8Array.byteLength; i++) {
+                        binary += String.fromCharCode(uint8Array[i]);
+                    }
+                    const base64Audio = btoa(binary);
+                    
+                    log(`✅ Audio convertit la base64: ${base64Audio.length} chars`, 'success');
+                    
+                    // Now test the full conversation
+                    await testFullConversationWithAudio(base64Audio);
+                    
+                    // Stop microphone
+                    stream.getTracks().forEach(track => track.stop());
+                };
+                
+                mediaRecorder.start();
+                
+                setTimeout(() => {
+                    mediaRecorder.stop();
+                    log('⏹️ Înregistrare oprită', 'info');
+                }, 3000);
+                
+            } catch (error) {
+                log(`❌ Eroare conversație completă: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testFullConversationWithAudio(audioData) {
+            log('🧪 Testez conversația cu audio real...', 'info');
+            
+            try {
+                // Start conversation
+                const convResponse = await fetch('http://localhost:8081/api/start-conversation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ voiceId: 'hnrrfdVZhpEHlvvBppOW' })
+                });
+                
+                const convData = await convResponse.json();
+                log(`✅ Conversație începută: ${convData.conversation_id}`, 'success');
+                
+                // Connect socket
+                const socket = io('http://localhost:8081');
+                
+                socket.on('connect', () => {
+                    log(`✅ Socket conectat: ${socket.id}`, 'success');
+                    
+                    socket.emit('join-conversation', {
+                        conversationId: convData.conversation_id,
+                        voiceId: 'hnrrfdVZhpEHlvvBppOW'
+                    });
+                });
+                
+                socket.on('conversation-ready', (data) => {
+                    log('✅ Conversație gata', 'success');
+                    
+                    // Send real recorded audio
+                    socket.emit('send-audio', { audioData: audioData });
+                    log('📤 Audio real trimis la server...', 'info');
+                });
+                
+                socket.on('ai-message', async (data) => {
+                    log(`📨 Răspuns AI primit pentru audio real:`, 'success');
+                    log(`   Ce ai spus (simulat): ${data.transcript}`, 'info');
+                    log(`   Răspuns AI: ${data.message}`, 'info');
+                    
+                    if (data.audio_data) {
+                        try {
+                            const binaryString = atob(data.audio_data);
+                            const audioArray = new Uint8Array(binaryString.length);
+                            for (let i = 0; i < binaryString.length; i++) {
+                                audioArray[i] = binaryString.charCodeAt(i);
+                            }
+                            
+                            const audioBuffer = await audioContext.decodeAudioData(audioArray.buffer);
+                            
+                            const source = audioContext.createBufferSource();
+                            source.buffer = audioBuffer;
+                            source.connect(audioContext.destination);
+                            
+                            source.onended = () => {
+                                log('🎉 CONVERSAȚIE COMPLETĂ TERMINATĂ! Ai auzit răspunsul?', 'success');
+                                socket.disconnect();
+                            };
+                            
+                            source.start();
+                            log('🔊 Redând răspunsul final...', 'info');
+                            
+                        } catch (audioError) {
+                            log(`❌ Eroare finală audio: ${audioError.message}`, 'error');
+                            socket.disconnect();
+                        }
+                    }
+                });
+                
+            } catch (error) {
+                log(`❌ Eroare conversație finală: ${error.message}`, 'error');
+            }
+        }
+        
+        // Initialize
+        log('🎵 Test Audio Kalina AI - Pregătit!', 'success');
+        log('Apasă butoanele în ordine pentru a testa fiecare componentă.', 'info');
+    </script>
+</body>
+</html>
