@@ -428,3 +428,216 @@
 .transform-gpu {
   transform: translateZ(0);
 }
+
+/* Advanced Landing Page Container Effects */
+.gradient-border {
+  position: relative;
+  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.gradient-border:hover::before {
+  opacity: 1;
+}
+
+/* Glow Effects for Dark Sections */
+.glow-effect {
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.glow-effect:hover {
+  box-shadow: 0 0 50px rgba(255, 255, 255, 0.2);
+}
+
+/* Enhanced Card Hover Animations */
+.card-hover-light {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover-light:hover {
+  transform: translateY(-12px) rotateY(5deg);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+}
+
+.card-hover-dark {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover-dark:hover {
+  transform: translateY(-12px) rotateY(-5deg);
+  box-shadow: 0 25px 50px rgba(255, 255, 255, 0.1);
+}
+
+/* Interactive Icon Animations */
+.interactive-icon {
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.interactive-icon:hover {
+  transform: rotate(15deg) scale(1.2);
+}
+
+/* Enhanced Button Effects */
+.enhanced-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.enhanced-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.enhanced-button:hover::before {
+  left: 100%;
+}
+
+/* Scroll-triggered Reveal Animations */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: all 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+.reveal-on-scroll.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Advanced Gradient Backgrounds */
+.gradient-bg-light {
+  background: linear-gradient(135deg, 
+    hsl(var(--background)) 0%,
+    rgba(0, 0, 0, 0.02) 50%,
+    hsl(var(--background)) 100%
+  );
+}
+
+.gradient-bg-dark {
+  background: linear-gradient(135deg, 
+    hsl(var(--foreground)) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    hsl(var(--foreground)) 100%
+  );
+}
+
+/* Parallax Effects */
+.parallax-element {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Text Reveal with Character Animation */
+.text-reveal-chars {
+  overflow: hidden;
+}
+
+.text-reveal-chars .char {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(100%);
+  animation: char-reveal 0.8s cubic-bezier(0.77, 0, 0.175, 1) forwards;
+}
+
+@keyframes char-reveal {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Floating Animation Variations */
+.float-delayed {
+  animation: float 6s ease-in-out infinite;
+  animation-delay: -2s;
+}
+
+.float-slow {
+  animation: float 8s ease-in-out infinite;
+}
+
+/* Container Entrance Animations */
+.container-slide-left {
+  transform: translateX(-100px);
+  opacity: 0;
+  transition: all 1s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+.container-slide-left.visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.container-slide-right {
+  transform: translateX(100px);
+  opacity: 0;
+  transition: all 1s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+.container-slide-right.visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* Advanced Ripple Effect */
+.advanced-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.advanced-ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease-out, height 0.6s ease-out, opacity 0.6s ease-out;
+  opacity: 0;
+}
+
+.advanced-ripple:hover::after {
+  width: 300px;
+  height: 300px;
+  opacity: 1;
+}
+
+/* Staggered Animation Delays */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+
+/* Performance Optimizations */
+.animated-element {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}

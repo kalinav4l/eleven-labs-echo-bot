@@ -278,17 +278,17 @@ const Landing = () => {
           >
             <Button 
               size="lg" 
-              className="bg-black text-white hover:bg-gray-800 px-8 py-4 text-lg"
+              className="bg-black text-white hover:bg-gray-800 px-8 py-4 text-lg enhanced-button btn-ripple animate-magnetic-hover"
             >
               Solicită un Demo Acum
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <ArrowRight className="ml-2 h-5 w-5 interactive-icon" />
             </Button>
             <Button 
               size="lg" 
               variant="outline" 
-              className="border-gray-300 text-black hover:bg-gray-50 px-8 py-4 text-lg"
+              className="border-gray-300 text-black hover:bg-gray-50 px-8 py-4 text-lg enhanced-button advanced-ripple animate-magnetic-hover"
             >
-              <Play className="mr-2 h-5 w-5" />
+              <Play className="mr-2 h-5 w-5 interactive-icon" />
               Watch Demo
             </Button>
           </motion.div>
