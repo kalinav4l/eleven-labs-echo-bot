@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Bot, Phone, MessageSquare, TrendingUp, ArrowRight, CheckCircle, Users, Zap, Shield } from 'lucide-react';
+import { Header } from '@/components/Header';
 
 const Landing = () => {
   const features = [
@@ -48,32 +49,9 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Bot className="h-8 w-8 text-gray-900 mr-3" />
-              <h1 className="text-2xl font-bold text-gray-900">Kalina AI</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link to="/auth">
-                <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50">
-                  Conectare
-                </Button>
-              </Link>
-              <Link to="/auth">
-                <Button className="bg-gray-900 text-white hover:bg-gray-800">
-                  Înregistrare Gratuită
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
-
+      <Header />
       {/* Hero Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 pt-32">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-4xl sm:text-6xl font-bold text-gray-900 mb-6 animate-fade-in">
             Construiește Agenți AI
