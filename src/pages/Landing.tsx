@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Bot, Phone, MessageSquare, TrendingUp, ArrowRight, CheckCircle, Users, Zap, Shield } from 'lucide-react';
 import { Header } from '@/components/Header';
+import { Hero } from '@/components/Hero';
 
 const Landing = () => {
   const features = [
@@ -50,31 +51,7 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-white">
       <Header />
-      {/* Hero Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 pt-32">
-        <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-6xl font-bold text-gray-900 mb-6 animate-fade-in">
-            Construiește Agenți AI
-            <br />
-            <span className="text-gray-600">pentru Business-ul Tău</span>
-          </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto animate-slide-in-up">
-            Platformă completă pentru crearea și gestionarea agenților AI inteligenți. 
-            Automatizează conversațiile, crește satisfacția clienților și optimizează procesele de business.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4 animate-slide-in-up">
-            <Link to="/auth">
-              <Button size="lg" className="bg-gray-900 text-white hover:bg-gray-800 px-8 py-4 text-lg">
-                Începe Gratuit
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-            <Button size="lg" variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-4 text-lg">
-              Vezi Demo
-            </Button>
-          </div>
-        </div>
-      </section>
+      <Hero />
 
       {/* Features Section */}
       <section className="py-20 bg-gray-50">
