@@ -40,6 +40,7 @@ function App() {
             <Route path="/dashboard" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/account" element={<Account />} />
+            <Route path="/account/*" element={<Account />} />
             <Route path="/account/kalina-agents" element={<KalinaAgents />} />
             <Route path="/account/agent-edit/:agentId" element={<AgentEdit />} />
             <Route path="/account/agent-consultant" element={<AgentConsultant />} />

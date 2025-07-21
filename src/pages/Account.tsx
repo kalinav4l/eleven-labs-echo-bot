@@ -22,8 +22,24 @@ import ElevenLabsChart from '@/components/ElevenLabsChart';
 const Account = () => {
   const {
     user,
-    signOut
+    signOut,
+    loading: authLoading
   } = useAuth();
+
+  // Redirect to landing if not authenticated
+  if (!authLoading && !user) {
+    window.location.href = '/';
+    return null;
+  }
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
   const {
     displayName,
     loading: profileLoading
