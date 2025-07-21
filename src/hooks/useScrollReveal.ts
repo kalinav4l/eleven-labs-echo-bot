@@ -17,7 +17,7 @@ export function useScrollReveal(direction: Direction = 'up', delay: number = 0) 
       },
       {
         threshold: 0.1,
-        rootMargin: '0px 0px -100px 0px'
+        rootMargin: '0px 0px -50px 0px'
       }
     );
 
@@ -32,22 +32,5 @@ export function useScrollReveal(direction: Direction = 'up', delay: number = 0) 
     };
   }, [delay]);
 
-  const getAnimationClass = () => {
-    if (!isVisible) return 'opacity-0';
-    
-    switch (direction) {
-      case 'up':
-        return 'animate-slide-in-up opacity-100';
-      case 'down':
-        return 'animate-slide-in-down opacity-100';
-      case 'left':
-        return 'animate-slide-in-left opacity-100';
-      case 'right':
-        return 'animate-slide-in-right opacity-100';
-      default:
-        return 'animate-fade-in opacity-100';
-    }
-  };
-
-  return { ref, isVisible, animationClass: getAnimationClass() };
+  return { ref, isVisible };
 }
