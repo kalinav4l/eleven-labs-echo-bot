@@ -1,7 +1,4 @@
-import React, { useRef, useMemo } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Points, PointMaterial } from '@react-three/drei';
-import * as THREE from 'three';
+import React, { useEffect, useRef } from 'react';
 
 interface ThreadsBackgroundProps {
   className?: string;
@@ -11,54 +8,6 @@ interface ThreadsBackgroundProps {
   enableMouseInteraction?: boolean;
 }
 
-function AnimatedPoints({ color, amplitude, distance }: {
-  color: [number, number, number];
-  amplitude: number;
-  distance: number;
-}) {
-  const ref = useRef<THREE.Points>(null);
-  
-  const particlesPosition = useMemo(() => {
-    const positions = new Float32Array(1000 * 3);
-    
-    for (let i = 0; i < 1000; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 10;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 10;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
-    }
-    
-    return positions;
-  }, []);
-
-  useFrame((state) => {
-    if (ref.current) {
-      const time = state.clock.getElapsedTime();
-      const positions = ref.current.geometry.attributes.position.array as Float32Array;
-      
-      for (let i = 0; i < positions.length; i += 3) {
-        positions[i + 1] = Math.sin(time + positions[i] * distance) * amplitude;
-      }
-      
-      ref.current.geometry.attributes.position.needsUpdate = true;
-      ref.current.rotation.x = time * 0.05;
-      ref.current.rotation.y = time * 0.075;
-    }
-  });
-
-  return (
-    <Points ref={ref} positions={particlesPosition} stride={3} frustumCulled={false}>
-      <PointMaterial
-        transparent
-        color={new THREE.Color(color[0], color[1], color[2])}
-        size={0.002}
-        sizeAttenuation={true}
-        depthWrite={false}
-        opacity={0.3}
-      />
-    </Points>
-  );
-}
-
 export const ThreadsBackground: React.FC<ThreadsBackgroundProps> = ({
   className = '',
   color = [0, 0, 0],
@@ -66,18 +15,101 @@ export const ThreadsBackground: React.FC<ThreadsBackgroundProps> = ({
   distance = 0.5,
   enableMouseInteraction = false
 }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const particles: Array<{
+      x: number;
+      y: number;
+      baseY: number;
+      speed: number;
+      angle: number;
+    }> = [];
+
+    // Create particles
+    for (let i = 0; i < 50; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        baseY: Math.random() * canvas.height,
+        speed: 0.02 + Math.random() * 0.02,
+        angle: Math.random() * Math.PI * 2
+      });
+    }
+
+    let animationId: number;
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      particles.forEach((particle, index) => {
+        particle.angle += particle.speed;
+        particle.y = particle.baseY + Math.sin(particle.angle) * amplitude * 20;
+        
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, 1, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${color[0] * 255}, ${color[1] * 255}, ${color[2] * 255}, 0.3)`;
+        ctx.fill();
+        
+        // Connect nearby particles
+        particles.forEach((otherParticle, otherIndex) => {
+          if (index !== otherIndex) {
+            const dx = particle.x - otherParticle.x;
+            const dy = particle.y - otherParticle.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < 100) {
+              ctx.beginPath();
+              ctx.moveTo(particle.x, particle.y);
+              ctx.lineTo(otherParticle.x, otherParticle.y);
+              ctx.strokeStyle = `rgba(${color[0] * 255}, ${color[1] * 255}, ${color[2] * 255}, ${0.1 * (1 - distance / 100)})`;
+              ctx.lineWidth = 0.5;
+              ctx.stroke();
+            }
+          }
+        });
+      });
+      
+      animationId = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    const handleResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      cancelAnimationFrame(animationId);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [color, amplitude, distance]);
+
   return (
-    <div className={className}>
-      <Canvas
-        camera={{ position: [0, 0, 1] }}
-        style={{ background: 'transparent' }}
-      >
-        <AnimatedPoints 
-          color={color} 
-          amplitude={amplitude} 
-          distance={distance} 
-        />
-      </Canvas>
-    </div>
+    <canvas
+      ref={canvasRef}
+      className={className}
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: 0
+      }}
+    />
   );
 };
