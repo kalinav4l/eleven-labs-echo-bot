@@ -13,7 +13,7 @@ const Index = () => {
     data: stats
   } = useUserStats();
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/" replace />;
   }
   const statCards = [{
     title: "Total Agents",

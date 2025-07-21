@@ -100,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Sign in successful, redirecting...');
         // Force page reload for clean state
         setTimeout(() => {
-          window.location.href = '/';
+          window.location.href = '/dashboard';
         }, 100);
       }
 
@@ -118,7 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Clean up existing state first
       cleanupAuthState();
 
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${window.location.origin}/dashboard`;
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -171,11 +171,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       // Force page reload for clean state
-      window.location.href = '/auth';
+      window.location.href = '/';
     } catch (error) {
       console.error('Sign out error:', error);
       // Force reload anyway
-      window.location.href = '/auth';
+      window.location.href = '/';
     }
   };
 

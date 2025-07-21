@@ -8,9 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 const Landing = () => {
   const { user } = useAuth();
 
-  // Redirect authenticated users to account page
+  // Redirect authenticated users to dashboard
   if (user) {
-    return <Navigate to="/account" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (
