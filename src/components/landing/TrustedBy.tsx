@@ -2,10 +2,10 @@
 
 import { useScrollReveal } from '@/hooks/useScrollReveal'
 import { useEffect, useState } from 'react'
-import { ThreadsBackground } from './ThreadsBackground'
+import Threads from '../Threads'
 
 export function TrustedBy() {
-  const { ref, isVisible } = useScrollReveal('up')
+  const { ref, classes, isVisible } = useScrollReveal('up')
   const [isMobile, setIsMobile] = useState(false)
   
   useEffect(() => {
@@ -36,7 +36,7 @@ export function TrustedBy() {
 
   return (
     <section className="relative overflow-hidden bg-white py-16 md:py-10">
-      <ThreadsBackground
+      <Threads
         className="absolute inset-0 z-0 pointer-events-none w-full h-full"
         color={[0, 0, 0]}
         amplitude={isMobile ? 0.8 : 1.5}
