@@ -412,65 +412,72 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
         </TabsContent>
 
         <TabsContent value="transcription" className="flex-1 flex flex-col mt-0">
-          <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4">
-            {conversationData?.transcript?.length > 0 ? (
-              conversationData.transcript.map((turn: any, index: number) => (
-                <div key={index} className="flex items-start space-x-3">
-                  {/* Avatar pentru agent (stânga) */}
-                  {turn.role === 'agent' && (
-                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                      <span className="text-black text-sm font-medium">A</span>
-                    </div>
-                  )}
-                  
-                  {/* Message bubble */}
-                  <div className={`flex-1 ${turn.role === 'user' ? 'flex justify-end' : ''}`}>
-                    <div className={`max-w-[80%] ${
-                      turn.role === 'agent' 
-                        ? 'bg-gray-100 text-black rounded-2xl rounded-bl-md' 
-                        : 'bg-black text-white rounded-2xl rounded-br-md ml-auto'
-                    } px-4 py-3 relative`}>
-                      <p className="text-sm leading-relaxed">{turn.message}</p>
-                      
-                      {/* Timestamp */}
-                      <div className={`text-xs mt-1 ${
-                        turn.role === 'agent' ? 'text-gray-500 text-right' : 'text-gray-300 text-left'
-                      }`}>
-                        {turn.time_in_call_secs !== undefined && formatDuration(turn.time_in_call_secs)}
+          <div className="p-6 pb-0">
+            <h3 className="text-lg font-semibold mb-4">Transcript Complet</h3>
+          </div>
+          
+          {/* Container dedicat pentru transcript cu scroll */}
+          <div className="flex-1 mx-6 mb-6 bg-gray-50 rounded-lg border">
+            <div className="h-full overflow-y-auto p-4 space-y-4">
+              {conversationData?.transcript?.length > 0 ? (
+                conversationData.transcript.map((turn: any, index: number) => (
+                  <div key={index} className="flex items-start space-x-3">
+                    {/* Avatar pentru agent (stânga) */}
+                    {turn.role === 'agent' && (
+                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                        <span className="text-black text-sm font-medium">A</span>
                       </div>
-                      
-                      {/* LLM și RAG info pentru mesajele agentului */}
-                      {turn.role === 'agent' && (turn.llm_usage || turn.rag_retrieval_info) && (
-                        <div className="flex gap-1 mt-2">
-                          {turn.llm_usage && (
-                            <span className="text-xs bg-gray-200 text-black px-2 py-1 rounded">
-                              LLM {turn.llm_usage.model_usage ? Object.keys(turn.llm_usage.model_usage)[0]?.split('-')[0] : ''}
-                            </span>
-                          )}
-                          {turn.rag_retrieval_info && (
-                            <span className="text-xs bg-gray-300 text-black px-2 py-1 rounded">
-                              RAG {Math.round(turn.rag_retrieval_info.rag_latency_secs * 1000)}ms
-                            </span>
-                          )}
+                    )}
+                    
+                    {/* Message bubble */}
+                    <div className={`flex-1 ${turn.role === 'user' ? 'flex justify-end' : ''}`}>
+                      <div className={`max-w-[80%] ${
+                        turn.role === 'agent' 
+                          ? 'bg-white text-black rounded-2xl rounded-bl-md border' 
+                          : 'bg-black text-white rounded-2xl rounded-br-md ml-auto'
+                      } px-4 py-3 relative`}>
+                        <p className="text-sm leading-relaxed">{turn.message}</p>
+                        
+                        {/* Timestamp */}
+                        <div className={`text-xs mt-1 ${
+                          turn.role === 'agent' ? 'text-gray-500 text-right' : 'text-gray-300 text-left'
+                        }`}>
+                          {turn.time_in_call_secs !== undefined && formatDuration(turn.time_in_call_secs)}
                         </div>
-                      )}
+                        
+                        {/* LLM și RAG info pentru mesajele agentului */}
+                        {turn.role === 'agent' && (turn.llm_usage || turn.rag_retrieval_info) && (
+                          <div className="flex gap-1 mt-2">
+                            {turn.llm_usage && (
+                              <span className="text-xs bg-gray-200 text-black px-2 py-1 rounded">
+                                LLM {turn.llm_usage.model_usage ? Object.keys(turn.llm_usage.model_usage)[0]?.split('-')[0] : ''}
+                              </span>
+                            )}
+                            {turn.rag_retrieval_info && (
+                              <span className="text-xs bg-gray-300 text-black px-2 py-1 rounded">
+                                RAG {Math.round(turn.rag_retrieval_info.rag_latency_secs * 1000)}ms
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
+                    
+                    {/* Avatar pentru user (dreapta) */}
+                    {turn.role === 'user' && (
+                      <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center flex-shrink-0">
+                        <span className="text-white text-sm font-medium">U</span>
+                      </div>
+                    )}
                   </div>
-                  
-                  {/* Avatar pentru user (dreapta) */}
-                  {turn.role === 'user' && (
-                    <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-sm font-medium">U</span>
-                    </div>
-                  )}
+                ))
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <p>Nu există transcript disponibil pentru această conversație.</p>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>Nu există transcript disponibil pentru această conversație.</p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </TabsContent>
       </Tabs>
