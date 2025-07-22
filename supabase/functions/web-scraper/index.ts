@@ -92,14 +92,50 @@ serve(async (req) => {
             for (let i = 0; i < elements.length; i++) {
               const element = elements[i];
               
-              // Extract title
+              // Extract title with more specific selectors for sote.md
               let productTitle = '';
-              const titleSelectors = ['h1, h2, h3, h4, h5, h6', '.title, .name, .product-name', '.nume, .produs-nume'];
+              const titleSelectors = [
+                'h1, h2, h3, h4, h5, h6',
+                '.title, .name, .product-name, .product-title',
+                '.nume, .produs-nume, .denumire',
+                'a[title]', // Link with title attribute
+                '.card-title, .item-title',
+                '.product__title, .item__title',
+                '[data-product-title]',
+                'p strong', // Sometimes titles are in bold paragraphs
+                '.caption h3, .caption h4',
+                '.info h3, .info h4'
+              ];
+              
               for (const tSel of titleSelectors) {
-                const titleEl = element.querySelector(tSel);
+                let titleEl = element.querySelector(tSel);
                 if (titleEl?.textContent?.trim()) {
                   productTitle = titleEl.textContent.trim();
                   break;
+                }
+                // Try to get title from link's title attribute
+                if (tSel === 'a[title]') {
+                  titleEl = element.querySelector('a');
+                  if (titleEl?.getAttribute('title')?.trim()) {
+                    productTitle = titleEl.getAttribute('title').trim();
+                    break;
+                  }
+                }
+              }
+              
+              // Fallback: get text from the first meaningful text element
+              if (!productTitle) {
+                const allTextElements = element.querySelectorAll('*');
+                for (let j = 0; j < allTextElements.length; j++) {
+                  const textEl = allTextElements[j];
+                  const text = textEl.textContent?.trim();
+                  if (text && text.length > 5 && text.length < 200 && 
+                      !text.includes('MDL') && !text.includes('LEI') && 
+                      !text.match(/^\d+[.,]\d+/) && // Not a price
+                      !text.includes('₽') && !text.includes('$')) {
+                    productTitle = text;
+                    break;
+                  }
                 }
               }
               
