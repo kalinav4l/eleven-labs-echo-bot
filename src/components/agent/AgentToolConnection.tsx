@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Link, CheckCircle, MessageSquare, X } from 'lucide-react';
+import { Link, CheckCircle, MessageSquare, X, Copy } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { useClipboard } from '@/hooks/useClipboard';
 interface AgentToolConnectionProps {
   agentData: any;
   setAgentData: React.Dispatch<React.SetStateAction<any>>;
@@ -19,6 +20,7 @@ const AgentToolConnection: React.FC<AgentToolConnectionProps> = ({
     const tools = agentData.conversation_config?.tools || [];
     return tools.some((tool: any) => tool.id === toolId);
   });
+  const { copyToClipboard } = useClipboard();
   const examplePrompt = `Daca omul nu are timp, poti oferi sa trimiti o oferta prin SMS.
 Poti intreba: 'Doriți să vă trimit oferta prin SMS la acest număr ({{system__called_number}}), sau la un alt număr de contact?'
 Daca clientul cere pe alt numar, cere numarul explicit si foloseste tool-ul de SMS pentru numarul specificat de el.
@@ -108,13 +110,23 @@ In oferta trimite si linkul la site https://kalinaai.md/.`;
         <div className="border border-amber-500/20 rounded-lg p-3 mb-3 bg-red-50">
           <p className="text-sm text-amber-600 flex items-start gap-2">
             <span className="mt-0.5">⚠️</span>
-            <span className="text-base text-red-600"><strong>IMPORTANT:</strong> Acest prompt este OBLIGATORIU pentru funcționarea corectă a tool-ului SMS. Agentul nu va putea trimite oferte prin SMS fără aceste instrucțiuni.</span>
+            <span className="text-base text-red-600"><strong>IMPORTANT:</strong> Acest prompt este OBLIGATORIU pentru funcționarea corectă a tool-ului SMS. Agentul nu va putea trimite oferte prin SMS fără aceste instrucțiuni. Poți schimba site-ul cu al tău.</span>
           </p>
         </div>
 
         {/* Simple Prompt Display */}
         <div className="space-y-2">
-          <Textarea value={examplePrompt} readOnly className="glass-input min-h-[100px] resize-none text-sm" />
+          <div className="flex gap-2">
+            <Textarea value={examplePrompt} readOnly className="glass-input min-h-[100px] resize-none text-sm flex-1" />
+            <Button 
+              onClick={() => copyToClipboard(examplePrompt)} 
+              variant="outline" 
+              size="sm"
+              className="self-start"
+            >
+              <Copy className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Connected Tools */}
