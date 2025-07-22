@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Search, Phone, Copy, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { ConversationDetailModal } from '@/components/outbound/ConversationDetailModal';
-import { useConversationById } from '@/hooks/useConversationById';
+import { ConversationDetailSidebar } from '@/components/outbound/ConversationDetailSidebar';
 import { supabase } from '@/integrations/supabase/client';
 const ConversationAnalytics = () => {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ const ConversationAnalytics = () => {
   const [dateAfter, setDateAfter] = useState('');
   const [dateBefore, setDateBefore] = useState('');
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
   const [conversationCosts, setConversationCosts] = useState<Record<string, number>>({});
   const {
@@ -73,10 +73,10 @@ const ConversationAnalytics = () => {
   };
   const handleConversationClick = (conversationId: string) => {
     setSelectedConversationId(conversationId);
-    setIsModalOpen(true);
+    setIsSidebarOpen(true);
   };
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  const handleCloseSidebar = () => {
+    setIsSidebarOpen(false);
     setSelectedConversationId(null);
   };
 
@@ -246,7 +246,7 @@ const ConversationAnalytics = () => {
                 filteredCalls.map(call => {
                   const dateTime = formatDate(call.call_date);
                   return (
-                    <div key={call.id} className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer" onDoubleClick={() => call.conversation_id && navigate(`/account/conversation-analytics/${call.conversation_id}`)}>
+                    <div key={call.id} className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer" onClick={() => call.conversation_id && handleConversationClick(call.conversation_id)}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center text-sm">
                           <Phone className="w-3 h-3 mr-1 text-muted-foreground" />
@@ -292,7 +292,7 @@ const ConversationAnalytics = () => {
                       </td>
                     </tr> : filteredCalls.map(call => {
                   const dateTime = formatDate(call.call_date);
-                  return <tr key={call.id} className="hover:bg-gray-50 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:z-10 relative" onDoubleClick={() => call.conversation_id && navigate(`/account/conversation-analytics/${call.conversation_id}`)}>
+                  return <tr key={call.id} className="hover:bg-gray-50 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:z-10 relative" onClick={() => call.conversation_id && handleConversationClick(call.conversation_id)}>
                           <td className="p-3">
                             <div className="flex items-center text-sm">
                               <Phone className="w-3 h-3 mr-1 text-muted-foreground" />
@@ -342,7 +342,19 @@ const ConversationAnalytics = () => {
         </div>
       </div>
       
-      <ConversationDetailModal conversationId={selectedConversationId} isOpen={isModalOpen} onClose={handleCloseModal} />
+      {/* Conversation Detail Sidebar */}
+      <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+        <SheetContent side="right" className="w-full sm:w-[600px] sm:max-w-[50vw] p-0">
+          <SheetHeader className="p-6 border-b">
+            <SheetTitle>Detalii Conversație</SheetTitle>
+          </SheetHeader>
+          <div className="p-6">
+            {selectedConversationId && (
+              <ConversationDetailSidebar conversationId={selectedConversationId} />
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </DashboardLayout>;
 };
 export default ConversationAnalytics;
