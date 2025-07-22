@@ -1,0 +1,107 @@
+project_id = "pwfczzxwjfxomqzhhwvj"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+port = 54324
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://lovable.dev"]
+jwt_expiry = 3600
+enable_signup = true
+email_double_confirm_changes = true
+enable_manual_linking = false
+
+[edge_runtime]
+enabled = true
+port = 54323
+inspector_port = 8083
+
+[functions.chat-with-agent]
+verify_jwt = false
+
+[functions.chat-with-gpt]
+verify_jwt = false
+
+[functions.create-checkout]
+verify_jwt = false
+
+[functions.create-elevenlabs-agent]
+verify_jwt = true
+
+[functions.delete-elevenlabs-agent]
+verify_jwt = true
+
+[functions.document-processor]
+verify_jwt = true
+
+[functions.generate-agent-prompt]
+verify_jwt = true
+
+[functions.get-agent-conversations]
+verify_jwt = true
+
+[functions.get-conversation-audio]
+verify_jwt = false
+
+[functions.get-elevenlabs-agent]
+verify_jwt = true
+
+[functions.get-elevenlabs-conversation]
+verify_jwt = true
+
+[functions.get-elevenlabs-conversations]
+verify_jwt = true
+
+[functions.initiate-scheduled-call]
+verify_jwt = false
+
+[functions.kalina-chat]
+verify_jwt = false
+
+[functions.kalina-widget]
+verify_jwt = false
+
+[functions.knowledge-base-operations]
+verify_jwt = true
+
+[functions.process-document]
+verify_jwt = true
+
+[functions.process-transcript]
+verify_jwt = true
+
+[functions.prompt-generation]
+verify_jwt = true
+
+[functions.save-conversation]
+verify_jwt = false
+
+[functions.send-sms]
+verify_jwt = true
+
+[functions.speech-to-text]
+verify_jwt = true
+
+[functions.text-to-speech]
+verify_jwt = true
+
+[functions.translate-text]
+verify_jwt = true
+
+[functions.update-elevenlabs-agent]
+verify_jwt = true
+
+[functions.verify-payment]
+verify_jwt = false
+
+[functions.web-scraper]
+verify_jwt = false
+
+[functions.check-scheduled-tasks]
+verify_jwt = false
