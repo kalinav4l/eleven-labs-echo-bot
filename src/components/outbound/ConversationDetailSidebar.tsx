@@ -199,6 +199,8 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
     autoTranslate();
   }, [conversationData?.summary]);
 
+  console.log('ConversationDetailSidebar - isLoading:', isLoading, 'error:', error, 'conversation:', conversation);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
