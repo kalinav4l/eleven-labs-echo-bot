@@ -21,10 +21,13 @@ serve(async (req) => {
     // Găsește conversații recent finalizate care nu au fost încă procesate pentru oferte
     const { data: conversations, error } = await supabase
       .from('call_history')
-      .select('*')
+      .select(`
+        *,
+        sms_offers!left(id)
+      `)
       .eq('call_status', 'completed')
-      .gte('call_date', new Date(Date.now() - 10 * 60 * 1000).toISOString()) // Ultimele 10 minute
-      .is('conversation_id', null);
+      .gte('call_date', new Date(Date.now() - 60 * 60 * 1000).toISOString()) // Ultima oră
+      .is('sms_offers.id', null); // Nu există încă ofertă SMS
 
     if (error) {
       console.error('❌ Eroare la căutarea conversațiilor:', error);
