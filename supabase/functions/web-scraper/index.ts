@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { DOMParser, HTMLDocument } from 'https://deno.land/x/deno_dom@v0.1.43/deno-dom-wasm.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -941,10 +942,9 @@ class ProductDetector {
     const uniqueProducts = this.deduplicateProducts(allProducts);
     const scoredProducts = this.scoreProducts(uniqueProducts, doc, targetUrl);
     
-    // Sort by quality score and return top results
+    // Sort by quality score and return ALL results (removed limit)
     const finalProducts = scoredProducts
-      .sort((a, b) => (b.quality_score || 0) - (a.quality_score || 0))
-      .slice(0, 100);
+      .sort((a, b) => (b.quality_score || 0) - (a.quality_score || 0));
     
     console.log(`✅ Detection completed in ${Date.now() - startTime}ms, found ${finalProducts.length} products`);
     return finalProducts;
@@ -2173,7 +2173,7 @@ serve(async (req) => {
     console.log(`📄 HTML content retrieved: ${htmlContent.length} characters`);
 
     const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlContent, 'text/html');
+    const doc = parser.parseFromString(htmlContent, 'text/html') as HTMLDocument;
 
     // Extract basic metadata
     const title = doc.querySelector('title')?.textContent || '';
@@ -2238,12 +2238,12 @@ serve(async (req) => {
       keywords,
       language,
       text: doc.body?.textContent?.substring(0, 10000) || '',
-      links: Array.from(doc.querySelectorAll('a')).slice(0, 200).map(link => ({
+      links: Array.from(doc.querySelectorAll('a')).map(link => ({
         url: link.href || link.getAttribute('href') || '',
         text: link.textContent?.trim() || '',
         type: link.getAttribute('rel') || 'link'
       })),
-      images: Array.from(doc.querySelectorAll('img')).slice(0, 100).map(img => ({
+      images: Array.from(doc.querySelectorAll('img')).map(img => ({
         src: img.src || img.getAttribute('src') || '',
         alt: img.alt || '',
         title: img.title || '',

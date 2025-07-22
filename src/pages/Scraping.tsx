@@ -939,7 +939,7 @@ const useFullSiteScraper = () => {
       { url: baseUrl, depth: 0 }
     ];
 
-    while (urlsToVisit.length > 0 && (unlimitedScraping || visitedUrls.size < 500)) { // Folosește unlimited sau 500
+    while (urlsToVisit.length > 0 && (unlimitedScraping || visitedUrls.size < 5000)) { // Măresc limita la 5000 sau unlimited
       const { url, depth, parentUrl } = urlsToVisit.shift()!;
       
       if (visitedUrls.has(url) || depth > maxDepth) {
@@ -958,7 +958,7 @@ const useFullSiteScraper = () => {
             if (normalizedUrl && 
                 isSameDomain(normalizedUrl, baseUrl) && 
                 !visitedUrls.has(normalizedUrl) && 
-                urlsToVisit.length < (unlimitedScraping ? 10000 : 1000)) { // Elimin limitele dacă e unlimited
+                urlsToVisit.length < (unlimitedScraping ? Infinity : 5000)) { // Elimin limitele complet sau măresc la 5000
               urlsToVisit.push({ url: normalizedUrl, depth: depth + 1, parentUrl: url });
             }
           });
