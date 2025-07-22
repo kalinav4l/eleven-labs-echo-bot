@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { X, Plus } from 'lucide-react';
+import { X } from 'lucide-react';
 import { LANGUAGES } from '@/constants/constants';
 
 interface AdditionalLanguagesSectionProps {
@@ -18,12 +18,9 @@ const AdditionalLanguagesSection: React.FC<AdditionalLanguagesSectionProps> = ({
   onLanguagesChange,
   currentLanguage,
 }) => {
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('');
-
-  const addLanguage = () => {
-    if (selectedLanguage && !selectedLanguages.includes(selectedLanguage)) {
-      onLanguagesChange([...selectedLanguages, selectedLanguage]);
-      setSelectedLanguage('');
+  const addLanguage = (languageValue: string) => {
+    if (languageValue && !selectedLanguages.includes(languageValue)) {
+      onLanguagesChange([...selectedLanguages, languageValue]);
     }
   };
 
@@ -51,9 +48,9 @@ const AdditionalLanguagesSection: React.FC<AdditionalLanguagesSectionProps> = ({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex gap-2">
-          <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+          <Select value="" onValueChange={addLanguage}>
             <SelectTrigger className="glass-input flex-1">
-              <SelectValue placeholder="Selectează o limbă..." />
+              <SelectValue placeholder="Selectează o limbă pentru a o adăuga..." />
             </SelectTrigger>
             <SelectContent>
               {availableLanguages.map((language) => (
@@ -63,15 +60,6 @@ const AdditionalLanguagesSection: React.FC<AdditionalLanguagesSectionProps> = ({
               ))}
             </SelectContent>
           </Select>
-          <Button
-            onClick={addLanguage}
-            disabled={!selectedLanguage}
-            variant="outline"
-            size="icon"
-            className="glass-button border-border"
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
         </div>
 
         <div className="space-y-2">
