@@ -399,8 +399,6 @@ const Calls = () => {
                       onPhoneSelect={setSelectedPhoneId}
                       totalRecipients={contacts.length}
                       selectedRecipients={selectedContacts.size}
-                      smsConfig={smsConfig}
-                      onSMSConfigChange={setSmsConfig}
                     />
                   </div>
                 </div>

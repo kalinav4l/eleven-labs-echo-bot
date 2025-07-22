@@ -1,17 +1,8 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { AgentSelector } from './AgentSelector';
 import { PhoneSelector } from './PhoneSelector';
-import { SMSConfigSection } from './SMSConfigSection';
-import { Settings, Users, Phone } from 'lucide-react';
-interface SMSConfig {
-  enabled: boolean;
-  apiToken: string;
-  senderId: string;
-  message: string;
-  delay: number;
-}
+
 interface BatchConfigPanelProps {
   selectedAgentId: string;
   onAgentSelect: (agentId: string) => void;
@@ -19,21 +10,18 @@ interface BatchConfigPanelProps {
   onPhoneSelect: (phoneId: string) => void;
   totalRecipients: number;
   selectedRecipients: number;
-  smsConfig: SMSConfig;
-  onSMSConfigChange: (config: SMSConfig) => void;
 }
+
 export const BatchConfigPanel: React.FC<BatchConfigPanelProps> = ({
   selectedAgentId,
   onAgentSelect,
   selectedPhoneId,
   onPhoneSelect,
   totalRecipients,
-  selectedRecipients,
-  smsConfig,
-  onSMSConfigChange
+  selectedRecipients
 }) => {
-  return <Card className="p-6">
-      
+  return (
+    <Card className="p-6">
       <CardContent className="px-0 space-y-6">
         {/* Agent Selection */}
         <div className="space-y-2">
@@ -45,8 +33,16 @@ export const BatchConfigPanel: React.FC<BatchConfigPanelProps> = ({
           <PhoneSelector selectedPhoneId={selectedPhoneId} onPhoneSelect={onPhoneSelect} />
         </div>
 
-        {/* SMS Configuration */}
-        <SMSConfigSection config={smsConfig} onConfigChange={onSMSConfigChange} />
+        {/* Recipients Summary */}
+        <div className="bg-muted/50 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Contacte selectate</span>
+            <span className="text-sm font-medium">
+              {selectedRecipients} din {totalRecipients}
+            </span>
+          </div>
+        </div>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
