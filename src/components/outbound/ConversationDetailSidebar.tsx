@@ -237,7 +237,7 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
           </TabsList>
         </div>
 
-        <TabsContent value="overview" className="space-y-4 mt-4 overflow-y-auto flex-1 min-h-0">
+        <TabsContent value="overview" className="space-y-4 mt-4 p-6">
           {/* Rezumat Conversație */}
           <Card className="shadow-sm">
             <CardHeader className="pb-2">
