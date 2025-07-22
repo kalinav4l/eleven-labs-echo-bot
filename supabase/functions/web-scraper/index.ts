@@ -76,32 +76,79 @@ serve(async (req) => {
             }
           }
           
-          // Extract price
+          // Extract price with enhanced selectors for sote.md and Romanian sites
           let productPrice = '';
-          const priceSelectors = ['.price, .pret, .cost', '.product-price, .produs-pret', '[data-price]'];
+          const priceSelectors = [
+            '.price, .pret, .cost, .pretul',
+            '.product-price, .produs-pret',
+            '[data-price]',
+            '.money, .suma, .valoare',
+            '.price-current, .price-regular',
+            '.current-price, .regular-price',
+            '.product__price, .item__price',
+            '.price-item, .price-value',
+            '[class*="price"]',
+            '[class*="pret"]',
+            'span[contains(text(), "MDL")], span[contains(text(), "LEI")], span[contains(text(), "RON")]'
+          ];
+          
           for (const pSel of priceSelectors) {
             const priceEl = element.querySelector(pSel);
             if (priceEl?.textContent?.trim()) {
               const priceText = priceEl.textContent.trim();
-              if (priceText.match(/\d+/)) {
+              // Check for Romanian currency patterns
+              if (priceText.match(/\d+(\.\d+)?\s*(MDL|LEI|RON|lei|mdl|ron)/i) || 
+                  priceText.match(/\d+(\,\d+)?\s*(MDL|LEI|RON|lei|mdl|ron)/i) ||
+                  priceText.match(/\d+/)) {
                 productPrice = priceText;
                 break;
               }
             }
           }
           
-          // Extract image
+          // Fallback: search in all text content for price patterns
+          if (!productPrice) {
+            const allText = element.textContent || '';
+            const priceMatch = allText.match(/(\d+(?:[.,]\d+)?)\s*(MDL|LEI|RON|lei|mdl|ron)/i);
+            if (priceMatch) {
+              productPrice = priceMatch[0];
+            }
+          }
+          
+          // Extract image with better selectors
           let productImage = '';
           const imgEl = element.querySelector('img');
           if (imgEl) {
-            productImage = imgEl.src || imgEl.getAttribute('data-src') || '';
+            let imgSrc = imgEl.src || imgEl.getAttribute('data-src') || imgEl.getAttribute('data-lazy') || imgEl.getAttribute('srcset');
+            if (imgSrc) {
+              // Handle srcset format
+              if (imgSrc.includes(',')) {
+                imgSrc = imgSrc.split(',')[0].trim().split(' ')[0];
+              }
+              // Make sure it's a full URL
+              if (imgSrc.startsWith('//')) {
+                imgSrc = 'https:' + imgSrc;
+              } else if (imgSrc.startsWith('/')) {
+                const baseUrl = new URL(url);
+                imgSrc = `${baseUrl.origin}${imgSrc}`;
+              }
+              productImage = imgSrc;
+            }
           }
           
-          // Extract URL
+          // Extract URL with better logic
           let productUrl = url;
           const linkEl = element.querySelector('a');
-          if (linkEl?.href) {
-            productUrl = linkEl.href.startsWith('http') ? linkEl.href : new URL(linkEl.href, url).href;
+          if (linkEl?.getAttribute('href')) {
+            const href = linkEl.getAttribute('href');
+            if (href.startsWith('http')) {
+              productUrl = href;
+            } else if (href.startsWith('/')) {
+              const baseUrl = new URL(url);
+              productUrl = `${baseUrl.origin}${href}`;
+            } else {
+              productUrl = new URL(href, url).href;
+            }
           }
           
           if (productTitle && (productPrice || productImage)) {
