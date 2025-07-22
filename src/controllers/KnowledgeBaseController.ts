@@ -1,15 +1,15 @@
 
 import { CreateTextDocumentRequest, CreateDocumentResponse, KnowledgeBaseResponse } from '../types/dtos';
-import { API_CONFIG } from '../constants/constants';
+import { ENV } from '../config/environment';
 
 export class KnowledgeBaseController {
   static async createTextDocument(request: CreateTextDocumentRequest): Promise<CreateDocumentResponse> {
-    const response = await fetch(`${API_CONFIG.BACKEND_URL}/knowledge-base-operations`, {
+    const response = await fetch(`${ENV.BACKEND_URL}/knowledge-base-operations`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-API-KEY': API_CONFIG.BACKEND_API_KEY,
-        'Authorization': `Bearer ${API_CONFIG.BACKEND_API_KEY}`,
+        'X-API-KEY': ENV.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${ENV.SUPABASE_ANON_KEY}`,
       },
       body: JSON.stringify({
         ...request,
@@ -32,11 +32,11 @@ export class KnowledgeBaseController {
     // Adăugăm un identificator în numele fișierului pentru a-l putea identifica ca aparținând utilizatorului
     const userFileName = `${name} (User Document)`;
     
-    const response = await fetch(`${API_CONFIG.BACKEND_URL}/knowledge-base-operations?name=${encodeURIComponent(userFileName)}`, {
+    const response = await fetch(`${ENV.BACKEND_URL}/knowledge-base-operations?name=${encodeURIComponent(userFileName)}`, {
       method: 'POST',
       headers: {
-        'X-API-KEY': API_CONFIG.BACKEND_API_KEY,
-        'Authorization': `Bearer ${API_CONFIG.BACKEND_API_KEY}`,
+        'X-API-KEY': ENV.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${ENV.SUPABASE_ANON_KEY}`,
       },
       body: formData,
     });
@@ -50,11 +50,11 @@ export class KnowledgeBaseController {
   }
 
   static async getExistingDocuments(): Promise<KnowledgeBaseResponse> {
-    const response = await fetch(`${API_CONFIG.BACKEND_URL}/knowledge-base-operations`, {
+    const response = await fetch(`${ENV.BACKEND_URL}/knowledge-base-operations`, {
       method: 'GET',
       headers: {
-        'X-API-KEY': API_CONFIG.BACKEND_API_KEY,
-        'Authorization': `Bearer ${API_CONFIG.BACKEND_API_KEY}`,
+        'X-API-KEY': ENV.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${ENV.SUPABASE_ANON_KEY}`,
       },
     });
     if (!response.ok) {
