@@ -795,9 +795,24 @@ const extractAllContent = async (htmlContent: string, targetUrl: string, deepScr
   };
 };
 
+// Funcție de validare URL
+const isValidUrl = (urlString: string): boolean => {
+  try {
+    const url = new URL(urlString);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
 // Funcția principală de scraping - ÎMBUNĂTĂȚITĂ cu Edge Function
 const handleScrape = async (url: string, deepScraping: boolean = false): Promise<ScrapedData | null> => {
   try {
+    // Validează URL-ul înainte de scraping
+    if (!isValidUrl(url)) {
+      throw new Error('URL invalid. Vă rugăm să introduceți un URL valid (cu http:// sau https://).');
+    }
+
     console.log(`Încep scraping pentru: ${url}`);
     
     // Încearcă să folosească edge function-ul pentru scraping mai robust
@@ -811,12 +826,18 @@ const handleScrape = async (url: string, deepScraping: boolean = false): Promise
 
     if (error) {
       console.error('Eroare la edge function:', error);
-      throw new Error(`Eroare la scraping: ${error.message}`);
+      // Încearcă fallback-ul în loc să arunce eroare
+      console.log('Încerc fallback scraping...');
+      return await handleScrapeFallback(url);
     }
 
-    if (data && data.products) {
+    if (data && data.success && data.products) {
       console.log(`Scraping reușit: ${data.products.length} produse găsite`);
       return data as ScrapedData;
+    } else if (data && !data.success) {
+      console.error('Edge function a returnat eroare:', data.error);
+      // Încearcă fallback-ul
+      return await handleScrapeFallback(url);
     }
 
     throw new Error('Nu s-au primit date valide de la server');
