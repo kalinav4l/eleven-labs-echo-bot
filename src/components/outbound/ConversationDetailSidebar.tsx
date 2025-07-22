@@ -410,32 +410,42 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3 max-h-96 overflow-y-auto">
+              <div className="space-y-2 max-h-96 overflow-y-auto">
                 {conversationData?.transcript?.length > 0 ? (
                   conversationData.transcript.map((turn: any, index: number) => (
                     <div
                       key={index}
-                      className={`p-3 rounded-lg text-sm ${
+                      className={`p-3 rounded-lg text-sm border-l-3 ${
                         turn.role === 'agent'
-                          ? 'bg-blue-50 border-l-4 border-blue-400'
-                          : 'bg-gray-50 border-l-4 border-gray-400'
+                          ? 'bg-gradient-to-r from-blue-50 to-blue-100 border-l-blue-500'
+                          : 'bg-gradient-to-r from-gray-50 to-gray-100 border-l-gray-500'
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-xs">
-                          {turn.role === 'agent' ? '🤖 Agent' : '👤 Utilizator'}
-                        </span>
-                        {turn.time_in_call_secs && (
-                          <span className="text-xs text-gray-500">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                            turn.role === 'agent' 
+                              ? 'bg-blue-500 text-white' 
+                              : 'bg-gray-500 text-white'
+                          }`}>
+                            {turn.role === 'agent' ? 'A' : 'U'}
+                          </div>
+                          <span className="font-semibold text-xs text-gray-700">
+                            {turn.role === 'agent' ? 'Agent' : 'Utilizator'}
+                          </span>
+                        </div>
+                        {turn.time_in_call_secs !== undefined && (
+                          <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full">
                             {formatDuration(turn.time_in_call_secs)}
                           </span>
                         )}
                       </div>
-                      <p className="text-gray-700">{turn.message}</p>
+                      <p className="text-gray-800 leading-relaxed ml-8">{turn.message}</p>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-4 text-gray-500 text-sm">
+                  <div className="text-center py-8 text-gray-500 text-sm bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                    <MessageSquare className="w-8 h-8 mx-auto mb-2 text-gray-400" />
                     Nu există transcript disponibil
                   </div>
                 )}
