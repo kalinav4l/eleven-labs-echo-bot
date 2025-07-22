@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Link, Copy, CheckCircle, MessageSquare } from 'lucide-react';
+import { Link, CheckCircle, MessageSquare, X } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
 interface AgentToolConnectionProps {
@@ -13,11 +12,14 @@ interface AgentToolConnectionProps {
 }
 
 const AgentToolConnection: React.FC<AgentToolConnectionProps> = ({ agentData, setAgentData }) => {
-  const toolId = 'tool_01k04eezd2ee2s07f6z6zs84y5'; // Fixed tool ID
+  const toolId = 'tool_01k04eezd2ee2s07f6z6zs84y5';
   const [isLoading, setIsLoading] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(() => {
+    const tools = agentData.conversation_config?.tools || [];
+    return tools.some((tool: any) => tool.id === toolId);
+  });
 
-  const examplePrompt = `OBLIGATORIU: Daca omul nu are timp, poti oferi sa trimiti o oferta prin SMS.
+  const examplePrompt = `Daca omul nu are timp, poti oferi sa trimiti o oferta prin SMS.
 Poti intreba: 'Doriți să vă trimit oferta prin SMS la acest număr ({{system__called_number}}), sau la un alt număr de contact?'
 Daca clientul cere pe alt numar, cere numarul explicit si foloseste tool-ul de SMS pentru numarul specificat de el.
 Daca confirma la numarul curent, trimite sms prin smsto care ai in webhook cu tool.
@@ -26,7 +28,6 @@ In oferta trimite si linkul la site https://kalinaai.md/.`;
   const connectSMSTool = async () => {
     setIsLoading(true);
     try {
-      // Fetch and connect tool in one step
       const response = await fetch(`https://api.elevenlabs.io/v1/convai/tools/${toolId}`, {
         method: "GET",
         headers: {
@@ -39,8 +40,6 @@ In oferta trimite si linkul la site https://kalinaai.md/.`;
       }
 
       const data = await response.json();
-      
-      // Add tool to agent's tools array
       const currentTools = agentData.conversation_config?.tools || [];
       const updatedTools = [...currentTools, data];
 
@@ -53,10 +52,9 @@ In oferta trimite si linkul la site https://kalinaai.md/.`;
       });
 
       setIsConnected(true);
-      
       toast({
-        title: "Succes!",
-        description: "Tool-ul SMS a fost conectat la agent"
+        title: "Conectat!",
+        description: "Tool-ul SMS a fost conectat"
       });
     } catch (error) {
       console.error('Error connecting SMS tool:', error);
@@ -70,128 +68,91 @@ In oferta trimite si linkul la site https://kalinaai.md/.`;
     }
   };
 
-  const copyPrompt = () => {
-    navigator.clipboard.writeText(examplePrompt);
-    toast({
-      title: "Copiat!",
-      description: "Prompt-ul a fost copiat în clipboard"
-    });
-  };
-
-  const addPromptToAgent = () => {
-    const currentPrompt = agentData.conversation_config?.agent?.prompt?.prompt || '';
-    const newPrompt = currentPrompt + '\n\n' + examplePrompt;
+  const disconnectSMSTool = () => {
+    const currentTools = agentData.conversation_config?.tools || [];
+    const updatedTools = currentTools.filter((tool: any) => tool.id !== toolId);
 
     setAgentData({
       ...agentData,
       conversation_config: {
         ...agentData.conversation_config,
-        agent: {
-          ...agentData.conversation_config?.agent,
-          prompt: {
-            ...agentData.conversation_config?.agent?.prompt,
-            prompt: newPrompt
-          }
-        }
+        tools: updatedTools
       }
     });
 
+    setIsConnected(false);
     toast({
-      title: "Succes!",
-      description: "Prompt-ul a fost adăugat la agentul tău"
+      title: "Deconectat!",
+      description: "Tool-ul SMS a fost deconectat"
     });
   };
 
   return (
     <Card className="liquid-glass">
-      <CardHeader>
+      <CardHeader className="pb-4">
         <CardTitle className="text-foreground flex items-center gap-2">
           <MessageSquare className="w-5 h-5" />
           Tool SMS pentru Oferte
         </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Conectează tool-ul SMS pentru a permite agentului să trimită oferte prin mesaje text.
-        </p>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Connect SMS Tool Button */}
-        <div className="flex justify-center">
-          <Button
-            onClick={connectSMSTool}
-            disabled={isLoading || isConnected}
-            className="bg-accent text-white hover:bg-accent/90 px-8 py-3 text-lg"
-          >
-            {isLoading ? (
-              'Se conectează...'
-            ) : isConnected ? (
-              <>
-                <CheckCircle className="w-5 h-5 mr-2" />
-                Tool SMS Conectat
-              </>
-            ) : (
-              <>
-                <Link className="w-5 h-5 mr-2" />
-                Conectează Tool SMS
-              </>
-            )}
-          </Button>
-        </div>
-
-        {/* Obligatory Prompt Section */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="text-foreground font-medium text-red-600">
-              ⚠️ Prompt OBLIGATORIU
-            </Label>
-            <div className="flex gap-2">
+      <CardContent className="space-y-4">
+        {/* Connect/Disconnect Buttons */}
+        <div className="flex gap-3">
+          {!isConnected ? (
+            <Button
+              onClick={connectSMSTool}
+              disabled={isLoading}
+              className="bg-accent text-white hover:bg-accent/90 flex-1"
+            >
+              {isLoading ? (
+                'Se conectează...'
+              ) : (
+                <>
+                  <Link className="w-4 h-4 mr-2" />
+                  Conectează Tool SMS
+                </>
+              )}
+            </Button>
+          ) : (
+            <div className="flex gap-2 w-full">
               <Button
-                onClick={copyPrompt}
-                variant="outline"
-                size="sm"
-                className="glass-button"
+                disabled
+                className="bg-accent text-white flex-1 cursor-default"
               >
-                <Copy className="w-4 h-4 mr-1" />
-                Copiază
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Tool SMS Conectat
               </Button>
               <Button
-                onClick={addPromptToAgent}
+                onClick={disconnectSMSTool}
                 variant="outline"
-                size="sm"
-                className="glass-button"
+                className="bg-black text-white hover:bg-black/80 border-black"
               >
-                Adaugă la Prompt
+                <X className="w-4 h-4" />
               </Button>
             </div>
-          </div>
+          )}
+        </div>
+
+        {/* Simple Prompt Display */}
+        <div className="space-y-2">
           <Textarea
             value={examplePrompt}
             readOnly
-            className="glass-input min-h-[120px] resize-none bg-red-50/50 border-red-200"
+            className="glass-input min-h-[100px] resize-none text-sm"
           />
-          <div className="bg-red-50/50 border border-red-200 rounded-lg p-3">
-            <p className="text-sm text-red-700 font-medium">
-              ⚠️ IMPORTANT: Acest prompt este OBLIGATORIU pentru funcționarea corectă a tool-ului SMS. 
-              Agentul nu va putea trimite oferte prin SMS fără aceste instrucțiuni.
-            </p>
-          </div>
         </div>
 
-        {/* Connected Tools Display */}
-        {agentData.conversation_config?.tools && agentData.conversation_config.tools.length > 0 && (
-          <div className="space-y-3">
-            <Label className="text-foreground font-medium">Tool-uri Conectate</Label>
-            <div className="space-y-2">
-              {agentData.conversation_config.tools.map((tool: any, index: number) => (
-                <div key={index} className="flex items-center justify-between p-3 border border-border rounded-lg bg-card/30">
-                  <div>
-                    <p className="font-medium text-foreground">{tool.name || `Tool ${index + 1}`}</p>
-                    <p className="text-sm text-muted-foreground">{tool.type || 'Unknown type'}</p>
-                  </div>
-                  <Badge variant="secondary" className="bg-green-500/10 text-green-600">
-                    Conectat
-                  </Badge>
-                </div>
-              ))}
+        {/* Connected Tools */}
+        {isConnected && (
+          <div className="pt-2">
+            <div className="flex items-center justify-between p-3 border border-border rounded-lg bg-card/30">
+              <div>
+                <p className="font-medium text-foreground text-sm">SMS Tool</p>
+                <p className="text-xs text-muted-foreground">Webhook</p>
+              </div>
+              <Badge variant="secondary" className="bg-green-500/10 text-green-600 text-xs">
+                Conectat
+              </Badge>
             </div>
           </div>
         )}
