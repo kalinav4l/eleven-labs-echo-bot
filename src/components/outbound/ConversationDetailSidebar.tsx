@@ -236,14 +236,22 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
 
       {/* Tabs Section */}
       <Tabs defaultValue="overview" className="w-full flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-2 h-10 bg-gray-50 p-1 rounded-lg">
-          <TabsTrigger value="overview" className="text-xs data-[state=active]:bg-white">
-            Overview & Detalii
-          </TabsTrigger>
-          <TabsTrigger value="transcription" className="text-xs data-[state=active]:bg-white">
-            Transcription
-          </TabsTrigger>
-        </TabsList>
+        <div className="border-b bg-white">
+          <TabsList className="h-auto bg-transparent p-0 w-full justify-start gap-8 px-6">
+            <TabsTrigger 
+              value="overview" 
+              className="bg-transparent border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-sm font-medium data-[state=active]:shadow-none"
+            >
+              Overview & Detalii
+            </TabsTrigger>
+            <TabsTrigger 
+              value="transcription" 
+              className="bg-transparent border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-sm font-medium data-[state=active]:shadow-none"
+            >
+              Transcription
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="overview" className="space-y-4 mt-4 overflow-y-auto flex-1">
           {/* Rezumat Conversație */}
@@ -401,84 +409,66 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
           )}
         </TabsContent>
 
-        <TabsContent value="transcription" className="flex-1 flex flex-col mt-4">
-          <div className="flex-1 overflow-hidden">
-            <div className="h-full bg-white border rounded-lg">
-              {/* Header cu tabs pentru ElevenLabs look */}
-              <div className="border-b">
-                <div className="flex items-center px-4 py-3">
-                  <div className="flex space-x-6 text-sm">
-                    <span className="text-gray-400">Overview</span>
-                    <span className="font-medium border-b-2 border-blue-500 pb-2">Transcription</span>
-                    <span className="text-gray-400">Client data</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Transcript Container */}
-              <div className="h-full overflow-y-auto p-4">
-                {conversationData?.transcript?.length > 0 ? (
-                  <div className="space-y-4">
-                    {conversationData.transcript.map((turn: any, index: number) => (
-                      <div key={index} className="flex items-start space-x-3">
-                        {/* Avatar pentru agent (stânga) */}
-                        {turn.role === 'agent' && (
-                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                            <span className="text-blue-600 text-sm font-medium">A</span>
-                          </div>
-                        )}
-                        
-                        {/* Message bubble */}
-                        <div className={`flex-1 ${turn.role === 'user' ? 'flex justify-end' : ''}`}>
-                          <div className={`max-w-[80%] ${
-                            turn.role === 'agent' 
-                              ? 'bg-gray-100 text-gray-800 rounded-2xl rounded-bl-md' 
-                              : 'bg-blue-500 text-white rounded-2xl rounded-br-md ml-auto'
-                          } px-4 py-3 relative`}>
-                            <p className="text-sm leading-relaxed">{turn.message}</p>
-                            
-                            {/* Timestamp */}
-                            <div className={`text-xs mt-1 ${
-                              turn.role === 'agent' ? 'text-gray-500 text-right' : 'text-blue-100 text-left'
-                            }`}>
-                              {turn.time_in_call_secs !== undefined && formatDuration(turn.time_in_call_secs)}
-                            </div>
-                            
-                            {/* LLM și RAG info pentru mesajele agentului */}
-                            {turn.role === 'agent' && (turn.llm_usage || turn.rag_retrieval_info) && (
-                              <div className="flex gap-1 mt-2">
-                                {turn.llm_usage && (
-                                  <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">
-                                    LLM {turn.llm_usage.model_usage ? Object.keys(turn.llm_usage.model_usage)[0]?.split('-')[0] : ''}
-                                  </span>
-                                )}
-                                {turn.rag_retrieval_info && (
-                                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                                    RAG {Math.round(turn.rag_retrieval_info.rag_latency_secs * 1000)}ms
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        
-                        {/* Avatar pentru user (dreapta) */}
-                        {turn.role === 'user' && (
-                          <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0">
-                            <span className="text-white text-sm font-medium">U</span>
-                          </div>
-                        )}
+        <TabsContent value="transcription" className="flex-1 flex flex-col mt-0">
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            {conversationData?.transcript?.length > 0 ? (
+              conversationData.transcript.map((turn: any, index: number) => (
+                <div key={index} className="flex items-start space-x-3">
+                  {/* Avatar pentru agent (stânga) */}
+                  {turn.role === 'agent' && (
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <span className="text-blue-600 text-sm font-medium">A</span>
+                    </div>
+                  )}
+                  
+                  {/* Message bubble */}
+                  <div className={`flex-1 ${turn.role === 'user' ? 'flex justify-end' : ''}`}>
+                    <div className={`max-w-[80%] ${
+                      turn.role === 'agent' 
+                        ? 'bg-gray-100 text-gray-800 rounded-2xl rounded-bl-md' 
+                        : 'bg-blue-500 text-white rounded-2xl rounded-br-md ml-auto'
+                    } px-4 py-3 relative`}>
+                      <p className="text-sm leading-relaxed">{turn.message}</p>
+                      
+                      {/* Timestamp */}
+                      <div className={`text-xs mt-1 ${
+                        turn.role === 'agent' ? 'text-gray-500 text-right' : 'text-blue-100 text-left'
+                      }`}>
+                        {turn.time_in_call_secs !== undefined && formatDuration(turn.time_in_call_secs)}
                       </div>
-                    ))}
+                      
+                      {/* LLM și RAG info pentru mesajele agentului */}
+                      {turn.role === 'agent' && (turn.llm_usage || turn.rag_retrieval_info) && (
+                        <div className="flex gap-1 mt-2">
+                          {turn.llm_usage && (
+                            <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">
+                              LLM {turn.llm_usage.model_usage ? Object.keys(turn.llm_usage.model_usage)[0]?.split('-')[0] : ''}
+                            </span>
+                          )}
+                          {turn.rag_retrieval_info && (
+                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                              RAG {Math.round(turn.rag_retrieval_info.rag_latency_secs * 1000)}ms
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <div className="text-center py-12 text-gray-500">
-                    <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                    <p>Nu există transcript disponibil pentru această conversație.</p>
-                  </div>
-                )}
+                  
+                  {/* Avatar pentru user (dreapta) */}
+                  {turn.role === 'user' && (
+                    <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-sm font-medium">U</span>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <p>Nu există transcript disponibil pentru această conversație.</p>
               </div>
-            </div>
+            )}
           </div>
         </TabsContent>
       </Tabs>
