@@ -16,7 +16,6 @@ import { BatchConfigPanel } from '@/components/outbound/BatchConfigPanel';
 import { BatchStatusPanel } from '@/components/outbound/BatchStatusPanel';
 import { ContactsList } from '@/components/outbound/ContactsList';
 import { CSVUploadSection } from '@/components/outbound/CSVUploadSection';
-
 interface Contact {
   id: string;
   name: string;
@@ -24,7 +23,6 @@ interface Contact {
   country: string;
   location: string;
 }
-
 interface SMSConfig {
   enabled: boolean;
   apiToken: string;
@@ -32,9 +30,10 @@ interface SMSConfig {
   message: string;
   delay: number;
 }
-
 const Outbound = () => {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
@@ -53,7 +52,9 @@ const Outbound = () => {
   });
 
   // Get user's phone numbers
-  const { data: phoneNumbers } = useUserPhoneNumbers();
+  const {
+    data: phoneNumbers
+  } = useUserPhoneNumbers();
   const {
     processBatchCalls,
     isProcessingBatch,
@@ -76,15 +77,12 @@ const Outbound = () => {
     isLoading: historyLoading,
     refetch: refetchHistory
   } = useCallHistory();
-
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
-
   const handleCSVUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    
     if (!file.name.endsWith('.csv')) {
       toast({
         title: "Eroare",
@@ -93,18 +91,15 @@ const Outbound = () => {
       });
       return;
     }
-
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       const text = e.target?.result as string;
       const lines = text.split('\n').filter(line => line.trim());
       const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-      
       const nameIndex = headers.findIndex(h => h.includes('name') || h.includes('nume'));
       const phoneIndex = headers.findIndex(h => h.includes('phone') || h.includes('telefon'));
       const countryIndex = headers.findIndex(h => h.includes('country') || h.includes('tara'));
       const locationIndex = headers.findIndex(h => h.includes('location') || h.includes('locatie'));
-
       if (phoneIndex === -1) {
         toast({
           title: "Eroare",
@@ -113,7 +108,6 @@ const Outbound = () => {
         });
         return;
       }
-
       const parsedContacts: Contact[] = lines.slice(1).map((line, index) => {
         const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
         return {
@@ -124,7 +118,6 @@ const Outbound = () => {
           location: locationIndex >= 0 ? values[locationIndex] || 'Necunoscut' : 'Necunoscut'
         };
       }).filter(contact => contact.phone);
-
       setContacts(parsedContacts);
       setActiveSection('contacts');
       toast({
@@ -133,12 +126,10 @@ const Outbound = () => {
       });
     };
     reader.readAsText(file);
-    
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
-
   const handleContactSelect = (contactId: string, checked: boolean) => {
     const newSelected = new Set(selectedContacts);
     if (checked) {
@@ -148,7 +139,6 @@ const Outbound = () => {
     }
     setSelectedContacts(newSelected);
   };
-
   const handleSelectAll = () => {
     if (selectedContacts.size === contacts.length) {
       setSelectedContacts(new Set());
@@ -156,7 +146,6 @@ const Outbound = () => {
       setSelectedContacts(new Set(contacts.map(c => c.id)));
     }
   };
-
   const handleBatchProcess = async () => {
     if (!selectedAgentId || selectedContacts.size === 0) {
       toast({
@@ -166,7 +155,6 @@ const Outbound = () => {
       });
       return;
     }
-    
     if (!selectedPhoneId) {
       toast({
         title: "Eroare",
@@ -175,19 +163,18 @@ const Outbound = () => {
       });
       return;
     }
-
     setBatchStartTime(new Date());
     const contactsToProcess = contacts.filter(c => selectedContacts.has(c.id));
     await processBatchCalls(contactsToProcess, selectedAgentId);
-    
     setTimeout(() => {
       refetchHistory();
     }, 2000);
   };
-
   const downloadTemplate = () => {
     const csvContent = "nume,telefon,tara,locatie\nJohn Doe,+40712345678,Romania,Bucuresti\nJane Smith,+40798765432,Romania,Cluj";
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csvContent], {
+      type: 'text/csv;charset=utf-8;'
+    });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
@@ -197,9 +184,7 @@ const Outbound = () => {
     link.click();
     document.body.removeChild(link);
   };
-
-  return (
-    <DashboardLayout>
+  return <DashboardLayout>
       <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* Mobile Responsive Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -224,8 +209,7 @@ const Outbound = () => {
           {/* Main Content - Full width on mobile, 2/3 on desktop */}
           <div className="lg:col-span-2 order-2 lg:order-1">
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              {!activeSection && (
-                <div className="text-center py-16 px-8">
+              {!activeSection && <div className="text-center py-16 px-8">
                   {/* Phone Icon */}
                   <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
                     <Phone className="w-10 h-10 text-blue-600" />
@@ -237,28 +221,19 @@ const Outbound = () => {
                   </p>
                   
                   <div className="flex justify-center gap-4">
-                    <Button 
-                      onClick={() => setActiveSection('batch')}
-                      className="bg-black text-white hover:bg-gray-800 px-6 py-2"
-                    >
+                    <Button onClick={() => setActiveSection('batch')} className="bg-black text-white hover:bg-gray-800 px-6 py-2">
                       <Settings className="w-4 h-4 mr-2" />
                       Configurează
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => fileInputRef.current?.click()}
-                      className="border-gray-300 px-6 py-2"
-                    >
+                    <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="border-gray-300 px-6 py-2">
                       <Upload className="w-4 h-4 mr-2" />
                       Încarcă CSV
                     </Button>
                   </div>
-                </div>
-              )}
+                </div>}
 
               {/* Configuration Section */}
-              {activeSection === 'batch' && (
-                <div className="p-6">
+              {activeSection === 'batch' && <div className="p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-semibold text-gray-900">Configurare Campanie</h2>
                     <Button variant="outline" size="sm" onClick={() => setActiveSection(null)}>
@@ -266,8 +241,7 @@ const Outbound = () => {
                     </Button>
                   </div>
 
-                  {contacts.length === 0 ? (
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                  {contacts.length === 0 ? <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                       <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-900 mb-2">Încarcă Lista de Contacte</h3>
                       <p className="text-gray-500 mb-4">Selectează un fișier CSV cu contactele pentru apeluri</p>
@@ -279,9 +253,7 @@ const Outbound = () => {
                           Descarcă Template
                         </Button>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
+                    </div> : <div className="space-y-6">
                       {/* Contacts Overview */}
                       <div className="bg-blue-50 rounded-lg p-4">
                         <div className="flex items-center justify-between">
@@ -297,52 +269,31 @@ const Outbound = () => {
 
                       {/* Contacts List */}
                       <div className="border rounded-lg max-h-64 overflow-y-auto">
-                        {contacts.map((contact, index) => (
-                          <div
-                            key={contact.id}
-                            className={`p-4 flex items-center gap-3 transition-colors ${
-                              index !== contacts.length - 1 ? 'border-b' : ''
-                            } ${
-                              selectedContacts.has(contact.id) ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedContacts.has(contact.id)}
-                              onChange={(e) => handleContactSelect(contact.id, e.target.checked)}
-                              className="w-4 h-4 text-blue-600 rounded border-gray-300"
-                            />
+                        {contacts.map((contact, index) => <div key={contact.id} className={`p-4 flex items-center gap-3 transition-colors ${index !== contacts.length - 1 ? 'border-b' : ''} ${selectedContacts.has(contact.id) ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'}`}>
+                            <input type="checkbox" checked={selectedContacts.has(contact.id)} onChange={e => handleContactSelect(contact.id, e.target.checked)} className="w-4 h-4 text-blue-600 rounded border-gray-300" />
                             <div className="flex-1">
                               <div className="font-medium text-gray-900">{contact.name}</div>
                               <div className="text-sm text-gray-500">{contact.phone}</div>
                             </div>
                             <div className="text-xs text-gray-400">{contact.country}</div>
-                          </div>
-                        ))}
+                          </div>)}
                       </div>
                       
                       {/* Start Campaign Button */}
-                      {selectedContacts.size > 0 && selectedAgentId && selectedPhoneId && (
-                        <Button onClick={handleBatchProcess} className="w-full bg-green-600 hover:bg-green-700 text-white py-3">
+                      {selectedContacts.size > 0 && selectedAgentId && selectedPhoneId && <Button onClick={handleBatchProcess} className="w-full bg-green-600 hover:bg-green-700 text-white py-3">
                           🚀 Începe Campania ({selectedContacts.size} contacte)
-                        </Button>
-                      )}
+                        </Button>}
                       
-                      {selectedContacts.size > 0 && (!selectedAgentId || !selectedPhoneId) && (
-                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      {selectedContacts.size > 0 && (!selectedAgentId || !selectedPhoneId) && <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                           <p className="text-amber-800 text-sm">
                             ⚠️ Configurează agentul și numărul de telefon în panoul din dreapta pentru a începe campania
                           </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+                        </div>}
+                    </div>}
+                </div>}
 
               {/* History Section */}
-              {activeSection === 'history' && (
-                <div className="p-6">
+              {activeSection === 'history' && <div className="p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-semibold text-gray-900">Istoric Apeluri</h2>
                     <Button variant="outline" size="sm" onClick={() => setActiveSection(null)}>
@@ -350,8 +301,7 @@ const Outbound = () => {
                     </Button>
                   </div>
                   <CallHistoryTab callHistory={callHistory} isLoading={historyLoading} />
-                </div>
-              )}
+                </div>}
             </div>
           </div>
 
@@ -361,38 +311,21 @@ const Outbound = () => {
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <h3 className="font-semibold text-gray-900 mb-4">Acțiuni Rapide</h3>
               <div className="space-y-2">
-                <button
-                  onClick={() => setActiveSection('batch')}
-                  className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${
-                    activeSection === 'batch' 
-                      ? 'bg-blue-600 text-white shadow-md' 
-                      : 'hover:bg-gray-50 border border-gray-200'
-                  }`}
-                >
+                <button onClick={() => setActiveSection('batch')} className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${activeSection === 'batch' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-50 border border-gray-200'}`}>
                   <div className="flex items-center gap-3">
                     <Phone className="w-4 h-4" />
                     <span className="text-sm font-medium">Apeluri în Lot</span>
                   </div>
                 </button>
                 
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full p-3 rounded-lg text-left hover:bg-gray-50 border border-gray-200 transition-all duration-200"
-                >
+                <button onClick={() => fileInputRef.current?.click()} className="w-full p-3 rounded-lg text-left hover:bg-gray-50 border border-gray-200 transition-all duration-200">
                   <div className="flex items-center gap-3">
                     <Upload className="w-4 h-4" />
                     <span className="text-sm font-medium">Import CSV</span>
                   </div>
                 </button>
                 
-                <button
-                  onClick={() => setActiveSection('history')}
-                  className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${
-                    activeSection === 'history' 
-                      ? 'bg-blue-600 text-white shadow-md' 
-                      : 'hover:bg-gray-50 border border-gray-200'
-                  }`}
-                >
+                <button onClick={() => setActiveSection('history')} className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${activeSection === 'history' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-50 border border-gray-200'}`}>
                   <div className="flex items-center gap-3">
                     <History className="w-4 h-4" />
                     <span className="text-sm font-medium">Istoric</span>
@@ -402,17 +335,7 @@ const Outbound = () => {
             </div>
 
             {/* Configuration Panel */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <h3 className="font-semibold text-gray-900 mb-4">Configurare</h3>
-              <BatchConfigPanel
-                selectedAgentId={selectedAgentId}
-                onAgentSelect={setSelectedAgentId}
-                selectedPhoneId={selectedPhoneId}
-                onPhoneSelect={setSelectedPhoneId}
-                totalRecipients={contacts.length}
-                selectedRecipients={selectedContacts.size}
-              />
-            </div>
+            
 
             {/* Statistics */}
             <div className="bg-white rounded-xl border border-gray-200 p-5">
@@ -430,38 +353,16 @@ const Outbound = () => {
             </div>
 
             {/* Batch Status */}
-            {(isProcessingBatch || currentProgress > 0) && (
-              <div className="bg-white rounded-xl border border-gray-200 p-5">
+            {(isProcessingBatch || currentProgress > 0) && <div className="bg-white rounded-xl border border-gray-200 p-5">
                 <h3 className="font-semibold text-gray-900 mb-4">Status Campanie</h3>
-                <BatchStatusPanel 
-                  isProcessing={isProcessingBatch}
-                  isPaused={isPaused}
-                  isStopped={isStopped}
-                  currentProgress={currentProgress}
-                  totalCalls={totalCalls}
-                  callStatuses={callStatuses}
-                  currentCallStatus={currentCallStatus}
-                  startTime={batchStartTime}
-                  onPause={pauseBatch}
-                  onResume={resumeBatch}
-                  onStop={stopBatch}
-                />
-              </div>
-            )}
+                <BatchStatusPanel isProcessing={isProcessingBatch} isPaused={isPaused} isStopped={isStopped} currentProgress={currentProgress} totalCalls={totalCalls} callStatuses={callStatuses} currentCallStatus={currentCallStatus} startTime={batchStartTime} onPause={pauseBatch} onResume={resumeBatch} onStop={stopBatch} />
+              </div>}
           </div>
         </div>
 
         {/* Hidden file input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".csv"
-          onChange={handleCSVUpload}
-          className="hidden"
-        />
+        <input ref={fileInputRef} type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" />
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
-
 export default Outbound;
