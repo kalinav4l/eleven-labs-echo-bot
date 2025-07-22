@@ -238,15 +238,11 @@ const ConversationAnalytics = () => {
           <div className="bg-white">
             {/* Mobile Card Layout */}
             <div className="block sm:hidden space-y-3 p-3">
-              {filteredCalls.length === 0 ? (
-                <div className="text-center p-8 text-muted-foreground">
+              {filteredCalls.length === 0 ? <div className="text-center p-8 text-muted-foreground">
                   Nu sunt conversații disponibile
-                </div>
-              ) : (
-                filteredCalls.map(call => {
-                  const dateTime = formatDate(call.call_date);
-                  return (
-                    <div key={call.id} className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer" onClick={() => call.conversation_id && handleConversationClick(call.conversation_id)}>
+                </div> : filteredCalls.map(call => {
+              const dateTime = formatDate(call.call_date);
+              return <div key={call.id} className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer" onClick={() => call.conversation_id && handleConversationClick(call.conversation_id)}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center text-sm">
                           <Phone className="w-3 h-3 mr-1 text-muted-foreground" />
@@ -266,10 +262,8 @@ const ConversationAnalytics = () => {
                         <span>Cost: {call.conversation_id ? formatCost(conversationCosts[call.conversation_id] || 0) : formatCost(0)}</span>
                         <span>Durată: {call.conversation_id ? formatDuration(conversationDurations[call.conversation_id] || 0) : formatDuration(call.duration_seconds || 0)}</span>
                       </div>
-                    </div>
-                  );
-                })
-              )}
+                    </div>;
+            })}
             </div>
 
             {/* Desktop Table Layout */}
@@ -344,14 +338,12 @@ const ConversationAnalytics = () => {
       
       {/* Conversation Detail Sidebar */}
       <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
-        <SheetContent side="right" className="w-[50vw] max-w-none p-0">
+        <SheetContent side="right" className="w-[50vw] max-w-none p-0 px-[2px]">
           <SheetHeader className="p-6 border-b">
             <SheetTitle>Detalii Conversație</SheetTitle>
           </SheetHeader>
           <div className="p-6">
-            {selectedConversationId && (
-              <ConversationDetailSidebar conversationId={selectedConversationId} />
-            )}
+            {selectedConversationId && <ConversationDetailSidebar conversationId={selectedConversationId} />}
           </div>
         </SheetContent>
       </Sheet>
