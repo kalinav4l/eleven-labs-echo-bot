@@ -92,88 +92,54 @@ serve(async (req) => {
             for (let i = 0; i < elements.length; i++) {
               const element = elements[i];
               
-              // Extract title - enhanced extraction logic
+              // Extract title - simple and direct approach
               let productTitle = '';
               
-              // Debug: log element structure for first few elements
-              if (i < 3) {
-                console.log(`Element ${i} HTML structure:`, element.outerHTML?.substring(0, 500));
-              }
+              // Get all text from the element and clean it
+              const elementText = element.textContent || '';
               
-              // Try multiple approaches to find title
-              // 1. Look for link text content
-              const linkEl = element.querySelector('a');
-              if (linkEl?.textContent?.trim()) {
-                const linkText = linkEl.textContent.trim();
-                if (linkText.length > 3 && linkText.length < 150 && 
-                    !linkText.match(/^\d+/) && 
-                    !linkText.includes('MDL') && 
-                    !linkText.includes('LEI')) {
-                  productTitle = linkText;
+              // Split text into lines and find the first meaningful one
+              const lines = elementText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+              
+              for (const line of lines) {
+                // Skip lines that are clearly prices, buttons or short fragments
+                if (line.length > 10 && 
+                    line.length < 200 && 
+                    !line.match(/^\d+[.,]\d+/) && // Not starting with a number (price)
+                    !line.match(/MDL|LEI|RON/i) && // Not containing currency
+                    !line.match(/^(adauga|cos|buy|cart|add)/i) && // Not a button text
+                    !line.match(/^\d+$/) && // Not just a number
+                    line.split(' ').length > 1) { // More than one word
+                  productTitle = line.trim();
+                  break;
                 }
               }
               
-              // 2. Look for title attribute on link
-              if (!productTitle && linkEl?.getAttribute('title')) {
-                const titleAttr = linkEl.getAttribute('title').trim();
-                if (titleAttr.length > 3 && titleAttr.length < 150) {
-                  productTitle = titleAttr;
-                }
-              }
-              
-              // 3. Look for headings
+              // If no good title found, try to get it from link
               if (!productTitle) {
-                const headingEl = element.querySelector('h1, h2, h3, h4, h5, h6');
-                if (headingEl?.textContent?.trim()) {
-                  productTitle = headingEl.textContent.trim();
-                }
-              }
-              
-              // 4. Look for spans or divs with meaningful text
-              if (!productTitle) {
-                const textElements = element.querySelectorAll('span, div, p');
-                for (let j = 0; j < textElements.length; j++) {
-                  const textEl = textElements[j];
-                  const text = textEl.textContent?.trim();
-                  if (text && text.length > 3 && text.length < 150 && 
-                      !text.includes('MDL') && !text.includes('LEI') && 
-                      !text.match(/^\d+[.,]\d+/) && // Not a price
-                      !text.includes('€') && !text.includes('$') &&
-                      !text.toLowerCase().includes('adauga') &&
-                      !text.toLowerCase().includes('cos')) {
-                    productTitle = text;
-                    break;
+                const link = element.querySelector('a');
+                if (link) {
+                  // Try title attribute first
+                  const titleAttr = link.getAttribute('title');
+                  if (titleAttr && titleAttr.length > 10) {
+                    productTitle = titleAttr.trim();
+                  } else {
+                    // Try link text
+                    const linkText = link.textContent?.trim();
+                    if (linkText && linkText.length > 10 && linkText.length < 200) {
+                      productTitle = linkText;
+                    }
                   }
                 }
               }
               
-              // 5. Last resort: use any text content from the element
-              if (!productTitle) {
-                const allText = element.textContent?.trim();
-                if (allText) {
-                  // Split by common separators and take the first meaningful part
-                  const parts = allText.split(/\n|\t|\s{2,}/).filter(part => {
-                    const p = part.trim();
-                    return p.length > 3 && p.length < 150 && 
-                           !p.includes('MDL') && !p.includes('LEI') && 
-                           !p.match(/^\d+[.,]\d+/);
-                  });
-                  if (parts.length > 0) {
-                    productTitle = parts[0].trim();
-                  }
-                }
-              }
-              
-              // Clean up the title
+              // Final cleanup
               if (productTitle) {
+                // Remove extra whitespace
                 productTitle = productTitle.replace(/\s+/g, ' ').trim();
-                // Remove common unwanted prefixes/suffixes
-                productTitle = productTitle.replace(/^(produs|articol|item)[\s:]/i, '');
-                productTitle = productTitle.replace(/[\s:]+(mdl|lei|ron)$/i, '');
-              }
-              
-              if (i < 3) {
-                console.log(`Element ${i} extracted title: "${productTitle}"`);
+                // Remove common unwanted text
+                productTitle = productTitle.replace(/\s*(MDL|LEI|RON)\s*.*$/i, '');
+                productTitle = productTitle.replace(/^\s*(produs|item|articol)[\s:]/i, '');
               }
               
               // Extract price with enhanced selectors for sote.md and Romanian sites
