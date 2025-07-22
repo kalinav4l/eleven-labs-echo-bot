@@ -227,7 +227,7 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-screen flex flex-col">
       {/* Header */}
       <div className="border-b pb-4">
         <h2 className="text-xl font-bold text-gray-900">
@@ -237,8 +237,8 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
       </div>
 
       {/* Tabs Section */}
-      <Tabs defaultValue="overview" className="w-full flex-1 flex flex-col">
-        <div className="border-b bg-white">
+      <Tabs defaultValue="overview" className="w-full flex-1 flex flex-col min-h-0">
+        <div className="border-b bg-white flex-shrink-0">
           <TabsList className="h-auto bg-transparent p-0 w-full justify-start gap-8 px-6">
             <TabsTrigger 
               value="overview" 
@@ -255,7 +255,7 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
           </TabsList>
         </div>
 
-        <TabsContent value="overview" className="space-y-4 mt-4 overflow-y-auto flex-1">
+        <TabsContent value="overview" className="space-y-4 mt-4 overflow-y-auto flex-1 min-h-0">
           {/* Rezumat Conversație */}
           <Card className="shadow-sm">
             <CardHeader className="pb-2">
@@ -411,20 +411,20 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
           )}
         </TabsContent>
 
-        <TabsContent value="transcription" className="flex-1 flex flex-col mt-0">
-          <div className="p-6 pb-0">
+        <TabsContent value="transcription" className="flex-1 flex flex-col min-h-0">
+          <div className="p-6 pb-0 flex-shrink-0">
             <h3 className="text-lg font-semibold mb-4">Transcript Complet</h3>
           </div>
           
-          {/* Container dedicat pentru transcript cu scroll */}
-          <div className="flex-1 mx-6 mb-6 bg-gray-50 rounded-lg border">
+          {/* Container dedicat pentru transcript cu scroll - FIXED HEIGHT */}
+          <div className="flex-1 mx-6 mb-6 bg-gray-50 rounded-lg border min-h-0">
             <div className="h-full overflow-y-auto p-4 space-y-4">
               {conversationData?.transcript?.length > 0 ? (
                 conversationData.transcript.map((turn: any, index: number) => (
                   <div key={index} className="flex items-start space-x-3">
                     {/* Avatar pentru agent (stânga) */}
                     {turn.role === 'agent' && (
-                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-white border border-gray-300 flex items-center justify-center flex-shrink-0">
                         <span className="text-black text-sm font-medium">A</span>
                       </div>
                     )}
@@ -433,7 +433,7 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
                     <div className={`flex-1 ${turn.role === 'user' ? 'flex justify-end' : ''}`}>
                       <div className={`max-w-[80%] ${
                         turn.role === 'agent' 
-                          ? 'bg-white text-black rounded-2xl rounded-bl-md border' 
+                          ? 'bg-white text-black rounded-2xl rounded-bl-md border border-gray-300' 
                           : 'bg-black text-white rounded-2xl rounded-br-md ml-auto'
                       } px-4 py-3 relative`}>
                         <p className="text-sm leading-relaxed">{turn.message}</p>
@@ -449,12 +449,12 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
                         {turn.role === 'agent' && (turn.llm_usage || turn.rag_retrieval_info) && (
                           <div className="flex gap-1 mt-2">
                             {turn.llm_usage && (
-                              <span className="text-xs bg-gray-200 text-black px-2 py-1 rounded">
+                              <span className="text-xs bg-gray-100 text-black px-2 py-1 rounded border">
                                 LLM {turn.llm_usage.model_usage ? Object.keys(turn.llm_usage.model_usage)[0]?.split('-')[0] : ''}
                               </span>
                             )}
                             {turn.rag_retrieval_info && (
-                              <span className="text-xs bg-gray-300 text-black px-2 py-1 rounded">
+                              <span className="text-xs bg-gray-200 text-black px-2 py-1 rounded border">
                                 RAG {Math.round(turn.rag_retrieval_info.rag_latency_secs * 1000)}ms
                               </span>
                             )}
@@ -465,7 +465,7 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
                     
                     {/* Avatar pentru user (dreapta) */}
                     {turn.role === 'user' && (
-                      <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center flex-shrink-0">
                         <span className="text-white text-sm font-medium">U</span>
                       </div>
                     )}
