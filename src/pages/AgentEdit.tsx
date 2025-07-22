@@ -28,13 +28,17 @@ const AgentEdit = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [agentData, setAgentData] = useState<AgentResponse | null>(null);
+  const [originalAgentData, setOriginalAgentData] = useState<AgentResponse | null>(null);
+  const [hasChanges, setHasChanges] = useState(false);
   const [newDocContent, setNewDocContent] = useState('');
   const [newDocName, setNewDocName] = useState('');
   const [isAddingDoc, setIsAddingDoc] = useState(false);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [additionalLanguages, setAdditionalLanguages] = useState<string[]>([]);
+  const [originalAdditionalLanguages, setOriginalAdditionalLanguages] = useState<string[]>([]);
   const [isMultilingualModalOpen, setIsMultilingualModalOpen] = useState(false);
   const [multilingualMessages, setMultilingualMessages] = useState<Record<string, string>>({});
+  const [originalMultilingualMessages, setOriginalMultilingualMessages] = useState<Record<string, string>>({});
   const [selectedExistingDocId, setSelectedExistingDocId] = useState<string>('');
 
   // Enhanced Knowledge Base Hook
@@ -83,9 +87,11 @@ const AgentEdit = () => {
       try {
         const data = await ElevenLabsController.getAgent(agentId);
         setAgentData(data);
+        setOriginalAgentData(JSON.parse(JSON.stringify(data))); // Deep copy
 
         const parsedAdditionalLanguages = parseAdditionalLanguagesFromResponse(data);
         setAdditionalLanguages(parsedAdditionalLanguages);
+        setOriginalAdditionalLanguages([...parsedAdditionalLanguages]); // Copy
 
         processAgentKnowledgeBase(data);
       } catch (error) {
@@ -124,8 +130,32 @@ const AgentEdit = () => {
             }
 
             setMultilingualMessages(currentMessages);
+            setOriginalMultilingualMessages(JSON.parse(JSON.stringify(currentMessages))); // Deep copy
         }
     }, [agentData]);
+
+  // Detect changes by comparing current data with original data
+  useEffect(() => {
+    if (!agentData || !originalAgentData) {
+      setHasChanges(false);
+      return;
+    }
+
+    // Compare agent data
+    const agentDataChanged = JSON.stringify(agentData) !== JSON.stringify(originalAgentData);
+    
+    // Compare additional languages
+    const languagesChanged = JSON.stringify(additionalLanguages.sort()) !== JSON.stringify(originalAdditionalLanguages.sort());
+    
+    // Compare multilingual messages
+    const messagesChanged = JSON.stringify(multilingualMessages) !== JSON.stringify(originalMultilingualMessages);
+
+    // Check if documents were added/removed
+    const documentsChanged = documents.length > 0;
+
+    const hasAnyChanges = agentDataChanged || languagesChanged || messagesChanged || documentsChanged;
+    setHasChanges(hasAnyChanges);
+  }, [agentData, originalAgentData, additionalLanguages, originalAdditionalLanguages, multilingualMessages, originalMultilingualMessages, documents]);
 
   // Handle additional languages change - add empty messages for new languages
   const handleAdditionalLanguagesChange = (newLanguages: string[]) => {
@@ -180,9 +210,15 @@ const AgentEdit = () => {
         await updateAgentKnowledgeBase(true);
       }
       
+      // Reset original values after successful save
+      setOriginalAgentData(JSON.parse(JSON.stringify(data)));
+      setOriginalAdditionalLanguages([...additionalLanguages]);
+      setOriginalMultilingualMessages(JSON.parse(JSON.stringify(multilingualMessages)));
+      setHasChanges(false);
+      
       toast({
         title: "Succes!",
-        description: "Agentul a fost salvat cu succes. Pagina se va reîncărca."
+        description: "Agentul a fost salvat cu succes."
       });
       
     } catch (error) {
@@ -544,33 +580,35 @@ const AgentEdit = () => {
         </Card>
 
         {/* Bottom Action Buttons - Mobile optimized */}
-        <div className="flex flex-col space-y-2 lg:flex-row lg:justify-end lg:gap-4 lg:space-y-0 sticky bottom-4 bg-background/95 backdrop-blur-sm p-4 -mx-4 border-t">
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/account/kalina-agents')} 
-            className="glass-button border-border w-full lg:w-auto hover:bg-muted/50 transition-colors"
-            disabled={isSaving}
-          >
-            Anulează
-          </Button>
-          <Button 
-            onClick={handleSave} 
-            disabled={isSaving} 
-            className="bg-accent text-white hover:bg-accent/90 w-full lg:w-auto transition-all duration-200 shadow-md hover:shadow-lg"
-          >
-            {isSaving ? (
-              <>
-                <Save className="w-4 h-4 mr-2 animate-spin" />
-                Se salvează...
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4 mr-2" />
-                Salvează
-              </>
-            )}
-          </Button>
-        </div>
+        {hasChanges && (
+          <div className="flex flex-col space-y-2 lg:flex-row lg:justify-end lg:gap-4 lg:space-y-0 sticky bottom-4 bg-background/95 backdrop-blur-sm p-4 -mx-4 border-t">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/account/kalina-agents')} 
+              className="glass-button border-border w-full lg:w-auto hover:bg-muted/50 transition-colors"
+              disabled={isSaving}
+            >
+              Anulează
+            </Button>
+            <Button 
+              onClick={handleSave} 
+              disabled={isSaving} 
+              className="bg-accent text-white hover:bg-accent/90 w-full lg:w-auto transition-all duration-200 shadow-md hover:shadow-lg"
+            >
+              {isSaving ? (
+                <>
+                  <Save className="w-4 h-4 mr-2 animate-spin" />
+                  Se salvează...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Salvează
+                </>
+              )}
+            </Button>
+          </div>
+        )}
 
         {/* Test Modal */}
         <AgentTestModal 
