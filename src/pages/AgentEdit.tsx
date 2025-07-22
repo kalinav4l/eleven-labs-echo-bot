@@ -111,7 +111,7 @@ const AgentEdit = () => {
         const messages: Record<string, string> = {};
         Object.entries(languagePresets).forEach(([lang, preset]) => {
           if (typeof preset === 'object' && preset !== null && 'first_message' in preset) {
-            messages[lang] = (preset as LanguagePreset).first_message || '';
+            messages[lang] = (preset as any).first_message || '';
           }
         });
         setMultilingualMessages(messages);
@@ -153,20 +153,6 @@ const AgentEdit = () => {
     try {
       await ElevenLabsController.updateAgent(agentId, agentData);
 
-      // Update agent name in database if it has changed
-      if (agentData.conversation_config?.agent?.name) {
-        const { error } = await supabase
-          .from('user_agents')
-          .update({ 
-            agent_name: agentData.conversation_config.agent.name 
-          })
-          .eq('agent_id', agentId);
-
-        if (error) {
-          console.error('Error updating agent name in database:', error);
-        }
-      }
-
       toast({
         title: "Succes",
         description: "Agentul a fost salvat cu succes!"
@@ -191,7 +177,7 @@ const AgentEdit = () => {
       
       Object.entries(messages).forEach(([lang, message]) => {
         if (languagePresets[lang]) {
-          languagePresets[lang].first_message = message;
+          (languagePresets[lang] as any).first_message = message;
         }
       });
       
@@ -440,7 +426,7 @@ const AgentEdit = () => {
                     agentData={agentData} 
                     setAgentData={setAgentData}
                     onOpenMultilingualModal={openMultilingualModal}
-                    hasAdditionalLanguages={additionalLanguages.length > 0}
+                    additionalLanguages={additionalLanguages}
                   />
                 </CardContent>
               </Card>
@@ -457,11 +443,9 @@ const AgentEdit = () => {
                 </CardHeader>
                 <CardContent className="p-6">
                   <AdditionalLanguagesSection
-                    agentData={agentData}
-                    setAgentData={setAgentData}
-                    additionalLanguages={additionalLanguages}
-                    onAdditionalLanguagesChange={handleAdditionalLanguagesChange}
-                    onAgentDataRefresh={handleAgentDataRefresh}
+                    selectedLanguages={additionalLanguages}
+                    onLanguagesChange={handleAdditionalLanguagesChange}
+                    currentLanguage={agentData.conversation_config?.agent?.language}
                   />
                 </CardContent>
               </Card>
@@ -611,7 +595,7 @@ const AgentEdit = () => {
 
                   {/* Update Knowledge Base */}
                   <Button
-                    onClick={() => updateAgentKnowledgeBase(agentData)}
+                    onClick={() => updateAgentKnowledgeBase()}
                     disabled={isUpdatingKnowledge || documents.length === 0}
                     className="w-full bg-green-600 hover:bg-green-700 text-white"
                   >
@@ -628,13 +612,14 @@ const AgentEdit = () => {
         <AgentTestModal
           isOpen={isTestModalOpen}
           onClose={() => setIsTestModalOpen(false)}
-          agentId={agentId || ''}
+          agent={agentData}
         />
 
         <MultilingualFirstMessageModal
           isOpen={isMultilingualModalOpen}
           onClose={() => setIsMultilingualModalOpen(false)}
-          languages={additionalLanguages}
+          defaultLanguage={agentData.conversation_config?.agent?.language || 'ro'}
+          additionalLanguages={additionalLanguages}
           messages={multilingualMessages}
           onMessagesUpdate={handleMultilingualMessagesUpdate}
         />
