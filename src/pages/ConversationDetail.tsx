@@ -96,22 +96,14 @@ const ConversationDetail = () => {
     }
   };
 
-  // Function to translate summary using GPT
-  const translateSummary = async () => {
-    if (!conversationData?.summary) {
-      toast({
-        title: "Eroare",
-        description: "Nu există rezumat de tradus",
-        variant: "destructive"
-      });
-      return;
-    }
+  // Function to auto-translate summary using GPT
+  const translateSummary = async (text: string) => {
+    if (!text) return text;
 
-    setIsTranslating(true);
     try {
       const { data, error } = await supabase.functions.invoke('translate-text', {
         body: {
-          text: conversationData.summary,
+          text: text,
           targetLanguage: 'ro', // Translate to Romanian
           sourceLanguage: 'auto'
         }
@@ -119,27 +111,16 @@ const ConversationDetail = () => {
 
       if (error) {
         console.error('Translation error:', error);
-        throw error;
+        return text;
       }
 
-      if (data?.translatedText) {
-        setTranslatedSummary(data.translatedText);
-        toast({
-          title: "Succes!",
-          description: "Rezumatul a fost tradus cu succes"
-        });
-      }
+      return data?.translatedText || text;
     } catch (error) {
       console.error('Error translating summary:', error);
-      toast({
-        title: "Eroare",
-        description: "Nu s-a putut traduce rezumatul",
-        variant: "destructive"
-      });
-    } finally {
-      setIsTranslating(false);
+      return text;
     }
   };
+
 
   // Function to download audio
   const downloadAudio = async () => {
@@ -211,6 +192,20 @@ const ConversationDetail = () => {
 
   const conversationData = getConversationData();
 
+  // Auto-translate summary when conversation loads
+  React.useEffect(() => {
+    const autoTranslate = async () => {
+      if (conversationData?.summary && !translatedSummary) {
+        setIsTranslating(true);
+        const translated = await translateSummary(conversationData.summary);
+        setTranslatedSummary(translated);
+        setIsTranslating(false);
+      }
+    };
+    
+    autoTranslate();
+  }, [conversationData?.summary]);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -246,76 +241,47 @@ const ConversationDetail = () => {
         {conversation && (
           <div className="space-y-6">
             {/* Tabs Section */}
-            <Tabs defaultValue="transcription" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 h-12 bg-gray-50 p-1 rounded-xl no-border">
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 h-12 bg-gray-50 p-1 rounded-xl no-border">
                 <TabsTrigger value="overview" className="flex items-center gap-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm elevenlabs-button-secondary">
                   <MessageSquare className="w-4 h-4" />
-                  Overview
+                  Overview & Detalii
                 </TabsTrigger>
                 <TabsTrigger value="transcription" className="flex items-center gap-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm elevenlabs-button-secondary">
                   <Volume2 className="w-4 h-4" />
                   Transcription
                 </TabsTrigger>
-                <TabsTrigger value="client-data" className="flex items-center gap-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm elevenlabs-button-secondary">
-                  <Phone className="w-4 h-4" />
-                  Client data
-                </TabsTrigger>
-                <TabsTrigger value="phone-call" className="flex items-center gap-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm elevenlabs-button-secondary">
-                  <Phone className="w-4 h-4" />
-                  Phone call
-                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="space-y-6 mt-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Summary Card */}
-                  <Card className="elevenlabs-card">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
-                        <MessageSquare className="w-5 h-5" />
-                        Rezumat Conversație
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => translateSummary()}
-                          disabled={isTranslating}
-                          className="ml-auto"
-                        >
-                          {isTranslating ? (
-                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                          ) : (
-                            <Languages className="w-4 h-4 mr-2" />
-                          )}
-                          Traduce
-                        </Button>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="bg-white p-4 rounded-lg border">
-                        <p className="text-gray-700 leading-relaxed">
-                          {translatedSummary || conversationData?.summary}
-                        </p>
-                        {translatedSummary && (
-                          <div className="mt-3 pt-3 border-t border-gray-200">
-                            <p className="text-sm text-gray-500 mb-2">Text original:</p>
-                            <p className="text-gray-600 text-sm italic">
-                              {conversationData?.summary}
-                            </p>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => setTranslatedSummary('')}
-                              className="mt-2"
-                            >
-                              Arată originalul
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                {/* Rezumat Conversație */}
+                <Card className="elevenlabs-card">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+                      <MessageSquare className="w-5 h-5" />
+                      Rezumat Conversație (tradus automat)
+                      {isTranslating && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="bg-white p-4 rounded-lg border">
+                      <p className="text-gray-700 leading-relaxed">
+                        {translatedSummary || conversationData?.summary}
+                      </p>
+                      {translatedSummary && translatedSummary !== conversationData?.summary && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <p className="text-sm text-gray-500 mb-2">Text original:</p>
+                          <p className="text-gray-600 text-sm italic">
+                            {conversationData?.summary}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
 
-                  {/* Call Analysis Card */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Status & Rezultat */}
                   <Card className="elevenlabs-card">
                     <CardHeader className="pb-3">
                       <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
@@ -323,26 +289,92 @@ const ConversationDetail = () => {
                         Status & Rezultat
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-3">
                       <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
-                        <span className="font-medium">Status apel:</span>
-                        <Badge className="status-badge bg-gray-900 text-white px-3 py-1">
-                          {conversationData?.status === 'done' ? 'Finalizat cu succes' : 
+                        <span className="font-medium text-sm">Status apel:</span>
+                        <Badge className="status-badge bg-gray-900 text-white px-2 py-1 text-xs">
+                          {conversationData?.status === 'done' ? 'Finalizat' : 
                            conversationData?.status === 'failed' ? 'Eșuat' : 
                            conversationData?.status}
                         </Badge>
                       </div>
                       <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
-                        <span className="font-medium">Cost total:</span>
+                        <span className="font-medium text-sm">Cost total:</span>
                         <span className="text-lg font-bold text-gray-900">{conversationData?.cost} credite</span>
                       </div>
                       <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
-                        <span className="font-medium">Durată:</span>
+                        <span className="font-medium text-sm">Durată:</span>
                         <span className="text-lg font-bold text-gray-900">{conversationData?.duration}</span>
                       </div>
                       <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
-                        <span className="font-medium">Dată & Oră:</span>
+                        <span className="font-medium text-sm">Dată & Oră:</span>
                         <span className="text-sm text-gray-600">{conversationData?.startTime}</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                        <span className="font-medium text-sm">Succes apel:</span>
+                        <Badge className={`status-badge ${conversationData?.callSuccessful === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white text-xs`}>
+                          {conversationData?.callSuccessful === 'success' ? 'Succes' : 'Eșuat'}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Informații Client */}
+                  <Card className="elevenlabs-card">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+                        <Phone className="w-5 h-5" />
+                        Informații Client
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="bg-white p-3 rounded-lg border">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-600">Număr telefon:</span>
+                          <span className="text-sm font-bold text-red-600">{conversationData?.phoneNumber}</span>
+                        </div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-600">Număr agent:</span>
+                          <span className="text-sm font-medium text-gray-800">{conversationData?.agentNumber}</span>
+                        </div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-600">Limbă:</span>
+                          <span className="text-sm font-medium text-gray-800">{conversationData?.language}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-600">Motiv încheiere:</span>
+                          <span className="text-sm font-medium text-gray-800">{conversationData?.terminationReason}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Detalii Apel */}
+                  <Card className="elevenlabs-card">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+                        <Phone className="w-5 h-5" />
+                        Detalii Apel
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="bg-white p-3 rounded-lg border space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-600">Tip apel:</span>
+                          <Badge className="status-badge bg-gray-900 text-white text-xs">
+                            {conversation.metadata?.phone_call?.direction === 'outbound' ? 'Outbound' : 'Inbound'}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-600">Tip interacțiune:</span>
+                          <Badge className="status-badge bg-gray-900 text-white text-xs">Apel vocal</Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-600">Canal:</span>
+                          <span className="text-sm font-medium">
+                            {conversation.metadata?.phone_call?.direction === 'outbound' ? 'Outbound Call' : 'Inbound Call'}
+                          </span>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -504,98 +536,6 @@ const ConversationDetail = () => {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="client-data" className="space-y-6 mt-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <Card className="elevenlabs-card">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
-                        <Phone className="w-5 h-5" />
-                        Informații Client
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="bg-white p-4 rounded-lg border">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-600">Număr telefon:</span>
-                          <span className="text-lg font-bold text-red-600">{conversationData?.phoneNumber}</span>
-                        </div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-600">Număr agent:</span>
-                          <span className="font-medium text-gray-800">{conversationData?.agentNumber}</span>
-                        </div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-600">Limbă:</span>
-                          <span className="font-medium text-gray-800">{conversationData?.language}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-600">Motiv încheiere:</span>
-                          <span className="font-medium text-gray-800 text-xs">{conversationData?.terminationReason}</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="elevenlabs-card">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
-                        <MessageSquare className="w-5 h-5" />
-                        Detalii Suplimentare
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="bg-white p-4 rounded-lg border space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-600">Tip interacțiune:</span>
-                          <Badge className="status-badge bg-gray-900 text-white">Apel vocal</Badge>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-600">Canal:</span>
-                          <span className="font-medium">Outbound Call</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="phone-call" className="space-y-6 mt-6">
-                <Card className="elevenlabs-card">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
-                      <Phone className="w-5 h-5" />
-                      Detalii Apel
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                      <div className="bg-white p-4 rounded-lg border space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-600">Tip apel:</span>
-                          <Badge className="status-badge bg-gray-900 text-white">
-                            {conversation.metadata?.phone_call?.direction === 'outbound' ? 'Outbound' : 'Inbound'}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-600">Durata:</span>
-                          <span className="text-lg font-bold text-gray-900">{conversationData?.duration}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-600">Status:</span>
-                          <Badge className="status-badge bg-gray-900 text-white">
-                            {conversationData?.status === 'done' ? 'Finalizat' : 
-                             conversationData?.status === 'failed' ? 'Eșuat' : 
-                             conversationData?.status}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-600">Succes apel:</span>
-                          <Badge className={`status-badge ${conversationData?.callSuccessful === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white`}>
-                            {conversationData?.callSuccessful === 'success' ? 'Succes' : 'Eșuat'}
-                          </Badge>
-                        </div>
-                      </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
             </Tabs>
           </div>
         )}
