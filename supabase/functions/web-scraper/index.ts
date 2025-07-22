@@ -101,8 +101,7 @@ serve(async (req) => {
               '.product__price, .item__price',
               '.price-item, .price-value',
               '[class*="price"]',
-              '[class*="pret"]',
-              'span[contains(text(), "MDL")], span[contains(text(), "LEI")], span[contains(text(), "RON")]'
+              '[class*="pret"]'
             ];
             
             for (const pSel of priceSelectors) {
