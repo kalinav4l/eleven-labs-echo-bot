@@ -409,8 +409,8 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
           )}
         </TabsContent>
 
-        <TabsContent value="transcription" className="flex-1 flex flex-col mt-0">
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <TabsContent value="transcription" className="flex-1 flex flex-col mt-0 h-full">
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
             {conversationData?.transcript?.length > 0 ? (
               conversationData.transcript.map((turn: any, index: number) => (
                 <div key={index} className="flex items-start space-x-3">
