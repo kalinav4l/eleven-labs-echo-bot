@@ -104,6 +104,14 @@ In oferta trimite si linkul la site https://kalinaai.md/.`;
             </div>}
         </div>
 
+        {/* Important Note */}
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 mb-3">
+          <p className="text-sm text-amber-600 flex items-start gap-2">
+            <span className="mt-0.5">⚠️</span>
+            <span><strong>IMPORTANT:</strong> Acest prompt este OBLIGATORIU pentru funcționarea corectă a tool-ului SMS. Agentul nu va putea trimite oferte prin SMS fără aceste instrucțiuni.</span>
+          </p>
+        </div>
+
         {/* Simple Prompt Display */}
         <div className="space-y-2">
           <Textarea value={examplePrompt} readOnly className="glass-input min-h-[100px] resize-none text-sm" />
