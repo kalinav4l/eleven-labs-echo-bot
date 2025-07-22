@@ -338,7 +338,7 @@ const ConversationAnalytics = () => {
       
       {/* Conversation Detail Sidebar */}
       <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
-        <SheetContent side="right" className="w-[50vw] max-w-none p-0 px-0 py-[19px] my-0 mx-[43px]">
+        <SheetContent side="right" className="w-[50vw] max-w-[50vw] min-w-[50vw] p-0">
           <SheetHeader className="p-6 border-b">
             <SheetTitle>Detalii Conversație</SheetTitle>
           </SheetHeader>
