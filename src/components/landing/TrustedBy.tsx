@@ -128,7 +128,7 @@ export function TrustedBy() {
                 <div
                   key={index}
                   ref={el => { cardRefs.current[index] = el || null; }}
-                  className={`bg-white border border-gray-200 rounded-2xl p-8 hover:shadow-lg duration-300 hover:scale-105 w-full max-w-md ${
+                  className={`bg-white border border-gray-200 rounded-2xl p-8 hover:shadow-lg transition-all duration-300 hover:scale-105 w-full max-w-md transition-all duration-1000 ${
                     isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'
                   }`}
                   style={{
@@ -148,5 +148,3 @@ export function TrustedBy() {
     </section>
   )
 }
-
-export default TrustedBy;

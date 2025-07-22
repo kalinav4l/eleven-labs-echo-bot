@@ -3,9 +3,6 @@ import React from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Header } from '@/components/landing/Header';
-import { Hero } from '@/components/landing/Hero';
-import Demo from './Demo';
-import { TrustedBy } from '@/components/landing/TrustedBy';
 
 const Landing = () => {
   const { user, loading } = useAuth();
@@ -27,9 +24,6 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <Hero />
-      <Demo />
-      <TrustedBy />
     </div>
   );
 };

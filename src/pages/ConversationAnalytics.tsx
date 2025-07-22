@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Search, Phone, Copy, ExternalLink, MessageCircle, AlertTriangle } from 'lucide-react';
+import { Search, Phone, Copy, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ConversationDetailSidebar } from '@/components/outbound/ConversationDetailSidebar';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,7 +23,6 @@ const ConversationAnalytics = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
   const [conversationCosts, setConversationCosts] = useState<Record<string, number>>({});
-  const [sentSMS, setSentSMS] = useState<Record<string, boolean>>({});
   const {
     callHistory,
     isLoading
@@ -31,29 +30,6 @@ const ConversationAnalytics = () => {
   const {
     toast
   } = useToast();
-
-  // Function to check SMS sent for conversations
-  const checkSMSSent = async (conversationId: string) => {
-    if (!conversationId || sentSMS[conversationId] !== undefined) {
-      return sentSMS[conversationId] || false;
-    }
-    
-    try {
-      const { data } = await supabase.functions.invoke('monitor-conversations', {
-        body: { conversationId }
-      });
-      
-      const hasSMS = data?.smsSent || false;
-      setSentSMS(prev => ({
-        ...prev,
-        [conversationId]: hasSMS
-      }));
-      return hasSMS;
-    } catch (error) {
-      console.error('Error checking SMS:', error);
-      return false;
-    }
-  };
 
   // Function to get duration and cost from conversation data
   const getConversationData = async (conversationId: string) => {
@@ -111,7 +87,6 @@ const ConversationAnalytics = () => {
       for (const call of conversationsToLoad) {
         if (call.conversation_id) {
           await getConversationData(call.conversation_id);
-          await checkSMSSent(call.conversation_id);
         }
       }
     };
@@ -283,24 +258,9 @@ const ConversationAnalytics = () => {
                       <div className="text-xs text-gray-500 mb-2">
                         Agent: {call.agent_name || 'Agent necunoscut'}
                       </div>
-                      <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
+                      <div className="flex justify-between items-center text-xs text-gray-500">
                         <span>Cost: {call.conversation_id ? formatCost(conversationCosts[call.conversation_id] || 0) : formatCost(0)}</span>
                         <span>Durată: {call.conversation_id ? formatDuration(conversationDurations[call.conversation_id] || 0) : formatDuration(call.duration_seconds || 0)}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center text-xs text-gray-500">
-                          {call.conversation_id && sentSMS[call.conversation_id] ? (
-                            <div className="flex items-center text-green-600">
-                              <MessageCircle className="w-3 h-3 mr-1" />
-                              SMS trimis
-                            </div>
-                          ) : (
-                            <div className="flex items-center text-orange-600">
-                              <AlertTriangle className="w-3 h-3 mr-1" />
-                              SMS nu trimis
-                            </div>
-                          )}
-                        </div>
                       </div>
                     </div>;
             })}
@@ -315,24 +275,18 @@ const ConversationAnalytics = () => {
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Nume Contact</th>
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Agent</th>
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Cost total:</th>
-                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">SMS Status</th>
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Evaluation result</th>
                     <th className="text-left p-3 text-sm font-medium text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredCalls.length === 0 ? <tr>
-                      <td colSpan={7} className="text-center p-8 text-muted-foreground">
+                      <td colSpan={6} className="text-center p-8 text-muted-foreground">
                         Nu sunt conversații disponibile
                       </td>
-                    </tr> : filteredCalls.map((call, index) => {
+                    </tr> : filteredCalls.map(call => {
                   const dateTime = formatDate(call.call_date);
-                  const isLastAndNoSMS = index === 0 && (!call.conversation_id || !sentSMS[call.conversation_id]);
-                  return <tr key={call.id} className={`cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:z-10 relative ${
-                    isLastAndNoSMS 
-                      ? 'bg-orange-50 hover:bg-orange-100 border-l-4 border-orange-400' 
-                      : 'hover:bg-gray-50'
-                  }`} onClick={() => call.conversation_id && handleConversationClick(call.conversation_id)}>
+                  return <tr key={call.id} className="hover:bg-gray-50 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:z-10 relative" onClick={() => call.conversation_id && handleConversationClick(call.conversation_id)}>
                           <td className="p-3">
                             <div className="flex items-center text-sm">
                               <Phone className="w-3 h-3 mr-1 text-muted-foreground" />
@@ -355,19 +309,6 @@ const ConversationAnalytics = () => {
                                 {call.conversation_id ? formatCost(conversationCosts[call.conversation_id] || 0) : formatCost(0)}
                               </div>
                             </div>
-                          </td>
-                          <td className="p-3">
-                            {call.conversation_id && sentSMS[call.conversation_id] ? (
-                              <div className="flex items-center text-green-600">
-                                <MessageCircle className="w-4 h-4 mr-1" />
-                                <span className="text-xs">Trimis</span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center text-orange-600">
-                                <AlertTriangle className="w-4 h-4 mr-1" />
-                                <span className="text-xs">Nu trimis</span>
-                              </div>
-                            )}
                           </td>
                           <td className="p-3">
                             <div className={getStatusStyle(call.call_status)}>
