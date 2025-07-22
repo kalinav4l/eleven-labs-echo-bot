@@ -16,6 +16,7 @@ import { useEnhancedKnowledgeBase } from '@/hooks/useEnhancedKnowledgeBase';
 import AgentGeneralInfo from '@/components/agent/AgentGeneralInfo';
 import AgentSystemPrompt from '@/components/agent/AgentSystemPrompt';
 import AgentFirstMessage from '@/components/agent/AgentFirstMessage';
+import AgentToolConnection from '@/components/agent/AgentToolConnection';
 import {AgentResponse, LanguagePreset} from "@/types/dtos.ts";
 import {ElevenLabsController} from "@/controllers/ElevenLabsController.ts";
 import { supabase } from '@/integrations/supabase/client';
@@ -380,6 +381,12 @@ const AgentEdit = () => {
           selectedLanguages={additionalLanguages} 
           onLanguagesChange={handleAdditionalLanguagesChange}
           currentLanguage={agentData.conversation_config?.agent?.language} 
+        />
+
+        {/* Tool Connection Section */}
+        <AgentToolConnection 
+          agentData={agentData} 
+          setAgentData={setAgentData} 
         />
 
         {/* Enhanced Knowledge Base Section - Mobile optimized */}
