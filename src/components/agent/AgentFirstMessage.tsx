@@ -18,7 +18,7 @@ interface AgentFirstMessageProps {
 const AgentFirstMessage: React.FC<AgentFirstMessageProps> = ({ 
   agentData, 
   setAgentData, 
-  additionalLanguages, 
+  additionalLanguages = [], 
   onOpenMultilingualModal 
 }) => {
   const getLanguageLabel = (languageId: string) => {
