@@ -92,51 +92,88 @@ serve(async (req) => {
             for (let i = 0; i < elements.length; i++) {
               const element = elements[i];
               
-              // Extract title with more specific selectors for sote.md
+              // Extract title - enhanced extraction logic
               let productTitle = '';
-              const titleSelectors = [
-                'h1, h2, h3, h4, h5, h6',
-                '.title, .name, .product-name, .product-title',
-                '.nume, .produs-nume, .denumire',
-                'a[title]', // Link with title attribute
-                '.card-title, .item-title',
-                '.product__title, .item__title',
-                '[data-product-title]',
-                'p strong', // Sometimes titles are in bold paragraphs
-                '.caption h3, .caption h4',
-                '.info h3, .info h4'
-              ];
               
-              for (const tSel of titleSelectors) {
-                let titleEl = element.querySelector(tSel);
-                if (titleEl?.textContent?.trim()) {
-                  productTitle = titleEl.textContent.trim();
-                  break;
+              // Debug: log element structure for first few elements
+              if (i < 3) {
+                console.log(`Element ${i} HTML structure:`, element.outerHTML?.substring(0, 500));
+              }
+              
+              // Try multiple approaches to find title
+              // 1. Look for link text content
+              const linkEl = element.querySelector('a');
+              if (linkEl?.textContent?.trim()) {
+                const linkText = linkEl.textContent.trim();
+                if (linkText.length > 3 && linkText.length < 150 && 
+                    !linkText.match(/^\d+/) && 
+                    !linkText.includes('MDL') && 
+                    !linkText.includes('LEI')) {
+                  productTitle = linkText;
                 }
-                // Try to get title from link's title attribute
-                if (tSel === 'a[title]') {
-                  titleEl = element.querySelector('a');
-                  if (titleEl?.getAttribute('title')?.trim()) {
-                    productTitle = titleEl.getAttribute('title').trim();
+              }
+              
+              // 2. Look for title attribute on link
+              if (!productTitle && linkEl?.getAttribute('title')) {
+                const titleAttr = linkEl.getAttribute('title').trim();
+                if (titleAttr.length > 3 && titleAttr.length < 150) {
+                  productTitle = titleAttr;
+                }
+              }
+              
+              // 3. Look for headings
+              if (!productTitle) {
+                const headingEl = element.querySelector('h1, h2, h3, h4, h5, h6');
+                if (headingEl?.textContent?.trim()) {
+                  productTitle = headingEl.textContent.trim();
+                }
+              }
+              
+              // 4. Look for spans or divs with meaningful text
+              if (!productTitle) {
+                const textElements = element.querySelectorAll('span, div, p');
+                for (let j = 0; j < textElements.length; j++) {
+                  const textEl = textElements[j];
+                  const text = textEl.textContent?.trim();
+                  if (text && text.length > 3 && text.length < 150 && 
+                      !text.includes('MDL') && !text.includes('LEI') && 
+                      !text.match(/^\d+[.,]\d+/) && // Not a price
+                      !text.includes('€') && !text.includes('$') &&
+                      !text.toLowerCase().includes('adauga') &&
+                      !text.toLowerCase().includes('cos')) {
+                    productTitle = text;
                     break;
                   }
                 }
               }
               
-              // Fallback: get text from the first meaningful text element
+              // 5. Last resort: use any text content from the element
               if (!productTitle) {
-                const allTextElements = element.querySelectorAll('*');
-                for (let j = 0; j < allTextElements.length; j++) {
-                  const textEl = allTextElements[j];
-                  const text = textEl.textContent?.trim();
-                  if (text && text.length > 5 && text.length < 200 && 
-                      !text.includes('MDL') && !text.includes('LEI') && 
-                      !text.match(/^\d+[.,]\d+/) && // Not a price
-                      !text.includes('₽') && !text.includes('$')) {
-                    productTitle = text;
-                    break;
+                const allText = element.textContent?.trim();
+                if (allText) {
+                  // Split by common separators and take the first meaningful part
+                  const parts = allText.split(/\n|\t|\s{2,}/).filter(part => {
+                    const p = part.trim();
+                    return p.length > 3 && p.length < 150 && 
+                           !p.includes('MDL') && !p.includes('LEI') && 
+                           !p.match(/^\d+[.,]\d+/);
+                  });
+                  if (parts.length > 0) {
+                    productTitle = parts[0].trim();
                   }
                 }
+              }
+              
+              // Clean up the title
+              if (productTitle) {
+                productTitle = productTitle.replace(/\s+/g, ' ').trim();
+                // Remove common unwanted prefixes/suffixes
+                productTitle = productTitle.replace(/^(produs|articol|item)[\s:]/i, '');
+                productTitle = productTitle.replace(/[\s:]+(mdl|lei|ron)$/i, '');
+              }
+              
+              if (i < 3) {
+                console.log(`Element ${i} extracted title: "${productTitle}"`);
               }
               
               // Extract price with enhanced selectors for sote.md and Romanian sites
