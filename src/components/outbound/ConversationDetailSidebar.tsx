@@ -7,30 +7,29 @@ import { Loader2, Phone, MessageSquare, Volume2, Download, CheckCircle, Play, La
 import { useConversationById } from '@/hooks/useConversationById';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
 interface ConversationDetailSidebarProps {
   conversationId: string;
 }
-
-export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps> = ({ conversationId }) => {
+export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps> = ({
+  conversationId
+}) => {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [translatedSummary, setTranslatedSummary] = useState<string>('');
   const [isTranslating, setIsTranslating] = useState(false);
-  const { toast } = useToast();
-  
+  const {
+    toast
+  } = useToast();
   const {
     data: conversation,
     isLoading,
     error
   } = useConversationById(conversationId);
-
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
-
   const formatDate = (unixSeconds: number) => {
     return new Date(unixSeconds * 1000).toLocaleString('ro-RO', {
       day: '2-digit',
@@ -47,14 +46,16 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
       console.error('No conversation ID provided to getAudioUrl');
       return null;
     }
-    
     try {
       setIsLoadingAudio(true);
-      
-      const { data, error } = await supabase.functions.invoke('get-conversation-audio', {
-        body: { conversationId },
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('get-conversation-audio', {
+        body: {
+          conversationId
+        }
       });
-
       if (error) {
         console.error('Error fetching audio:', error);
         toast({
@@ -64,19 +65,19 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
         });
         return null;
       }
-
       if (data?.audioData) {
         const binaryString = atob(data.audioData);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);
         }
-        const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
+        const audioBlob = new Blob([bytes], {
+          type: 'audio/mpeg'
+        });
         const audioUrl = URL.createObjectURL(audioBlob);
         setAudioUrl(audioUrl);
         return audioUrl;
       }
-
       return null;
     } catch (error) {
       console.error('Error fetching audio:', error);
@@ -94,21 +95,21 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
   // Function to auto-translate summary using GPT
   const translateSummary = async (text: string) => {
     if (!text) return text;
-
     try {
-      const { data, error } = await supabase.functions.invoke('translate-text', {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('translate-text', {
         body: {
           text: text,
           targetLanguage: 'ro',
           sourceLanguage: 'auto'
         }
       });
-
       if (error) {
         console.error('Translation error:', error);
         return text;
       }
-
       return data?.translatedText || text;
     } catch (error) {
       console.error('Error translating summary:', error);
@@ -119,25 +120,28 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
   // Function to download audio
   const downloadAudio = async () => {
     if (!conversationId) return;
-    
     try {
       setIsLoadingAudio(true);
-      
-      const { data, error } = await supabase.functions.invoke('get-conversation-audio', {
-        body: { conversationId },
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('get-conversation-audio', {
+        body: {
+          conversationId
+        }
       });
-
       if (error) {
         throw new Error(error.message);
       }
-
       if (data?.audioData) {
         const binaryString = atob(data.audioData);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);
         }
-        const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
+        const audioBlob = new Blob([bytes], {
+          type: 'audio/mpeg'
+        });
         const url = URL.createObjectURL(audioBlob);
         const a = document.createElement('a');
         a.href = url;
@@ -146,7 +150,6 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        
         toast({
           title: "Audio descărcat",
           description: "Fișierul audio a fost descărcat cu succes"
@@ -167,7 +170,6 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
   // Extract data from conversation object
   const getConversationData = () => {
     if (!conversation) return null;
-    
     return {
       startTime: conversation.metadata?.start_time_unix_secs ? formatDate(conversation.metadata.start_time_unix_secs) : 'Nu este disponibil',
       duration: conversation.metadata?.call_duration_secs ? formatDuration(conversation.metadata.call_duration_secs) : '0:00',
@@ -182,7 +184,6 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
       transcript: conversation.transcript || []
     };
   };
-
   const conversationData = getConversationData();
 
   // Auto-translate summary when conversation loads
@@ -195,39 +196,26 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
         setIsTranslating(false);
       }
     };
-    
     autoTranslate();
   }, [conversationData?.summary]);
-
   console.log('ConversationDetailSidebar - isLoading:', isLoading, 'error:', error, 'conversation:', conversation);
-
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
+    return <div className="flex items-center justify-center py-12">
         <Loader2 className="w-8 h-8 animate-spin mr-3" />
         <span className="text-lg">Se încarcă conversația...</span>
-      </div>
-    );
+      </div>;
   }
-
   if (error) {
-    return (
-      <div className="text-center py-12">
+    return <div className="text-center py-12">
         <div className="text-red-600 text-lg">Eroare la încărcarea conversației</div>
-      </div>
-    );
+      </div>;
   }
-
   if (!conversation) {
-    return (
-      <div className="text-center py-12">
+    return <div className="text-center py-12">
         <div className="text-gray-600 text-lg">Conversația nu a fost găsită</div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="h-screen flex flex-col">
+  return <div className="h-screen flex flex-col">
       {/* Header */}
       <div className="border-b pb-4">
         <h2 className="text-xl font-bold text-gray-900">
@@ -240,16 +228,10 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
       <Tabs defaultValue="overview" className="w-full flex-1 flex flex-col min-h-0">
         <div className="border-b bg-white flex-shrink-0">
           <TabsList className="h-auto bg-transparent p-0 w-full justify-start gap-8 px-6">
-            <TabsTrigger 
-              value="overview" 
-              className="bg-transparent border-b-2 border-transparent data-[state=active]:border-black data-[state=active]:bg-transparent rounded-none px-0 py-3 text-sm font-medium data-[state=active]:shadow-none"
-            >
+            <TabsTrigger value="overview" className="bg-transparent border-b-2 border-transparent data-[state=active]:border-black data-[state=active]:bg-transparent rounded-none px-0 py-3 text-sm font-medium data-[state=active]:shadow-none">
               Overview & Detalii
             </TabsTrigger>
-            <TabsTrigger 
-              value="transcription" 
-              className="bg-transparent border-b-2 border-transparent data-[state=active]:border-black data-[state=active]:bg-transparent rounded-none px-0 py-3 text-sm font-medium data-[state=active]:shadow-none"
-            >
+            <TabsTrigger value="transcription" className="bg-transparent border-b-2 border-transparent data-[state=active]:border-black data-[state=active]:bg-transparent rounded-none px-0 py-3 text-sm font-medium data-[state=active]:shadow-none">
               Transcription
             </TabsTrigger>
           </TabsList>
@@ -270,14 +252,12 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
                 <p className="text-gray-700 leading-relaxed">
                   {translatedSummary || conversationData?.summary}
                 </p>
-                {translatedSummary && translatedSummary !== conversationData?.summary && (
-                  <div className="mt-3 pt-3 border-t border-gray-200">
+                {translatedSummary && translatedSummary !== conversationData?.summary && <div className="mt-3 pt-3 border-t border-gray-200">
                     <p className="text-xs text-gray-500 mb-1">Text original:</p>
                     <p className="text-gray-600 text-xs italic">
                       {conversationData?.summary}
                     </p>
-                  </div>
-                )}
+                  </div>}
               </div>
             </CardContent>
           </Card>
@@ -294,9 +274,7 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
               <div className="flex items-center justify-between p-2 bg-gray-50 rounded text-xs">
                 <span className="font-medium">Status:</span>
                 <Badge className="bg-gray-900 text-white px-2 py-0.5 text-xs">
-                  {conversationData?.status === 'done' ? 'Finalizat' : 
-                   conversationData?.status === 'failed' ? 'Eșuat' : 
-                   conversationData?.status}
+                  {conversationData?.status === 'done' ? 'Finalizat' : conversationData?.status === 'failed' ? 'Eșuat' : conversationData?.status}
                 </Badge>
               </div>
               <div className="flex items-center justify-between p-2 bg-gray-50 rounded text-xs">
@@ -357,8 +335,7 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
           </Card>
 
           {/* Audio Player */}
-          {conversation.has_audio && (
-            <Card className="shadow-sm">
+          {conversation.has_audio && <Card className="shadow-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm">
                   <Volume2 className="w-4 h-4" />
@@ -367,48 +344,31 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {isLoadingAudio && (
-                    <div className="flex items-center justify-center py-2">
+                  {isLoadingAudio && <div className="flex items-center justify-center py-2">
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       <span className="text-xs text-gray-600">Se încarcă...</span>
-                    </div>
-                  )}
+                    </div>}
                   
-                  {audioUrl && (
-                    <audio controls className="w-full" style={{ height: '32px' }}>
+                  {audioUrl && <audio controls className="w-full" style={{
+                height: '32px'
+              }}>
                       <source src={audioUrl} type="audio/mpeg" />
                       Browser-ul nu suportă redarea audio.
-                    </audio>
-                  )}
+                    </audio>}
                   
                   <div className="flex gap-2">
-                    {!audioUrl && (
-                      <Button
-                        onClick={() => getAudioUrl(conversationId)}
-                        disabled={isLoadingAudio}
-                        size="sm"
-                        variant="outline"
-                        className="flex-1 text-xs"
-                      >
+                    {!audioUrl && <Button onClick={() => getAudioUrl(conversationId)} disabled={isLoadingAudio} size="sm" variant="outline" className="flex-1 text-xs">
                         <Play className="w-3 h-3 mr-1" />
                         Încarcă Audio
-                      </Button>
-                    )}
-                    <Button
-                      onClick={downloadAudio}
-                      disabled={isLoadingAudio}
-                      size="sm"
-                      variant="outline"
-                      className="flex-1 text-xs"
-                    >
+                      </Button>}
+                    <Button onClick={downloadAudio} disabled={isLoadingAudio} size="sm" variant="outline" className="flex-1 text-xs">
                       <Download className="w-3 h-3 mr-1" />
                       Descarcă
                     </Button>
                   </div>
                 </div>
               </CardContent>
-            </Card>
-          )}
+            </Card>}
         </TabsContent>
 
         <TabsContent value="transcription" className="flex-1 flex flex-col min-h-0">
@@ -417,70 +377,47 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
           </div>
           
           {/* Container dedicat pentru transcript cu scroll - FIXED HEIGHT */}
-          <div className="flex-1 mx-6 mb-6 bg-gray-50 rounded-lg border min-h-0">
+          <div className="flex-1 mx-6 mb-6 rounded-lg border min-h-0 bg-white">
             <div className="h-full overflow-y-auto p-4 space-y-4">
-              {conversationData?.transcript?.length > 0 ? (
-                conversationData.transcript.map((turn: any, index: number) => (
-                  <div key={index} className="flex items-start space-x-3">
+              {conversationData?.transcript?.length > 0 ? conversationData.transcript.map((turn: any, index: number) => <div key={index} className="flex items-start space-x-3">
                     {/* Avatar pentru agent (stânga) */}
-                    {turn.role === 'agent' && (
-                      <div className="w-8 h-8 rounded-full bg-white border border-gray-300 flex items-center justify-center flex-shrink-0">
+                    {turn.role === 'agent' && <div className="w-8 h-8 rounded-full bg-white border border-gray-300 flex items-center justify-center flex-shrink-0">
                         <span className="text-black text-sm font-medium">A</span>
-                      </div>
-                    )}
+                      </div>}
                     
                     {/* Message bubble */}
                     <div className={`flex-1 ${turn.role === 'user' ? 'flex justify-end' : ''}`}>
-                      <div className={`max-w-[80%] ${
-                        turn.role === 'agent' 
-                          ? 'bg-white text-black rounded-2xl rounded-bl-md border border-gray-300' 
-                          : 'bg-black text-white rounded-2xl rounded-br-md ml-auto'
-                      } px-4 py-3 relative`}>
+                      <div className={`max-w-[80%] ${turn.role === 'agent' ? 'bg-white text-black rounded-2xl rounded-bl-md border border-gray-300' : 'bg-black text-white rounded-2xl rounded-br-md ml-auto'} px-4 py-3 relative`}>
                         <p className="text-sm leading-relaxed">{turn.message}</p>
                         
                         {/* Timestamp */}
-                        <div className={`text-xs mt-1 ${
-                          turn.role === 'agent' ? 'text-gray-500 text-right' : 'text-gray-300 text-left'
-                        }`}>
+                        <div className={`text-xs mt-1 ${turn.role === 'agent' ? 'text-gray-500 text-right' : 'text-gray-300 text-left'}`}>
                           {turn.time_in_call_secs !== undefined && formatDuration(turn.time_in_call_secs)}
                         </div>
                         
                         {/* LLM și RAG info pentru mesajele agentului */}
-                        {turn.role === 'agent' && (turn.llm_usage || turn.rag_retrieval_info) && (
-                          <div className="flex gap-1 mt-2">
-                            {turn.llm_usage && (
-                              <span className="text-xs bg-gray-100 text-black px-2 py-1 rounded border">
+                        {turn.role === 'agent' && (turn.llm_usage || turn.rag_retrieval_info) && <div className="flex gap-1 mt-2">
+                            {turn.llm_usage && <span className="text-xs bg-gray-100 text-black px-2 py-1 rounded border">
                                 LLM {turn.llm_usage.model_usage ? Object.keys(turn.llm_usage.model_usage)[0]?.split('-')[0] : ''}
-                              </span>
-                            )}
-                            {turn.rag_retrieval_info && (
-                              <span className="text-xs bg-gray-200 text-black px-2 py-1 rounded border">
+                              </span>}
+                            {turn.rag_retrieval_info && <span className="text-xs bg-gray-200 text-black px-2 py-1 rounded border">
                                 RAG {Math.round(turn.rag_retrieval_info.rag_latency_secs * 1000)}ms
-                              </span>
-                            )}
-                          </div>
-                        )}
+                              </span>}
+                          </div>}
                       </div>
                     </div>
                     
                     {/* Avatar pentru user (dreapta) */}
-                    {turn.role === 'user' && (
-                      <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center flex-shrink-0">
+                    {turn.role === 'user' && <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center flex-shrink-0">
                         <span className="text-white text-sm font-medium">U</span>
-                      </div>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-12 text-gray-500">
+                      </div>}
+                  </div>) : <div className="text-center py-12 text-gray-500">
                   <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                   <p>Nu există transcript disponibil pentru această conversație.</p>
-                </div>
-              )}
+                </div>}
             </div>
           </div>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 };
