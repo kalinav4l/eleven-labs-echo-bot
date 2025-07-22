@@ -99,41 +99,50 @@ const AgentEdit = () => {
         setIsLoading(false);
       }
     };
-
     fetchAgentData();
-  }, [agentId]);
+  }, [agentId, processAgentKnowledgeBase]);
 
-  // Initialize multilingual messages when agentData changes
-  useEffect(() => {
-    if (agentData) {
-      const languagePresets = agentData.conversation_config?.language_presets;
-      if (languagePresets) {
-        const messages: Record<string, string> = {};
-        Object.entries(languagePresets).forEach(([lang, preset]) => {
-          if (typeof preset === 'object' && preset !== null && 'first_message' in preset) {
-            messages[lang] = (preset as any).first_message || '';
-          }
-        });
-        setMultilingualMessages(messages);
-      }
-    }
-  }, [agentData]);
+  // Initialize multilingual messages when agent data loads
+    useEffect(() => {
+        if (agentData?.conversation_config) {
+            const defaultLanguage = agentData.conversation_config.agent?.language || 'en';
+            const defaultFirstMessage = agentData.conversation_config.agent?.first_message || '';
+            // Start with the default language and its first message
+            const currentMessages: Record<string, string> = {
+                [defaultLanguage]: defaultFirstMessage
+            };
 
+            // Add/override with language presets
+            if (agentData.conversation_config.language_presets) {
+                Object.entries(agentData.conversation_config.language_presets).forEach(([languageId, preset]) => {
+                    if (preset.overrides?.agent?.first_message) {
+                        currentMessages[languageId] = preset.overrides.agent.first_message;
+                    } else if (preset.first_message_translation?.text) {
+                        currentMessages[languageId] = preset.first_message_translation.text;
+                    }
+                });
+            }
+
+            setMultilingualMessages(currentMessages);
+        }
+    }, [agentData]);
+
+  // Handle additional languages change - add empty messages for new languages
   const handleAdditionalLanguagesChange = (newLanguages: string[]) => {
     setAdditionalLanguages(newLanguages);
     
-    // Initialize multilingual messages for new languages
+    const defaultLanguage = agentData?.conversation_config?.agent?.language || 'en';
     const updatedMessages = { ...multilingualMessages };
-    newLanguages.forEach(lang => {
-      if (!updatedMessages[lang]) {
-        updatedMessages[lang] = '';
+    
+    newLanguages.forEach(language => {
+      if (!updatedMessages[language]) {
+        updatedMessages[language] = '';
       }
     });
     
-    // Remove messages for languages that are no longer selected
-    Object.keys(updatedMessages).forEach(lang => {
-      if (!newLanguages.includes(lang) && lang !== agentData?.conversation_config?.agent?.language) {
-        delete updatedMessages[lang];
+    Object.keys(updatedMessages).forEach(language => {
+      if (language !== defaultLanguage && !newLanguages.includes(language)) {
+        delete updatedMessages[language];
       }
     });
     
@@ -142,21 +151,40 @@ const AgentEdit = () => {
 
   const handleAgentDataRefresh = (refreshedAgentData: AgentResponse) => {
     setAgentData(refreshedAgentData);
+    
     const parsedAdditionalLanguages = parseAdditionalLanguagesFromResponse(refreshedAgentData);
     setAdditionalLanguages(parsedAdditionalLanguages);
   };
 
   const handleSave = async () => {
-    if (!agentData || !agentId) return;
-
+    if (!agentId || !agentData) return;
     setIsSaving(true);
     try {
-      await ElevenLabsController.updateAgent(agentId, agentData);
-
+      const updatePayload = ElevenLabsController.prepareUpdatePayload(agentData, multilingualMessages);
+      const data = await ElevenLabsController.updateAgent(agentId, updatePayload);
+      handleAgentDataRefresh(data)
+      
+      // Update agent name in database if it was changed
+      if (agentData.name) {
+        const { error: updateError } = await supabase
+          .from('kalina_agents')
+          .update({ name: agentData.name })
+          .eq('elevenlabs_agent_id', agentId);
+        
+        if (updateError) {
+          console.error('Error updating agent name in database:', updateError);
+        }
+      }
+      
+      if (documents.length > 0) {
+        await updateAgentKnowledgeBase(true);
+      }
+      
       toast({
-        title: "Succes",
-        description: "Agentul a fost salvat cu succes!"
+        title: "Succes!",
+        description: "Agentul a fost salvat cu succes. Pagina se va reîncărca."
       });
+      
     } catch (error) {
       console.error('Error saving agent:', error);
       toast({
@@ -169,47 +197,13 @@ const AgentEdit = () => {
     }
   };
 
-  const handleMultilingualMessagesUpdate = (messages: Record<string, string>) => {
-    setMultilingualMessages(messages);
-    if (agentData) {
-      const updatedAgentData = { ...agentData };
-      const languagePresets = updatedAgentData.conversation_config?.language_presets || {};
-      
-      Object.entries(messages).forEach(([lang, message]) => {
-        if (languagePresets[lang]) {
-          (languagePresets[lang] as any).first_message = message;
-        }
-      });
-      
-      if (updatedAgentData.conversation_config) {
-        updatedAgentData.conversation_config.language_presets = languagePresets;
-      }
-      
-      setAgentData(updatedAgentData);
-    }
-  };
-
-  const openMultilingualModal = () => {
-    setIsMultilingualModalOpen(true);
-  };
-
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    try {
-      await addFileDocument(file);
+    const success = await addFileDocument(file);
+    if (success) {
       event.target.value = '';
-      toast({
-        title: "Succes",
-        description: "Documentul a fost încărcat cu succes!"
-      });
-    } catch (error) {
-      toast({
-        title: "Eroare",
-        description: "Nu s-a putut încărca documentul",
-        variant: "destructive"
-      });
     }
   };
 
@@ -217,86 +211,106 @@ const AgentEdit = () => {
     if (!newDocName.trim() || !newDocContent.trim()) {
       toast({
         title: "Eroare",
-        description: "Numele și conținutul documentului sunt obligatorii",
-        variant: "destructive"
+        description: "Te rog completează numele și conținutul documentului.",
+        variant: "destructive",
       });
       return;
     }
 
-    try {
-      setIsAddingDoc(true);
-      await addTextDocument(newDocName, newDocContent);
+    const success = await addTextDocument(newDocName, newDocContent);
+    if (success) {
       setNewDocName('');
       setNewDocContent('');
-      toast({
-        title: "Succes", 
-        description: "Documentul a fost adăugat cu succes!"
-      });
-    } catch (error) {
-      toast({
-        title: "Eroare",
-        description: "Nu s-a putut adăuga documentul",
-        variant: "destructive"
-      });
-    } finally {
       setIsAddingDoc(false);
     }
   };
 
-  const handleRemoveDocument = async (docId: string) => {
-    try {
-      await removeDocument(docId);
+  const handleRemoveDocument = (id: string) => {
+    removeDocument(id);
+  };
+
+  const handleUpdateKnowledgeBase = async () => {
+    await updateAgentKnowledgeBase(false);
+  };
+
+  const handleAddExistingDocument = () => {
+    if (!selectedExistingDocId) {
       toast({
-        title: "Succes",
-        description: "Documentul a fost eliminat cu succes!"
+        title: "Eroare",
+        description: "Te rog selectează un document.",
+        variant: "destructive",
       });
-    } catch (error) {
-      toast({
-        title: "Eroare", 
-        description: "Nu s-a putut elimina documentul",
-        variant: "destructive"
+      return;
+    }
+
+    addExistingDocument(selectedExistingDocId);
+    setSelectedExistingDocId('');
+  };
+
+  const getAvailableExistingDocuments = () => {
+    return existingDocuments.filter(doc => !selectedExistingDocuments.has(doc.id));
+  };
+
+  const handleMultilingualMessagesUpdate = (messages: Record<string, string>) => {
+    setMultilingualMessages(messages);
+      const defaultLanguage = agentData?.conversation_config?.agent?.language || 'en';
+      const defaultLanguageFirstMessage = messages[defaultLanguage];
+
+      const sourceHash = JSON.stringify({
+          firstMessage: defaultLanguageFirstMessage,
+          language: defaultLanguage
+      });
+
+      const language_presets: { [key: string]: LanguagePreset } = Object.entries(messages)
+          .filter(([lang]) => lang !== defaultLanguage)
+          .reduce((acc, [lang, firstMessageText]) => {
+              acc[lang] = {
+                  overrides: {
+                      agent: {
+                          first_message: firstMessageText
+                      }
+                  },
+                  first_message_translation: {
+                      source_hash: sourceHash,
+                      text: firstMessageText
+                  }
+              };
+              return acc;
+          }, {} as { [key: string]: LanguagePreset });
+
+    if (messages[defaultLanguage]) {
+      setAgentData({
+        ...agentData!,
+        conversation_config: {
+          ...agentData!.conversation_config,
+          agent: {
+            ...agentData!.conversation_config?.agent,
+            first_message: messages[defaultLanguage]
+          },
+          language_presets: language_presets
+        }
       });
     }
   };
 
-  const handleAddExistingDocument = async () => {
-    if (!selectedExistingDocId) {
-      toast({
-        title: "Eroare",
-        description: "Selectează un document din listă",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    try {
-      await addExistingDocument(selectedExistingDocId);
-      setSelectedExistingDocId('');
-      toast({
-        title: "Succes",
-        description: "Documentul a fost adăugat cu succes!"
-      });
-    } catch (error) {
-      toast({
-        title: "Eroare",
-        description: "Nu s-a putut adăuga documentul",
-        variant: "destructive"
-      });
-    }
+  const openMultilingualModal = () => {
+    const defaultLanguage = agentData?.conversation_config?.agent?.language || 'en';
+    const currentMessage = agentData?.conversation_config?.agent?.first_message || '';
+
+    const initialMessages = {
+      ...multilingualMessages,
+      [defaultLanguage]: currentMessage
+    };
+    setMultilingualMessages(initialMessages);
+    setIsMultilingualModalOpen(true);
   };
 
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="min-h-screen bg-gradient-to-br from-muted/30 to-background flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto animate-pulse">
-              <Bot className="w-8 h-8 text-primary" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold text-foreground">Se încarcă agentul...</h2>
-              <p className="text-muted-foreground">Vă rugăm să așteptați</p>
-            </div>
+        <div className="p-4 lg:p-6 space-y-6">
+          <div className="flex justify-center items-center min-h-[400px]">
+            <div className="text-muted-foreground">Se încarcă agentul...</div>
           </div>
         </div>
       </DashboardLayout>
@@ -306,23 +320,9 @@ const AgentEdit = () => {
   if (!agentData) {
     return (
       <DashboardLayout>
-        <div className="min-h-screen bg-gradient-to-br from-muted/30 to-background flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <div className="w-16 h-16 bg-destructive/20 rounded-full flex items-center justify-center mx-auto">
-              <Bot className="w-8 h-8 text-destructive" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold text-foreground">Agent negăsit</h2>
-              <p className="text-muted-foreground">Agentul specificat nu a putut fi găsit</p>
-              <Button 
-                onClick={() => navigate('/account/agents')} 
-                variant="outline"
-                className="mt-4"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Înapoi la Agenți
-              </Button>
-            </div>
+        <div className="p-4 lg:p-6 space-y-6">
+          <div className="flex justify-center items-center min-h-[400px]">
+            <div className="text-muted-foreground">Agentul nu a fost găsit</div>
           </div>
         </div>
       </DashboardLayout>
@@ -331,297 +331,265 @@ const AgentEdit = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-muted/20 to-background">
-        <div className="container mx-auto p-4 sm:p-6 space-y-6">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => navigate('/account/agents')}
-                className="shrink-0 hover:bg-muted/50"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Înapoi
-              </Button>
-              <div className="space-y-1">
-                <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
-                    <Bot className="w-6 h-6 text-primary" />
-                  </div>
-                  Editare Agent
-                </h1>
-                <p className="text-muted-foreground text-sm">
-                  Personalizează comportamentul și configurația agentului tău AI
-                </p>
+      <div className="p-4 lg:p-6 space-y-4 lg:space-y-6 lg:px-[240px] lg:my-[60px]">
+        {/* Header - Mobile optimized */}
+        <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+          <div className="flex items-center gap-4">
+            <Button variant="outline" onClick={() => navigate('/account/kalina-agents')} className="glass-button border-border">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Înapoi
+            </Button>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
+                <Bot className="w-5 h-5 text-accent" />
+              </div>
+              <div>
+                <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Editare Agent</h1>
+                <p className="text-sm text-muted-foreground">Modifică setările agentului tău AI</p>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button 
-                variant="outline" 
-                onClick={() => setIsTestModalOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <TestTube className="w-4 h-4" />
-                Testează Agent
-              </Button>
-              <Button 
-                onClick={handleSave} 
-                disabled={isSaving}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2"
-              >
-                <Save className="w-4 h-4" />
-                {isSaving ? 'Se salvează...' : 'Salvează'}
-              </Button>
-            </div>
           </div>
-
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Configuration */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* General Information */}
-              <Card className="shadow-lg border-border/50 bg-card/95 backdrop-blur-sm">
-                <CardHeader className="border-b border-border/30">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <div className="w-5 h-5 bg-primary/20 rounded flex items-center justify-center">
-                      <Bot className="w-3 h-3 text-primary" />
-                    </div>
-                    Informații Generale
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <AgentGeneralInfo agentData={agentData} setAgentData={setAgentData} />
-                </CardContent>
-              </Card>
-
-              {/* System Prompt */}
-              <Card className="shadow-lg border-border/50 bg-card/95 backdrop-blur-sm">
-                <CardHeader className="border-b border-border/30">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <div className="w-5 h-5 bg-secondary/20 rounded flex items-center justify-center">
-                      <FileText className="w-3 h-3 text-secondary-foreground" />
-                    </div>
-                    Prompt Sistem
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <AgentSystemPrompt agentData={agentData} setAgentData={setAgentData} />
-                </CardContent>
-              </Card>
-
-              {/* First Message */}
-              <Card className="shadow-lg border-border/50 bg-card/95 backdrop-blur-sm">
-                <CardHeader className="border-b border-border/30">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <div className="w-5 h-5 bg-accent/20 rounded flex items-center justify-center">
-                      <Bot className="w-3 h-3 text-accent-foreground" />
-                    </div>
-                    Primul Mesaj
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <AgentFirstMessage 
-                    agentData={agentData} 
-                    setAgentData={setAgentData}
-                    onOpenMultilingualModal={openMultilingualModal}
-                    additionalLanguages={additionalLanguages}
-                  />
-                </CardContent>
-              </Card>
-
-              {/* Additional Languages */}
-              <Card className="shadow-lg border-border/50 bg-card/95 backdrop-blur-sm">
-                <CardHeader className="border-b border-border/30">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <div className="w-5 h-5 bg-blue-500/20 rounded flex items-center justify-center">
-                      <Bot className="w-3 h-3 text-blue-600" />
-                    </div>
-                    Limbi Adiționale
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <AdditionalLanguagesSection
-                    selectedLanguages={additionalLanguages}
-                    onLanguagesChange={handleAdditionalLanguagesChange}
-                    currentLanguage={agentData.conversation_config?.agent?.language}
-                  />
-                </CardContent>
-              </Card>
-
-              {/* Tool Connection */}
-              <div className="space-y-6">
-                <AgentToolConnection 
-                  agentData={agentData} 
-                  setAgentData={setAgentData} 
-                />
-              </div>
-            </div>
-
-            {/* Knowledge Base Sidebar */}
-            <div className="space-y-6">
-              <Card className="shadow-lg border-border/50 bg-card/95 backdrop-blur-sm">
-                <CardHeader className="border-b border-border/30">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <div className="w-5 h-5 bg-green-500/20 rounded flex items-center justify-center">
-                      <Database className="w-3 h-3 text-green-600" />
-                    </div>
-                    Baza de Cunoștințe
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 space-y-6">
-                  {/* Upload Document */}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium text-foreground">
-                      Încarcă Document
-                    </Label>
-                    <div className="border-2 border-dashed border-border/50 rounded-lg p-4 text-center hover:border-primary/50 transition-colors">
-                      <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground mb-3">
-                        Selectează un fișier pentru a-l adăuga la baza de cunoștințe
-                      </p>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => document.getElementById('file-upload')?.click()}
-                      >
-                        Selectează Fișier
-                      </Button>
-                      <input
-                        id="file-upload"
-                        type="file"
-                        className="hidden"
-                        accept=".txt,.pdf,.doc,.docx"
-                        onChange={handleFileUpload}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Add Manual Document */}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium text-foreground">
-                      Adaugă Document Manual
-                    </Label>
-                    <div className="space-y-3">
-                      <Input
-                        placeholder="Numele documentului"
-                        value={newDocName}
-                        onChange={(e) => setNewDocName(e.target.value)}
-                        className="bg-muted/30"
-                      />
-                      <Textarea
-                        placeholder="Conținutul documentului..."
-                        value={newDocContent}
-                        onChange={(e) => setNewDocContent(e.target.value)}
-                        className="min-h-[100px] bg-muted/30"
-                      />
-                      <Button 
-                        onClick={addManualDocument}
-                        disabled={isAddingDoc || !newDocName.trim() || !newDocContent.trim()}
-                        size="sm"
-                        className="w-full"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        {isAddingDoc ? 'Se adaugă...' : 'Adaugă Document'}
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Add Existing Document */}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium text-foreground">
-                      Folosește Document Existent
-                    </Label>
-                    <div className="space-y-3">
-                      <Select
-                        value={selectedExistingDocId}
-                        onValueChange={setSelectedExistingDocId}
-                      >
-                        <SelectTrigger className="bg-muted/30">
-                          <SelectValue placeholder="Selectează document existent" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {existingDocuments.map((doc) => (
-                            <SelectItem key={doc.id} value={doc.id}>
-                              {doc.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        onClick={handleAddExistingDocument}
-                        disabled={!selectedExistingDocId}
-                        size="sm"
-                        className="w-full"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Adaugă Document
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Current Documents */}
-                  {documents.length > 0 && (
-                    <div className="space-y-3">
-                      <Label className="text-sm font-medium text-foreground">
-                        Documente Curente ({documents.length})
-                      </Label>
-                      <div className="space-y-2 max-h-60 overflow-y-auto">
-                        {documents.map((doc) => (
-                          <div 
-                            key={doc.id} 
-                            className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border/30"
-                          >
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
-                              <span className="text-sm text-foreground truncate">
-                                {doc.name}
-                              </span>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemoveDocument(doc.id)}
-                              className="h-8 w-8 p-0 hover:bg-destructive/20 shrink-0"
-                            >
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Update Knowledge Base */}
-                  <Button
-                    onClick={() => updateAgentKnowledgeBase()}
-                    disabled={isUpdatingKnowledge || documents.length === 0}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    <Database className="w-4 h-4 mr-2" />
-                    {isUpdatingKnowledge ? 'Se actualizează...' : 'Actualizează Baza de Cunoștințe'}
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+          
+          <Button 
+            onClick={() => setIsTestModalOpen(true)} 
+            className="bg-accent text-white hover:bg-accent/90 border border-accent/20 shadow-md flex items-center gap-2 w-full lg:w-auto transition-all duration-200"
+          >
+            <TestTube className="w-4 h-4" />
+            Testează Agent
+          </Button>
         </div>
 
-        {/* Modals */}
-        <AgentTestModal
-          isOpen={isTestModalOpen}
-          onClose={() => setIsTestModalOpen(false)}
-          agent={agentData}
+        {/* Main Content - Mobile optimized grid */}
+        <div className="grid grid-cols-1 gap-4 lg:gap-6">
+          {/* General Information */}
+          <AgentGeneralInfo agentData={agentData} setAgentData={setAgentData} />
+
+          {/* System Prompt */}
+          <AgentSystemPrompt agentData={agentData} setAgentData={setAgentData} />
+        </div>
+
+        {/* First Message Section - Mobile optimized */}
+        <AgentFirstMessage 
+          agentData={agentData} 
+          setAgentData={setAgentData} 
+          additionalLanguages={additionalLanguages}
+          onOpenMultilingualModal={openMultilingualModal}
         />
 
-        <MultilingualFirstMessageModal
-          isOpen={isMultilingualModalOpen}
-          onClose={() => setIsMultilingualModalOpen(false)}
-          defaultLanguage={agentData.conversation_config?.agent?.language || 'ro'}
-          additionalLanguages={additionalLanguages}
-          messages={multilingualMessages}
+        {/* Additional Languages Section */}
+        <AdditionalLanguagesSection 
+          selectedLanguages={additionalLanguages} 
+          onLanguagesChange={handleAdditionalLanguagesChange}
+          currentLanguage={agentData.conversation_config?.agent?.language} 
+        />
+
+        {/* Tool Connection Section */}
+        <AgentToolConnection 
+          agentData={agentData} 
+          setAgentData={setAgentData} 
+        />
+
+        {/* Enhanced Knowledge Base Section - Mobile optimized */}
+        <Card className="liquid-glass">
+          <CardHeader>
+            <CardTitle className="text-foreground">Knowledge Base</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Oferă LLM-ului informații specifice domeniului pentru a-l ajuta să răspundă mai precis la întrebări.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <Label className="text-foreground font-medium">Retrieval-Augmented Generation (RAG)</Label>
+                <p className="text-xs text-muted-foreground">
+                  RAG mărește dimensiunea maximă a Knowledge Base-ului agentului. Agentul va avea acces la informații relevante din Knowledge Base în timpul generării răspunsului.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={loadExistingDocuments}
+                  disabled={isLoadingExisting}
+                  className="flex items-center justify-center gap-2 h-12 hover:bg-accent/5 transition-colors"
+                >
+                  <Database className="w-4 h-4" />
+                  <span className="text-sm font-medium">
+                    {isLoadingExisting ? 'Se încarcă...' : 'Selectează existente'}
+                  </span>
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setIsAddingDoc(true)} 
+                  className="flex items-center justify-center gap-2 h-12 hover:bg-accent/5 transition-colors"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span className="text-sm font-medium">Adaugă Manual</span>
+                </Button>
+                
+                <label className="cursor-pointer">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex items-center justify-center gap-2 w-full h-12 hover:bg-accent/5 transition-colors" 
+                    asChild
+                  >
+                    <span>
+                      <Upload className="w-4 h-4" />
+                      <span className="text-sm font-medium">Încarcă Document</span>
+                    </span>
+                  </Button>
+                  <input type="file" className="hidden" accept=".txt,.md,.pdf,.doc,.docx" onChange={handleFileUpload} />
+                </label>
+              </div>
+            </div>
+
+            {/* Existing Documents Selection */}
+            {existingDocuments.length > 0 && (
+              <div className="p-4 border border-gray-200 rounded-lg space-y-3">
+                <Label className="text-foreground font-medium">Documente Existente în ElevenLabs</Label>
+                <div className="flex flex-col space-y-2 sm:flex-row sm:gap-2 sm:space-y-0">
+                  <Select 
+                    value={selectedExistingDocId} 
+                    onValueChange={setSelectedExistingDocId}
+                  >
+                    <SelectTrigger className="glass-input flex-1">
+                      <SelectValue placeholder="Selectează un document existent" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                      {getAvailableExistingDocuments().map((doc) => (
+                        <SelectItem key={doc.id} value={doc.id}>
+                          {doc.name} ({doc.type})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    onClick={handleAddExistingDocument}
+                    disabled={!selectedExistingDocId}
+                    size="sm"
+                    className="flex items-center gap-2 w-full sm:w-auto"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Adaugă
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Manual Document Addition - Mobile optimized */}
+            {isAddingDoc && (
+              <div className="p-4 border border-gray-200 rounded-lg space-y-3">
+                <Input value={newDocName} onChange={e => setNewDocName(e.target.value)} placeholder="Numele documentului" className="glass-input" />
+                <Textarea value={newDocContent} onChange={e => setNewDocContent(e.target.value)} placeholder="Conținutul documentului..." className="glass-input min-h-[100px]" />
+                <div className="flex flex-col space-y-2 sm:flex-row sm:gap-2 sm:space-y-0">
+                  <Button onClick={addManualDocument} size="sm" className="w-full sm:w-auto">
+                    Adaugă
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setIsAddingDoc(false)} className="w-full sm:w-auto">
+                    Anulează
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Documents List - Mobile optimized */}
+            <div className="space-y-2">
+              {documents.length === 0 ? (
+                <p className="text-muted-foreground text-sm text-center py-8">
+                  Nu ai adăugat încă documente în Knowledge Base.
+                  <br />
+                  Adaugă documente pentru a îmbunătăți răspunsurile agentului.
+                </p>
+              ) : (
+                documents.map(doc => (
+                  <div key={doc.id} className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-3 bg-muted/30 rounded-lg border">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-foreground">
+                        {doc.name} 
+                        <span className="text-xs text-muted-foreground ml-2">
+                          ({doc.type === 'existing' ? 'existent' : doc.type})
+                        </span>
+                      </h4>
+                        <p className="text-xs text-blue-600 mt-1">
+                          ElevenLabs ID: {doc.elevenLabsId}
+                        </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => handleRemoveDocument(doc.id)} className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full sm:w-auto">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {documents.length > 0 && (
+              <Button onClick={handleUpdateKnowledgeBase} disabled={isUpdatingKnowledge || !agentId} className="bg-accent text-white hover:bg-accent/90 w-full">
+                {isUpdatingKnowledge ? (
+                  <>
+                    <Save className="w-4 h-4 mr-2 animate-spin" />
+                    Se Actualizează Knowledge Base pentru {agentId}
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Actualizează Knowledge Base în ElevenLabs
+                  </>
+                )}
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Bottom Action Buttons - Mobile optimized */}
+        <div className="flex flex-col space-y-2 lg:flex-row lg:justify-end lg:gap-4 lg:space-y-0 sticky bottom-4 bg-background/95 backdrop-blur-sm p-4 -mx-4 border-t">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/account/kalina-agents')} 
+            className="glass-button border-border w-full lg:w-auto hover:bg-muted/50 transition-colors"
+            disabled={isSaving}
+          >
+            Anulează
+          </Button>
+          <Button 
+            onClick={handleSave} 
+            disabled={isSaving} 
+            className="bg-accent text-white hover:bg-accent/90 w-full lg:w-auto transition-all duration-200 shadow-md hover:shadow-lg"
+          >
+            {isSaving ? (
+              <>
+                <Save className="w-4 h-4 mr-2 animate-spin" />
+                Se salvează...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Salvează
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* Test Modal */}
+        <AgentTestModal 
+          agent={agentData} 
+          isOpen={isTestModalOpen} 
+          onClose={() => setIsTestModalOpen(false)} 
+        />
+
+        {/* Multilingual First Message Modal */}
+        <MultilingualFirstMessageModal 
+          isOpen={isMultilingualModalOpen} 
+          onClose={() => setIsMultilingualModalOpen(false)} 
+          defaultLanguage={agentData?.conversation_config?.agent?.language || 'en'} 
+          additionalLanguages={additionalLanguages} 
+          messages={multilingualMessages} 
           onMessagesUpdate={handleMultilingualMessagesUpdate}
+          agentId={agentId}
+          agentData={agentData}
+          onAgentDataRefresh={handleAgentDataRefresh}
         />
       </div>
     </DashboardLayout>
