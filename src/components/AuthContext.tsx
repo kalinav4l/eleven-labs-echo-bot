@@ -171,11 +171,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       // Force page reload for clean state
-      window.location.href = '/';
+      window.location.href = '/auth';
     } catch (error) {
       console.error('Sign out error:', error);
       // Force reload anyway
-      window.location.href = '/';
+      window.location.href = '/auth';
     }
   };
 

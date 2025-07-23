@@ -2,7 +2,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./components/AuthContext";
-import Landing from "./pages/Landing";
+
 import Auth from "./pages/Auth";
 import Account from "./pages/Account";
 import NotFound from "./pages/NotFound";
@@ -35,7 +35,7 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <Toaster />
           <Routes>
-            <Route path="/" element={<Landing />} />
+            <Route path="/" element={<Auth />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/account" element={<Account />} />
             <Route path="/account/*" element={<Account />} />
