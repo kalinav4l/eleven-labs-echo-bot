@@ -334,6 +334,56 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_logs: {
+        Row: {
+          agent_transcript: string | null
+          conversation_id: string
+          created_at: string
+          generated_offer: string | null
+          id: string
+          phone_number: string | null
+          sms_response: Json | null
+          sms_status: string | null
+          updated_at: string
+          user_transcript: string | null
+          webhook_config_id: string | null
+        }
+        Insert: {
+          agent_transcript?: string | null
+          conversation_id: string
+          created_at?: string
+          generated_offer?: string | null
+          id?: string
+          phone_number?: string | null
+          sms_response?: Json | null
+          sms_status?: string | null
+          updated_at?: string
+          user_transcript?: string | null
+          webhook_config_id?: string | null
+        }
+        Update: {
+          agent_transcript?: string | null
+          conversation_id?: string
+          created_at?: string
+          generated_offer?: string | null
+          id?: string
+          phone_number?: string | null
+          sms_response?: Json | null
+          sms_status?: string | null
+          updated_at?: string
+          user_transcript?: string | null
+          webhook_config_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_logs_webhook_config_id_fkey"
+            columns: ["webhook_config_id"]
+            isOneToOne: false
+            referencedRelation: "webhook_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           agent_id: string
@@ -617,6 +667,45 @@ export type Database = {
           name?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      loading_videos: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_seconds: number | null
+          file_size_mb: number | null
+          id: string
+          is_active: boolean
+          title: string
+          updated_at: string
+          video_path: string
+          video_url: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          file_size_mb?: number | null
+          id?: string
+          is_active?: boolean
+          title: string
+          updated_at?: string
+          video_path: string
+          video_url: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          file_size_mb?: number | null
+          id?: string
+          is_active?: boolean
+          title?: string
+          updated_at?: string
+          video_path?: string
+          video_url?: string
         }
         Relationships: []
       }
@@ -977,6 +1066,48 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_offers: {
+        Row: {
+          contact_name: string | null
+          conversation_id: string
+          created_at: string
+          gpt_analysis: Json | null
+          id: string
+          offer_content: string
+          phone_number: string
+          status: string
+          transcript_summary: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contact_name?: string | null
+          conversation_id: string
+          created_at?: string
+          gpt_analysis?: Json | null
+          id?: string
+          offer_content: string
+          phone_number: string
+          status?: string
+          transcript_summary?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contact_name?: string | null
+          conversation_id?: string
+          created_at?: string
+          gpt_analysis?: Json | null
+          id?: string
+          offer_content?: string
+          phone_number?: string
+          status?: string
+          transcript_summary?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_balance: {
         Row: {
           balance_usd: number
@@ -1157,6 +1288,42 @@ export type Database = {
           user_id?: string | null
           video_id?: string
           video_url?: string | null
+        }
+        Relationships: []
+      }
+      webhook_configs: {
+        Row: {
+          business_description: string | null
+          contact_info: string | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          name: string
+          sender_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          business_description?: string | null
+          contact_info?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          sender_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          business_description?: string | null
+          contact_info?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          sender_id?: string | null
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
