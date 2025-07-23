@@ -1,6 +1,6 @@
 
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./components/AuthContext";
 
 import Auth from "./pages/Auth";
@@ -35,7 +35,7 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <Toaster />
           <Routes>
-            <Route path="/" element={<Auth />} />
+            <Route path="/" element={<Navigate to="/auth" replace />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/account" element={<Account />} />
             <Route path="/account/*" element={<Account />} />
