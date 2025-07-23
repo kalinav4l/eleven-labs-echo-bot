@@ -5,6 +5,7 @@ import { AuthProvider } from "./components/AuthContext";
 
 import Auth from "./pages/Auth";
 import Account from "./pages/Account";
+import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import AccountSettings from "./pages/AccountSettings";
 import KalinaAgents from "./pages/KalinaAgents";
@@ -34,10 +35,10 @@ function App() {
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
           <Toaster />
-          <Routes>
-            <Route path="/" element={<Navigate to="/auth" replace />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/account" element={<Account />} />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/account" element={<Account />} />
             <Route path="/account/*" element={<Account />} />
             <Route path="/account/kalina-agents" element={<KalinaAgents />} />
             <Route path="/account/agent-edit/:agentId" element={<AgentEdit />} />

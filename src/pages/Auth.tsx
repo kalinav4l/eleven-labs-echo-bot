@@ -37,7 +37,7 @@ const Auth = () => {
   };
 
   if (user) {
-    return <Navigate to="/account" replace />;
+    return <Navigate to="/" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,7 +72,7 @@ const Auth = () => {
           
           setError(errorMessage);
         } else {
-          // Force page refresh for clean state
+          // Redirect to home page after successful login
           window.location.href = '/';
         }
       } else {
