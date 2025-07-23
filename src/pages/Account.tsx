@@ -277,84 +277,99 @@ const Account = () => {
         </div>
 
         <div className="px-6 py-8">
-          {/* Animated Quick Stats */}
+          {/* Animated Quick Stats with Staggered Animation */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {quickStats.map((stat, index) => <StatCard key={index} label={stat.label} value={stat.value} icon={stat.icon} delay={index * 100} />)}
+            {quickStats.map((stat, index) => (
+              <div 
+                key={index} 
+                className="animate-fade-in hover-scale group"
+                style={{ animationDelay: `${index * 150}ms` }}
+              >
+                <StatCard 
+                  label={stat.label} 
+                  value={stat.value} 
+                  icon={stat.icon} 
+                  delay={index * 100}
+                  className="transition-all duration-500 hover:shadow-lg hover:shadow-primary/10 group-hover:border-primary/20"
+                />
+              </div>
+            ))}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             {/* Enhanced Performance Overview */}
-            <div className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-all duration-300 animate-[slideInUp_0.8s_ease-out]">
-              <div className="p-6 border-b border-gray-200">
+            <div className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-lg hover:shadow-primary/5 transition-all duration-500 animate-scale-in group overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+              <div className="p-6 border-b border-gray-200 relative z-10">
                 <h2 className="font-semibold text-gray-900 text-lg flex items-center">
-                  <div className="w-2 h-2 bg-gray-900 rounded-full mr-3 animate-pulse" />
+                  <div className="w-2 h-2 bg-gradient-to-r from-primary to-secondary rounded-full mr-3 animate-pulse shadow-sm"></div>
                   Performanță Generală
                 </h2>
               </div>
-              <div className="p-6 space-y-4">
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-300 hover:scale-[1.02]">
+              <div className="p-6 space-y-4 relative z-10">
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50/50 to-white rounded-xl border border-blue-100/50 hover:border-blue-200 transition-all duration-500 hover:scale-[1.03] hover:shadow-md group animate-fade-in" style={{ animationDelay: '100ms' }}>
                   <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-50 rounded-xl flex items-center justify-center">
-                      <Zap className="w-5 h-5 text-blue-600" />
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-lg group-hover:scale-110 transition-all duration-300">
+                      <Zap className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">Credite Consumate</p>
+                      <p className="font-medium text-gray-900 group-hover:text-blue-900 transition-colors duration-300">Credite Consumate</p>
                       <p className="text-xs text-gray-500">Total utilizate</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-xl font-bold text-gray-900">
+                    <p className="text-xl font-bold text-gray-900 group-hover:text-blue-900 transition-colors duration-300">
                       <AnimatedCounter target={totalConsumedCredits} />
                     </p>
                     <p className="text-xs text-gray-500">credite</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-300 hover:scale-[1.02]">
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50/50 to-white rounded-xl border border-green-100/50 hover:border-green-200 transition-all duration-500 hover:scale-[1.03] hover:shadow-md group animate-fade-in" style={{ animationDelay: '200ms' }}>
                   <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-green-50 rounded-xl flex items-center justify-center">
-                      <Clock className="w-5 h-5 text-green-600" />
+                    <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-lg group-hover:scale-110 transition-all duration-300">
+                      <Clock className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">Durată Medie</p>
+                      <p className="font-medium text-gray-900 group-hover:text-green-900 transition-colors duration-300">Durată Medie</p>
                       <p className="text-xs text-gray-500">Pe apel</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-xl font-bold text-gray-900">{averageCallDurationFormatted}</p>
+                    <p className="text-xl font-bold text-gray-900 group-hover:text-green-900 transition-colors duration-300">{averageCallDurationFormatted}</p>
                     <p className="text-xs text-gray-500">Total: {totalTimeFormatted}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-300 hover:scale-[1.02]">
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50/50 to-white rounded-xl border border-purple-100/50 hover:border-purple-200 transition-all duration-500 hover:scale-[1.03] hover:shadow-md group animate-fade-in" style={{ animationDelay: '300ms' }}>
                   <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-purple-50 rounded-xl flex items-center justify-center">
-                      <Bot className="w-5 h-5 text-purple-600" />
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-lg group-hover:scale-110 transition-all duration-300">
+                      <Bot className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">Agenți Activi</p>
+                      <p className="font-medium text-gray-900 group-hover:text-purple-900 transition-colors duration-300">Agenți Activi</p>
                       <p className="text-xs text-gray-500">În utilizare</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-xl font-bold text-gray-900">
+                    <p className="text-xl font-bold text-gray-900 group-hover:text-purple-900 transition-colors duration-300">
                       <AnimatedCounter target={totalAgents} />
                     </p>
                     <p className="text-xs text-gray-500">agenți creați</p>
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-gray-100">
+                <div className="pt-4 border-t border-gray-100 animate-fade-in" style={{ animationDelay: '400ms' }}>
                   <div className="flex space-x-3">
-                    <Link to="/account/kalina-agents" className="flex-1">
-                      <Button variant="outline" size="sm" className="w-full hover:scale-105 transition-transform">
-                        <Bot className="w-4 h-4 mr-2" />
+                    <Link to="/account/kalina-agents" className="flex-1 group">
+                      <Button variant="outline" size="sm" className="w-full hover:scale-105 transition-all duration-300 hover:shadow-md hover:border-primary/30 group-hover:bg-primary/5">
+                        <Bot className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform duration-300" />
                         Agenți
                       </Button>
                     </Link>
-                    <Link to="/account/conversation-analytics" className="flex-1">
-                      <Button variant="outline" size="sm" className="w-full hover:scale-105 transition-transform">
-                        <BarChart3 className="w-4 h-4 mr-2" />
+                    <Link to="/account/conversation-analytics" className="flex-1 group">
+                      <Button variant="outline" size="sm" className="w-full hover:scale-105 transition-all duration-300 hover:shadow-md hover:border-primary/30 group-hover:bg-primary/5">
+                        <BarChart3 className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform duration-300" />
                         Analytics
                       </Button>
                     </Link>
@@ -364,36 +379,43 @@ const Account = () => {
             </div>
 
             {/* Enhanced Recent Activity */}
-            <div className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-all duration-300 animate-[slideInUp_0.8s_ease-out_0.2s_both]">
-              <div className="p-6 border-b border-gray-200">
+            <div className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-lg hover:shadow-secondary/5 transition-all duration-500 animate-scale-in group overflow-hidden relative" style={{ animationDelay: '200ms' }}>
+              <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+              <div className="p-6 border-b border-gray-200 relative z-10">
                 <h2 className="font-semibold text-gray-900 text-lg flex items-center">
-                  <div className="w-2 h-2 bg-gray-900 rounded-full mr-3 animate-pulse" />
+                  <div className="w-2 h-2 bg-gradient-to-r from-secondary to-primary rounded-full mr-3 animate-pulse shadow-sm"></div>
                   Activitate Recentă
                 </h2>
               </div>
-              <div className="p-6">
+              <div className="p-6 relative z-10">
                 <div className="space-y-3">
-                  {recentActivity.length > 0 ? recentActivity.map((activity, index) => <div key={index} className="flex items-start space-x-4 p-3 rounded-xl hover:bg-gray-50 transition-all duration-300 hover:scale-[1.02] cursor-pointer group" style={{
-                  animationDelay: `${index * 0.1}s`
-                }}>
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center flex-shrink-0 group-hover:from-gray-200 group-hover:to-gray-100 transition-all duration-300">
-                        <activity.icon className="w-4 h-4 text-gray-600 group-hover:text-gray-900 transition-colors duration-300" />
+                  {recentActivity.length > 0 ? recentActivity.map((activity, index) => (
+                    <div 
+                      key={index} 
+                      className="flex items-start space-x-4 p-3 rounded-xl hover:bg-gradient-to-r hover:from-primary/5 hover:to-secondary/5 transition-all duration-500 hover:scale-[1.03] cursor-pointer group hover:shadow-md animate-slide-in-right border border-transparent hover:border-primary/10" 
+                      style={{ animationDelay: `${index * 150}ms` }}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center flex-shrink-0 group-hover:from-primary/20 group-hover:to-secondary/20 group-hover:scale-110 transition-all duration-300 shadow-sm">
+                        <activity.icon className="w-4 h-4 text-primary group-hover:text-secondary transition-colors duration-300" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900 font-medium group-hover:text-gray-700 transition-colors duration-300">
+                        <p className="text-sm text-gray-900 font-medium group-hover:text-primary transition-colors duration-300">
                           {activity.action}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1 flex items-center">
-                          <Clock className="w-3 h-3 mr-1" />
+                        <p className="text-xs text-gray-500 mt-1 flex items-center group-hover:text-gray-600 transition-colors duration-300">
+                          <Clock className="w-3 h-3 mr-1 group-hover:scale-110 transition-transform duration-300" />
                           {activity.time}
                         </p>
                       </div>
-                    </div>) : <div className="text-center py-8">
-                      <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    </div>
+                  )) : (
+                    <div className="text-center py-8 animate-fade-in">
+                      <div className="w-16 h-16 mx-auto bg-gradient-to-br from-gray-100 to-gray-50 rounded-full flex items-center justify-center mb-4 animate-pulse">
                         <Activity className="w-8 h-8 text-gray-400" />
                       </div>
                       <p className="text-gray-500 text-sm">Nu există activitate recentă</p>
-                    </div>}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

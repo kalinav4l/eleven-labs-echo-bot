@@ -8,6 +8,7 @@ interface StatCardProps {
   icon: LucideIcon;
   isLoading?: boolean;
   delay?: number;
+  className?: string;
 }
 
 const StatCard: React.FC<StatCardProps> = ({ 
@@ -15,11 +16,12 @@ const StatCard: React.FC<StatCardProps> = ({
   value, 
   icon: Icon, 
   isLoading = false,
-  delay = 0 
+  delay = 0,
+  className = ""
 }) => {
   return (
     <div 
-      className="group relative overflow-hidden p-6 border border-gray-200 rounded-xl bg-white hover:border-gray-300 transition-all duration-500 hover:shadow-lg transform hover:scale-105"
+      className={`group relative overflow-hidden p-6 border border-gray-200 rounded-xl bg-white hover:border-gray-300 transition-all duration-500 hover:shadow-lg transform hover:scale-105 ${className}`}
       style={{ animationDelay: `${delay}ms` }}
     >
       {/* Animated background gradient */}
