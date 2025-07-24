@@ -132,15 +132,21 @@ const KalinaAgents = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Button size="sm" disabled={!agent.is_active} onClick={e => {
+                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 px-3" disabled={!agent.is_active} onClick={e => {
                 e.stopPropagation();
                 setVoiceTestAgent(agent);
-              }} className="text-white text-xs h-8 px-3 bg-gray-950 hover:bg-gray-800">
+              }}>
                     <Mic className="w-3 h-3 mr-1" />
                     Test Audio
                   </Button>
                   
-                  
+                  <Button size="sm" className="bg-black hover:bg-gray-800 text-white text-xs h-8 px-3" disabled={!agent.is_active} onClick={e => {
+                e.stopPropagation();
+                handleTestCall(agent);
+              }}>
+                    <Phone className="w-3 h-3 mr-1" />
+                    Test Apel
+                  </Button>
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
