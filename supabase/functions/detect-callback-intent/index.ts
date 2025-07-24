@@ -303,14 +303,12 @@ serve(async (req) => {
       client_name: contactName || 'Client necunoscut',
       phone_number: phoneNumber,
       scheduled_datetime: intent.suggestedTime || new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-      description: `Callback cerut în conversația ${conversationId}`,
+      description: `Callback cerut în conversația ${conversationId}${intent.reason ? ': ' + intent.reason : ''}`,
       priority: intent.urgency,
       status: 'scheduled',
-      notes: `Motiv: ${intent.reason || 'Nu specificat'}. Timeframe cerut: ${intent.timeframe || 'mai târziu'}`,
+      notes: `Conversația originală: ${conversationId}. Motiv: ${intent.reason || 'Nu specificat'}. Timeframe cerut: ${intent.timeframe || 'mai târziu'}`,
       task_type: 'callback',
-      agent_id: agentId,
-      callback_reason: intent.reason || 'Cerere callback din conversație',
-      original_conversation_id: conversationId
+      agent_id: agentId
     };
 
     const { data: callbackRecord, error: insertError } = await supabase
