@@ -43,7 +43,7 @@ const countryCodes = [{
   flag: '🇬🇧'
 }, {
   code: '+373',
-  country: 'MD',
+  country: 'MD'
 }, {
   code: '+40',
   country: 'RO',
@@ -55,7 +55,12 @@ export default function PhoneNumbers() {
   const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [expandedPhone, setExpandedPhone] = useState<string | null>(null);
-  const [testCallModal, setTestCallModal] = useState<{isOpen: boolean, phone?: PhoneNumber}>({isOpen: false});
+  const [testCallModal, setTestCallModal] = useState<{
+    isOpen: boolean;
+    phone?: PhoneNumber;
+  }>({
+    isOpen: false
+  });
   const [formData, setFormData] = useState<SIPTrunkData>({
     label: '',
     phone_number: '',
@@ -322,21 +327,20 @@ export default function PhoneNumbers() {
               </div> : <div className="space-y-4">
                 {phoneNumbers.map(phone => <div key={phone.id} className="border rounded-2xl overflow-hidden">
                     {/* Collapsed View */}
-                    <div className="p-6 cursor-pointer hover:bg-muted/50 flex items-center justify-between" onClick={() => setExpandedPhone(expandedPhone === phone.id ? null : phone.id)}>
+                    <div onClick={() => setExpandedPhone(expandedPhone === phone.id ? null : phone.id)} className="p-6 cursor-pointer flex items-center justify-between bg-white/0">
                       <div className="flex items-center gap-4">
                         {expandedPhone === phone.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                         <div>
                           <div className="flex items-center gap-3 mb-1">
                             <h3 className="font-semibold text-xl">{phone.phone_number}</h3>
-                            <Copy className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground" 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigator.clipboard.writeText(phone.phone_number);
-                                    toast({
-                                      title: "Copiat!",
-                                      description: "Numărul de telefon a fost copiat în clipboard"
-                                    });
-                                  }} />
+                            <Copy className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground" onClick={e => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(phone.phone_number);
+                        toast({
+                          title: "Copiat!",
+                          description: "Numărul de telefon a fost copiat în clipboard"
+                        });
+                      }} />
                           </div>
                           <p className="text-sm text-muted-foreground mb-1">{phone.label}</p>
                           <div className="text-sm text-muted-foreground font-mono">
@@ -347,9 +351,12 @@ export default function PhoneNumbers() {
                       
                       <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" onClick={e => {
-                          e.stopPropagation();
-                          setTestCallModal({isOpen: true, phone});
-                        }}>
+                    e.stopPropagation();
+                    setTestCallModal({
+                      isOpen: true,
+                      phone
+                    });
+                  }}>
                           <PhoneCall className="h-4 w-4" />
                         </Button>
                         <Button variant="outline" size="sm" onClick={e => e.stopPropagation()}>
@@ -372,11 +379,11 @@ export default function PhoneNumbers() {
                           <h4 className="font-medium">Agent</h4>
                           <p className="text-sm text-muted-foreground">Assign an agent to handle calls to this phone number.</p>
                           <div className="flex items-center gap-2">
-                            <Select value={phone.connected_agent_id || "no-agent"} onValueChange={(value) => {
-                              if (value !== "no-agent") {
-                                connectAgent(phone.id, value);
-                              }
-                            }}>
+                            <Select value={phone.connected_agent_id || "no-agent"} onValueChange={value => {
+                      if (value !== "no-agent") {
+                        connectAgent(phone.id, value);
+                      }
+                    }}>
                               <SelectTrigger className="w-[280px] rounded-xl">
                                 <SelectValue placeholder="No agent" />
                               </SelectTrigger>
@@ -500,8 +507,7 @@ export default function PhoneNumbers() {
                                     </div>
                                   </div>
                                   
-                                  {phone.outbound_username && (
-                                    <div>
+                                  {phone.outbound_username && <div>
                                       <div className="flex items-center gap-2 mb-2">
                                         <h5 className="text-sm font-medium">Username</h5>
                                         <div className="bg-muted rounded-lg p-1">
@@ -509,8 +515,7 @@ export default function PhoneNumbers() {
                                         </div>
                                       </div>
                                       <p className="text-sm text-muted-foreground font-mono">{phone.outbound_username}</p>
-                                    </div>
-                                  )}
+                                    </div>}
                                 </div>
                               </div>
                             </div>
@@ -706,12 +711,9 @@ export default function PhoneNumbers() {
           </Card>}
 
         {/* Test Call Modal */}
-        <PhoneTestCallModal 
-          isOpen={testCallModal.isOpen}
-          onClose={() => setTestCallModal({isOpen: false})}
-          phoneNumber={testCallModal.phone?.phone_number || ''}
-          phoneLabel={testCallModal.phone?.label || ''}
-        />
+        <PhoneTestCallModal isOpen={testCallModal.isOpen} onClose={() => setTestCallModal({
+        isOpen: false
+      })} phoneNumber={testCallModal.phone?.phone_number || ''} phoneLabel={testCallModal.phone?.label || ''} />
       </div>
     </DashboardLayout>;
 }
