@@ -18,7 +18,6 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import AnimatedCounter from '@/components/AnimatedCounter';
 import SkeletonCard from '@/components/SkeletonCard';
 import ElevenLabsChart from '@/components/ElevenLabsChart';
-
 const Account = () => {
   const {
     user,
@@ -34,11 +33,9 @@ const Account = () => {
 
   // Show loading while checking auth
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+    return <div className="min-h-screen bg-white flex items-center justify-center">
         <LoadingSpinner size="lg" />
-      </div>
-    );
+      </div>;
   }
   const {
     displayName,
@@ -67,7 +64,6 @@ const Account = () => {
   // State for enhanced analytics data
   const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
   const [conversationCredits, setConversationCredits] = useState<Record<string, number>>({});
-
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -206,7 +202,6 @@ const Account = () => {
     time: new Date(conv.created_at).toLocaleDateString('ro-RO'),
     icon: Activity
   })) || [])].slice(0, 4);
-
   if (profileLoading || agentsLoading || statsLoading) {
     return <DashboardLayout>
         <div className="min-h-screen bg-white">
@@ -254,7 +249,6 @@ const Account = () => {
         </div>
       </DashboardLayout>;
   }
-
   return <DashboardLayout>
       <div className="min-h-screen bg-white">
         {/* Animated Header */}
@@ -269,7 +263,7 @@ const Account = () => {
                   Gestionează agenții tăi AI și urmărește performanțele
                 </p>
               </div>
-              <Button onClick={handleSignOut} variant="outline" className="border-gray-300 hover:border-gray-400 text-gray-700 animate-[slideInRight_0.6s_ease-out] hover:scale-105 transition-transform">
+              <Button onClick={handleSignOut} variant="outline" className="border-gray-300 hover:border-gray-400 animate-[slideInRight_0.6s_ease-out] hover:scale-105 transition-transform text-[#ff0000]">
                 Ieșire
               </Button>
             </div>
@@ -279,21 +273,11 @@ const Account = () => {
         <div className="px-6 py-8">
           {/* Animated Quick Stats with Staggered Animation */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {quickStats.map((stat, index) => (
-              <div 
-                key={index} 
-                className="animate-fade-in hover-scale group"
-                style={{ animationDelay: `${index * 150}ms` }}
-              >
-                <StatCard 
-                  label={stat.label} 
-                  value={stat.value} 
-                  icon={stat.icon} 
-                  delay={index * 100}
-                  className="transition-all duration-500 hover:shadow-lg hover:shadow-primary/10 group-hover:border-primary/20"
-                />
-              </div>
-            ))}
+            {quickStats.map((stat, index) => <div key={index} className="animate-fade-in hover-scale group" style={{
+            animationDelay: `${index * 150}ms`
+          }}>
+                <StatCard label={stat.label} value={stat.value} icon={stat.icon} delay={index * 100} className="transition-all duration-500 hover:shadow-lg hover:shadow-primary/10 group-hover:border-primary/20" />
+              </div>)}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
@@ -307,7 +291,9 @@ const Account = () => {
                 </h2>
               </div>
               <div className="p-6 space-y-4 relative z-10">
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50/50 to-white rounded-xl border border-blue-100/50 hover:border-blue-200 transition-all duration-500 hover:scale-[1.03] hover:shadow-md group animate-fade-in" style={{ animationDelay: '100ms' }}>
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50/50 to-white rounded-xl border border-blue-100/50 hover:border-blue-200 transition-all duration-500 hover:scale-[1.03] hover:shadow-md group animate-fade-in" style={{
+                animationDelay: '100ms'
+              }}>
                   <div className="flex items-center space-x-4">
                     <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-lg group-hover:scale-110 transition-all duration-300">
                       <Zap className="w-5 h-5 text-white" />
@@ -325,7 +311,9 @@ const Account = () => {
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50/50 to-white rounded-xl border border-green-100/50 hover:border-green-200 transition-all duration-500 hover:scale-[1.03] hover:shadow-md group animate-fade-in" style={{ animationDelay: '200ms' }}>
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50/50 to-white rounded-xl border border-green-100/50 hover:border-green-200 transition-all duration-500 hover:scale-[1.03] hover:shadow-md group animate-fade-in" style={{
+                animationDelay: '200ms'
+              }}>
                   <div className="flex items-center space-x-4">
                     <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-lg group-hover:scale-110 transition-all duration-300">
                       <Clock className="w-5 h-5 text-white" />
@@ -341,7 +329,9 @@ const Account = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50/50 to-white rounded-xl border border-purple-100/50 hover:border-purple-200 transition-all duration-500 hover:scale-[1.03] hover:shadow-md group animate-fade-in" style={{ animationDelay: '300ms' }}>
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50/50 to-white rounded-xl border border-purple-100/50 hover:border-purple-200 transition-all duration-500 hover:scale-[1.03] hover:shadow-md group animate-fade-in" style={{
+                animationDelay: '300ms'
+              }}>
                   <div className="flex items-center space-x-4">
                     <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-lg group-hover:scale-110 transition-all duration-300">
                       <Bot className="w-5 h-5 text-white" />
@@ -359,7 +349,9 @@ const Account = () => {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-gray-100 animate-fade-in" style={{ animationDelay: '400ms' }}>
+                <div className="pt-4 border-t border-gray-100 animate-fade-in" style={{
+                animationDelay: '400ms'
+              }}>
                   <div className="flex space-x-3">
                     <Link to="/account/kalina-agents" className="flex-1 group">
                       <Button variant="outline" size="sm" className="w-full hover:scale-105 transition-all duration-300 hover:shadow-md hover:border-primary/30 group-hover:bg-primary/5">
@@ -379,7 +371,9 @@ const Account = () => {
             </div>
 
             {/* Enhanced Recent Activity */}
-            <div className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-lg hover:shadow-secondary/5 transition-all duration-500 animate-scale-in group overflow-hidden relative" style={{ animationDelay: '200ms' }}>
+            <div className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-lg hover:shadow-secondary/5 transition-all duration-500 animate-scale-in group overflow-hidden relative" style={{
+            animationDelay: '200ms'
+          }}>
               <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
               <div className="p-6 border-b border-gray-200 relative z-10">
                 <h2 className="font-semibold text-gray-900 text-lg flex items-center">
@@ -389,12 +383,9 @@ const Account = () => {
               </div>
               <div className="p-6 relative z-10">
                 <div className="space-y-3">
-                  {recentActivity.length > 0 ? recentActivity.map((activity, index) => (
-                    <div 
-                      key={index} 
-                      className="flex items-start space-x-4 p-3 rounded-xl hover:bg-gradient-to-r hover:from-primary/5 hover:to-secondary/5 transition-all duration-500 hover:scale-[1.03] cursor-pointer group hover:shadow-md animate-slide-in-right border border-transparent hover:border-primary/10" 
-                      style={{ animationDelay: `${index * 150}ms` }}
-                    >
+                  {recentActivity.length > 0 ? recentActivity.map((activity, index) => <div key={index} className="flex items-start space-x-4 p-3 rounded-xl hover:bg-gradient-to-r hover:from-primary/5 hover:to-secondary/5 transition-all duration-500 hover:scale-[1.03] cursor-pointer group hover:shadow-md animate-slide-in-right border border-transparent hover:border-primary/10" style={{
+                  animationDelay: `${index * 150}ms`
+                }}>
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center flex-shrink-0 group-hover:from-primary/20 group-hover:to-secondary/20 group-hover:scale-110 transition-all duration-300 shadow-sm">
                         <activity.icon className="w-4 h-4 text-primary group-hover:text-secondary transition-colors duration-300" />
                       </div>
@@ -407,15 +398,12 @@ const Account = () => {
                           {activity.time}
                         </p>
                       </div>
-                    </div>
-                  )) : (
-                    <div className="text-center py-8 animate-fade-in">
+                    </div>) : <div className="text-center py-8 animate-fade-in">
                       <div className="w-16 h-16 mx-auto bg-gradient-to-br from-gray-100 to-gray-50 rounded-full flex items-center justify-center mb-4 animate-pulse">
                         <Activity className="w-8 h-8 text-gray-400" />
                       </div>
                       <p className="text-gray-500 text-sm">Nu există activitate recentă</p>
-                    </div>
-                  )}
+                    </div>}
                 </div>
               </div>
             </div>
@@ -457,5 +445,4 @@ const Account = () => {
       </div>
     </DashboardLayout>;
 };
-
 export default Account;
