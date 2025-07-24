@@ -27,6 +27,36 @@ export const useConversationTracking = () => {
 
       console.log('Saving conversation to Analytics Hub:', conversationData);
 
+      // Check for callback intent in transcript
+      const transcriptText = conversationData.transcript
+        ?.map((entry: any) => entry.message || entry.text || '')
+        .join(' ') || '';
+      
+      if (transcriptText) {
+        try {
+          console.log('Checking for callback intent in conversation...');
+          
+          const { data: callbackData, error: callbackError } = await supabase.functions.invoke('detect-callback-intent', {
+            body: {
+              text: transcriptText,
+              conversationId: conversationData.conversation_id,
+              phoneNumber: conversationData.phone_number,
+              contactName: conversationData.contact_name,
+              agentId: conversationData.agent_id,
+              userId: user.id
+            }
+          });
+
+          if (callbackError) {
+            console.warn('Callback detection failed:', callbackError);
+          } else if (callbackData?.callbackDetected) {
+            console.log('Callback detected and scheduled:', callbackData);
+          }
+        } catch (callbackError) {
+          console.warn('Error during callback detection:', callbackError);
+        }
+      }
+
       // Create the call history record
       const callRecord = {
         user_id: user.id,

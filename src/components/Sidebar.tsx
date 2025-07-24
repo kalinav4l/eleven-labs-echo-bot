@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { User, Settings, Bot, FileText, PhoneCall, X, BarChart3, Calendar, Globe, Mail, Workflow, BookOpen, Phone, TestTube } from 'lucide-react';
+import { User, Settings, Bot, FileText, PhoneCall, X, BarChart3, Calendar, Globe, Mail, Workflow, BookOpen, Phone, TestTube, PhoneForwarded } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from '@/hooks/use-mobile';
 interface SidebarProps {
@@ -82,6 +82,11 @@ const Sidebar = ({
               <Link to="/account/test-call" className={`${location.pathname === '/account/test-call' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
                 <Phone className="mr-3 h-4 w-4" />
                 <span>Test Call</span>
+              </Link>
+
+              <Link to="/account/callbacks" className={`${location.pathname === '/account/callbacks' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
+                <PhoneForwarded className="mr-3 h-4 w-4" />
+                <span>Callbacks</span>
               </Link>
             </div>
           </div>
