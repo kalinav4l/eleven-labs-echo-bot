@@ -437,6 +437,62 @@ const CallbackScheduler = () => {
     );
   };
 
+  // Manual callback detection states
+  const [manualTestText, setManualTestText] = useState('');
+  const [manualTestPhone, setManualTestPhone] = useState('+37379416481');
+  const [manualTestName, setManualTestName] = useState('Test Manual');
+
+  // Manual callback detection mutation
+  const manualDetectionMutation = useMutation({
+    mutationFn: async ({ text, phoneNumber, contactName }: { text: string, phoneNumber: string, contactName: string }) => {
+      const { data, error } = await supabase.functions.invoke('detect-callback-intent', {
+        body: {
+          text,
+          conversationId: `manual-test-${Date.now()}`,
+          phoneNumber,
+          contactName,
+          agentId: userAgents[0]?.elevenlabs_agent_id,
+          userId: user.id
+        }
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['callback-requests', user.id] });
+      toast({
+        title: data.callbackDetected ? "Callback detectat!" : "Nu s-a detectat callback",
+        description: data.message || "Test completat",
+        variant: data.callbackDetected ? "default" : "destructive"
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Eroare la testare",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleManualTest = () => {
+    if (!manualTestText.trim()) {
+      toast({
+        title: "Eroare",
+        description: "Te rog introdu textul pentru testare",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    manualDetectionMutation.mutate({
+      text: manualTestText,
+      phoneNumber: manualTestPhone,
+      contactName: manualTestName
+    });
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -526,6 +582,68 @@ const CallbackScheduler = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Manual Callback Detection Test */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Testare Manuală Detecție Callback</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Testează dacă textul unei conversații conține o cerere de callback
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="test_phone">Numărul de Telefon</Label>
+                <Input
+                  id="test_phone"
+                  value={manualTestPhone}
+                  onChange={(e) => setManualTestPhone(e.target.value)}
+                  placeholder="+37379416481"
+                />
+              </div>
+              <div>
+                <Label htmlFor="test_name">Numele Contactului</Label>
+                <Input
+                  id="test_name"
+                  value={manualTestName}
+                  onChange={(e) => setManualTestName(e.target.value)}
+                  placeholder="Test Manual"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="test_text">Textul Conversației</Label>
+              <Textarea
+                id="test_text"
+                value={manualTestText}
+                onChange={(e) => setManualTestText(e.target.value)}
+                placeholder="De ex: 'telefoneaza-ma peste 5 minute va rog'"
+                rows={4}
+                className="w-full"
+              />
+            </div>
+            
+            <Button 
+              onClick={handleManualTest}
+              disabled={manualDetectionMutation.isPending}
+              className="w-full"
+            >
+              {manualDetectionMutation.isPending ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Se testează...
+                </>
+              ) : (
+                <>
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Testează Detecția de Callback
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Callback Lists */}
         {isLoading ? (
