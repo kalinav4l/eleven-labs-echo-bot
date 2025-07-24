@@ -625,23 +625,63 @@ const CallbackScheduler = () => {
               />
             </div>
             
-            <Button 
-              onClick={handleManualTest}
-              disabled={manualDetectionMutation.isPending}
-              className="w-full"
-            >
-              {manualDetectionMutation.isPending ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Se testează...
-                </>
-              ) : (
-                <>
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Testează Detecția de Callback
-                </>
-              )}
-            </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Button 
+                onClick={handleManualTest}
+                disabled={manualDetectionMutation.isPending}
+                className="w-full"
+              >
+                {manualDetectionMutation.isPending ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Se testează...
+                  </>
+                ) : (
+                  <>
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Testează Detecția de Callback
+                  </>
+                )}
+              </Button>
+              
+              <Button 
+                onClick={async () => {
+                  try {
+                    const { data, error } = await supabase.functions.invoke('check-scheduled-tasks');
+                    
+                    if (error) {
+                      console.error('Error checking scheduled tasks:', error);
+                      toast({
+                        title: "Eroare",
+                        description: error.message || "Eroare la verificarea task-urilor programate",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+
+                    queryClient.invalidateQueries({ queryKey: ['callback-requests', user.id] });
+                    
+                    toast({
+                      title: "Verificare Task-uri",
+                      description: data.message || "Task-uri verificate cu succes",
+                      variant: data.executedTasks > 0 ? "default" : "destructive"
+                    });
+                  } catch (error) {
+                    console.error('Error:', error);
+                    toast({
+                      title: "Eroare",
+                      description: "Eroare la verificarea task-urilor programate",
+                      variant: "destructive"
+                    });
+                  }
+                }}
+                variant="secondary"
+                className="w-full"
+              >
+                <Clock className="h-4 w-4 mr-2" />
+                Verifică și Execută Task-uri Programate
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
