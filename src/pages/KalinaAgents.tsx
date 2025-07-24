@@ -107,7 +107,9 @@ const KalinaAgents = () => {
         {filteredAgents && filteredAgents.length > 0 ? filteredAgents.map(agent => <div key={agent.id} className="bg-white rounded-lg p-4 transition-all duration-200 hover:bg-gray-50/50 cursor-pointer" onClick={() => handleEditAgent(agent.agent_id)}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4 flex-1">
-                  
+                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Bot className="w-5 h-5 text-gray-600" />
+                  </div>
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3">
@@ -133,7 +135,7 @@ const KalinaAgents = () => {
                   <Button size="sm" disabled={!agent.is_active} onClick={e => {
                 e.stopPropagation();
                 setVoiceTestAgent(agent);
-              }} className="text-xs h-8 px-3 text-gray-950 bg-slate-50">
+              }} className="text-white text-xs h-8 px-3 bg-gray-950 hover:bg-gray-800">
                     <Mic className="w-3 h-3 mr-1" />
                     Test Audio
                   </Button>
