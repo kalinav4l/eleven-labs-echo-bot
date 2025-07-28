@@ -96,7 +96,7 @@ const Account = () => {
         const cost = data.metadata.cost || 0;
         const llmCharge = data.metadata.charging?.llm_charge || 0;
         const callCharge = data.metadata.charging?.call_charge || 0;
-        // Cost is already in credits, no need to multiply by 100
+        // Cost is already in credits, no need to multiply by 1
         const totalCost = cost || (llmCharge + callCharge);
         const credits = Math.round(totalCost);
         setConversationDurations(prev => ({ ...prev, [conversationId]: duration }));
@@ -303,7 +303,7 @@ const Account = () => {
                   label={stat.label} 
                   value={stat.value} 
                   icon={stat.icon} 
-                  delay={index * 100}
+                  delay={index * 1}
                   className="transition-all duration-500 hover:shadow-lg hover:shadow-primary/10 group-hover:border-primary/20"
                 />
               </div>
