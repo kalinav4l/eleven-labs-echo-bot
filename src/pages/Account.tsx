@@ -83,7 +83,7 @@ const Account = () => {
   // Calculate total consumed credits from ElevenLabs data - prioritize ElevenLabs when available
   const totalConsumedCredits = callHistory?.reduce((total, call) => {
     // Use ElevenLabs conversation credits if available, otherwise fallback to cost_usd
-    const credits = call.conversation_id && conversationCredits[call.conversation_id] !== undefined ? conversationCredits[call.conversation_id] : Math.round((call.cost_usd || 0) * 1000); // Convert USD to credits
+    const credits = call.conversation_id && conversationCredits[call.conversation_id] !== undefined ? conversationCredits[call.conversation_id] : Math.round((call.cost_usd || 0) * 100); // Convert USD to credits (1 USD = 100 credits)
 
     return total + credits;
   }, 0) || 0;
@@ -110,9 +110,9 @@ const Account = () => {
         const llmCharge = data.metadata.charging?.llm_charge || 0;
         const callCharge = data.metadata.charging?.call_charge || 0;
 
-        // Calculate total credits (convert USD to credits, 1 USD = 1000 credits)
+        // Calculate total credits (convert USD to credits, 1 USD = 100 credits)
         const totalCost = cost || llmCharge + callCharge;
-        const credits = Math.round(totalCost * 1000);
+        const credits = Math.round(totalCost * 100);
         setConversationDurations(prev => ({
           ...prev,
           [conversationId]: duration

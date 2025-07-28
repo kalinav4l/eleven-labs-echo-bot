@@ -59,7 +59,7 @@ export const useCreditTracking = () => {
           agent_name: agentName,
           duration_minutes: durationMinutes,
           message_count: messageCount,
-          credits_used: Math.ceil(durationMinutes * 1000) // 1000 credits per minute
+          credits_used: Math.ceil(durationMinutes * 10) // 10 credits per minute
         })
         .select()
         .single();

@@ -55,7 +55,7 @@ const VoiceAgent = () => {
 
   const handleConversationEnd = async (durationMinutes: number) => {
     if (user && currentConversation && durationMinutes > 0) {
-      const creditsToDeduct = Math.ceil(durationMinutes * 1000); // 1000 credits per minute
+      const creditsToDeduct = Math.ceil(durationMinutes * 10); // 10 credits per minute
       
       const success = await deductCredits(
         creditsToDeduct,
