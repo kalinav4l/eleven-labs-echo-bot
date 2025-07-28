@@ -86,19 +86,21 @@ const ConversationAnalytics = () => {
     setIsUpdatingAll(true);
     try {
       const conversationsToUpdate = callHistory.filter(call => call.conversation_id);
-      
+
       // Process all conversations in parallel for faster loading
-      const updatePromises = conversationsToUpdate.map(async (call) => {
+      const updatePromises = conversationsToUpdate.map(async call => {
         if (call.conversation_id) {
           try {
-            const { data } = await supabase.functions.invoke('get-elevenlabs-conversation', {
-              body: { conversationId: call.conversation_id }
+            const {
+              data
+            } = await supabase.functions.invoke('get-elevenlabs-conversation', {
+              body: {
+                conversationId: call.conversation_id
+              }
             });
-            
             if (data?.metadata) {
               const duration = Math.round(data.metadata.call_duration_secs || 0);
               const cost = data.metadata.cost || 0;
-              
               return {
                 conversationId: call.conversation_id,
                 duration,
@@ -111,23 +113,25 @@ const ConversationAnalytics = () => {
         }
         return null;
       });
-
       const results = await Promise.all(updatePromises);
-      
+
       // Update state with all results at once
       const newDurations: Record<string, number> = {};
       const newCosts: Record<string, number> = {};
-      
       results.forEach(result => {
         if (result) {
           newDurations[result.conversationId] = result.duration;
           newCosts[result.conversationId] = result.cost;
         }
       });
-      
-      setConversationDurations(prev => ({ ...prev, ...newDurations }));
-      setConversationCosts(prev => ({ ...prev, ...newCosts }));
-      
+      setConversationDurations(prev => ({
+        ...prev,
+        ...newDurations
+      }));
+      setConversationCosts(prev => ({
+        ...prev,
+        ...newCosts
+      }));
       toast({
         title: "Actualizare completă",
         description: `${Object.keys(newDurations).length} conversații au fost actualizate cu succes`
@@ -230,14 +234,7 @@ const ConversationAnalytics = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Analytics Conversații</h1>
-          <Button 
-            onClick={updateAllConversations}
-            disabled={isUpdatingAll}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className={`w-4 h-4 ${isUpdatingAll ? 'animate-spin' : ''}`} />
-            {isUpdatingAll ? 'Actualizează...' : 'Actualizează toate'}
-          </Button>
+          
         </div>
 
         {/* Mobile-Responsive Filters */}
