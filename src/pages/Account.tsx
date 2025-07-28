@@ -82,6 +82,47 @@ const Account = () => {
   const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
   const [conversationCredits, setConversationCredits] = useState<Record<string, number>>({});
 
+  // Function to get conversation data from ElevenLabs
+  const getConversationData = async (conversationId: string) => {
+    if (!conversationId || conversationDurations[conversationId] !== undefined) {
+      return conversationDurations[conversationId] || 0;
+    }
+    try {
+      const { data } = await supabase.functions.invoke('get-elevenlabs-conversation', {
+        body: { conversationId }
+      });
+      if (data?.metadata) {
+        const duration = Math.round(data.metadata.call_duration_secs || 0);
+        const cost = data.metadata.cost || 0;
+        const llmCharge = data.metadata.charging?.llm_charge || 0;
+        const callCharge = data.metadata.charging?.call_charge || 0;
+        const totalCost = cost || llmCharge + callCharge;
+        const credits = Math.round(totalCost * 100);
+        setConversationDurations(prev => ({ ...prev, [conversationId]: duration }));
+        setConversationCredits(prev => ({ ...prev, [conversationId]: credits }));
+        return duration;
+      }
+    } catch (error) {
+      console.error('Error fetching conversation data:', error);
+    }
+    return 0;
+  };
+
+  // Load detailed conversation data
+  useEffect(() => {
+    const loadDetailedAnalytics = async () => {
+      const conversationsToLoad = callHistory?.filter(call => call.conversation_id && conversationDurations[call.conversation_id] === undefined) || [];
+      for (const call of conversationsToLoad) {
+        if (call.conversation_id) {
+          await getConversationData(call.conversation_id);
+        }
+      }
+    };
+    if (callHistory && callHistory.length > 0) {
+      loadDetailedAnalytics();
+    }
+  }, [callHistory?.length]);
+
   // Redirect to landing if not authenticated
   if (!authLoading && !user) {
     window.location.href = '/';
@@ -114,59 +155,7 @@ const Account = () => {
   const totalConversations = userStats?.total_conversations || 0;
   const totalTranscripts = savedTranscripts?.length || 0;
 
-  // Function to get conversation data from ElevenLabs
-  const getConversationData = async (conversationId: string) => {
-    if (!conversationId || conversationDurations[conversationId] !== undefined) {
-      return conversationDurations[conversationId] || 0;
-    }
-    try {
-      const {
-        data
-      } = await supabase.functions.invoke('get-elevenlabs-conversation', {
-        body: {
-          conversationId
-        }
-      });
-      if (data?.metadata) {
-        const duration = Math.round(data.metadata.call_duration_secs || 0);
-        // Extract credits/cost from ElevenLabs metadata
-        const cost = data.metadata.cost || 0;
-        const llmCharge = data.metadata.charging?.llm_charge || 0;
-        const callCharge = data.metadata.charging?.call_charge || 0;
 
-        // Calculate total credits (convert USD to credits, 1 USD = 100 credits)
-        const totalCost = cost || llmCharge + callCharge;
-        const credits = Math.round(totalCost * 100);
-        setConversationDurations(prev => ({
-          ...prev,
-          [conversationId]: duration
-        }));
-        setConversationCredits(prev => ({
-          ...prev,
-          [conversationId]: credits
-        }));
-        return duration;
-      }
-    } catch (error) {
-      console.error('Error fetching conversation data:', error);
-    }
-    return 0;
-  };
-
-  // Load detailed conversation data
-  useEffect(() => {
-    const loadDetailedAnalytics = async () => {
-      const conversationsToLoad = callHistory?.filter(call => call.conversation_id && conversationDurations[call.conversation_id] === undefined) || [];
-      for (const call of conversationsToLoad) {
-        if (call.conversation_id) {
-          await getConversationData(call.conversation_id);
-        }
-      }
-    };
-    if (callHistory && callHistory.length > 0) {
-      loadDetailedAnalytics();
-    }
-  }, [callHistory?.length]);
 
   // Calculate total seconds from both sources - prioritize ElevenLabs data when available
   const totalSecondsFromCalls = callHistory?.reduce((total, call) => {
