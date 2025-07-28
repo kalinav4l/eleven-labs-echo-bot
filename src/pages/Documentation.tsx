@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -13,6 +13,26 @@ import {
 const Documentation = () => {
   const { user } = useAuth();
   const [activeSection, setActiveSection] = useState('overview');
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToSection = (sectionId: string) => {
+    setActiveSection(sectionId);
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start',
+        inline: 'nearest'
+      });
+    }
+  };
 
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -58,68 +78,47 @@ const Documentation = () => {
   ];
 
   const renderOverview = () => (
-    <div className="max-w-5xl">
-      <div className="mb-12 animate-fade-in">
-        <h1 className="text-6xl font-bold text-black mb-6 animate-slide-in-up">Kalina AI</h1>
-        <p className="text-2xl text-gray-600 leading-relaxed animate-fade-in animation-delay-300">
-          Platforma completă de agenți vocali AI pentru automatizarea apelurilor telefonice, 
-          campanii în masă și interacțiuni cu clienții.
-        </p>
-      </div>
+    <section id="overview" className="min-h-screen p-12 relative">
+      <div className="max-w-5xl mx-auto">
+        <div 
+          className="mb-12 animate-fade-in"
+          style={{
+            transform: `translateY(${scrollY * 0.1}px)`,
+            filter: `drop-shadow(0 ${Math.min(scrollY * 0.02, 20)}px ${Math.min(scrollY * 0.05, 40)}px rgba(0,0,0,0.1))`
+          }}
+        >
+          <h1 className="text-8xl font-bold text-black mb-6 animate-slide-in-up bg-gradient-to-r from-black via-gray-800 to-black bg-clip-text">
+            Kalina AI
+          </h1>
+          <p className="text-3xl text-gray-600 leading-relaxed animate-fade-in animation-delay-300 drop-shadow-lg">
+            Platforma completă de agenți vocali AI pentru automatizarea apelurilor telefonice
+          </p>
+        </div>
 
-      <div className="grid gap-8 md:grid-cols-3 mb-16">
-        <div className="p-8 bg-black text-white rounded-2xl hover-scale animate-fade-in animation-delay-500">
-          <Bot className="h-12 w-12 mb-4 animate-pulse" />
-          <h3 className="text-xl font-bold mb-3">Agenți AI Avansați</h3>
-          <p className="text-gray-300">Conversații naturale cu inteligență artificială</p>
-        </div>
-        <div className="p-8 border-2 border-black rounded-2xl hover-scale animate-fade-in animation-delay-700">
-          <Phone className="h-12 w-12 mb-4 text-black animate-pulse" />
-          <h3 className="text-xl font-bold mb-3 text-black">Apeluri Automate</h3>
-          <p className="text-gray-600">Campanii telefonice scalabile și eficiente</p>
-        </div>
-        <div className="p-8 bg-black text-white rounded-2xl hover-scale animate-fade-in animation-delay-1000">
-          <BarChart3 className="h-12 w-12 mb-4 animate-pulse" />
-          <h3 className="text-xl font-bold mb-3">Analize Detaliate</h3>
-          <p className="text-gray-300">Monitorizare performanță în timp real</p>
-        </div>
-      </div>
-
-      <div className="mb-12 animate-fade-in animation-delay-1200">
-        <h2 className="text-3xl font-bold text-black mb-8 animate-slide-in-left">Componente Principale</h2>
-        <div className="space-y-6">
-          <div className="flex items-start gap-6 p-6 border border-gray-200 rounded-xl hover-scale animate-slide-in-right animation-delay-200">
-            <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center">
-              <Bot className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-black mb-2">Agent Management System</h3>
-              <p className="text-gray-600">Creare, editare și gestionarea agenților vocali cu personalități și funcționalități personalizate.</p>
-            </div>
+        <div 
+          className="grid gap-8 md:grid-cols-3 mb-16"
+          style={{
+            transform: `translateY(${scrollY * 0.05}px)`,
+          }}
+        >
+          <div className="p-8 bg-black text-white rounded-2xl hover-scale animate-fade-in animation-delay-500 shadow-2xl hover:shadow-black/50 transition-all duration-500">
+            <Bot className="h-16 w-16 mb-6 animate-pulse drop-shadow-lg" />
+            <h3 className="text-2xl font-bold mb-4">Agenți AI Avansați</h3>
+            <p className="text-gray-300 text-lg">Conversații naturale cu inteligență artificială</p>
           </div>
-          
-          <div className="flex items-start gap-6 p-6 border border-gray-200 rounded-xl">
-            <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center">
-              <PhoneCall className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-black mb-2">Call Engine</h3>
-              <p className="text-gray-600">Motor de apeluri integrat cu ElevenLabs pentru apeluri individuale și campanii în masă.</p>
-            </div>
+          <div className="p-8 border-4 border-black rounded-2xl hover-scale animate-fade-in animation-delay-700 shadow-2xl hover:shadow-gray-500/50 transition-all duration-500 bg-white">
+            <Phone className="h-16 w-16 mb-6 text-black animate-pulse drop-shadow-lg" />
+            <h3 className="text-2xl font-bold mb-4 text-black">Apeluri Automate</h3>
+            <p className="text-gray-600 text-lg">Campanii telefonice scalabile și eficiente</p>
           </div>
-          
-          <div className="flex items-start gap-6 p-6 border border-gray-200 rounded-xl">
-            <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center">
-              <Monitor className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-black mb-2">Analytics Dashboard</h3>
-              <p className="text-gray-600">Dashboarduri comprehensive pentru monitorizarea conversațiilor și optimizarea performanței.</p>
-            </div>
+          <div className="p-8 bg-black text-white rounded-2xl hover-scale animate-fade-in animation-delay-1000 shadow-2xl hover:shadow-black/50 transition-all duration-500">
+            <BarChart3 className="h-16 w-16 mb-6 animate-pulse drop-shadow-lg" />
+            <h3 className="text-2xl font-bold mb-4">Analize Detaliate</h3>
+            <p className="text-gray-300 text-lg">Monitorizare performanță în timp real</p>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 
   const renderHowItWorks = () => (
@@ -617,143 +616,10 @@ const Documentation = () => {
         return renderVoiceAgents();
       case 'phone-calls':
         return renderPhoneCalls();
-      case 'batch-campaigns':
-        return (
-          <div className="max-w-5xl">
-            <h1 className="text-5xl font-bold text-black mb-6">Campanii în Masă</h1>
-            <p className="text-xl text-gray-600 mb-8">Apeluri simultane către sute de contacte</p>
-            <div className="p-8 border-2 border-black rounded-2xl">
-              <p className="text-gray-600">Încărcați fișiere CSV cu contacte și lansați campanii automate către toate contactele odată. Sistemul gestionează execuția paralelă și raportarea centralizată.</p>
-            </div>
-          </div>
-        );
-      case 'analytics':
-        return (
-          <div className="max-w-5xl">
-            <h1 className="text-5xl font-bold text-black mb-6">Analiză & Rapoarte</h1>
-            <p className="text-xl text-gray-600 mb-8">Monitorizare performanță și insight-uri detaliate</p>
-            <div className="grid gap-8 md:grid-cols-2">
-              <div className="p-8 bg-black text-white rounded-2xl">
-                <BarChart3 className="h-12 w-12 mb-4" />
-                <h3 className="text-2xl font-bold mb-4">Metrici în Timp Real</h3>
-                <p className="text-gray-300">Urmărirea conversațiilor active, rate de success și performanță agenți.</p>
-              </div>
-              <div className="p-8 border-2 border-black rounded-2xl">
-                <PieChart className="h-12 w-12 text-black mb-4" />
-                <h3 className="text-2xl font-bold text-black mb-4">Analiză Sentiment</h3>
-                <p className="text-gray-600">Detectarea automată a emoțiilor și intențiilor din conversații.</p>
-              </div>
-            </div>
-          </div>
-        );
-      case 'scheduling':
-        return (
-          <div className="max-w-5xl">
-            <h1 className="text-5xl font-bold text-black mb-6">Programări Automate</h1>
-            <p className="text-xl text-gray-600 mb-8">Sistem de detectare și programare callback-uri</p>
-            <div className="p-8 border-2 border-black rounded-2xl">
-              <Calendar className="h-12 w-12 text-black mb-4" />
-              <p className="text-gray-600">Sistemul detectează automat cererile de callback din conversații și programează apeluri de urmărire.</p>
-            </div>
-          </div>
-        );
-      case 'transcriptions':
-        return (
-          <div className="max-w-5xl">
-            <h1 className="text-5xl font-bold text-black mb-6">Transcrieri Audio</h1>
-            <p className="text-xl text-gray-600 mb-8">Conversie automată speech-to-text</p>
-            <div className="p-8 border-2 border-black rounded-2xl">
-              <FileText className="h-12 w-12 text-black mb-4" />
-              <p className="text-gray-600">Toate conversațiile sunt transcrise automat și stocate pentru analiză ulterioară și căutare.</p>
-            </div>
-          </div>
-        );
-      case 'web-scraping':
-        return (
-          <div className="max-w-5xl">
-            <h1 className="text-5xl font-bold text-black mb-6">Extragere Date Web</h1>
-            <p className="text-xl text-gray-600 mb-8">Colectare automată de informații din pagini web</p>
-            <div className="p-8 border-2 border-black rounded-2xl">
-              <Globe className="h-12 w-12 text-black mb-4" />
-              <p className="text-gray-600">Extractoare de date pentru îmbogățirea bazei de cunoștințe a agenților cu informații actualizate.</p>
-            </div>
-          </div>
-        );
-      case 'elevenlabs':
-        return (
-          <div className="max-w-5xl">
-            <h1 className="text-5xl font-bold text-black mb-6">Integrare ElevenLabs</h1>
-            <p className="text-xl text-gray-600 mb-8">API integration pentru conversational AI</p>
-            <div className="p-8 border-2 border-black rounded-2xl">
-              <Mic className="h-12 w-12 text-black mb-4" />
-              <p className="text-gray-600">Integrare completă cu ElevenLabs Conversational AI pentru gestionarea apelurilor telefonice și sinteza vocii.</p>
-            </div>
-          </div>
-        );
-      case 'webhooks':
-        return (
-          <div className="max-w-5xl">
-            <h1 className="text-5xl font-bold text-black mb-6">Webhooks & Callbacks</h1>
-            <p className="text-xl text-gray-600 mb-8">Comunicare în timp real cu servicii externe</p>
-            <div className="p-8 border-2 border-black rounded-2xl">
-              <Webhook className="h-12 w-12 text-black mb-4" />
-              <p className="text-gray-600">Sistem de webhook-uri pentru sincronizarea cu ElevenLabs și alte servicii externe.</p>
-            </div>
-          </div>
-        );
-      case 'apis':
-        return (
-          <div className="max-w-5xl">
-            <h1 className="text-5xl font-bold text-black mb-6">API Reference</h1>
-            <p className="text-xl text-gray-600 mb-8">Documentația completă a API-urilor</p>
-            <div className="p-8 border-2 border-black rounded-2xl">
-              <Code className="h-12 w-12 text-black mb-4" />
-              <p className="text-gray-600">Referința completă pentru toate endpoint-urile și funcționalitățile API.</p>
-            </div>
-          </div>
-        );
-      case 'database':
-        return (
-          <div className="max-w-5xl">
-            <h1 className="text-5xl font-bold text-black mb-6">Schema Bazei de Date</h1>
-            <p className="text-xl text-gray-600 mb-8">Structura și relațiile tabelelor</p>
-            <div className="p-8 border-2 border-black rounded-2xl">
-              <Database className="h-12 w-12 text-black mb-4" />
-              <p className="text-gray-600">Documentația schemei PostgreSQL cu toate tabelele, relațiile și funcțiile.</p>
-            </div>
-          </div>
-        );
       case 'credits':
         return renderCredits();
-      case 'pricing':
-        return (
-          <div className="max-w-5xl">
-            <h1 className="text-5xl font-bold text-black mb-6">Prețuri & Planuri</h1>
-            <p className="text-xl text-gray-600 mb-8">Structura de prețuri și pachete disponibile</p>
-            <div className="p-8 border-2 border-black rounded-2xl">
-              <Building2 className="h-12 w-12 text-black mb-4" />
-              <p className="text-gray-600">Informații despre planurile de abonament și opțiunile de plată.</p>
-            </div>
-          </div>
-        );
-      case 'billing':
-        return (
-          <div className="max-w-5xl">
-            <h1 className="text-5xl font-bold text-black mb-6">Facturare</h1>
-            <p className="text-xl text-gray-600 mb-8">Gestionarea facturării și plăților</p>
-            <div className="p-8 border-2 border-black rounded-2xl">
-              <Settings className="h-12 w-12 text-black mb-4" />
-              <p className="text-gray-600">Sistemul de facturare automată și gestionarea conturilor.</p>
-            </div>
-          </div>
-        );
       default:
-        return (
-          <div className="max-w-5xl">
-            <h1 className="text-5xl font-bold text-black mb-6">În dezvoltare</h1>
-            <p className="text-xl text-gray-600">Această secțiune este în curs de dezvoltare.</p>
-          </div>
-        );
+        return renderOverview();
     }
   };
 
@@ -780,7 +646,7 @@ const Documentation = () => {
                       return (
                         <button
                           key={item.id}
-                          onClick={() => setActiveSection(item.id)}
+                          onClick={() => scrollToSection(item.id)}
                           className={`w-full flex items-center gap-4 px-4 py-3 text-left rounded-xl transition-all duration-300 text-sm font-medium hover-scale animate-slide-in-right ${
                             activeSection === item.id
                               ? 'bg-black text-white transform scale-105 shadow-lg'
@@ -801,9 +667,15 @@ const Documentation = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-auto bg-white animate-fade-in animation-delay-800">
-          <div className="p-12">
-            <div className="animate-slide-in-up">
+        <div className="flex-1 overflow-auto bg-white animate-fade-in animation-delay-800 scroll-smooth" style={{scrollBehavior: 'smooth'}}>
+          <div ref={contentRef} className="relative">
+            <div 
+              className="animate-slide-in-up transition-all duration-700"
+              style={{
+                transform: `translateY(${scrollY * 0.02}px)`,
+                filter: `drop-shadow(0 ${Math.min(scrollY * 0.01, 10)}px ${Math.min(scrollY * 0.03, 30)}px rgba(0,0,0,0.15))`
+              }}
+            >
               {renderContent()}
             </div>
           </div>
