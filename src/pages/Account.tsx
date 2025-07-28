@@ -13,7 +13,7 @@ import { useUserConversations } from '@/hooks/useUserConversations';
 import { useCallHistory } from '@/hooks/useCallHistory';
 import { useTranscripts } from '@/hooks/useTranscripts';
 import { supabase } from '@/integrations/supabase/client';
-import { Bot, Phone, BarChart3, Users, TrendingUp, Calendar, Clock, Star, Activity, FileText, MessageSquare, Zap, Target } from 'lucide-react';
+import { Bot, Phone, BarChart3, Users, TrendingUp, Calendar, Clock, Star, Activity, FileText, MessageSquare, Zap, Target, CreditCard } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AnimatedCounter from '@/components/AnimatedCounter';
@@ -189,9 +189,9 @@ const Account = () => {
     icon: Phone,
     color: 'text-gray-600'
   }, {
-    label: 'Minute Consumate',
-    value: Math.floor(totalSecondsFromCalls / 60).toString(),
-    icon: Clock,
+    label: 'Credite Consumate',
+    value: totalConsumedCredits.toString(),
+    icon: CreditCard,
     color: 'text-gray-600'
   }, {
     label: 'Conversații',
