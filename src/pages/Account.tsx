@@ -256,42 +256,90 @@ const Account = () => {
   }
 
   return <DashboardLayout>
-      <div className="min-h-screen bg-white">
-        {/* Animated Header */}
-        <div className="bg-white border-b border-gray-200">
-          <div className="px-6 py-6">
-            <div className="flex items-center justify-between animate-fade-in">
-              <div>
-                <h1 className="text-2xl font-semibold text-gray-900 animate-[slideInLeft_0.6s_ease-out]">
-                  Bun venit, {displayName}!
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 relative overflow-hidden">
+        {/* Floating 3D Background Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }}></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-secondary/10 to-primary/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '6s', animationDelay: '2s' }}></div>
+          
+          {/* Floating particles */}
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-2 h-2 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full animate-float"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 10}s`,
+                animationDuration: `${8 + Math.random() * 4}s`
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Advanced Animated Header with 3D Effect */}
+        <div className="liquid-glass border-b border-white/20 backdrop-blur-xl relative z-10">
+          <div className="px-6 py-8">
+            <div className="flex items-center justify-between">
+              <div className="group">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900 bg-clip-text text-transparent transform hover:scale-105 transition-all duration-700 hover:rotate-1">
+                  Bun venit, <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{displayName}</span>!
                 </h1>
-                <p className="text-gray-600 mt-1 text-sm animate-[slideInLeft_0.6s_ease-out_0.2s_both]">
+                <p className="text-slate-600 mt-2 text-sm transform translate-y-2 opacity-0 animate-[slideUp_0.8s_ease-out_0.3s_forwards] group-hover:translate-x-1 transition-transform duration-500">
                   Gestionează agenții tăi AI și urmărește performanțele
                 </p>
+                
+                {/* Animated underline */}
+                <div className="h-1 w-0 bg-gradient-to-r from-primary to-secondary rounded-full mt-3 group-hover:w-32 transition-all duration-1000 ease-out"></div>
               </div>
-              <Button onClick={handleSignOut} variant="outline" className="border-gray-300 hover:border-gray-400 text-gray-700 animate-[slideInRight_0.6s_ease-out] hover:scale-105 transition-transform">
-                Ieșire
+              
+              <Button 
+                onClick={handleSignOut} 
+                variant="outline" 
+                className="liquid-glass border-white/30 hover:border-primary/30 text-slate-700 hover:scale-110 hover:rotate-2 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20 group"
+              >
+                <span className="group-hover:scale-110 transition-transform duration-300">Ieșire</span>
               </Button>
             </div>
           </div>
         </div>
 
         <div className="px-6 py-8">
-          {/* Animated Quick Stats with Staggered Animation */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {/* Hyper-Realistic 3D Animated Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12 relative z-10">
             {quickStats.map((stat, index) => (
               <div 
                 key={index} 
-                className="animate-fade-in hover-scale group"
-                style={{ animationDelay: `${index * 150}ms` }}
+                className="card-3d group"
+                style={{ 
+                  animationDelay: `${index * 200}ms`
+                }}
               >
-                <StatCard 
-                  label={stat.label} 
-                  value={stat.value} 
-                  icon={stat.icon} 
-                  delay={index * 100}
-                  className="transition-all duration-500 hover:shadow-lg hover:shadow-primary/10 group-hover:border-primary/20"
-                />
+                <div className="liquid-glass h-32 relative overflow-hidden transform transition-all duration-700 hover:scale-105 group-hover:shadow-2xl group-hover:shadow-primary/20">
+                  {/* Animated background gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 animate-morphing"></div>
+                  
+                  {/* Floating icon */}
+                  <div className="absolute top-4 right-4 transform group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">
+                    <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl flex items-center justify-center animate-glow-pulse">
+                      <stat.icon className="w-5 h-5 text-slate-700 group-hover:text-primary transition-colors duration-300" />
+                    </div>
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="p-6 relative z-10">
+                    <p className="text-sm font-medium text-slate-600 mb-2 group-hover:text-slate-800 transition-colors duration-300">
+                      {stat.label}
+                    </p>
+                    <p className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent group-hover:from-primary group-hover:to-secondary transition-all duration-500">
+                      <AnimatedCounter target={parseInt(stat.value) || 0} />
+                      {stat.value.includes(':') && stat.value}
+                    </p>
+                  </div>
+                  
+                  {/* Hover shimmer effect */}
+                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000 ease-out"></div>
+                </div>
               </div>
             ))}
           </div>
