@@ -363,6 +363,24 @@ serve(async (req) => {
     // Use transmitted userId if available, otherwise find agent owner
     let callbackUserId = userId;
     
+    // Try to get userId from saved call sessions first (most reliable)
+    if (!callbackUserId && conversationId) {
+      console.log('🔍 Căut sesiunea salvată pentru conversation_id:', conversationId);
+      
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('call_sessions')
+        .select('agent_owner_user_id, agent_id')
+        .eq('session_id', conversationId)
+        .maybeSingle();
+      
+      if (sessionData) {
+        callbackUserId = sessionData.agent_owner_user_id;
+        console.log('✅ Găsit proprietar din sesiune salvată:', callbackUserId);
+      } else {
+        console.log('⚠️ Nu am găsit sesiune salvată, caut prin agent ID...');
+      }
+    }
+    
     if (!callbackUserId) {
       // Fallback: Find the agent owner based on agentId
       if (!agentId) {

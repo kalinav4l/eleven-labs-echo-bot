@@ -5,6 +5,7 @@ import { Mic, MicOff, Phone, PhoneOff } from 'lucide-react';
 import { useConversation } from '@11labs/react';
 import { toast } from '@/components/ui/use-toast';
 import { useConversationTracking } from '@/hooks/useConversationTracking';
+import { useCallSessionTracking } from '@/hooks/useCallSessionTracking';
 
 interface Message {
   id: string;
@@ -33,14 +34,29 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const { saveConversation } = useConversationTracking();
+  const { saveCallSession } = useCallSessionTracking();
 
   const conversation = useConversation({
-    onConnect: (props: { conversationId: string }) => {
+    onConnect: async (props: { conversationId: string }) => {
       console.log('✅ Conectat la agent vocal cu conversationId:', props.conversationId);
       setIsConnecting(false);
       setIsActive(true);
       setConversationStart(new Date());
-      setCurrentConversationId(props.conversationId); // Capturează conversationId din connect
+      setCurrentConversationId(props.conversationId);
+      
+      // Salvez sesiunea cu agent ID corect pentru callback-uri
+      try {
+        await saveCallSession.mutateAsync({
+          session_id: props.conversationId,
+          agent_id: agentId,
+          session_type: 'voice_test',
+          contact_name: `Test vocal cu ${agentName}`
+        });
+        console.log('✅ Sesiune salvată pentru callback-uri corecte');
+      } catch (error) {
+        console.warn('⚠️ Nu s-a putut salva sesiunea:', error);
+      }
+      
       toast({
         title: "Conectat!",
         description: "Poți vorbi acum cu agentul",

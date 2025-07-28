@@ -182,6 +182,42 @@ export type Database = {
         }
         Relationships: []
       }
+      call_sessions: {
+        Row: {
+          agent_id: string
+          agent_owner_user_id: string
+          contact_name: string | null
+          created_at: string
+          id: string
+          phone_number: string | null
+          session_id: string
+          session_type: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          agent_owner_user_id: string
+          contact_name?: string | null
+          created_at?: string
+          id?: string
+          phone_number?: string | null
+          session_id: string
+          session_type?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          agent_owner_user_id?: string
+          contact_name?: string | null
+          created_at?: string
+          id?: string
+          phone_number?: string | null
+          session_id?: string
+          session_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       callback_requests: {
         Row: {
           agent_id: string | null

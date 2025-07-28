@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
+import { useCallSessionTracking } from '@/hooks/useCallSessionTracking';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
 import { useSMSService } from './useSMSService';
@@ -44,6 +45,7 @@ export const useCallInitiation = ({
 }: UseCallInitiationProps) => {
   const { user } = useAuth();
   const { scheduleSMS } = useSMSService();
+  const { saveCallSession } = useCallSessionTracking();
   const [isInitiating, setIsInitiating] = useState(false);
   const [isProcessingBatch, setIsProcessingBatch] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -636,6 +638,22 @@ export const useCallInitiation = ({
           conversationId: data.conversationId,
           contactName: contactName || targetPhone 
         });
+
+        // Salvez sesiunea pentru callback-uri corecte
+        if (data?.conversationId) {
+          try {
+            await saveCallSession.mutateAsync({
+              session_id: data.conversationId,
+              agent_id: targetAgentId,
+              phone_number: targetPhone,
+              contact_name: contactName || targetPhone,
+              session_type: 'phone_call'
+            });
+            console.log('✅ Sesiune salvată pentru callback-uri corecte');
+          } catch (sessionError) {
+            console.warn('⚠️ Nu s-a putut salva sesiunea:', sessionError);
+          }
+        }
 
         toast({
           title: "Succes!",
