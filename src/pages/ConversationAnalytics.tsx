@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Search, Phone, Copy, ExternalLink } from 'lucide-react';
+import { Search, Phone, Copy, ExternalLink, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ConversationDetailSidebar } from '@/components/outbound/ConversationDetailSidebar';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +23,7 @@ const ConversationAnalytics = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
   const [conversationCosts, setConversationCosts] = useState<Record<string, number>>({});
+  const [isUpdatingAll, setIsUpdatingAll] = useState(false);
   const {
     callHistory,
     isLoading
@@ -78,6 +79,69 @@ const ConversationAnalytics = () => {
   const handleCloseSidebar = () => {
     setIsSidebarOpen(false);
     setSelectedConversationId(null);
+  };
+
+  // Function to update all conversations at once
+  const updateAllConversations = async () => {
+    setIsUpdatingAll(true);
+    try {
+      const conversationsToUpdate = callHistory.filter(call => call.conversation_id);
+      
+      // Process all conversations in parallel for faster loading
+      const updatePromises = conversationsToUpdate.map(async (call) => {
+        if (call.conversation_id) {
+          try {
+            const { data } = await supabase.functions.invoke('get-elevenlabs-conversation', {
+              body: { conversationId: call.conversation_id }
+            });
+            
+            if (data?.metadata) {
+              const duration = Math.round(data.metadata.call_duration_secs || 0);
+              const cost = data.metadata.cost || 0;
+              
+              return {
+                conversationId: call.conversation_id,
+                duration,
+                cost
+              };
+            }
+          } catch (error) {
+            console.error(`Error updating conversation ${call.conversation_id}:`, error);
+          }
+        }
+        return null;
+      });
+
+      const results = await Promise.all(updatePromises);
+      
+      // Update state with all results at once
+      const newDurations: Record<string, number> = {};
+      const newCosts: Record<string, number> = {};
+      
+      results.forEach(result => {
+        if (result) {
+          newDurations[result.conversationId] = result.duration;
+          newCosts[result.conversationId] = result.cost;
+        }
+      });
+      
+      setConversationDurations(prev => ({ ...prev, ...newDurations }));
+      setConversationCosts(prev => ({ ...prev, ...newCosts }));
+      
+      toast({
+        title: "Actualizare completă",
+        description: `${Object.keys(newDurations).length} conversații au fost actualizate cu succes`
+      });
+    } catch (error) {
+      console.error('Error updating all conversations:', error);
+      toast({
+        title: "Eroare",
+        description: "A apărut o eroare la actualizarea conversațiilor",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpdatingAll(false);
+    }
   };
 
   // Load conversation data when call history changes
@@ -174,6 +238,14 @@ const ConversationAnalytics = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Analytics Conversații</h1>
+          <Button 
+            onClick={updateAllConversations}
+            disabled={isUpdatingAll}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${isUpdatingAll ? 'animate-spin' : ''}`} />
+            {isUpdatingAll ? 'Actualizează...' : 'Actualizează toate'}
+          </Button>
         </div>
 
         {/* Mobile-Responsive Filters */}
