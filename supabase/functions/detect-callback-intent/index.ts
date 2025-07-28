@@ -200,6 +200,8 @@ const detectWithOpenAI = async (text: string): Promise<CallbackIntent> => {
   }
 
   try {
+    console.log('Using GPT-4.1 for enhanced callback detection...');
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -207,35 +209,59 @@ const detectWithOpenAI = async (text: string): Promise<CallbackIntent> => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           {
             role: 'system',
-            content: `Ești un sistem de analiză care detectează când cineva cere să fie sunat înapoi.
+            content: `Ești un expert în analiza conversațiilor în română pentru detectarea intențiilor de callback/reprogramare.
 
-Analizează textul și determină:
-1. Dacă persoana cere să fie sunată înapoi (true/false)
-2. Când vrea să fie sunată (timeframe)
-3. Urgența cererii (low/medium/high/urgent)
-4. Motivul pentru care vrea să fie sunată (reason)
+Analizează textul cu atenție pentru următoarele tipuri de cereri:
+1. Cereri directe de callback: "sună-mă", "telefoneză-mă", "contactează-mă"
+2. Cereri indirecte: "nu pot acum", "sunt ocupat", "vorbim mai târziu"
+3. Programări: "să programăm", "să ne vedem", "să discutăm"
+4. Amânări: "mai târziu", "altă dată", "peste câteva zile"
 
-Răspunde doar cu JSON în formatul:
+Contextele în care oamenii cer callback:
+- Sunt la muncă/ocupați
+- Nu au timp să vorbească
+- Vor să se gândească la ofertă
+- Vor mai multe informații
+- Vor să discute cu familia
+- Nu sunt într-un loc potrivit pentru conversație
+
+Răspunde DOAR cu JSON valid în formatul:
 {
   "hasCallbackRequest": boolean,
-  "timeframe": "string sau null",
+  "timeframe": "string cu când vrea să fie contactat",
   "urgency": "low|medium|high|urgent",
-  "reason": "string sau null"
+  "reason": "motivul pentru callback",
+  "confidence": number între 0-100,
+  "extractedPhones": ["array cu numere găsite"],
+  "suggestedTime": "ISO string sau null"
 }`
           },
-          { role: 'user', content: text }
+          { 
+            role: 'user', 
+            content: `Analizează această conversație pentru callback intent:
+
+"${text}"
+
+Caută indicii ca:
+- Expresii directe: "sună-mă", "telefoneză-mă", "call me back", "contactează-mă"
+- Expresii indirecte: "nu pot acum", "sunt ocupat", "vorbim mai târziu", "să ne programăm"
+- Timpuri: "mâine", "săptămâna viitoare", "peste o oră", "diseară"
+- Motive: "să mă gândesc", "să vorbesc cu soția", "să discut cu familia"
+
+Dacă nu există niciun indiciu clar de callback, hasCallbackRequest = false.`
+          }
         ],
-        max_tokens: 200,
-        temperature: 0.1,
+        max_tokens: 500,
+        temperature: 0.2,
       }),
     });
 
     if (!response.ok) {
-      console.error('OpenAI API error:', response.status);
+      console.error('OpenAI API error:', response.status, await response.text());
       return { hasCallbackRequest: false, urgency: 'medium' };
     }
 
@@ -246,20 +272,55 @@ Răspunde doar cu JSON în formatul:
       return { hasCallbackRequest: false, urgency: 'medium' };
     }
 
+    console.log('GPT-4.1 raw response:', aiResponse);
+
     try {
       const parsed = JSON.parse(aiResponse);
+      
+      // Generate suggested time based on timeframe if provided
+      let suggestedTime = '';
+      if (parsed.hasCallbackRequest && parsed.timeframe) {
+        const now = new Date();
+        const lowerTimeframe = parsed.timeframe.toLowerCase();
+        
+        if (lowerTimeframe.includes('mâine') || lowerTimeframe.includes('tomorrow')) {
+          const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+          tomorrow.setHours(10, 0, 0, 0); // 10 AM tomorrow
+          suggestedTime = tomorrow.toISOString();
+        } else if (lowerTimeframe.includes('diseară') || lowerTimeframe.includes('evening')) {
+          const evening = new Date(now);
+          evening.setHours(18, 0, 0, 0);
+          if (evening.getTime() < now.getTime()) {
+            evening.setDate(evening.getDate() + 1);
+          }
+          suggestedTime = evening.toISOString();
+        } else if (lowerTimeframe.includes('săptămâna') || lowerTimeframe.includes('week')) {
+          const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+          nextWeek.setHours(10, 0, 0, 0);
+          suggestedTime = nextWeek.toISOString();
+        } else if (lowerTimeframe.includes('ore') || lowerTimeframe.includes('hour')) {
+          const hours = parseInt(lowerTimeframe.match(/\d+/)?.[0] || '2');
+          suggestedTime = new Date(now.getTime() + hours * 60 * 60 * 1000).toISOString();
+        } else {
+          // Default to 2 hours from now
+          suggestedTime = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
+        }
+      }
+
       return {
         hasCallbackRequest: parsed.hasCallbackRequest || false,
         timeframe: parsed.timeframe || undefined,
         urgency: parsed.urgency || 'medium',
-        reason: parsed.reason || undefined
+        reason: parsed.reason || undefined,
+        suggestedTime: suggestedTime || undefined,
+        extractedPhones: parsed.extractedPhones || []
       };
     } catch (parseError) {
-      console.error('Failed to parse OpenAI response:', parseError);
+      console.error('Failed to parse GPT-4.1 response:', parseError, 'Raw response:', aiResponse);
       return { hasCallbackRequest: false, urgency: 'medium' };
     }
   } catch (error) {
-    console.error('OpenAI detection error:', error);
+    console.error('GPT-4.1 detection error:', error);
     return { hasCallbackRequest: false, urgency: 'medium' };
   }
 };
