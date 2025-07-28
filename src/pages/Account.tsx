@@ -157,6 +157,8 @@ const Account = () => {
 
   // Calculate total consumed credits from conversation data (from ElevenLabs API)
   const totalConsumedCredits = Object.values(conversationCredits).reduce((total, credits) => total + credits, 0);
+  // Convert credits to USD (12 credits = $0.15, so 1 credit = $0.0125)
+  const totalConsumedUSD = (totalConsumedCredits * 0.0125).toFixed(2);
   const totalConversations = userStats?.total_conversations || 0;
   const totalTranscripts = savedTranscripts?.length || 0;
 
@@ -189,8 +191,8 @@ const Account = () => {
     icon: Phone,
     color: 'text-gray-600'
   }, {
-    label: 'Credite Consumate',
-    value: totalConsumedCredits.toString(),
+    label: 'Cost Consumat',
+    value: `$${totalConsumedUSD}`,
     icon: Zap,
     color: 'text-gray-600'
   }, {
@@ -331,15 +333,15 @@ const Account = () => {
                       <Zap className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900 group-hover:text-blue-900 transition-colors duration-300">Credite Consumate</p>
-                      <p className="text-xs text-gray-500">Total utilizate</p>
+                      <p className="font-medium text-gray-900 group-hover:text-blue-900 transition-colors duration-300">Cost Consumat</p>
+                      <p className="text-xs text-gray-500">Total utilizat</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-xl font-bold text-gray-900 group-hover:text-blue-900 transition-colors duration-300">
-                      <AnimatedCounter target={totalConsumedCredits} />
+                      ${totalConsumedUSD}
                     </p>
-                    <p className="text-xs text-gray-500">credite</p>
+                    <p className="text-xs text-gray-500">{totalConsumedCredits} credite</p>
                   </div>
                 </div>
                 
