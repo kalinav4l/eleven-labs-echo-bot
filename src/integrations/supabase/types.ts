@@ -1291,6 +1291,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_phone_mapping: {
+        Row: {
+          created_at: string
+          id: string
+          phone_number: string
+          primary_number: boolean | null
+          updated_at: string
+          user_id: string
+          verified: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          phone_number: string
+          primary_number?: boolean | null
+          updated_at?: string
+          user_id: string
+          verified?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          phone_number?: string
+          primary_number?: boolean | null
+          updated_at?: string
+          user_id?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
       user_statistics: {
         Row: {
           agents_used: number
