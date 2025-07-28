@@ -157,6 +157,9 @@ const Account = () => {
 
   // Calculate total consumed credits from conversation data (from ElevenLabs API)
   const totalConsumedCredits = Object.values(conversationCredits).reduce((total, credits) => total + credits, 0);
+  // Convert credits to USD: 880 credits = 0.15 cents = 0.0015 dollars
+  const creditToUsdRate = 0.0015 / 880; // 0.0000017045 dollars per credit
+  const totalConsumedUSD = totalConsumedCredits * creditToUsdRate;
   const totalConversations = userStats?.total_conversations || 0;
   const totalTranscripts = savedTranscripts?.length || 0;
 
@@ -190,7 +193,7 @@ const Account = () => {
     color: 'text-gray-600'
   }, {
     label: 'Credite Consumate',
-    value: totalConsumedCredits.toString(),
+    value: `$${totalConsumedUSD.toFixed(4)}`,
     icon: Zap,
     color: 'text-gray-600'
   }, {
@@ -335,12 +338,12 @@ const Account = () => {
                       <p className="text-xs text-gray-500">Total utilizate</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xl font-bold text-gray-900 group-hover:text-blue-900 transition-colors duration-300">
-                      <AnimatedCounter target={totalConsumedCredits} />
-                    </p>
-                    <p className="text-xs text-gray-500">credite</p>
-                  </div>
+                   <div className="text-right">
+                     <p className="text-xl font-bold text-gray-900 group-hover:text-blue-900 transition-colors duration-300">
+                       ${totalConsumedUSD.toFixed(4)}
+                     </p>
+                     <p className="text-xs text-gray-500">{totalConsumedCredits} credite</p>
+                   </div>
                 </div>
                 
                 <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50/50 to-white rounded-xl border border-green-100/50 hover:border-green-200 transition-all duration-500 hover:scale-[1.03] hover:shadow-md group animate-fade-in" style={{ animationDelay: '200ms' }}>

@@ -37,6 +37,9 @@ const CreditsDisplay = () => {
   }
 
   const remainingCredits = credits?.remaining_credits ?? 10000;
+  // Convert credits to USD: 880 credits = 0.15 cents = 0.0015 dollars
+  const creditToUsdRate = 0.0015 / 880; // 0.0000017045 dollars per credit
+  const remainingUSD = remainingCredits * creditToUsdRate;
 
   const handleUpgrade = () => {
     navigate('/pricing');
@@ -47,7 +50,7 @@ const CreditsDisplay = () => {
       <div className="flex items-center space-x-2 px-3 py-2 bg-gray-100 rounded-lg">
         <Coins className="w-4 h-4 text-gray-600" />
         <span className="text-sm text-gray-700 font-medium">
-          {remainingCredits.toLocaleString()} credite
+          ${remainingUSD.toFixed(4)}
         </span>
       </div>
       <Button
