@@ -434,6 +434,43 @@ serve(async (req) => {
       console.log('✅ Folosesc userId transmis direct:', callbackUserId);
     }
     
+    // Check if there's already a callback scheduled for this phone number to prevent duplicates
+    const { data: existingCallbacks, error: checkError } = await supabase
+      .from('scheduled_calls')
+      .select('id, user_id')
+      .eq('phone_number', phoneNumber)
+      .eq('status', 'scheduled')
+      .gte('scheduled_datetime', new Date().toISOString());
+
+    if (existingCallbacks && existingCallbacks.length > 0) {
+      console.log('⚠️ Callback deja existent pentru acest număr:', phoneNumber, 'Callbacks existente:', existingCallbacks);
+      
+      // Check if we should use phone number mapping to determine the correct user
+      const { data: phoneMapping, error: mappingError } = await supabase
+        .from('phone_number_mappings')
+        .select('user_id, is_primary')
+        .eq('phone_number', phoneNumber)
+        .order('is_primary', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (phoneMapping) {
+        console.log('📞 Folosesc maparea de telefon pentru utilizatorul:', phoneMapping.user_id);
+        callbackUserId = phoneMapping.user_id;
+      } else {
+        // If no mapping exists and there are multiple callbacks, skip creating a new one
+        return new Response(
+          JSON.stringify({
+            callbackDetected: true,
+            callbackId: existingCallbacks[0].id,
+            intent: intent,
+            message: `Callback deja programat pentru numărul ${phoneNumber}`
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     console.log(`🎯 Creez callback pentru utilizatorul sunat: ${callbackUserId} (numărul: ${phoneNumber})`);
 
     // Create callback entry in scheduled_calls
