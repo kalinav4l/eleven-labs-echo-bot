@@ -171,16 +171,9 @@ const DashboardCustomizer: React.FC<DashboardCustomizerProps> = ({
     
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('user_dashboard_preferences')
-        .upsert({
-          user_id: user.id,
-          preferences: preferences,
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) throw error;
-
+      // Save to localStorage for now, later we'll add Supabase integration
+      localStorage.setItem(`dashboard_preferences_${user.id}`, JSON.stringify(preferences));
+      
       onPreferencesChange(preferences);
       toast.success('Preferințele au fost salvate cu succes!');
       onClose();
