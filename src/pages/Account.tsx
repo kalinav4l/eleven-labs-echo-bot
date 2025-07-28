@@ -80,13 +80,10 @@ const Account = () => {
   const totalAgents = userAgents?.length || 0;
   const totalCalls = callHistory?.length || 0;
 
-  // Calculate total consumed credits from ElevenLabs data - prioritize ElevenLabs when available
-  const totalConsumedCredits = callHistory?.reduce((total, call) => {
-    // Use ElevenLabs conversation credits if available, otherwise fallback to cost_usd
-    const credits = call.conversation_id && conversationCredits[call.conversation_id] !== undefined ? conversationCredits[call.conversation_id] : Math.round((call.cost_usd || 0) * 100); // Convert USD to credits (1 USD = 100 credits)
-
-    return total + credits;
-  }, 0) || 0;
+  // Calculate total consumed credits ONLY from ElevenLabs data (ignore old incorrect calculations)
+  const totalConsumedCredits = Object.values(conversationCredits).reduce((total, credits) => {
+    return total + (credits || 0);
+  }, 0);
   const totalConversations = userStats?.total_conversations || 0;
   const totalTranscripts = savedTranscripts?.length || 0;
 
