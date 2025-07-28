@@ -120,8 +120,11 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
       const duration = Math.floor((Date.now() - conversationStart.getTime()) / 1000);
       
       try {
+        console.log('💾 Salvez conversația de test cu agentId:', agentId);
+        console.log('💾 CurrentConversationId de salvat:', currentConversationId);
+        
         const conversationData = {
-          agent_id: agentId,
+          agent_id: agentId, // Folosește agentId-ul real transmis ca prop
           agent_name: agentName,
           phone_number: 'Voice Chat',
           contact_name: `Test vocal cu ${agentName}`,
@@ -133,6 +136,8 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
           conversation_id: currentConversationId,
           elevenlabs_history_id: currentConversationId
         };
+        
+        console.log('🔄 Trimit datele conversației pentru salvare:', conversationData);
 
         await saveConversation.mutateAsync(conversationData);
         

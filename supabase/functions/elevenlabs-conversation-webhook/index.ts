@@ -39,21 +39,27 @@ serve(async (req) => {
       throw new Error('Missing required fields: conversation_id, agent_id');
     }
 
-    // Find the agent owner based on agent_id
+    // Find the agent owner based on elevenlabs_agent_id
+    console.log('🔍 Caut agentul în baza de date cu elevenlabs_agent_id:', payload.agent_id);
+    
     const { data: agentData, error: agentError } = await supabase
       .from('kalina_agents')
-      .select('user_id, name')
+      .select('user_id, name, agent_id')
       .eq('elevenlabs_agent_id', payload.agent_id)
       .single();
 
     if (agentError || !agentData) {
-      console.error('Could not find agent owner for agent:', payload.agent_id, agentError);
-      // Don't throw error, just log and continue - this might be an agent from another system
-      console.warn('Agent not found in kalina_agents table, skipping conversation tracking');
+      console.error('❌ AGENT NU GĂSIT - Nu pot găsi proprietarul pentru agent:', payload.agent_id);
+      console.error('❌ EROARE CĂUTARE AGENT:', agentError);
+      console.error('❌ ACEST AGENT NU EXISTĂ ÎN SISTEMUL NOSTRU');
+      
+      // Return error instead of fallback - no hardcoded agent
       return new Response(JSON.stringify({
-        success: true,
-        message: 'Webhook received but agent not found in system'
+        success: false,
+        error: `Agent ${payload.agent_id} not found in system. Cannot process callback.`,
+        message: 'Agent not registered in our system'
       }), {
+        status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

@@ -158,11 +158,16 @@ serve(async (req) => {
       console.log('Found user by internal agent_id:', payload.agent_id, '-> userId:', userId);
     }
 
-    // If still no userId found, create a default fallback (optional - you can remove this if you want strict validation)
+    // CRITICAL: No hardcoded fallback - require agent owner identification
     if (!userId) {
-      console.warn('Could not determine user_id, callback will be created without user association');
-      // For now, let's still require user identification for security
-      throw new Error('Cannot determine user_id for this callback. Please include user_id, user_email, agent_name, or valid agent_id in the request.');
+      console.error('❌ CALLBACK CREATION FAILED - Nu pot determina proprietarul agentului');
+      console.error('❌ AGENT_ID PRIMIT:', payload.agent_id);
+      console.error('❌ AGENT_NAME PRIMIT:', payload.agent_name);
+      console.error('❌ USER_EMAIL PRIMIT:', payload.user_email);
+      console.error('❌ USER_ID PRIMIT:', payload.user_id);
+      console.error('❌ ACEST CALLBACK NU VA FI CREAT deoarece nu știu cui să-l asociez');
+      
+      throw new Error(`Cannot determine agent owner for callback. Agent ${payload.agent_id || payload.agent_name} not found in system. Please ensure the agent is properly registered.`);
     }
 
     console.log('Final userId determined:', userId);

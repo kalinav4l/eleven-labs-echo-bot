@@ -339,7 +339,9 @@ serve(async (req) => {
       throw new Error('Text is required');
     }
 
-    if (!conversationId || !phoneNumber || !userId) {
+    console.log('🔍 Received agentId:', agentId);
+    
+    if (!conversationId || !phoneNumber) {
       throw new Error('Missing required conversation details');
     }
 
@@ -363,15 +365,41 @@ serve(async (req) => {
       throw new Error('Agent ID is required to create callback');
     }
 
-    const { data: agentData, error: agentError } = await supabase
+    // Try to find agent by elevenlabs_agent_id first, then by agent_id
+    let agentData = null;
+    let agentError = null;
+    
+    // First try elevenlabs_agent_id
+    const { data: elevenLabsAgent, error: elevenLabsError } = await supabase
       .from('kalina_agents')
-      .select('user_id')
-      .eq('agent_id', agentId)
+      .select('user_id, name')
+      .eq('elevenlabs_agent_id', agentId)
       .single();
     
-    if (agentError || !agentData) {
-      console.error('Could not find agent owner for agent:', agentId, agentError);
-      throw new Error(`Agent not found: ${agentId}`);
+    if (elevenLabsAgent) {
+      agentData = elevenLabsAgent;
+      console.log('✅ Agent găsit prin elevenlabs_agent_id:', agentId);
+    } else {
+      // Fallback to agent_id column
+      const { data: normalAgent, error: normalError } = await supabase
+        .from('kalina_agents')
+        .select('user_id, name')
+        .eq('agent_id', agentId)
+        .single();
+      
+      agentData = normalAgent;
+      agentError = normalError;
+      
+      if (normalAgent) {
+        console.log('✅ Agent găsit prin agent_id:', agentId);
+      } else {
+        console.error('❌ Agent nu a fost găsit în niciuna din coloane pentru:', agentId);
+      }
+    }
+    
+    if (!agentData) {
+      console.error('Could not find agent owner for agent:', agentId, { elevenLabsError, agentError });
+      throw new Error(`Agent not found in system: ${agentId}. Asigură-te că agentul există în baza de date.`);
     }
 
     const callbackUserId = agentData.user_id;
@@ -412,7 +440,7 @@ serve(async (req) => {
           notes: `Callback programat pentru ${intent.timeframe || 'mai târziu'}. ID: ${callbackRecord.id}`
         })
         .eq('conversation_id', conversationId)
-        .eq('user_id', userId);
+        .eq('user_id', callbackUserId);
 
       if (updateError) {
         console.warn('Failed to update conversation with callback info:', updateError);
