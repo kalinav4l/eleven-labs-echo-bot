@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,28 @@ const Account = () => {
     signOut,
     loading: authLoading
   } = useAuth();
+
+  // Fetch user credits data
+  const { data: userCredits } = useQuery({
+    queryKey: ['user-credits', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      
+      const { data, error } = await supabase
+        .from('user_credits')
+        .select('used_credits, total_credits, remaining_credits')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching credits:', error);
+        return null;
+      }
+
+      return data;
+    },
+    enabled: !!user,
+  });
 
   // Redirect to landing if not authenticated
   if (!authLoading && !user) {
@@ -80,10 +103,8 @@ const Account = () => {
   const totalAgents = userAgents?.length || 0;
   const totalCalls = callHistory?.length || 0;
 
-  // Calculate total consumed credits ONLY from ElevenLabs data (ignore old incorrect calculations)
-  const totalConsumedCredits = Object.values(conversationCredits).reduce((total, credits) => {
-    return total + (credits || 0);
-  }, 0);
+  // Calculate total consumed credits from user_credits table (real credits used)
+  const totalConsumedCredits = userCredits?.used_credits || 0;
   const totalConversations = userStats?.total_conversations || 0;
   const totalTranscripts = savedTranscripts?.length || 0;
 
