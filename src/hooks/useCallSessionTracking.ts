@@ -75,12 +75,6 @@ export const useCallSessionTracking = () => {
       console.log('✅ Sesiune salvată cu succes:', data);
       return data;
     },
-    onError: (error) => {
-      console.error('❌ Eroare la salvarea sesiunii de apel:', error);
-    },
-    onSuccess: () => {
-      console.log('✅ Sesiunea de apel a fost salvată cu succes');
-    }
   });
 
   return {
