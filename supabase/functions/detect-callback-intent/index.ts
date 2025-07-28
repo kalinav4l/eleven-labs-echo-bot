@@ -360,8 +360,12 @@ serve(async (req) => {
       );
     }
 
-    // Use transmitted userId if available, otherwise find agent owner
+    // PRIORITIZE transmitted userId (from webhook) - this is the most reliable method
     let callbackUserId = userId;
+    
+    if (callbackUserId) {
+      console.log('✅ Folosesc userId transmis direct din webhook (PRIORITAR):', callbackUserId);
+    }
     
     // Try to get userId from saved call sessions first (most reliable)
     if (!callbackUserId && conversationId) {
