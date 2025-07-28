@@ -135,27 +135,27 @@ serve(async (req) => {
     }
     
     if (!userId && payload.agent_id) {
-      // Method 4: Look up by agent_id
+      // Method 4: Look up by agent_id (ElevenLabs agent_id)
       const { data: agentData } = await supabase
-        .from('kalina_agents')
-        .select('user_id')
-        .eq('agent_id', payload.agent_id)
-        .single();
-      
-      userId = agentData?.user_id;
-      console.log('Found user by agent_id:', payload.agent_id, '-> userId:', userId);
-    }
-    
-    if (!userId && payload.agent_id) {
-      // Method 5: Try elevenlabs_agent_id as fallback
-      const { data: agentData2 } = await supabase
         .from('kalina_agents')
         .select('user_id')
         .eq('elevenlabs_agent_id', payload.agent_id)
         .single();
       
-      userId = agentData2?.user_id;
+      userId = agentData?.user_id;
       console.log('Found user by elevenlabs_agent_id:', payload.agent_id, '-> userId:', userId);
+    }
+    
+    if (!userId && payload.agent_id) {
+      // Method 5: Look up by internal agent_id
+      const { data: agentData2 } = await supabase
+        .from('kalina_agents')
+        .select('user_id')
+        .eq('agent_id', payload.agent_id)
+        .single();
+      
+      userId = agentData2?.user_id;
+      console.log('Found user by internal agent_id:', payload.agent_id, '-> userId:', userId);
     }
 
     // If still no userId found, create a default fallback (optional - you can remove this if you want strict validation)
