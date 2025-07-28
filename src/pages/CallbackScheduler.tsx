@@ -626,19 +626,45 @@ const CallbackScheduler = () => {
               </div>
             </div>
             
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium text-red-800 mb-2">⚠️ IMPORTANT - Configurare Tool în ElevenLabs:</p>
+                  <p className="text-red-700 mb-3">
+                    Agentul nu poate trimite callback-uri fără să configurezi un <strong>Client Tool</strong> în ElevenLabs Dashboard!
+                  </p>
+                  
+                  <div className="bg-red-100 p-3 rounded text-red-800 space-y-2">
+                    <p className="font-medium">Pași obligatorii:</p>
+                    <ol className="list-decimal list-inside space-y-1 text-sm">
+                      <li>Du-te în <strong>ElevenLabs Dashboard</strong></li>
+                      <li>Editează agentul tău</li>
+                      <li>Adaugă <strong>Client Tool</strong> nou</li>
+                      <li>Numește-l: <strong>CreateCallback</strong></li>
+                      <li>URL: <code className="bg-red-200 px-1 rounded">https://pwfczzxwjfxomqzhhwvj.supabase.co/functions/v1/create-callback-webhook</code></li>
+                      <li>Method: <strong>POST</strong></li>
+                      <li>Parametrii: phone_number, callback_time, agent_name</li>
+                    </ol>
+                    
+                    <p className="font-medium text-red-900 mt-3">
+                      Fără acest tool, agentul NU poate trimite datele la webhook!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
               <div className="flex items-start gap-2">
                 <MessageSquare className="h-4 w-4 text-blue-600 mt-0.5" />
                 <div className="text-xs">
-                  <p className="font-medium text-blue-800 mb-1">Configurare Agent ElevenLabs:</p>
-                  <p className="text-blue-700 mb-2">
-                    În promptul agentului adaugă instrucțiuni pentru a trimite datele la webhook:
-                  </p>
-                  <pre className="bg-blue-100 p-2 rounded text-blue-800 overflow-x-auto">
+                  <p className="font-medium text-blue-800 mb-1">Actualizează promptul agentului:</p>
+                  <pre className="bg-blue-100 p-2 rounded text-blue-800 overflow-x-auto text-xs">
 {`"Când clientul cere callback:
-1. Extrage: nume, telefon, timp, motiv
-2. Trimite POST la webhook cu datele
-3. Confirmă: 'Te voi suna înapoi în [timp]!'"`}
+1. Extrage: phone_number, callback_time, agent_name
+2. Folosește tool-ul CreateCallback pentru a trimite datele
+3. Confirmă: 'Perfect, te voi suna înapoi în [callback_time]!'"`}
                   </pre>
                 </div>
               </div>
