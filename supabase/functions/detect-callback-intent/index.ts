@@ -358,9 +358,27 @@ serve(async (req) => {
       );
     }
 
+    // Find the agent owner to set the correct user_id for the callback
+    let callbackUserId = userId; // fallback to original userId
+    
+    if (agentId) {
+      const { data: agentData, error: agentError } = await supabase
+        .from('kalina_agents')
+        .select('user_id')
+        .eq('agent_id', agentId)
+        .single();
+      
+      if (agentData && !agentError) {
+        callbackUserId = agentData.user_id;
+        console.log(`Setting callback user_id to agent owner: ${callbackUserId} for agent: ${agentId}`);
+      } else {
+        console.warn('Could not find agent owner, using original userId:', agentError);
+      }
+    }
+
     // Create callback entry in scheduled_calls
     const callbackData = {
-      user_id: userId,
+      user_id: callbackUserId, // Use agent owner's user_id
       client_name: contactName || 'Client necunoscut',
       phone_number: phoneNumber,
       scheduled_datetime: intent.suggestedTime || new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
