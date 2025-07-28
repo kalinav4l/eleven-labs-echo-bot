@@ -2,9 +2,11 @@
 import { useAuth } from '@/components/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { useLLMUsageCalculation } from './useLLMUsageCalculation';
 
 export const useCreditTracking = () => {
   const { user } = useAuth();
+  const { calculateUsage } = useLLMUsageCalculation();
 
   const deductCredits = async (
     amount: number, 
@@ -48,9 +50,32 @@ export const useCreditTracking = () => {
     agentId: string,
     agentName: string,
     durationMinutes: number = 0,
-    messageCount: number = 1
+    messageCount: number = 1,
+    promptLength?: number
   ) => {
     try {
+      let actualCostUSD = durationMinutes * 0.0015; // fallback: 1 minute = $0.0015
+      
+      // Calculate exact LLM usage cost if prompt length is provided
+      if (promptLength) {
+        try {
+          const usageResult = await calculateUsage.mutateAsync({
+            prompt_length: promptLength,
+            number_of_pages: Math.ceil(promptLength / 100), // estimate pages
+            rag_enabled: true
+          });
+          
+          if (usageResult?.estimated_cost_usd) {
+            actualCostUSD = usageResult.estimated_cost_usd;
+            console.log(`Calculated exact cost: $${actualCostUSD} for prompt length: ${promptLength}`);
+          }
+        } catch (error) {
+          console.error('Failed to calculate exact LLM usage, using fallback cost:', error);
+        }
+      }
+
+      const creditsUsed = Math.ceil(actualCostUSD / 0.0000017045); // Convert USD to credits
+
       const { data, error } = await supabase
         .from('conversations')
         .insert({
@@ -59,7 +84,8 @@ export const useCreditTracking = () => {
           agent_name: agentName,
           duration_minutes: durationMinutes,
           message_count: messageCount,
-          credits_used: Math.ceil(durationMinutes * 10) // 10 credits per minute
+          credits_used: creditsUsed,
+          cost_usd: actualCostUSD
         })
         .select()
         .single();
