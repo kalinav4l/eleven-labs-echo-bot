@@ -234,11 +234,11 @@ const CallbackScheduler = () => {
   // Get priority color
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'urgent': return 'bg-red-100 text-red-800 border-red-200';
-      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'urgent': return 'bg-red-600 text-white border-red-600';
+      case 'high': return 'bg-orange-600 text-white border-orange-600';
+      case 'medium': return 'bg-yellow-600 text-white border-yellow-600';
+      case 'low': return 'bg-green-600 text-white border-green-600';
+      default: return 'bg-gray-600 text-white border-gray-600';
     }
   };
 
@@ -247,23 +247,23 @@ const CallbackScheduler = () => {
     switch (status) {
       case 'completed':
         return { 
-          color: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+          color: 'bg-green-600 text-white border-green-600',
           icon: <CheckCircle2 className="h-3 w-3" />
         };
       case 'in_progress':
         return { 
-          color: 'bg-blue-100 text-blue-800 border-blue-200',
+          color: 'bg-blue-600 text-white border-blue-600',
           icon: <RefreshCw className="h-3 w-3 animate-spin" />
         };
       case 'failed':
       case 'cancelled':
         return { 
-          color: 'bg-red-100 text-red-800 border-red-200',
+          color: 'bg-red-600 text-white border-red-600',
           icon: <XCircle className="h-3 w-3" />
         };
       default:
         return { 
-          color: 'bg-slate-100 text-slate-800 border-slate-200',
+          color: 'bg-gray-600 text-white border-gray-600',
           icon: <Clock className="h-3 w-3" />
         };
     }
@@ -322,15 +322,15 @@ const CallbackScheduler = () => {
     const isOverdue = new Date(callback.scheduled_datetime) < new Date() && callback.status === 'scheduled';
 
     return (
-      <Card key={callback.id} className={`transition-all hover:shadow-md ${isOverdue ? 'border-red-200 bg-red-50' : ''}`}>
+      <Card key={callback.id} className={`bg-white border border-gray-200 transition-all hover:shadow-lg ${isOverdue ? 'border-red-600 bg-red-50' : ''}`}>
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-base">{callback.client_name}</CardTitle>
-              {isOverdue && <AlertCircle className="h-4 w-4 text-red-500" />}
+              <User className="h-4 w-4 text-gray-600" />
+              <CardTitle className="text-base font-semibold text-gray-900">{callback.client_name}</CardTitle>
+              {isOverdue && <AlertCircle className="h-4 w-4 text-red-600" />}
               {callback.created_via_webhook && (
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300">
                   <MessageSquare className="h-3 w-3 mr-1" />
                   Webhook
                 </Badge>
@@ -345,7 +345,7 @@ const CallbackScheduler = () => {
                 <span className="ml-1">{callback.status}</span>
               </Badge>
               {callback.sms_sent && (
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                <Badge variant="outline" className="bg-green-600 text-white border-green-600">
                   SMS Trimis
                 </Badge>
               )}
@@ -547,283 +547,64 @@ const CallbackScheduler = () => {
           </div>
         </div>
 
-        {/* Webhook Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
-              Webhook pentru Callback-uri Automate
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Folosește această adresă pentru a crea callback-uri automat din agentul tău
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label className="text-sm font-medium">Adresa Webhook</Label>
-              <div className="flex items-center gap-2 mt-1">
-                <Input
-                  value="https://pwfczzxwjfxomqzhhwvj.supabase.co/functions/v1/create-callback-webhook"
-                  readOnly
-                  className="flex-1 text-xs bg-muted"
-                />
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    navigator.clipboard.writeText("https://pwfczzxwjfxomqzhhwvj.supabase.co/functions/v1/create-callback-webhook");
-                    toast({
-                      title: "Copiat!",
-                      description: "Adresa webhook a fost copiată în clipboard",
-                    });
-                  }}
-                >
-                  Copiază
-                </Button>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div>
-                <Label className="text-sm font-medium">Format Minim (doar 3 câmpuri):</Label>
-                <pre className="bg-green-50 border border-green-200 p-3 rounded text-xs overflow-x-auto mt-1">
-{`{
-  "phone_number": "+37379123456",
-  "callback_time": "30 minutes",
-  "agent_name": "Numele Agentului"
-}`}
-                </pre>
-                
-                <Label className="text-sm font-medium mt-3">Format Complet (opțional):</Label>
-                <pre className="bg-muted p-3 rounded text-xs overflow-x-auto mt-1">
-{`{
-  "phone_number": "+37379123456",
-  "callback_time": "30 minutes", 
-  "agent_name": "Numele Agentului",
-  "client_name": "Ion Popescu",
-  "reason": "să mă gândesc la ofertă",
-  "priority": "medium",
-  "send_sms": true,
-  "sms_message": "Te voi suna în {callback_time}!"
-}`}
-                </pre>
-              </div>
-              
-              <div>
-                <Label className="text-sm font-medium">Identificarea Utilizatorului:</Label>
-                <div className="bg-muted p-3 rounded text-xs mt-1 space-y-2">
-                  <p className="font-medium text-green-700">Webhook-ul identifică automat utilizatorul prin:</p>
-                  <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                    <li><strong>agent_name:</strong> Numele agentului (recomandat - simplu)</li>
-                    <li><strong>user_id:</strong> ID-ul direct al utilizatorului</li>
-                    <li><strong>user_email:</strong> Email-ul utilizatorului din sistem</li>
-                    <li><strong>agent_id:</strong> ID-ul agentului ElevenLabs asociat</li>
-                  </ul>
-                  <p className="text-xs text-green-600 bg-green-50 p-2 rounded mt-2">
-                    ✅ Folosește <strong>agent_name</strong> - cel mai simplu mod de identificare!
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
-                <div className="text-sm">
-                  <p className="font-medium text-red-800 mb-2">⚠️ IMPORTANT - Configurare Tool în ElevenLabs:</p>
-                  <p className="text-red-700 mb-3">
-                    Agentul nu poate trimite callback-uri fără să configurezi un <strong>Client Tool</strong> în ElevenLabs Dashboard!
-                  </p>
-                  
-                  <div className="bg-red-100 p-3 rounded text-red-800 space-y-2">
-                    <p className="font-medium">Pași obligatorii:</p>
-                    <ol className="list-decimal list-inside space-y-1 text-sm">
-                      <li>Du-te în <strong>ElevenLabs Dashboard</strong></li>
-                      <li>Editează agentul tău</li>
-                      <li>Adaugă <strong>Client Tool</strong> nou</li>
-                      <li>Numește-l: <strong>CreateCallback</strong></li>
-                      <li>URL: <code className="bg-red-200 px-1 rounded">https://pwfczzxwjfxomqzhhwvj.supabase.co/functions/v1/create-callback-webhook</code></li>
-                      <li>Method: <strong>POST</strong></li>
-                      <li>Parametrii: phone_number, callback_time, agent_name</li>
-                    </ol>
-                    
-                    <p className="font-medium text-red-900 mt-3">
-                      Fără acest tool, agentul NU poate trimite datele la webhook!
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
-              <div className="flex items-start gap-2">
-                <MessageSquare className="h-4 w-4 text-blue-600 mt-0.5" />
-                <div className="text-xs">
-                  <p className="font-medium text-blue-800 mb-1">Actualizează promptul agentului:</p>
-                  <pre className="bg-blue-100 p-2 rounded text-blue-800 overflow-x-auto text-xs">
-{`"Când clientul cere callback:
-1. Extrage: phone_number, callback_time, agent_name
-2. Folosește tool-ul CreateCallback pentru a trimite datele
-3. Confirmă: 'Perfect, te voi suna înapoi în [callback_time]!'"`}
-                  </pre>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-red-500" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <Card className="bg-white border border-gray-200">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <AlertCircle className="h-6 w-6 text-red-600" />
+                </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Întârziate</p>
+                  <p className="text-sm font-medium text-gray-600">Întârziate</p>
                   <p className="text-2xl font-bold text-red-600">{groupedCallbacks.overdue.length}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-blue-500" />
+          <Card className="bg-white border border-gray-200">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Clock className="h-6 w-6 text-blue-600" />
+                </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Programate</p>
+                  <p className="text-sm font-medium text-gray-600">Programate</p>
                   <p className="text-2xl font-bold text-blue-600">{groupedCallbacks.upcoming.length}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
+          <Card className="bg-white border border-gray-200">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <CheckCircle2 className="h-6 w-6 text-green-600" />
+                </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Completate</p>
+                  <p className="text-sm font-medium text-gray-600">Completate</p>
                   <p className="text-2xl font-bold text-green-600">{groupedCallbacks.completed.length}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <XCircle className="h-5 w-5 text-gray-500" />
+          <Card className="bg-white border border-gray-200">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gray-100 rounded-lg">
+                  <XCircle className="h-6 w-6 text-gray-600" />
+                </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Eșuate</p>
+                  <p className="text-sm font-medium text-gray-600">Eșuate</p>
                   <p className="text-2xl font-bold text-gray-600">{groupedCallbacks.failed.length}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
-
-        {/* Manual Callback Detection Test */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Testare Manuală Detecție Callback</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Testează dacă textul unei conversații conține o cerere de callback
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="test_phone">Numărul de Telefon</Label>
-                <Input
-                  id="test_phone"
-                  value={manualTestPhone}
-                  onChange={(e) => setManualTestPhone(e.target.value)}
-                  placeholder="+37379416481"
-                />
-              </div>
-              <div>
-                <Label htmlFor="test_name">Numele Contactului</Label>
-                <Input
-                  id="test_name"
-                  value={manualTestName}
-                  onChange={(e) => setManualTestName(e.target.value)}
-                  placeholder="Test Manual"
-                />
-              </div>
-            </div>
-            
-            <div>
-              <Label htmlFor="test_text">Textul Conversației</Label>
-              <Textarea
-                id="test_text"
-                value={manualTestText}
-                onChange={(e) => setManualTestText(e.target.value)}
-                placeholder="De ex: 'telefoneaza-ma peste 5 minute va rog'"
-                rows={4}
-                className="w-full"
-              />
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button 
-                onClick={handleManualTest}
-                disabled={manualDetectionMutation.isPending}
-                className="w-full"
-              >
-                {manualDetectionMutation.isPending ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Se testează...
-                  </>
-                ) : (
-                  <>
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Testează Detecția de Callback
-                  </>
-                )}
-              </Button>
-              
-              <Button 
-                onClick={async () => {
-                  try {
-                    const { data, error } = await supabase.functions.invoke('check-scheduled-tasks');
-                    
-                    if (error) {
-                      console.error('Error checking scheduled tasks:', error);
-                      toast({
-                        title: "Eroare",
-                        description: error.message || "Eroare la verificarea task-urilor programate",
-                        variant: "destructive"
-                      });
-                      return;
-                    }
-
-                    queryClient.invalidateQueries({ queryKey: ['callback-requests', user.id] });
-                    
-                    toast({
-                      title: "Verificare Task-uri",
-                      description: data.message || "Task-uri verificate cu succes",
-                      variant: data.executedTasks > 0 ? "default" : "destructive"
-                    });
-                  } catch (error) {
-                    console.error('Error:', error);
-                    toast({
-                      title: "Eroare",
-                      description: "Eroare la verificarea task-urilor programate",
-                      variant: "destructive"
-                    });
-                  }
-                }}
-                variant="secondary"
-                className="w-full"
-              >
-                <Clock className="h-4 w-4 mr-2" />
-                Verifică și Execută Task-uri Programate
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Callback Lists */}
         {isLoading ? (
