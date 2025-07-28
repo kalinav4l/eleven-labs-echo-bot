@@ -317,137 +317,58 @@ const CallbackScheduler = () => {
   };
 
   const renderCallbackCard = (callback: CallbackRequest) => {
-    const statusInfo = getStatusInfo(callback.status);
-    const taskTypeInfo = getTaskTypeInfo(callback.task_type);
     const isOverdue = new Date(callback.scheduled_datetime) < new Date() && callback.status === 'scheduled';
+    const statusColor = callback.status === 'completed' ? 'text-green-600' : 
+                       callback.status === 'failed' ? 'text-red-600' :
+                       isOverdue ? 'text-red-600' : 'text-blue-600';
 
     return (
-      <Card key={callback.id} className={`bg-white border border-gray-200 transition-all hover:shadow-lg ${isOverdue ? 'border-red-600 bg-red-50' : ''}`}>
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-gray-600" />
-              <CardTitle className="text-base font-semibold text-gray-900">{callback.client_name}</CardTitle>
-              {isOverdue && <AlertCircle className="h-4 w-4 text-red-600" />}
-              {callback.created_via_webhook && (
-                <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300">
-                  <MessageSquare className="h-3 w-3 mr-1" />
-                  Webhook
-                </Badge>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className={getPriorityColor(callback.priority)}>
-                {callback.priority}
-              </Badge>
-              <Badge variant="outline" className={statusInfo.color}>
-                {statusInfo.icon}
-                <span className="ml-1">{callback.status}</span>
-              </Badge>
-              {callback.sms_sent && (
-                <Badge variant="outline" className="bg-green-600 text-white border-green-600">
-                  SMS Trimis
-                </Badge>
-              )}
-            </div>
+      <Card key={callback.id} className="p-3 border hover:shadow-sm transition-shadow">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="font-medium truncate">{callback.client_name}</div>
+            <div className={`text-xs ${statusColor}`}>{callback.status}</div>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Phone className="h-3 w-3" />
-              <span>{callback.phone_number}</span>
-            </div>
+          
+          <div className="text-sm text-muted-foreground">{callback.phone_number}</div>
+          
+          <div className="text-xs text-muted-foreground">
+            {format(new Date(callback.scheduled_datetime), 'dd MMM, HH:mm', { locale: ro })}
+          </div>
+          
+          <div className="flex gap-1 pt-1">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleEditCallback(callback)}
+              disabled={callback.status === 'completed'}
+              className="h-7 px-2 text-xs"
+            >
+              Editează
+            </Button>
             
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="h-3 w-3" />
-              <span>
-                {format(new Date(callback.scheduled_datetime), 'dd MMM yyyy, HH:mm', { locale: ro })}
-                {' '}
-                <span className={isOverdue ? 'text-red-600 font-medium' : ''}>
-                  ({formatDistanceToNow(new Date(callback.scheduled_datetime), { 
-                    addSuffix: true, 
-                    locale: ro 
-                  })})
-                </span>
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              {taskTypeInfo.icon}
-              <span>{taskTypeInfo.label}</span>
-              {callback.callback_reason && (
-                <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                  {callback.callback_reason}
-                </span>
-              )}
-            </div>
-
-            {callback.description && (
-              <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
-                {callback.description}
-              </p>
-            )}
-
-            {callback.notes && (
-              <p className="text-xs text-gray-500 italic">
-                Note: {callback.notes}
-              </p>
-            )}
-
-            <div className="flex items-center justify-between pt-2">
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleEditCallback(callback)}
-                  disabled={callback.status === 'completed'}
-                >
-                  <Edit className="h-3 w-3 mr-1" />
-                  Editează
-                </Button>
-                
-                {callback.status === 'scheduled' && (
-                  <Button
-                    size="sm"
-                    onClick={() => executeCallbackMutation.mutate(callback)}
-                    disabled={executeCallbackMutation.isPending}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <Play className="h-3 w-3 mr-1" />
-                    Execută Acum
-                  </Button>
-                )}
-
-                {callback.status === 'failed' && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => updateCallbackMutation.mutate({
-                      id: callback.id,
-                      updates: { 
-                        status: 'scheduled',
-                        scheduled_datetime: new Date(Date.now() + 5 * 60 * 1000).toISOString()
-                      }
-                    })}
-                  >
-                    <RotateCcw className="h-3 w-3 mr-1" />
-                    Reprogramează
-                  </Button>
-                )}
-              </div>
-
+            {callback.status === 'scheduled' && (
               <Button
                 size="sm"
-                variant="destructive"
-                onClick={() => deleteCallbackMutation.mutate(callback.id)}
-                disabled={deleteCallbackMutation.isPending}
+                onClick={() => executeCallbackMutation.mutate(callback)}
+                disabled={executeCallbackMutation.isPending}
+                className="h-7 px-2 text-xs bg-green-600 hover:bg-green-700"
               >
-                <Trash2 className="h-3 w-3" />
+                Sună
               </Button>
-            </div>
+            )}
+
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => deleteCallbackMutation.mutate(callback.id)}
+              disabled={deleteCallbackMutation.isPending}
+              className="h-7 w-7 p-0"
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
           </div>
-        </CardContent>
+        </div>
       </Card>
     );
   };
@@ -569,41 +490,38 @@ const CallbackScheduler = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Overdue Callbacks */}
+            {/* Overdue */}
             {groupedCallbacks.overdue.length > 0 && (
               <div>
-                <h2 className="text-lg font-semibold text-red-600 mb-3 flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5" />
-                  Callback-uri Întârziate ({groupedCallbacks.overdue.length})
+                <h2 className="text-sm font-medium text-red-600 mb-2">
+                  Întârziate ({groupedCallbacks.overdue.length})
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                   {groupedCallbacks.overdue.map(renderCallbackCard)}
                 </div>
               </div>
             )}
 
-            {/* Upcoming Callbacks */}
+            {/* Upcoming */}
             {groupedCallbacks.upcoming.length > 0 && (
               <div>
-                <h2 className="text-lg font-semibold text-blue-600 mb-3 flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Callback-uri Programate ({groupedCallbacks.upcoming.length})
+                <h2 className="text-sm font-medium text-blue-600 mb-2">
+                  Programate ({groupedCallbacks.upcoming.length})
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                   {groupedCallbacks.upcoming.map(renderCallbackCard)}
                 </div>
               </div>
             )}
 
-            {/* Completed Callbacks */}
+            {/* Completed */}
             {groupedCallbacks.completed.length > 0 && (
               <div>
-                <h2 className="text-lg font-semibold text-green-600 mb-3 flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5" />
-                  Callback-uri Completate ({groupedCallbacks.completed.length})
+                <h2 className="text-sm font-medium text-green-600 mb-2">
+                  Completate ({groupedCallbacks.completed.length})
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {groupedCallbacks.completed.slice(0, 6).map(renderCallbackCard)}
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                  {groupedCallbacks.completed.slice(0, 10).map(renderCallbackCard)}
                 </div>
               </div>
             )}
