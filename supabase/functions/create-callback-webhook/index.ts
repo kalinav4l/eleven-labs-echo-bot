@@ -119,6 +119,22 @@ serve(async (req) => {
     }
     
     if (!userId && payload.agent_id) {
+      // Method 3.5: Try agent_id as agent name first
+      const { data: agentByName } = await supabase
+        .from('kalina_agents')
+        .select('user_id, agent_id')
+        .eq('name', payload.agent_id)
+        .eq('is_active', true)
+        .single();
+      
+      if (agentByName?.user_id) {
+        userId = agentByName.user_id;
+        payload.agent_id = agentByName.agent_id; // Update with real agent_id
+        console.log('Found user by agent_id as name:', payload.agent_id, '-> userId:', userId);
+      }
+    }
+    
+    if (!userId && payload.agent_id) {
       // Method 4: Look up by agent_id
       const { data: agentData } = await supabase
         .from('kalina_agents')
