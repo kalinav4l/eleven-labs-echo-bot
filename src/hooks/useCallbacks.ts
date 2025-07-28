@@ -30,24 +30,28 @@ export const useCallbacks = () => {
       if (!user) return [];
       
       const { data, error } = await supabase
-        .from('callback_requests')
+        .from('scheduled_calls')
         .select('*')
         .eq('user_id', user.id)
-        .order('scheduled_time', { ascending: true });
+        .eq('task_type', 'callback')
+        .order('scheduled_datetime', { ascending: true });
 
       if (error) {
         console.error('Error fetching callbacks:', error);
         throw error;
       }
 
-      // Update overdue status
+      // Update overdue status and map to correct field names
       const now = new Date();
       const updatedData = data?.map(callback => {
-        const scheduledTime = new Date(callback.scheduled_time);
-        if (callback.status === 'scheduled' && scheduledTime < now) {
-          return { ...callback, status: 'overdue' };
-        }
-        return callback;
+        const scheduledTime = new Date(callback.scheduled_datetime);
+        const status = callback.status === 'scheduled' && scheduledTime < now ? 'overdue' : callback.status;
+        
+        return {
+          ...callback,
+          scheduled_time: callback.scheduled_datetime, // Map field name for UI compatibility
+          status
+        };
       }) || [];
 
       return updatedData;
@@ -67,10 +71,12 @@ export const useCreateCallback = () => {
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
-        .from('callback_requests')
+        .from('scheduled_calls')
         .insert({
           ...callbackData,
           user_id: user.id,
+          task_type: 'callback',
+          scheduled_datetime: callbackData.scheduled_time,
         })
         .select()
         .single();
@@ -95,9 +101,16 @@ export const useUpdateCallback = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<CallbackRequest> & { id: string }) => {
+      // Map field names for database
+      const dbUpdates: any = { ...updates };
+      if (updates.scheduled_time) {
+        dbUpdates.scheduled_datetime = updates.scheduled_time;
+        delete dbUpdates.scheduled_time;
+      }
+      
       const { data, error } = await supabase
-        .from('callback_requests')
-        .update(updates)
+        .from('scheduled_calls')
+        .update(dbUpdates)
         .eq('id', id)
         .select()
         .single();
@@ -123,7 +136,7 @@ export const useDeleteCallback = () => {
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('callback_requests')
+        .from('scheduled_calls')
         .delete()
         .eq('id', id);
 
@@ -148,7 +161,7 @@ export const useExecuteCallback = () => {
     mutationFn: async (callback: CallbackRequest) => {
       // First, mark the callback as in progress
       const { error: updateError } = await supabase
-        .from('callback_requests')
+        .from('scheduled_calls')
         .update({ status: 'in_progress' })
         .eq('id', callback.id);
 
@@ -169,7 +182,7 @@ export const useExecuteCallback = () => {
       // Update status based on call result
       const finalStatus = data.success ? 'completed' : 'failed';
       await supabase
-        .from('callback_requests')
+        .from('scheduled_calls')
         .update({ status: finalStatus })
         .eq('id', callback.id);
 
@@ -197,12 +210,12 @@ export const useCallbackOperations = () => {
   // Group callbacks by status
   const groupedCallbacks = {
     overdue: callbacks.filter(cb => {
-      const scheduledTime = new Date(cb.scheduled_time);
+      const scheduledTime = new Date(cb.scheduled_time || cb.scheduled_datetime);
       const now = new Date();
       return cb.status === 'scheduled' && scheduledTime < now;
     }),
     upcoming: callbacks.filter(cb => {
-      const scheduledTime = new Date(cb.scheduled_time);
+      const scheduledTime = new Date(cb.scheduled_time || cb.scheduled_datetime);
       const now = new Date();
       return cb.status === 'scheduled' && scheduledTime >= now;
     }),
