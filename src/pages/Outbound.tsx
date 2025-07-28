@@ -335,7 +335,14 @@ const Outbound = () => {
             </div>
 
             {/* Configuration Panel */}
-            
+            <BatchConfigPanel
+              selectedAgentId={selectedAgentId}
+              onAgentSelect={setSelectedAgentId}
+              selectedPhoneId={selectedPhoneId}
+              onPhoneSelect={setSelectedPhoneId}
+              totalRecipients={contacts.length}
+              selectedRecipients={selectedContacts.size}
+            />
 
             {/* Statistics */}
             <div className="bg-white rounded-xl border border-gray-200 p-5">
