@@ -502,6 +502,7 @@ const Account = () => {
               </div>
             </div>
           </div>
+          </div>
 
           {/* 3D Floating Chart */}
           <div ref={chartRef} className="relative mb-12" style={{ transformStyle: 'preserve-3d' }}>
