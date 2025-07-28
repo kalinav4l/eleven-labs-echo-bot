@@ -510,15 +510,10 @@ const CallbackScheduler = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="p-4 space-y-4">
+        {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Callback Scheduler</h1>
-            <p className="text-muted-foreground">
-              Gestionează contactele care au cerut să fie sunați înapoi
-            </p>
-          </div>
-          
+          <h1 className="text-2xl font-bold">Programări</h1>
           <div className="flex gap-2">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-32">
@@ -531,7 +526,6 @@ const CallbackScheduler = () => {
                 <SelectItem value="failed">Eșuate</SelectItem>
               </SelectContent>
             </Select>
-
             <Select value={priorityFilter} onValueChange={setPriorityFilter}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="Prioritate" />
@@ -547,66 +541,27 @@ const CallbackScheduler = () => {
           </div>
         </div>
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-white border border-gray-200">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <AlertCircle className="h-6 w-6 text-red-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Întârziate</p>
-                  <p className="text-2xl font-bold text-red-600">{groupedCallbacks.overdue.length}</p>
-                </div>
-              </div>
-            </CardContent>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Card className="p-3">
+            <div className="text-xs text-muted-foreground">Întârziate</div>
+            <div className="text-xl font-bold text-red-600">{groupedCallbacks.overdue.length}</div>
           </Card>
-
-          <Card className="bg-white border border-gray-200">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Clock className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Programate</p>
-                  <p className="text-2xl font-bold text-blue-600">{groupedCallbacks.upcoming.length}</p>
-                </div>
-              </div>
-            </CardContent>
+          <Card className="p-3">
+            <div className="text-xs text-muted-foreground">Programate</div>
+            <div className="text-xl font-bold text-blue-600">{groupedCallbacks.upcoming.length}</div>
           </Card>
-
-          <Card className="bg-white border border-gray-200">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <CheckCircle2 className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Completate</p>
-                  <p className="text-2xl font-bold text-green-600">{groupedCallbacks.completed.length}</p>
-                </div>
-              </div>
-            </CardContent>
+          <Card className="p-3">
+            <div className="text-xs text-muted-foreground">Completate</div>
+            <div className="text-xl font-bold text-green-600">{groupedCallbacks.completed.length}</div>
           </Card>
-
-          <Card className="bg-white border border-gray-200">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-gray-100 rounded-lg">
-                  <XCircle className="h-6 w-6 text-gray-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Eșuate</p>
-                  <p className="text-2xl font-bold text-gray-600">{groupedCallbacks.failed.length}</p>
-                </div>
-              </div>
-            </CardContent>
+          <Card className="p-3">
+            <div className="text-xs text-muted-foreground">Eșuate</div>
+            <div className="text-xl font-bold text-red-600">{groupedCallbacks.failed.length}</div>
           </Card>
         </div>
 
-        {/* Callback Lists */}
+        {/* Content */}
         {isLoading ? (
           <div className="text-center py-8">
             <RefreshCw className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
