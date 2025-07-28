@@ -1,290 +1,98 @@
 import React, { useState } from 'react';
-import { useAuth } from '@/components/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { useCallbacks } from '@/hooks/useCallbacks';
+import { useUserAgents } from '@/hooks/useUserAgents';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Badge } from '@/components/ui/badge';
+import { toast } from '@/hooks/use-toast';
 import { 
-  Clock, Phone, Calendar, Trash2, Edit, RefreshCw, 
-  PhoneCall, MessageSquare, Bell, User, AlertCircle,
-  CheckCircle2, XCircle, Play, Pause, RotateCcw
+  Phone, 
+  Calendar, 
+  Clock, 
+  CheckCircle2, 
+  XCircle, 
+  AlertCircle, 
+  RefreshCw,
+  Trash2,
+  Edit,
+  Play,
+  User,
+  PhoneCall,
+  MessageSquare,
+  Bell,
+  RotateCcw,
+  ChevronRight
 } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { formatDistanceToNow, format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { ro } from 'date-fns/locale';
-
-interface CallbackRequest {
-  id: string;
-  client_name: string;
-  phone_number: string;
-  caller_number?: string;
-  scheduled_datetime: string;
-  description: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'scheduled' | 'completed' | 'cancelled' | 'in_progress' | 'failed';
-  notes: string;
-  agent_id?: string;
-  task_type: 'callback' | 'follow_up' | 'reminder';
-  original_conversation_id?: string;
-  callback_reason?: string;
-  created_at: string;
-  created_via_webhook?: boolean;
-  webhook_payload?: any;
-  sms_sent?: boolean;
-  sms_response?: any;
-}
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 const CallbackScheduler = () => {
-  const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [selectedCallback, setSelectedCallback] = useState<CallbackRequest | null>(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [selectedCallback, setSelectedCallback] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
 
+  // Edit form state
   const [editForm, setEditForm] = useState({
     client_name: '',
     phone_number: '',
     scheduled_datetime: '',
-    description: '',
     priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
+    description: '',
     notes: '',
     callback_reason: ''
   });
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
+  const {
+    callbacks,
+    groupedCallbacks,
+    statistics,
+    isLoading,
+    createCallback,
+    updateCallback: updateCallbackMutation,
+    deleteCallback: deleteCallbackMutation,
+    executeCallback: executeCallbackMutation
+  } = useCallbacks();
 
-  // Fetch callback requests
-  const { data: callbacks = [], isLoading } = useQuery({
-    queryKey: ['callback-requests', user.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('scheduled_calls')
-        .select('*')
-        .eq('user_id', user.id)
-        .in('task_type', ['callback', 'follow_up', 'reminder'])
-        .order('scheduled_datetime', { ascending: true });
+  const { data: userAgents } = useUserAgents();
 
-      if (error) throw error;
-      
-      return (data || []).map(callback => ({
-        ...callback,
-        priority: callback.priority as 'low' | 'medium' | 'high' | 'urgent',
-        status: callback.status as 'scheduled' | 'completed' | 'cancelled' | 'in_progress' | 'failed',
-        task_type: callback.task_type as 'callback' | 'follow_up' | 'reminder'
-      })) as CallbackRequest[];
-    },
-    enabled: !!user,
-    refetchInterval: 30000, // Refresh every 30 seconds
-  });
-
-  // Fetch user's agents
-  const { data: userAgents = [] } = useQuery({
-    queryKey: ['user-agents', user.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('kalina_agents')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_active', true);
-
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!user,
-  });
-
-  // Update callback mutation
-  const updateCallbackMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: string, updates: Partial<CallbackRequest> }) => {
-      const { data, error } = await supabase
-        .from('scheduled_calls')
-        .update(updates)
-        .eq('id', id)
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['callback-requests', user.id] });
-      toast({
-        title: "Callback actualizat",
-        description: "Detaliile callback-ului au fost actualizate cu succes.",
-      });
-      setIsEditDialogOpen(false);
-    },
-    onError: (error) => {
-      console.error('Error updating callback:', error);
-      toast({
-        title: "Eroare",
-        description: "Nu s-a putut actualiza callback-ul.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Delete callback mutation
-  const deleteCallbackMutation = useMutation({
-    mutationFn: async (callbackId: string) => {
-      const { error } = await supabase
-        .from('scheduled_calls')
-        .delete()
-        .eq('id', callbackId)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['callback-requests', user.id] });
-      toast({
-        title: "Callback șters",
-        description: "Callback-ul a fost șters cu succes.",
-      });
-    },
-    onError: (error) => {
-      console.error('Error deleting callback:', error);
-      toast({
-        title: "Eroare",
-        description: "Nu s-a putut șterge callback-ul.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Execute callback mutation
-  const executeCallbackMutation = useMutation({
-    mutationFn: async (callback: CallbackRequest) => {
-      // First, mark as in progress
-      await updateCallbackMutation.mutateAsync({
-        id: callback.id,
-        updates: { status: 'in_progress' }
-      });
-
-      // Then initiate the call
-      const { data, error } = await supabase.functions.invoke('initiate-scheduled-call', {
-        body: {
-          agent_id: callback.agent_id,
-          phone_number: callback.phone_number,
-          caller_number: callback.caller_number,
-          contact_name: callback.client_name,
-          user_id: user.id
-        }
-      });
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data, callback) => {
-      updateCallbackMutation.mutate({
-        id: callback.id,
-        updates: { status: 'completed' }
-      });
-      
-      toast({
-        title: "Callback executat cu succes!",
-        description: `Apelul către ${callback.client_name} a fost inițiat.`,
-      });
-    },
-    onError: (error, callback) => {
-      updateCallbackMutation.mutate({
-        id: callback.id,
-        updates: { status: 'failed' }
-      });
-      
-      toast({
-        title: "Eroare la executarea callback-ului",
-        description: error.message || "Nu s-a putut iniția apelul.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Filter callbacks
-  const filteredCallbacks = callbacks.filter(callback => {
+  // Filter callbacks based on selected filters
+  const filteredCallbacks = callbacks?.filter(callback => {
     const statusMatch = statusFilter === 'all' || callback.status === statusFilter;
     const priorityMatch = priorityFilter === 'all' || callback.priority === priorityFilter;
     return statusMatch && priorityMatch;
-  });
+  }) || [];
 
-  // Group callbacks by status and time
-  const groupedCallbacks = {
-    overdue: filteredCallbacks.filter(cb => 
-      new Date(cb.scheduled_datetime) < new Date() && cb.status === 'scheduled'
-    ),
-    upcoming: filteredCallbacks.filter(cb => 
-      new Date(cb.scheduled_datetime) >= new Date() && cb.status === 'scheduled'
-    ),
-    completed: filteredCallbacks.filter(cb => cb.status === 'completed'),
-    failed: filteredCallbacks.filter(cb => cb.status === 'failed' || cb.status === 'cancelled'),
-  };
-
-  // Get priority color
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return 'bg-red-600 text-white border-red-600';
-      case 'high': return 'bg-orange-600 text-white border-orange-600';
-      case 'medium': return 'bg-yellow-600 text-white border-yellow-600';
-      case 'low': return 'bg-green-600 text-white border-green-600';
-      default: return 'bg-gray-600 text-white border-gray-600';
-    }
-  };
-
-  // Get status color and icon
-  const getStatusInfo = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return { 
-          color: 'bg-green-600 text-white border-green-600',
-          icon: <CheckCircle2 className="h-3 w-3" />
-        };
-      case 'in_progress':
-        return { 
-          color: 'bg-blue-600 text-white border-blue-600',
-          icon: <RefreshCw className="h-3 w-3 animate-spin" />
-        };
-      case 'failed':
-      case 'cancelled':
-        return { 
-          color: 'bg-red-600 text-white border-red-600',
-          icon: <XCircle className="h-3 w-3" />
-        };
-      default:
-        return { 
-          color: 'bg-gray-600 text-white border-gray-600',
-          icon: <Clock className="h-3 w-3" />
-        };
-    }
-  };
-
-  // Handle edit callback
-  const handleEditCallback = (callback: CallbackRequest) => {
-    setSelectedCallback(callback);
+  const handleEditCallback = (callback: any) => {
     setEditForm({
       client_name: callback.client_name,
       phone_number: callback.phone_number,
-      scheduled_datetime: new Date(callback.scheduled_datetime).toISOString().slice(0, 16),
-      description: callback.description,
+      scheduled_datetime: callback.scheduled_datetime.slice(0, 16),
       priority: callback.priority,
-      notes: callback.notes,
+      description: callback.description || '',
+      notes: callback.notes || '',
       callback_reason: callback.callback_reason || ''
     });
+    setSelectedCallback(callback);
     setIsEditDialogOpen(true);
   };
 
-  // Handle update callback
+  const handleViewCallback = (callback: any) => {
+    setSelectedCallback(callback);
+    setIsDetailSheetOpen(true);
+  };
+
   const handleUpdateCallback = () => {
     if (!selectedCallback) return;
 
@@ -293,190 +101,154 @@ const CallbackScheduler = () => {
       updates: {
         client_name: editForm.client_name,
         phone_number: editForm.phone_number,
-        scheduled_datetime: new Date(editForm.scheduled_datetime).toISOString(),
-        description: editForm.description,
+        scheduled_datetime: editForm.scheduled_datetime,
         priority: editForm.priority,
+        description: editForm.description,
         notes: editForm.notes,
         callback_reason: editForm.callback_reason
       }
     });
+    setIsEditDialogOpen(false);
   };
 
-  // Get task type icon and label
-  const getTaskTypeInfo = (taskType: string) => {
-    switch (taskType) {
-      case 'callback':
-        return { icon: <PhoneCall className="h-3 w-3" />, label: 'Callback' };
-      case 'follow_up':
-        return { icon: <MessageSquare className="h-3 w-3" />, label: 'Follow-up' };
-      case 'reminder':
-        return { icon: <Bell className="h-3 w-3" />, label: 'Reminder' };
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <Badge className="bg-green-100 text-green-800 border-green-200">✓ Finalizat</Badge>;
+      case 'failed':
+        return <Badge className="bg-red-100 text-red-800 border-red-200">✗ Eșuat</Badge>;
+      case 'in_progress':
+        return <Badge className="bg-blue-100 text-blue-800 border-blue-200">⏳ În progres</Badge>;
       default:
-        return { icon: <Phone className="h-3 w-3" />, label: 'Call' };
+        return <Badge className="bg-gray-100 text-gray-800 border-gray-200">📋 Programat</Badge>;
     }
   };
 
-  const renderNotionTable = () => {
-    const allCallbacks = [...groupedCallbacks.overdue, ...groupedCallbacks.upcoming, ...groupedCallbacks.completed];
-    
-    if (allCallbacks.length === 0) return null;
+  const renderCallbackTable = (callbacks: any[], title: string, emptyMessage: string) => {
+    if (callbacks.length === 0) return null;
 
     return (
-      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
-        {/* Table Header */}
-        <div className="grid grid-cols-12 gap-4 p-3 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-700">
-          <div className="col-span-3">Nume Client</div>
-          <div className="col-span-2">Telefon</div>
-          <div className="col-span-2">Data & Ora</div>
-          <div className="col-span-1">Status</div>
-          <div className="col-span-1">Prioritate</div>
-          <div className="col-span-3">Acțiuni</div>
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          <Badge variant="outline">{callbacks.length}</Badge>
         </div>
         
-        {/* Table Rows */}
-        {allCallbacks.map((callback) => {
-          const isOverdue = new Date(callback.scheduled_datetime) < new Date() && callback.status === 'scheduled';
-          const statusEmoji = callback.status === 'completed' ? '✅' : 
-                             callback.status === 'failed' ? '❌' :
-                             isOverdue ? '🔴' : '🕐';
-          const priorityEmoji = callback.priority === 'urgent' ? '🔴' :
-                               callback.priority === 'high' ? '🟠' :
-                               callback.priority === 'medium' ? '🟡' : '🟢';
+        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+          {/* Table Header */}
+          <div className="grid grid-cols-12 gap-4 p-4 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-700">
+            <div className="col-span-2">Contact Number</div>
+            <div className="col-span-2">Nume Contact</div>
+            <div className="col-span-2">Agent</div>
+            <div className="col-span-2">Programat pentru</div>
+            <div className="col-span-2">Status</div>
+            <div className="col-span-2">Acțiuni</div>
+          </div>
           
-          return (
-            <div key={callback.id} className="grid grid-cols-12 gap-4 p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors items-center">
-              <div className="col-span-3 font-medium text-gray-900 truncate">
-                {callback.client_name}
-              </div>
-              <div className="col-span-2 text-gray-600 text-sm">
-                {callback.phone_number}
-              </div>
-              <div className="col-span-2 text-gray-600 text-sm">
-                {format(new Date(callback.scheduled_datetime), 'dd MMM, HH:mm', { locale: ro })}
-              </div>
-              <div className="col-span-1 text-sm">
-                <span className="flex items-center gap-1">
-                  {statusEmoji}
-                  <span className="capitalize">{callback.status}</span>
-                </span>
-              </div>
-              <div className="col-span-1 text-sm">
-                <span className="flex items-center gap-1">
-                  {priorityEmoji}
-                  <span className="capitalize">{callback.priority}</span>
-                </span>
-              </div>
-              <div className="col-span-3 flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleEditCallback(callback)}
-                  disabled={callback.status === 'completed'}
-                  className="h-8 px-3 text-xs border-gray-300 hover:border-gray-400"
-                >
-                  Editează
-                </Button>
+          {/* Table Rows */}
+          {callbacks.map((callback) => {
+            const isOverdue = new Date(callback.scheduled_datetime) < new Date() && callback.status === 'scheduled';
+            
+            return (
+              <div 
+                key={callback.id} 
+                className="grid grid-cols-12 gap-4 p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors items-center cursor-pointer"
+                onClick={() => handleViewCallback(callback)}
+              >
+                <div className="col-span-2 flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm font-medium">{callback.phone_number}</span>
+                </div>
                 
-                {callback.status === 'scheduled' && (
+                <div className="col-span-2">
+                  <span className="text-sm font-medium text-gray-900">{callback.client_name}</span>
+                </div>
+                
+                <div className="col-span-2">
+                  <span className="text-sm text-gray-600">
+                    {callback.agent_id ? `Agent ${callback.agent_id.slice(0, 8)}...` : 'Nu este specificat'}
+                  </span>
+                </div>
+                
+                <div className="col-span-2">
+                  <div className="text-sm text-gray-600">
+                    {format(new Date(callback.scheduled_datetime), 'dd MMM, HH:mm', { locale: ro })}
+                    {isOverdue && (
+                      <div className="text-xs text-red-600 font-medium">Întârziat</div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="col-span-2">
+                  {getStatusBadge(callback.status)}
+                </div>
+                
+                <div className="col-span-2 flex items-center gap-2">
+                  {callback.status === 'scheduled' && (
+                    <Button
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        executeCallbackMutation.mutate(callback);
+                      }}
+                      disabled={executeCallbackMutation.isPending}
+                      className="h-8 px-3 text-xs bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      Sună acum
+                    </Button>
+                  )}
+                  
                   <Button
                     size="sm"
-                    onClick={() => executeCallbackMutation.mutate(callback)}
-                    disabled={executeCallbackMutation.isPending}
-                    className="h-8 px-3 text-xs bg-green-600 hover:bg-green-700 text-white"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditCallback(callback);
+                    }}
+                    className="h-8 px-3 text-xs"
                   >
-                    Sună
+                    <Edit className="h-3 w-3" />
                   </Button>
-                )}
-
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => deleteCallbackMutation.mutate(callback.id)}
-                  disabled={deleteCallbackMutation.isPending}
-                  className="h-8 w-8 p-0"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
+                  
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteCallbackMutation.mutate(callback.id);
+                    }}
+                    disabled={deleteCallbackMutation.isPending}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                  
+                  <ChevronRight className="h-4 w-4 text-gray-400" />
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     );
   };
 
-  // Manual callback detection states
-  const [manualTestText, setManualTestText] = useState('');
-  const [manualTestPhone, setManualTestPhone] = useState('+37379416481');
-  const [manualTestName, setManualTestName] = useState('Test Manual');
-
-  // Manual callback detection mutation
-  const manualDetectionMutation = useMutation({
-    mutationFn: async ({ text, phoneNumber, contactName }: { text: string, phoneNumber: string, contactName: string }) => {
-      const { data, error } = await supabase.functions.invoke('detect-callback-intent', {
-        body: {
-          text,
-          conversationId: `manual-test-${Date.now()}`,
-          phoneNumber,
-          contactName,
-          agentId: userAgents[0]?.elevenlabs_agent_id,
-          userId: user.id
-        }
-      });
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['callback-requests', user.id] });
-      toast({
-        title: data.callbackDetected ? "Callback detectat!" : "Nu s-a detectat callback",
-        description: data.message || "Test completat",
-        variant: data.callbackDetected ? "default" : "destructive"
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Eroare la testare",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  });
-
-  const handleManualTest = () => {
-    if (!manualTestText.trim()) {
-      toast({
-        title: "Eroare",
-        description: "Te rog introdu textul pentru testare",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    manualDetectionMutation.mutate({
-      text: manualTestText,
-      phoneNumber: manualTestPhone,
-      contactName: manualTestName
-    });
-  };
-
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto p-6 space-y-6 bg-white min-h-screen">
-        {/* Header - Notion style */}
-        <div className="border-b border-gray-200 pb-6">
-          <div className="flex items-center justify-between">
+      <div className="max-w-7xl mx-auto p-6 space-y-6 bg-gray-50 min-h-screen">
+        {/* Header */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-3xl font-semibold text-gray-900 mb-2">📞 Programări Callback</h1>
-              <p className="text-gray-600">
+              <h1 className="text-2xl font-semibold text-gray-900">📞 Programări Callback</h1>
+              <p className="text-gray-600 mt-1">
                 Gestionează contactele care au cerut să fie sunați înapoi
               </p>
             </div>
             
             <div className="flex gap-3">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-36 border-gray-300">
+                <SelectTrigger className="w-36">
                   <SelectValue placeholder="Filtrează status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -487,7 +259,7 @@ const CallbackScheduler = () => {
                 </SelectContent>
               </Select>
               <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger className="w-36 border-gray-300">
+                <SelectTrigger className="w-36">
                   <SelectValue placeholder="Filtrează prioritate" />
                 </SelectTrigger>
                 <SelectContent>
@@ -501,8 +273,8 @@ const CallbackScheduler = () => {
             </div>
           </div>
           
-          {/* Quick Stats - Notion style */}
-          <div className="flex gap-8 mt-4 text-sm text-gray-600">
+          {/* Quick Stats */}
+          <div className="flex gap-8 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <span className="text-red-500">●</span>
               <span>{groupedCallbacks.overdue.length} întârziate</span>
@@ -518,25 +290,153 @@ const CallbackScheduler = () => {
           </div>
         </div>
 
-        {/* Notion-style Table */}
+        {/* Content */}
         {isLoading ? (
-          <div className="text-center py-12">
+          <div className="text-center py-12 bg-white border border-gray-200 rounded-lg">
             <RefreshCw className="h-8 w-8 animate-spin mx-auto text-gray-400" />
             <p className="text-gray-500 mt-3">Se încarcă callback-urile...</p>
           </div>
-        ) : filteredCallbacks.length === 0 ? (
-          <div className="text-center py-12 border border-gray-200 rounded-lg bg-gray-50">
-            <PhoneCall className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Nu există callback-uri</h3>
-            <p className="text-gray-600">
-              Nu ai niciun callback programat în acest moment.
-            </p>
-          </div>
         ) : (
-          renderNotionTable()
+          <div className="space-y-8">
+            {/* Overdue Callbacks */}
+            {renderCallbackTable(
+              groupedCallbacks.overdue,
+              "🔴 Callback-uri Întârziate",
+              "Nu există callback-uri întârziate"
+            )}
+
+            {/* Upcoming Callbacks */}
+            {renderCallbackTable(
+              groupedCallbacks.upcoming,
+              "🕐 Callback-uri Programate",
+              "Nu există callback-uri programate"
+            )}
+
+            {/* Completed Callbacks */}
+            {renderCallbackTable(
+              groupedCallbacks.completed.slice(0, 10),
+              "✅ Callback-uri Completate",
+              "Nu există callback-uri completate"
+            )}
+
+            {filteredCallbacks.length === 0 && (
+              <div className="text-center py-12 bg-white border border-gray-200 rounded-lg">
+                <PhoneCall className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Nu există callback-uri</h3>
+                <p className="text-gray-600">
+                  Nu ai niciun callback programat în acest moment.
+                </p>
+              </div>
+            )}
+          </div>
         )}
 
-        {/* Edit Callback Dialog */}
+        {/* Detail Sheet */}
+        <Sheet open={isDetailSheetOpen} onOpenChange={setIsDetailSheetOpen}>
+          <SheetContent className="w-[400px] sm:w-[540px]">
+            <SheetHeader>
+              <SheetTitle>Detalii Callback</SheetTitle>
+            </SheetHeader>
+            {selectedCallback && (
+              <div className="mt-6 space-y-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Client</Label>
+                    <p className="text-sm text-gray-900 mt-1">{selectedCallback.client_name}</p>
+                  </div>
+                  
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Telefon</Label>
+                    <p className="text-sm text-gray-900 mt-1">{selectedCallback.phone_number}</p>
+                  </div>
+                  
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Programat pentru</Label>
+                    <p className="text-sm text-gray-900 mt-1">
+                      {format(new Date(selectedCallback.scheduled_datetime), 'dd MMMM yyyy, HH:mm', { locale: ro })}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Status</Label>
+                    <div className="mt-1">
+                      {getStatusBadge(selectedCallback.status)}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Prioritate</Label>
+                    <p className="text-sm text-gray-900 mt-1 capitalize">{selectedCallback.priority}</p>
+                  </div>
+                  
+                  {selectedCallback.callback_reason && (
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Motiv callback</Label>
+                      <p className="text-sm text-gray-900 mt-1">{selectedCallback.callback_reason}</p>
+                    </div>
+                  )}
+                  
+                  {selectedCallback.description && (
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Descriere</Label>
+                      <p className="text-sm text-gray-900 mt-1">{selectedCallback.description}</p>
+                    </div>
+                  )}
+                  
+                  {selectedCallback.notes && (
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Note</Label>
+                      <p className="text-sm text-gray-900 mt-1">{selectedCallback.notes}</p>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Creat la</Label>
+                    <p className="text-sm text-gray-900 mt-1">
+                      {format(new Date(selectedCallback.created_at), 'dd MMMM yyyy, HH:mm', { locale: ro })}
+                    </p>
+                  </div>
+                  
+                  {selectedCallback.created_via_webhook && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm font-medium text-blue-900">Creat prin Webhook</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex gap-2 pt-4 border-t">
+                  {selectedCallback.status === 'scheduled' && (
+                    <Button
+                      onClick={() => executeCallbackMutation.mutate(selectedCallback)}
+                      disabled={executeCallbackMutation.isPending}
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                    >
+                      <Play className="h-4 w-4 mr-2" />
+                      Sună acum
+                    </Button>
+                  )}
+                  
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      handleEditCallback(selectedCallback);
+                      setIsDetailSheetOpen(false);
+                    }}
+                    className="flex-1"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Editează
+                  </Button>
+                </div>
+              </div>
+            )}
+          </SheetContent>
+        </Sheet>
+
+        {/* Edit Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader>
