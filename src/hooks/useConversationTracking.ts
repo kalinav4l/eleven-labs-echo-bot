@@ -27,6 +27,29 @@ export const useConversationTracking = () => {
 
       console.log('Saving conversation to Analytics Hub:', conversationData);
 
+      // Get the real agent_id from ElevenLabs conversation if available
+      let realAgentId = conversationData.agent_id;
+      
+      if (conversationData.elevenlabs_history_id || conversationData.conversation_id) {
+        try {
+          console.log('Getting real agent_id from ElevenLabs conversation...');
+          const { data: conversationDetails, error: conversationError } = await supabase.functions.invoke('get-elevenlabs-conversation', {
+            body: {
+              conversationId: conversationData.elevenlabs_history_id || conversationData.conversation_id
+            }
+          });
+
+          if (conversationDetails && !conversationError && conversationDetails.agent_id) {
+            realAgentId = conversationDetails.agent_id;
+            console.log('Found real agent_id from ElevenLabs:', realAgentId);
+          } else {
+            console.warn('Could not get agent_id from ElevenLabs conversation:', conversationError);
+          }
+        } catch (error) {
+          console.warn('Error getting agent_id from ElevenLabs:', error);
+        }
+      }
+
       // Check for callback intent in transcript
       const transcriptText = conversationData.transcript
         ?.map((entry: any) => entry.message || entry.text || '')
@@ -42,7 +65,7 @@ export const useConversationTracking = () => {
               conversationId: conversationData.conversation_id,
               phoneNumber: conversationData.phone_number,
               contactName: conversationData.contact_name,
-              agentId: conversationData.agent_id
+              agentId: realAgentId // Use the real agent_id instead of the provided one
             }
           });
 
@@ -56,7 +79,7 @@ export const useConversationTracking = () => {
         }
       }
 
-      // Create the call history record
+      // Create the call history record using the real agent_id
       const callRecord = {
         user_id: user.id,
         phone_number: conversationData.phone_number || 'Web Chat',
@@ -64,15 +87,16 @@ export const useConversationTracking = () => {
         call_status: conversationData.status || 'success',
         summary: conversationData.summary || 'Agent conversation',
         dialog_json: JSON.stringify({
-          agent_id: conversationData.agent_id,
+          agent_id: realAgentId, // Use real agent_id
           agent_name: conversationData.agent_name,
           transcript: conversationData.transcript || [],
           conversation_id: conversationData.conversation_id,
-          elevenlabs_history_id: conversationData.elevenlabs_history_id
+          elevenlabs_history_id: conversationData.elevenlabs_history_id,
+          original_agent_id: conversationData.agent_id // Keep track of original for debugging
         }),
         call_date: new Date().toISOString(),
         cost_usd: conversationData.cost_usd || 0,
-        agent_id: conversationData.agent_id,
+        agent_id: realAgentId, // Use real agent_id
         language: 'ro',
         conversation_id: conversationData.conversation_id,
         elevenlabs_history_id: conversationData.elevenlabs_history_id,

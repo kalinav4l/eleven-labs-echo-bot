@@ -25,6 +25,9 @@ inspector_port = 8083
 [functions.create-callback-webhook]
 verify_jwt = false
 
+[functions.elevenlabs-conversation-webhook]
+verify_jwt = false
+
 [functions.chat-with-agent]
 verify_jwt = false
 
