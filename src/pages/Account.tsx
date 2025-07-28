@@ -157,11 +157,6 @@ const Account = () => {
 
   // Calculate total consumed credits from conversation data (from ElevenLabs API)
   const totalConsumedCredits = Object.values(conversationCredits).reduce((total, credits) => total + credits, 0);
-  
-  // Convert credits to USD (1 credit = $0.0000017045)
-  const CREDIT_TO_USD_RATE = 0.0000017045;
-  const totalConsumedUSD = totalConsumedCredits * CREDIT_TO_USD_RATE;
-  
   const totalConversations = userStats?.total_conversations || 0;
   const totalTranscripts = savedTranscripts?.length || 0;
 
@@ -195,7 +190,7 @@ const Account = () => {
     color: 'text-gray-600'
   }, {
     label: 'Credite Consumate',
-    value: `$${totalConsumedUSD.toFixed(6)}`,
+    value: totalConsumedCredits.toString(),
     icon: Zap,
     color: 'text-gray-600'
   }, {
@@ -342,9 +337,9 @@ const Account = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-xl font-bold text-gray-900 group-hover:text-blue-900 transition-colors duration-300">
-                      ${totalConsumedUSD.toFixed(6)}
+                      <AnimatedCounter target={totalConsumedCredits} />
                     </p>
-                    <p className="text-xs text-gray-500">{totalConsumedCredits} credite</p>
+                    <p className="text-xs text-gray-500">credite</p>
                   </div>
                 </div>
                 
