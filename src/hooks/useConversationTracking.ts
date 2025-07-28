@@ -42,8 +42,7 @@ export const useConversationTracking = () => {
               conversationId: conversationData.conversation_id,
               phoneNumber: conversationData.phone_number,
               contactName: conversationData.contact_name,
-              agentId: conversationData.agent_id,
-              userId: user.id
+              agentId: conversationData.agent_id
             }
           });
 

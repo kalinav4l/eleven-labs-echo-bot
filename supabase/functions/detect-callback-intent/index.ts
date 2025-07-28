@@ -332,7 +332,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, conversationId, phoneNumber, contactName, agentId, userId } = await req.json();
+    const { text, conversationId, phoneNumber, contactName, agentId } = await req.json();
 
     // Input validation
     if (!text || typeof text !== 'string') {
@@ -358,23 +358,24 @@ serve(async (req) => {
       );
     }
 
-    // Find the agent owner to set the correct user_id for the callback
-    let callbackUserId = userId; // fallback to original userId
-    
-    if (agentId) {
-      const { data: agentData, error: agentError } = await supabase
-        .from('kalina_agents')
-        .select('user_id')
-        .eq('agent_id', agentId)
-        .single();
-      
-      if (agentData && !agentError) {
-        callbackUserId = agentData.user_id;
-        console.log(`Setting callback user_id to agent owner: ${callbackUserId} for agent: ${agentId}`);
-      } else {
-        console.warn('Could not find agent owner, using original userId:', agentError);
-      }
+    // Find the agent owner based on agentId
+    if (!agentId) {
+      throw new Error('Agent ID is required to create callback');
     }
+
+    const { data: agentData, error: agentError } = await supabase
+      .from('kalina_agents')
+      .select('user_id')
+      .eq('agent_id', agentId)
+      .single();
+    
+    if (agentError || !agentData) {
+      console.error('Could not find agent owner for agent:', agentId, agentError);
+      throw new Error(`Agent not found: ${agentId}`);
+    }
+
+    const callbackUserId = agentData.user_id;
+    console.log(`Creating callback for agent owner: ${callbackUserId} (agent: ${agentId})`);
 
     // Create callback entry in scheduled_calls
     const callbackData = {
