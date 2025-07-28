@@ -185,7 +185,7 @@ const Account = () => {
     color: 'text-gray-600'
   }, {
     label: 'Credite Consumate',
-    value: formatTotalTime(totalConsumedCredits),
+    value: totalConsumedCredits.toString(),
     icon: Zap,
     color: 'text-gray-600'
   }, {
@@ -332,7 +332,7 @@ const Account = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-xl font-bold text-gray-900 group-hover:text-blue-900 transition-colors duration-300">
-                      {formatTotalTime(totalConsumedCredits)}
+                      <AnimatedCounter target={totalConsumedCredits} />
                     </p>
                     <p className="text-xs text-gray-500">credite</p>
                   </div>
