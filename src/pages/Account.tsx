@@ -344,13 +344,16 @@ const Account = () => {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            {/* Enhanced Performance Overview */}
-            <div className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-lg hover:shadow-primary/5 transition-all duration-500 animate-scale-in group overflow-hidden relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-              <div className="p-6 border-b border-gray-200 relative z-10">
-                <h2 className="font-semibold text-gray-900 text-lg flex items-center">
-                  <div className="w-2 h-2 bg-gradient-to-r from-primary to-secondary rounded-full mr-3 animate-pulse shadow-sm"></div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 relative z-10">
+            {/* Enhanced Performance Overview with 3D Effects */}
+            <div className="liquid-glass card-3d group overflow-hidden relative bg-gradient-to-br from-white/80 to-white/40 backdrop-blur-xl">
+              {/* 3D Animated background */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 animate-morphing"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-accent/20 to-transparent rounded-full blur-xl animate-float" style={{ animationDelay: '2s' }}></div>
+              
+              <div className="p-6 border-b border-white/20 relative z-10">
+                <h2 className="font-bold text-xl bg-gradient-to-r from-slate-900 via-primary to-secondary bg-clip-text text-transparent flex items-center group-hover:scale-105 transition-transform duration-500">
+                  <div className="w-3 h-3 bg-gradient-to-r from-primary to-secondary rounded-full mr-3 animate-glow-pulse shadow-lg"></div>
                   Performanță Generală
                 </h2>
               </div>
