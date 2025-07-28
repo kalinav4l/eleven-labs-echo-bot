@@ -207,18 +207,15 @@ const Documentation = () => {
   );
 
   const renderArchitecture = () => (
-    <div className="max-w-5xl">
-      <h1 className="text-5xl font-bold text-black mb-6">Arhitectura Sistemului</h1>
-      <p className="text-xl text-gray-600 mb-12">Diagrama completă a componentelor și fluxurilor de date</p>
-      
-      <div className="mb-16">
-        <h2 className="text-3xl font-bold text-black mb-8">Componente Principale</h2>
+    <section id="architecture" className="min-h-screen p-12">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-5xl font-bold text-black mb-8">Arhitectura Sistemului</h1>
+        <p className="text-xl text-gray-600 mb-12">Componentele principale ale platformei</p>
+        
         <div className="grid gap-8 md:grid-cols-2">
-          <div className="p-8 border-2 border-black rounded-2xl">
-            <div className="flex items-center gap-4 mb-4">
-              <Database className="h-12 w-12 text-black" />
-              <h3 className="text-2xl font-bold text-black">Frontend (React)</h3>
-            </div>
+          <div className="liquid-glass p-8 hover-scale">
+            <Database className="h-12 w-12 text-black mb-4" />
+            <h3 className="text-2xl font-bold text-black mb-4">Frontend</h3>
             <ul className="space-y-2 text-gray-600">
               <li>• Dashboard interactiv</li>
               <li>• Gestionare agenți</li>
@@ -227,12 +224,10 @@ const Documentation = () => {
             </ul>
           </div>
           
-          <div className="p-8 bg-black text-white rounded-2xl">
-            <div className="flex items-center gap-4 mb-4">
-              <Code className="h-12 w-12 text-white" />
-              <h3 className="text-2xl font-bold">Backend (Supabase)</h3>
-            </div>
-            <ul className="space-y-2 text-gray-300">
+          <div className="liquid-glass p-8 hover-scale">
+            <Code className="h-12 w-12 text-black mb-4" />
+            <h3 className="text-2xl font-bold text-black mb-4">Backend</h3>
+            <ul className="space-y-2 text-gray-600">
               <li>• Database PostgreSQL</li>
               <li>• Edge Functions</li>
               <li>• Authentication</li>
@@ -240,12 +235,10 @@ const Documentation = () => {
             </ul>
           </div>
           
-          <div className="p-8 bg-black text-white rounded-2xl">
-            <div className="flex items-center gap-4 mb-4">
-              <Mic className="h-12 w-12 text-white" />
-              <h3 className="text-2xl font-bold">ElevenLabs API</h3>
-            </div>
-            <ul className="space-y-2 text-gray-300">
+          <div className="liquid-glass p-8 hover-scale">
+            <Mic className="h-12 w-12 text-black mb-4" />
+            <h3 className="text-2xl font-bold text-black mb-4">Voice Engine</h3>
+            <ul className="space-y-2 text-gray-600">
               <li>• Conversational AI</li>
               <li>• Voice synthesis</li>
               <li>• Phone call management</li>
@@ -253,274 +246,225 @@ const Documentation = () => {
             </ul>
           </div>
           
-          <div className="p-8 border-2 border-black rounded-2xl">
-            <div className="flex items-center gap-4 mb-4">
-              <Bot className="h-12 w-12 text-black" />
-              <h3 className="text-2xl font-bold text-black">AI Services</h3>
-            </div>
+          <div className="liquid-glass p-8 hover-scale">
+            <Bot className="h-12 w-12 text-black mb-4" />
+            <h3 className="text-2xl font-bold text-black mb-4">AI Services</h3>
             <ul className="space-y-2 text-gray-600">
-              <li>• OpenAI/GPT pentru conversații</li>
-              <li>• Analiza sentiment</li>
+              <li>• Natural language processing</li>
+              <li>• Sentiment analysis</li>
               <li>• Intent detection</li>
               <li>• Content processing</li>
             </ul>
           </div>
         </div>
       </div>
-
-      <div className="mb-16">
-        <h2 className="text-3xl font-bold text-black mb-8">Fluxul de Date</h2>
-        <div className="space-y-6">
-          <div className="flex items-center gap-4 p-6 bg-gray-100 rounded-xl">
-            <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center">1</div>
-            <ArrowRight className="h-6 w-6 text-gray-400" />
-            <span className="font-semibold">Utilizator → Frontend → Supabase</span>
-            <span className="text-gray-600">(Creare agent, configurare campanie)</span>
-          </div>
-          
-          <div className="flex items-center gap-4 p-6 bg-gray-100 rounded-xl">
-            <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center">2</div>
-            <ArrowRight className="h-6 w-6 text-gray-400" />
-            <span className="font-semibold">Supabase → ElevenLabs</span>
-            <span className="text-gray-600">(Inițiere apel prin Edge Function)</span>
-          </div>
-          
-          <div className="flex items-center gap-4 p-6 bg-gray-100 rounded-xl">
-            <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center">3</div>
-            <ArrowRight className="h-6 w-6 text-gray-400" />
-            <span className="font-semibold">ElevenLabs → Webhook → Supabase</span>
-            <span className="text-gray-600">(Status updates, conversații)</span>
-          </div>
-          
-          <div className="flex items-center gap-4 p-6 bg-gray-100 rounded-xl">
-            <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center">4</div>
-            <ArrowRight className="h-6 w-6 text-gray-400" />
-            <span className="font-semibold">Supabase → Frontend</span>
-            <span className="text-gray-600">(Real-time updates, analytics)</span>
-          </div>
-        </div>
-      </div>
-    </div>
+    </section>
   );
 
   const renderVoiceAgents = () => (
-    <div className="max-w-5xl">
-      <h1 className="text-5xl font-bold text-black mb-6">Agenți Vocali AI</h1>
-      <p className="text-xl text-gray-600 mb-12">Crearea și gestionarea agenților vocali inteligenți</p>
-      
-      <div className="grid gap-8 md:grid-cols-2 mb-16">
-        <div className="p-8 bg-black text-white rounded-2xl">
-          <h3 className="text-2xl font-bold mb-4">Ce sunt agenții vocali?</h3>
-          <p className="text-gray-300 mb-4">Agenții vocali sunt asistenti AI care pot purta conversații naturale prin telefon, răspund la întrebări și execută sarcini automate.</p>
-          <ul className="space-y-2 text-gray-300">
-            <li>• Conversații naturale</li>
-            <li>• Personalitate configurabilă</li>
-            <li>• Integrare cu sisteme externe</li>
-            <li>• Învățare din interacțiuni</li>
-          </ul>
+    <section id="voice-agents" className="min-h-screen p-12">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-5xl font-bold text-black mb-8">Agenți Vocali AI</h1>
+        <p className="text-xl text-gray-600 mb-12">Crearea și gestionarea agenților inteligenți</p>
+        
+        <div className="grid gap-8 md:grid-cols-2 mb-12">
+          <div className="liquid-glass p-8">
+            <h3 className="text-2xl font-bold mb-4 text-black">Ce sunt agenții vocali?</h3>
+            <p className="text-gray-600 mb-4">Asistenti AI care pot purta conversații naturale prin telefon și execută sarcini automate.</p>
+            <ul className="space-y-2 text-gray-600">
+              <li>• Conversații naturale</li>
+              <li>• Personalitate configurabilă</li>
+              <li>• Integrare cu sisteme externe</li>
+              <li>• Învățare din interacțiuni</li>
+            </ul>
+          </div>
+          <div className="liquid-glass p-8">
+            <h3 className="text-2xl font-bold text-black mb-4">Cum funcționează?</h3>
+            <p className="text-gray-600 mb-4">Agenții folosesc AI pentru înțelegerea și generarea de text, plus sinteza vocii.</p>
+            <ul className="space-y-2 text-gray-600">
+              <li>• Natural language processing</li>
+              <li>• Context awareness</li>
+              <li>• Emotional intelligence</li>
+              <li>• Multi-language support</li>
+            </ul>
+          </div>
         </div>
-        <div className="p-8 border-2 border-black rounded-2xl">
-          <h3 className="text-2xl font-bold text-black mb-4">Cum funcționează?</h3>
-          <p className="text-gray-600 mb-4">Agenții folosesc AI-ul GPT pentru înțelegerea și generarea de text, plus ElevenLabs pentru sinteza vocii.</p>
-          <ul className="space-y-2 text-gray-600">
-            <li>• Processing natural language</li>
-            <li>• Context awareness</li>
-            <li>• Emotional intelligence</li>
-            <li>• Multi-language support</li>
-          </ul>
-        </div>
-      </div>
 
-      <div className="mb-16">
-        <h2 className="text-3xl font-bold text-black mb-8">Configurarea unui Agent</h2>
         <div className="space-y-8">
-          <div className="p-8 border border-gray-200 rounded-2xl">
+          <div className="liquid-glass p-8">
             <h3 className="text-xl font-bold text-black mb-4">1. Informații Generale</h3>
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="glass-input p-4 rounded-lg">
                 <strong>Numele Agentului:</strong> Identificarea unică
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="glass-input p-4 rounded-lg">
                 <strong>Descrierea:</strong> Scopul și funcționalitatea
               </div>
             </div>
           </div>
 
-          <div className="p-8 border border-gray-200 rounded-2xl">
+          <div className="liquid-glass p-8">
             <h3 className="text-xl font-bold text-black mb-4">2. System Prompt</h3>
-            <p className="text-gray-600 mb-4">Promptul definește personalitatea, stilul de conversație și regulile agentului.</p>
-            <div className="bg-gray-900 p-4 rounded-lg text-green-400 font-mono text-sm">
-              Ești un agent de vânzări prietenos și profesionist...<br/>
-              Scopul tău este să califiezi lead-urile și să programezi întâlniri...<br/>
+            <p className="text-gray-600 mb-4">Promptul definește personalitatea și regulile agentului.</p>
+            <div className="glass-input p-4 rounded-lg font-mono text-sm text-gray-700">
+              Ești un agent prietenos și profesionist...<br/>
+              Scopul tău este să califiezi lead-urile...<br/>
               Folosește un ton conversațional dar respectuos...
             </div>
           </div>
 
-          <div className="p-8 border border-gray-200 rounded-2xl">
+          <div className="liquid-glass p-8">
             <h3 className="text-xl font-bold text-black mb-4">3. Configurare Voce</h3>
             <div className="grid gap-4 md:grid-cols-3">
-              <div className="p-4 bg-gray-50 rounded-lg text-center">
+              <div className="glass-input p-4 rounded-lg text-center">
                 <strong>Limba:</strong><br/>Română, Engleză, etc.
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg text-center">
+              <div className="glass-input p-4 rounded-lg text-center">
                 <strong>Vocea:</strong><br/>Masculină/Feminină
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg text-center">
+              <div className="glass-input p-4 rounded-lg text-center">
                 <strong>Stilul:</strong><br/>Calm, energic, profesional
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 
   const renderPhoneCalls = () => (
-    <div className="max-w-5xl">
-      <h1 className="text-5xl font-bold text-black mb-6">Apeluri Telefonice</h1>
-      <p className="text-xl text-gray-600 mb-12">Sistem complet de gestionare a apelurilor automate</p>
-      
-      <div className="grid gap-8 md:grid-cols-2 mb-16">
-        <div className="p-8 bg-black text-white rounded-2xl">
-          <PhoneCall className="h-12 w-12 mb-4" />
-          <h3 className="text-2xl font-bold mb-4">Apeluri Individuale</h3>
-          <p className="text-gray-300 mb-4">Apeluri personalizate către contacte specifice cu monitorizare detaliată.</p>
-          <ul className="space-y-2 text-gray-300">
-            <li>• Configurare rapidă</li>
-            <li>• Monitoring în timp real</li>
-            <li>• Transcriere automată</li>
-            <li>• Analiza conversației</li>
-          </ul>
+    <section id="phone-calls" className="min-h-screen p-12">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-5xl font-bold text-black mb-8">Apeluri Telefonice</h1>
+        <p className="text-xl text-gray-600 mb-12">Sistem complet de gestionare a apelurilor</p>
+        
+        <div className="grid gap-8 md:grid-cols-2 mb-12">
+          <div className="liquid-glass p-8">
+            <PhoneCall className="h-12 w-12 text-black mb-4" />
+            <h3 className="text-2xl font-bold mb-4 text-black">Apeluri Individuale</h3>
+            <p className="text-gray-600 mb-4">Apeluri personalizate către contacte specifice cu monitorizare detaliată.</p>
+            <ul className="space-y-2 text-gray-600">
+              <li>• Configurare rapidă</li>
+              <li>• Monitoring în timp real</li>
+              <li>• Transcriere automată</li>
+              <li>• Analiza conversației</li>
+            </ul>
+          </div>
+          <div className="liquid-glass p-8">
+            <Users className="h-12 w-12 text-black mb-4" />
+            <h3 className="text-2xl font-bold text-black mb-4">Campanii în Masă</h3>
+            <p className="text-gray-600 mb-4">Apeluri simultane către sute de contacte cu raportare centralizată.</p>
+            <ul className="space-y-2 text-gray-600">
+              <li>• Upload CSV contacte</li>
+              <li>• Execuție paralelă</li>
+              <li>• Progress tracking</li>
+              <li>• Statistici detaliate</li>
+            </ul>
+          </div>
         </div>
-        <div className="p-8 border-2 border-black rounded-2xl">
-          <Users className="h-12 w-12 text-black mb-4" />
-          <h3 className="text-2xl font-bold text-black mb-4">Campanii în Masă</h3>
-          <p className="text-gray-600 mb-4">Apeluri simultane către sute de contacte cu raportare centralizată.</p>
-          <ul className="space-y-2 text-gray-600">
-            <li>• Upload CSV contacte</li>
-            <li>• Execuție paralelă</li>
-            <li>• Progress tracking</li>
-            <li>• Statistici detaliate</li>
-          </ul>
-        </div>
-      </div>
 
-      <div className="mb-16">
-        <h2 className="text-3xl font-bold text-black mb-8">Proces de Execuție Apel</h2>
         <div className="space-y-6">
-          <div className="flex items-start gap-6 p-6 border border-gray-200 rounded-xl">
-            <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center text-white font-bold">1</div>
-            <div>
-              <h3 className="text-xl font-bold text-black mb-2">Inițiere Apel</h3>
-              <p className="text-gray-600">Sistemul trimite cererea către ElevenLabs cu parametrii agentului și numărul de telefon.</p>
+          <div className="liquid-glass p-6">
+            <div className="flex items-start gap-6">
+              <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center text-white font-bold">1</div>
+              <div>
+                <h3 className="text-xl font-bold text-black mb-2">Inițiere Apel</h3>
+                <p className="text-gray-600">Sistemul trimite cererea cu parametrii agentului și numărul de telefon.</p>
+              </div>
             </div>
           </div>
           
-          <div className="flex items-start gap-6 p-6 border border-gray-200 rounded-xl">
-            <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center text-white font-bold">2</div>
-            <div>
-              <h3 className="text-xl font-bold text-black mb-2">Conectare</h3>
-              <p className="text-gray-600">ElevenLabs apelează numărul și începe conversația cu primul mesaj configurat.</p>
+          <div className="liquid-glass p-6">
+            <div className="flex items-start gap-6">
+              <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center text-white font-bold">2</div>
+              <div>
+                <h3 className="text-xl font-bold text-black mb-2">Conectare</h3>
+                <p className="text-gray-600">Se apelează numărul și începe conversația cu primul mesaj configurat.</p>
+              </div>
             </div>
           </div>
           
-          <div className="flex items-start gap-6 p-6 border border-gray-200 rounded-xl">
-            <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center text-white font-bold">3</div>
-            <div>
-              <h3 className="text-xl font-bold text-black mb-2">Conversație</h3>
-              <p className="text-gray-600">Agentul AI conduce conversația conform promptului, adaptându-se la răspunsurile interlocutorului.</p>
+          <div className="liquid-glass p-6">
+            <div className="flex items-start gap-6">
+              <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center text-white font-bold">3</div>
+              <div>
+                <h3 className="text-xl font-bold text-black mb-2">Conversație</h3>
+                <p className="text-gray-600">Agentul AI conduce conversația, adaptându-se la răspunsurile interlocutorului.</p>
+              </div>
             </div>
           </div>
           
-          <div className="flex items-start gap-6 p-6 border border-gray-200 rounded-xl">
-            <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center text-white font-bold">4</div>
-            <div>
-              <h3 className="text-xl font-bold text-black mb-2">Finalizare & Analiza</h3>
-              <p className="text-gray-600">La sfârșitul apelului, conversația este transcrisă și analizată pentru insight-uri.</p>
+          <div className="liquid-glass p-6">
+            <div className="flex items-start gap-6">
+              <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center text-white font-bold">4</div>
+              <div>
+                <h3 className="text-xl font-bold text-black mb-2">Finalizare & Analiza</h3>
+                <p className="text-gray-600">Conversația este transcrisă și analizată pentru insight-uri.</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
-
-      <div className="p-8 bg-gray-100 rounded-2xl">
-        <h3 className="text-2xl font-bold text-black mb-4">Webhook Notifications</h3>
-        <p className="text-gray-600 mb-4">Sistemul primește notificări în timp real despre statusul apelurilor:</p>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="p-4 bg-white rounded-lg">
-            <strong>call.started:</strong> Apelul a început
-          </div>
-          <div className="p-4 bg-white rounded-lg">
-            <strong>call.ended:</strong> Apelul s-a terminat
-          </div>
-          <div className="p-4 bg-white rounded-lg">
-            <strong>conversation.created:</strong> Conversația salvată
-          </div>
-          <div className="p-4 bg-white rounded-lg">
-            <strong>transcript.ready:</strong> Transcrierea gata
-          </div>
-        </div>
-      </div>
-    </div>
+    </section>
   );
 
   const renderCredits = () => (
-    <div className="max-w-5xl">
-      <h1 className="text-5xl font-bold text-black mb-6">Sistem de Credite</h1>
-      <p className="text-xl text-gray-600 mb-12">Cum funcționează sistemul de credite și facturare</p>
-      
-      <div className="grid gap-8 md:grid-cols-2 mb-16">
-        <div className="p-8 bg-black text-white rounded-2xl">
-          <CreditCard className="h-12 w-12 mb-4" />
-          <h3 className="text-2xl font-bold mb-4">Credite Gratuită</h3>
-          <p className="text-gray-300 mb-4">Fiecare utilizator nou primește 100.000 de credite gratuite la înregistrare.</p>
-          <div className="text-3xl font-bold text-white">100,000</div>
-          <div className="text-gray-400">credite inițiale</div>
-        </div>
+    <section id="credits" className="min-h-screen p-12">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-5xl font-bold text-black mb-8">Sistem de Credite</h1>
+        <p className="text-xl text-gray-600 mb-12">Cum funcționează sistemul de credite și facturare</p>
         
-        <div className="p-8 border-2 border-black rounded-2xl">
-          <Building2 className="h-12 w-12 text-black mb-4" />
-          <h3 className="text-2xl font-bold text-black mb-4">Utilizare Credite</h3>
-          <p className="text-gray-600 mb-4">Creditele se consumă în funcție de utilizare:</p>
-          <ul className="space-y-2 text-gray-600">
-            <li>• 1 credit = 1 secundă de conversație</li>
-            <li>• Transcrieri: 10 credite/minut</li>
-            <li>• Analize: 5 credite/operațiune</li>
-          </ul>
+        <div className="grid gap-8 md:grid-cols-2 mb-12">
+          <div className="liquid-glass p-8">
+            <CreditCard className="h-12 w-12 text-black mb-4" />
+            <h3 className="text-2xl font-bold mb-4 text-black">Credite Gratuită</h3>
+            <p className="text-gray-600 mb-4">Fiecare utilizator nou primește 100.000 de credite gratuite la înregistrare.</p>
+            <div className="text-4xl font-bold text-black">100,000</div>
+            <div className="text-gray-500">credite inițiale</div>
+          </div>
+          
+          <div className="liquid-glass p-8">
+            <Building2 className="h-12 w-12 text-black mb-4" />
+            <h3 className="text-2xl font-bold text-black mb-4">Utilizare Credite</h3>
+            <p className="text-gray-600 mb-4">Creditele se consumă în funcție de utilizare:</p>
+            <ul className="space-y-2 text-gray-600">
+              <li>• 1 credit = 1 secundă de conversație</li>
+              <li>• Transcrieri: 10 credite/minut</li>
+              <li>• Analize: 5 credite/operațiune</li>
+            </ul>
+          </div>
         </div>
-      </div>
 
-      <div className="mb-16">
-        <h2 className="text-3xl font-bold text-black mb-8">Detalii Facturare</h2>
-        <div className="space-y-6">
-          <div className="p-8 border border-gray-200 rounded-2xl">
+        <div className="space-y-8">
+          <div className="liquid-glass p-8">
             <h3 className="text-xl font-bold text-black mb-4">Tracking Credite</h3>
-            <p className="text-gray-600 mb-4">Sistemul urmărește automat utilizarea creditelor pentru fiecare operațiune:</p>
+            <p className="text-gray-600 mb-4">Sistemul urmărește automat utilizarea creditelor:</p>
             <div className="grid gap-4 md:grid-cols-3">
-              <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="glass-input p-4 rounded-lg">
                 <strong>Total Credite:</strong><br/>Credite cumparate + gratuite
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="glass-input p-4 rounded-lg">
                 <strong>Credite Folosite:</strong><br/>Consumul total
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="glass-input p-4 rounded-lg">
                 <strong>Credite Rămase:</strong><br/>Disponibile pentru utilizare
               </div>
             </div>
           </div>
 
-          <div className="p-8 border border-gray-200 rounded-2xl">
+          <div className="liquid-glass p-8">
             <h3 className="text-xl font-bold text-black mb-4">Funcții Database</h3>
-            <p className="text-gray-600 mb-4">Sistemul folosește funcții PostgreSQL pentru gestionarea creditelor:</p>
-            <div className="bg-gray-900 p-4 rounded-lg text-green-400 font-mono text-sm">
+            <p className="text-gray-600 mb-4">Sistemul folosește funcții pentru gestionarea creditelor:</p>
+            <div className="glass-input p-4 rounded-lg font-mono text-sm text-gray-700">
               deduct_credits(user_id, amount, description)<br/>
               add_credits(user_id, amount, stripe_session_id)<br/>
               admin_add_credits(user_email, amount)
             </div>
           </div>
 
-          <div className="p-8 border border-gray-200 rounded-2xl">
+          <div className="liquid-glass p-8">
             <h3 className="text-xl font-bold text-black mb-4">Istoric Tranzacții</h3>
-            <p className="text-gray-600 mb-4">Toate operațiunile cu credite sunt înregistrate în tabela credit_transactions:</p>
+            <p className="text-gray-600 mb-4">Toate operațiunile cu credite sunt înregistrate:</p>
             <ul className="space-y-2 text-gray-600">
               <li>• Tipul tranzacției (usage, purchase, admin_bonus)</li>
               <li>• Suma și descrierea</li>
@@ -530,7 +474,7 @@ const Documentation = () => {
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 
   const renderContent = () => {
