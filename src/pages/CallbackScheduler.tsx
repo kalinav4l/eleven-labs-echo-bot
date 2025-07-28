@@ -593,21 +593,46 @@ const CallbackScheduler = () => {
   "callback_time": "30 minutes",
   "reason": "să mă gândesc la ofertă",
   "priority": "medium",
+  "user_id": "user_uuid_here",
+  "user_email": "user@example.com",
   "agent_id": "agent_123",
   "conversation_id": "conv_456",
-  "send_sms": true
+  "send_sms": true,
+  "sms_message": "Mulțumesc! Te voi suna în {callback_time}."
 }`}
                 </pre>
               </div>
               
               <div>
-                <Label className="text-sm font-medium">Configurare Agent ElevenLabs:</Label>
-                <div className="bg-muted p-3 rounded text-xs mt-1">
-                  <p className="mb-2 font-medium">În promptul agentului adaugă:</p>
-                  <p className="text-muted-foreground">
-                    "Când clientul cere callback, extrage numele, telefonul, timpul și motivul, 
-                    apoi trimite datele la webhook-ul de callback pentru programare automată."
+                <Label className="text-sm font-medium">Identificarea Utilizatorului:</Label>
+                <div className="bg-muted p-3 rounded text-xs mt-1 space-y-2">
+                  <p className="font-medium text-blue-700">Pentru securitate, webhook-ul identifică utilizatorul prin:</p>
+                  <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                    <li><strong>user_id:</strong> ID-ul direct al utilizatorului (recomandat)</li>
+                    <li><strong>user_email:</strong> Email-ul utilizatorului din sistem</li>
+                    <li><strong>agent_id:</strong> ID-ul agentului ElevenLabs asociat</li>
+                  </ul>
+                  <p className="text-xs text-orange-600">
+                    ⚠️ Include cel puțin unul dintre aceste câmpuri pentru ca callback-ul să ajungă la utilizatorul corect!
                   </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
+              <div className="flex items-start gap-2">
+                <MessageSquare className="h-4 w-4 text-blue-600 mt-0.5" />
+                <div className="text-xs">
+                  <p className="font-medium text-blue-800 mb-1">Configurare Agent ElevenLabs:</p>
+                  <p className="text-blue-700 mb-2">
+                    În promptul agentului adaugă instrucțiuni pentru a trimite datele la webhook:
+                  </p>
+                  <pre className="bg-blue-100 p-2 rounded text-blue-800 overflow-x-auto">
+{`"Când clientul cere callback:
+1. Extrage: nume, telefon, timp, motiv
+2. Trimite POST la webhook cu datele
+3. Confirmă: 'Te voi suna înapoi în [timp]!'"`}
+                  </pre>
                 </div>
               </div>
             </div>

@@ -14,7 +14,8 @@ interface CallbackWebhookRequest {
   priority?: 'low' | 'medium' | 'high' | 'urgent';
   agent_id?: string;
   conversation_id?: string;
-  user_id?: string;
+  user_id?: string; // Recomandat să fie inclus pentru securitate
+  user_email?: string; // Alternativă pentru identificare
   send_sms?: boolean;
   sms_message?: string;
 }
@@ -86,9 +87,20 @@ serve(async (req) => {
     const processedData = JSON.parse(gptData.choices[0].message.content);
     console.log('GPT processed data:', processedData);
 
-    // Get user_id from agent_id if not provided
+    // Determine user_id through multiple fallback methods for security
     let userId = payload.user_id;
+    
+    // Method 1: Direct user_id provided
+    if (!userId && payload.user_email) {
+      // Method 2: Look up by email
+      const { data: userData } = await supabase.auth.admin.listUsers();
+      const foundUser = userData.users.find(u => u.email === payload.user_email);
+      userId = foundUser?.id;
+      console.log('Found user by email:', payload.user_email, '-> userId:', userId);
+    }
+    
     if (!userId && payload.agent_id) {
+      // Method 3: Look up by agent_id
       const { data: agentData } = await supabase
         .from('kalina_agents')
         .select('user_id')
@@ -96,11 +108,27 @@ serve(async (req) => {
         .single();
       
       userId = agentData?.user_id;
+      console.log('Found user by agent_id:', payload.agent_id, '-> userId:', userId);
+    }
+    
+    if (!userId && payload.agent_id) {
+      // Method 4: Try elevenlabs_agent_id as fallback
+      const { data: agentData2 } = await supabase
+        .from('kalina_agents')
+        .select('user_id')
+        .eq('elevenlabs_agent_id', payload.agent_id)
+        .single();
+      
+      userId = agentData2?.user_id;
+      console.log('Found user by elevenlabs_agent_id:', payload.agent_id, '-> userId:', userId);
     }
 
     if (!userId) {
-      throw new Error('Cannot determine user_id for this callback');
+      console.error('Failed to determine user_id with payload:', payload);
+      throw new Error('Cannot determine user_id for this callback. Please include user_id, user_email, or valid agent_id in the request.');
     }
+
+    console.log('Final userId determined:', userId);
 
     // Create the callback in scheduled_calls table
     const { data: callbackData, error: callbackError } = await supabase
