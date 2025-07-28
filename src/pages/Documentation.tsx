@@ -41,12 +41,10 @@ const Documentation = () => {
       ]
     },
     {
-      title: 'INTEGRĂRI & API',
+      title: 'INTEGRĂRI & DEZVOLTATORI',
       items: [
-        { id: 'elevenlabs', title: 'ElevenLabs Integration', icon: Mic },
-        { id: 'webhooks', title: 'Webhooks & Callbacks', icon: Webhook },
-        { id: 'apis', title: 'API Reference', icon: Code },
-        { id: 'database', title: 'Database Schema', icon: Database }
+        { id: 'tutorials', title: 'Tutorials & Ghiduri', icon: BookOpen },
+        { id: 'support', title: 'Suport Tehnic', icon: Headphones }
       ]
     },
     {
@@ -61,36 +59,36 @@ const Documentation = () => {
 
   const renderOverview = () => (
     <div className="max-w-5xl">
-      <div className="mb-12">
-        <h1 className="text-6xl font-bold text-black mb-6">Kalina AI</h1>
-        <p className="text-2xl text-gray-600 leading-relaxed">
+      <div className="mb-12 animate-fade-in">
+        <h1 className="text-6xl font-bold text-black mb-6 animate-slide-in-up">Kalina AI</h1>
+        <p className="text-2xl text-gray-600 leading-relaxed animate-fade-in animation-delay-300">
           Platforma completă de agenți vocali AI pentru automatizarea apelurilor telefonice, 
           campanii în masă și interacțiuni cu clienții.
         </p>
       </div>
 
       <div className="grid gap-8 md:grid-cols-3 mb-16">
-        <div className="p-8 bg-black text-white rounded-2xl">
-          <Bot className="h-12 w-12 mb-4" />
+        <div className="p-8 bg-black text-white rounded-2xl hover-scale animate-fade-in animation-delay-500">
+          <Bot className="h-12 w-12 mb-4 animate-pulse" />
           <h3 className="text-xl font-bold mb-3">Agenți AI Avansați</h3>
           <p className="text-gray-300">Conversații naturale cu inteligență artificială</p>
         </div>
-        <div className="p-8 border-2 border-black rounded-2xl">
-          <Phone className="h-12 w-12 mb-4 text-black" />
+        <div className="p-8 border-2 border-black rounded-2xl hover-scale animate-fade-in animation-delay-700">
+          <Phone className="h-12 w-12 mb-4 text-black animate-pulse" />
           <h3 className="text-xl font-bold mb-3 text-black">Apeluri Automate</h3>
           <p className="text-gray-600">Campanii telefonice scalabile și eficiente</p>
         </div>
-        <div className="p-8 bg-black text-white rounded-2xl">
-          <BarChart3 className="h-12 w-12 mb-4" />
+        <div className="p-8 bg-black text-white rounded-2xl hover-scale animate-fade-in animation-delay-1000">
+          <BarChart3 className="h-12 w-12 mb-4 animate-pulse" />
           <h3 className="text-xl font-bold mb-3">Analize Detaliate</h3>
           <p className="text-gray-300">Monitorizare performanță în timp real</p>
         </div>
       </div>
 
-      <div className="mb-12">
-        <h2 className="text-3xl font-bold text-black mb-8">Componente Principale</h2>
+      <div className="mb-12 animate-fade-in animation-delay-1200">
+        <h2 className="text-3xl font-bold text-black mb-8 animate-slide-in-left">Componente Principale</h2>
         <div className="space-y-6">
-          <div className="flex items-start gap-6 p-6 border border-gray-200 rounded-xl">
+          <div className="flex items-start gap-6 p-6 border border-gray-200 rounded-xl hover-scale animate-slide-in-right animation-delay-200">
             <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center">
               <Bot className="h-6 w-6 text-white" />
             </div>
@@ -763,33 +761,34 @@ const Documentation = () => {
     <DashboardLayout>
       <div className="flex h-screen bg-white">
         {/* Sidebar */}
-        <div className="w-80 border-r-2 border-black flex flex-col bg-white">
-          <div className="p-8 border-b-2 border-black">
-            <h1 className="text-3xl font-bold text-black">Documentație</h1>
+        <div className="w-80 border-r-2 border-black flex flex-col bg-white animate-slide-in-left">
+          <div className="p-8 border-b-2 border-black animate-fade-in">
+            <h1 className="text-3xl font-bold text-black animate-pulse">Documentație</h1>
             <p className="text-gray-600 mt-2">Ghid complet Kalina AI</p>
           </div>
           
-          <nav className="flex-1 p-6">
+          <nav className="flex-1 p-6 animate-fade-in animation-delay-500">
             <div className="space-y-8">
-              {menuSections.map((section) => (
-                <div key={section.title}>
+              {menuSections.map((section, sectionIndex) => (
+                <div key={section.title} className="animate-fade-in" style={{animationDelay: `${(sectionIndex + 1) * 200}ms`}}>
                   <h3 className="text-xs font-bold text-black uppercase tracking-widest mb-4 border-b border-gray-200 pb-2">
                     {section.title}
                   </h3>
                   <div className="space-y-2">
-                    {section.items.map((item) => {
+                    {section.items.map((item, itemIndex) => {
                       const Icon = item.icon;
                       return (
                         <button
                           key={item.id}
                           onClick={() => setActiveSection(item.id)}
-                          className={`w-full flex items-center gap-4 px-4 py-3 text-left rounded-xl transition-all duration-200 text-sm font-medium ${
+                          className={`w-full flex items-center gap-4 px-4 py-3 text-left rounded-xl transition-all duration-300 text-sm font-medium hover-scale animate-slide-in-right ${
                             activeSection === item.id
-                              ? 'bg-black text-white transform scale-105'
-                              : 'text-gray-700 hover:text-black hover:bg-gray-100 hover:transform hover:scale-102'
+                              ? 'bg-black text-white transform scale-105 shadow-lg'
+                              : 'text-gray-700 hover:text-black hover:bg-gray-100 hover:shadow-md'
                           }`}
+                          style={{animationDelay: `${(sectionIndex * 100) + (itemIndex * 50)}ms`}}
                         >
-                          <Icon className="h-5 w-5" />
+                          <Icon className="h-5 w-5 animate-pulse" />
                           {item.title}
                         </button>
                       );
@@ -802,9 +801,11 @@ const Documentation = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-auto bg-white">
+        <div className="flex-1 overflow-auto bg-white animate-fade-in animation-delay-800">
           <div className="p-12">
-            {renderContent()}
+            <div className="animate-slide-in-up">
+              {renderContent()}
+            </div>
           </div>
         </div>
       </div>
