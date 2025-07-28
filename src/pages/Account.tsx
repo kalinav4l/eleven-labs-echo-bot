@@ -96,8 +96,9 @@ const Account = () => {
         const cost = data.metadata.cost || 0;
         const llmCharge = data.metadata.charging?.llm_charge || 0;
         const callCharge = data.metadata.charging?.call_charge || 0;
-        const totalCost = cost || llmCharge + callCharge;
-        const credits = Math.round(totalCost * 100);
+        // Cost is already in credits, no need to multiply by 100
+        const totalCost = cost || (llmCharge + callCharge);
+        const credits = Math.round(totalCost);
         setConversationDurations(prev => ({ ...prev, [conversationId]: duration }));
         setConversationCredits(prev => ({ ...prev, [conversationId]: credits }));
         return duration;
