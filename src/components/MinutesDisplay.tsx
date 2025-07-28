@@ -3,11 +3,11 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
-import { Coins, Plus } from 'lucide-react';
+import { Clock, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
-const CreditsDisplay = () => {
+const MinutesDisplay = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -36,7 +36,9 @@ const CreditsDisplay = () => {
     return null;
   }
 
-  const remainingCredits = credits?.remaining_credits ?? 10000;
+  const remainingCredits = credits?.remaining_credits ?? 5;
+  // Convert credits to minutes: 1 minute ≈ 6.67 credits at $0.15/minute
+  const remainingMinutes = Math.floor(remainingCredits / 6.67);
 
   const handleUpgrade = () => {
     navigate('/pricing');
@@ -45,9 +47,9 @@ const CreditsDisplay = () => {
   return (
     <div className="flex items-center space-x-2">
       <div className="flex items-center space-x-2 px-3 py-2 bg-gray-100 rounded-lg">
-        <Coins className="w-4 h-4 text-gray-600" />
+        <Clock className="w-4 h-4 text-gray-600" />
         <span className="text-sm text-gray-700 font-medium">
-          {remainingCredits.toLocaleString()} credite
+          {remainingMinutes} minute{remainingMinutes !== 1 ? '' : ''}
         </span>
       </div>
       <Button
@@ -62,4 +64,4 @@ const CreditsDisplay = () => {
   );
 };
 
-export default CreditsDisplay;
+export default MinutesDisplay;

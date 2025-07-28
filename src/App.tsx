@@ -27,6 +27,7 @@ import PhoneNumbers from "./pages/PhoneNumbers";
 import TestCall from "./pages/TestCall";
 import ConversationDetail from "./pages/ConversationDetail";
 import CallbackScheduler from "./pages/CallbackScheduler";
+import Pricing from "./pages/Pricing";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/pricing" element={<Pricing />} />
           <Route path="/account" element={<Account />} />
             <Route path="/account/*" element={<Account />} />
             <Route path="/account/kalina-agents" element={<KalinaAgents />} />

@@ -189,9 +189,9 @@ const Account = () => {
     icon: Phone,
     color: 'text-gray-600'
   }, {
-    label: 'Credite Consumate',
-    value: totalConsumedCredits.toString(),
-    icon: Zap,
+    label: 'Minute Consumate',
+    value: Math.floor(totalSecondsFromCalls / 60).toString(),
+    icon: Clock,
     color: 'text-gray-600'
   }, {
     label: 'Conversații',
@@ -200,7 +200,7 @@ const Account = () => {
     color: 'text-gray-600'
   }, {
     label: 'Cost Total ($)',
-    value: `$${(totalSecondsFromCalls / 60 * 0.15).toFixed(4)}`,
+    value: `$${(totalSecondsFromCalls / 60 * 0.15).toFixed(2)}`,
     icon: FileText,
     color: 'text-gray-600'
   }, {
