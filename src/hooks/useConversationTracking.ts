@@ -27,27 +27,35 @@ export const useConversationTracking = () => {
 
       console.log('Saving conversation to Analytics Hub:', conversationData);
 
-      // Get the real agent_id from ElevenLabs conversation if available
+      // LOGICA IDEALĂ: Capta agent_id-ul exact din conversația ElevenLabs activă
       let realAgentId = conversationData.agent_id;
       
+      // Prioritate 1: Din ElevenLabs conversation dacă este disponibil
       if (conversationData.elevenlabs_history_id || conversationData.conversation_id) {
         try {
-          console.log('Getting real agent_id from ElevenLabs conversation...');
+          console.log('🎯 Obțin agent_id-ul REAL din conversația ElevenLabs activă...');
+          const conversationId = conversationData.elevenlabs_history_id || conversationData.conversation_id;
+          
           const { data: conversationDetails, error: conversationError } = await supabase.functions.invoke('get-elevenlabs-conversation', {
             body: {
-              conversationId: conversationData.elevenlabs_history_id || conversationData.conversation_id
+              conversationId: conversationId
             }
           });
 
           if (conversationDetails && !conversationError && conversationDetails.agent_id) {
             realAgentId = conversationDetails.agent_id;
-            console.log('Found real agent_id from ElevenLabs:', realAgentId);
+            console.log('✅ AGENT_ID REAL identificat din ElevenLabs:', realAgentId);
+            console.log('📊 Conversația va fi asociată cu agentul corect:', realAgentId);
           } else {
-            console.warn('Could not get agent_id from ElevenLabs conversation:', conversationError);
+            console.warn('⚠️ Nu s-a putut obține agent_id din conversația ElevenLabs:', conversationError);
+            console.log('🔄 Folosesc agent_id-ul furnizat:', conversationData.agent_id);
           }
         } catch (error) {
-          console.warn('Error getting agent_id from ElevenLabs:', error);
+          console.warn('❌ Eroare la obținerea agent_id din ElevenLabs:', error);
+          console.log('🔄 Folosesc agent_id-ul furnizat ca fallback:', conversationData.agent_id);
         }
+      } else {
+        console.log('📝 Nu există conversation_id ElevenLabs, folosesc agent_id furnizat:', conversationData.agent_id);
       }
 
       // Check for callback intent in transcript

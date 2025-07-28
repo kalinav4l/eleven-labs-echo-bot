@@ -31,7 +31,9 @@ serve(async (req) => {
     );
 
     const payload: ElevenLabsWebhookPayload = await req.json();
-    console.log('Received ElevenLabs webhook payload:', payload);
+    console.log('🎯 WEBHOOK PAYLOAD - Agent în conversația activă:', payload.agent_id);
+    console.log('📞 WEBHOOK PAYLOAD - Conversation ID:', payload.conversation_id);
+    console.log('🔍 WEBHOOK PAYLOAD - Complet:', payload);
 
     if (!payload.conversation_id || !payload.agent_id) {
       throw new Error('Missing required fields: conversation_id, agent_id');
@@ -58,7 +60,10 @@ serve(async (req) => {
 
     const userId = agentData.user_id;
     const agentName = agentData.name;
-    console.log(`Processing conversation for agent owner: ${userId} (agent: ${payload.agent_id})`);
+    console.log(`✅ AGENT GĂSIT - Proprietar: ${userId}`);
+    console.log(`🎯 AGENT ACTIV - ID: ${payload.agent_id}`);
+    console.log(`📝 AGENT ACTIV - Nume: ${agentName}`);
+    console.log(`🔄 Procesez conversația pentru proprietarul corect al agentului...`);
 
     // Only process completed conversations
     if (payload.status === 'completed') {

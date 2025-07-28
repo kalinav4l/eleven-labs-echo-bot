@@ -35,11 +35,12 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
   const { saveConversation } = useConversationTracking();
 
   const conversation = useConversation({
-    onConnect: () => {
-      console.log('✅ Conectat la agent vocal');
+    onConnect: (props: { conversationId: string }) => {
+      console.log('✅ Conectat la agent vocal cu conversationId:', props.conversationId);
       setIsConnecting(false);
       setIsActive(true);
       setConversationStart(new Date());
+      setCurrentConversationId(props.conversationId); // Capturează conversationId din connect
       toast({
         title: "Conectat!",
         description: "Poți vorbi acum cu agentul",
@@ -210,9 +211,9 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
            throw new Error('ID agent invalid: ' + agentId);
          }
          
-         const sessionId = await conversation.startSession({ agentId });
-         setCurrentConversationId(sessionId);
-         console.log('📞 Conversație inițiată cu ID:', sessionId);
+          const sessionId = await conversation.startSession({ agentId });
+          console.log('📞 Conversație inițiată cu ID:', sessionId);
+          console.log('🎯 Agent folosit pentru conversație:', agentId);
       } catch (error) {
         console.error('❌ Eroare detaliată la pornirea conversației:', error);
         console.error('❌ Tip eroare:', error.name);
