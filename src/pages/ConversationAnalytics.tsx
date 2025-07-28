@@ -144,18 +144,10 @@ const ConversationAnalytics = () => {
     }
   };
 
-  // Load conversation data when call history changes
+  // Load conversation data when call history changes - automatically update all
   useEffect(() => {
-    const loadConversationData = async () => {
-      const conversationsToLoad = callHistory.filter(call => call.conversation_id && (conversationDurations[call.conversation_id] === undefined || conversationCosts[call.conversation_id] === undefined));
-      for (const call of conversationsToLoad) {
-        if (call.conversation_id) {
-          await getConversationData(call.conversation_id);
-        }
-      }
-    };
     if (callHistory.length > 0) {
-      loadConversationData();
+      updateAllConversations();
     }
   }, [callHistory.length]); // Only depend on length to avoid infinite loop
 
