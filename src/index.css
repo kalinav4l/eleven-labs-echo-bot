@@ -275,12 +275,3 @@
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-20px); }
 }
-
-/* Hover scale animation */
-.hover-scale {
-  transition: transform 0.2s ease-in-out;
-}
-
-.hover-scale:hover {
-  transform: scale(1.02);
-}
