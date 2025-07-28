@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,54 +67,6 @@ const Account = () => {
   // State for enhanced analytics data
   const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
   const [conversationCredits, setConversationCredits] = useState<Record<string, number>>({});
-  
-  // 3D scroll effect refs
-  const containerRef = useRef<HTMLDivElement>(null);
-  const statsRef = useRef<HTMLDivElement>(null);
-  const performanceRef = useRef<HTMLDivElement>(null);
-  const chartRef = useRef<HTMLDivElement>(null);
-
-  // 3D scroll animations
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const viewportHeight = window.innerHeight;
-      
-      // Stats cards 3D rotation based on scroll
-      if (statsRef.current) {
-        const rect = statsRef.current.getBoundingClientRect();
-        const elementCenter = rect.top + rect.height / 2;
-        const distanceFromCenter = (viewportHeight / 2 - elementCenter) / viewportHeight;
-        const rotateX = distanceFromCenter * 15;
-        statsRef.current.style.transform = `perspective(1000px) rotateX(${rotateX}deg) translateZ(20px)`;
-      }
-      
-      // Performance section parallax
-      if (performanceRef.current) {
-        const rect = performanceRef.current.getBoundingClientRect();
-        const elementCenter = rect.top + rect.height / 2;
-        const distanceFromCenter = (viewportHeight / 2 - elementCenter) / viewportHeight;
-        const rotateY = distanceFromCenter * 10;
-        const translateZ = Math.abs(distanceFromCenter) * 30;
-        performanceRef.current.style.transform = `perspective(1200px) rotateY(${rotateY}deg) translateZ(${translateZ}px)`;
-      }
-      
-      // Chart floating effect
-      if (chartRef.current) {
-        const rect = chartRef.current.getBoundingClientRect();
-        const elementCenter = rect.top + rect.height / 2;
-        const distanceFromCenter = (viewportHeight / 2 - elementCenter) / viewportHeight;
-        const translateY = distanceFromCenter * 20;
-        const rotateZ = distanceFromCenter * 5;
-        chartRef.current.style.transform = `perspective(800px) translateY(${translateY}px) rotateZ(${rotateZ}deg) translateZ(40px)`;
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Initial call
-    
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -300,84 +252,53 @@ const Account = () => {
             </div>
           </div>
         </div>
-    </DashboardLayout>;
+      </DashboardLayout>;
   }
 
-  return (
-    <DashboardLayout>
-      <div ref={containerRef} className="min-h-screen bg-white relative overflow-hidden">
-        {/* Floating 3D Background Elements */}
-        <div className="fixed inset-0 pointer-events-none">
-          <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-blue-100/20 to-purple-100/20 rounded-full blur-xl animate-float" style={{ animationDelay: '0s' }}></div>
-          <div className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-br from-green-100/20 to-blue-100/20 rounded-full blur-xl animate-float" style={{ animationDelay: '2s' }}></div>
-          <div className="absolute bottom-40 left-1/4 w-40 h-40 bg-gradient-to-br from-purple-100/20 to-pink-100/20 rounded-full blur-xl animate-float" style={{ animationDelay: '4s' }}></div>
-          <div className="absolute bottom-20 right-1/3 w-28 h-28 bg-gradient-to-br from-orange-100/20 to-yellow-100/20 rounded-full blur-xl animate-float" style={{ animationDelay: '1s' }}></div>
-        </div>
-
-        {/* Animated Header with 3D effect */}
-        <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
+  return <DashboardLayout>
+      <div className="min-h-screen bg-white">
+        {/* Animated Header */}
+        <div className="bg-white border-b border-gray-200">
           <div className="px-6 py-6">
             <div className="flex items-center justify-between animate-fade-in">
-              <div className="relative">
-                <h1 className="text-3xl font-bold text-gray-900 animate-[slideInLeft_0.6s_ease-out] hover:scale-105 transition-all duration-500 cursor-pointer hover:text-blue-600 transform-gpu hover:translateZ-10">
+              <div>
+                <h1 className="text-2xl font-semibold text-gray-900 animate-[slideInLeft_0.6s_ease-out]">
                   Bun venit, {displayName}!
                 </h1>
-                <p className="text-gray-600 mt-1 text-sm animate-[slideInLeft_0.6s_ease-out_0.2s_both] transform transition-all duration-300 hover:translateY-1">
+                <p className="text-gray-600 mt-1 text-sm animate-[slideInLeft_0.6s_ease-out_0.2s_both]">
                   Gestionează agenții tăi AI și urmărește performanțele
                 </p>
-                <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500 hover:w-full group-hover:w-full"></div>
               </div>
-              <Button 
-                onClick={handleSignOut} 
-                variant="outline" 
-                className="border-gray-300 hover:border-gray-400 text-gray-700 animate-[slideInRight_0.6s_ease-out] hover:scale-110 transition-all duration-500 transform-gpu hover:shadow-2xl hover:translateZ-20 hover:rotate-1"
-              >
+              <Button onClick={handleSignOut} variant="outline" className="border-gray-300 hover:border-gray-400 text-gray-700 animate-[slideInRight_0.6s_ease-out] hover:scale-105 transition-transform">
                 Ieșire
               </Button>
             </div>
           </div>
         </div>
 
-        <div className="px-6 py-8 relative">
-          {/* 3D Stats Cards with Scroll Animations */}
-          <div ref={statsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12 perspective-1000">
+        <div className="px-6 py-8">
+          {/* Animated Quick Stats with Staggered Animation */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {quickStats.map((stat, index) => (
               <div 
                 key={index} 
-                className="animate-fade-in group relative"
-                style={{ 
-                  animationDelay: `${index * 150}ms`,
-                  transformStyle: 'preserve-3d'
-                }}
+                className="animate-fade-in hover-scale group"
+                style={{ animationDelay: `${index * 150}ms` }}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-700 transform group-hover:scale-110"></div>
-                <div className="relative bg-white rounded-2xl border border-gray-200 p-6 shadow-lg hover:shadow-2xl transition-all duration-700 transform-gpu hover:translateY-2 hover:rotateX-5 hover:rotateY-5 hover:translateZ-20 group cursor-pointer">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center group-hover:from-blue-500 group-hover:to-purple-500 transition-all duration-500 group-hover:scale-110 group-hover:rotate-12 shadow-lg">
-                        <stat.icon className="w-6 h-6 text-gray-600 group-hover:text-white transition-all duration-500 group-hover:scale-110" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600 group-hover:text-gray-800 transition-colors duration-300">{stat.label}</p>
-                        <p className="text-2xl font-bold text-gray-900 group-hover:text-blue-600 transition-all duration-500 transform group-hover:scale-110">
-                          <AnimatedCounter target={parseInt(stat.value) || 0} />
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* 3D Shine Effect */}
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-shine transition-opacity duration-500"></div>
-                </div>
+                <StatCard 
+                  label={stat.label} 
+                  value={stat.value} 
+                  icon={stat.icon} 
+                  delay={index * 100}
+                  className="transition-all duration-500 hover:shadow-lg hover:shadow-primary/10 group-hover:border-primary/20"
+                />
               </div>
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
-            {/* 3D Performance Overview */}
-            <div ref={performanceRef} className="relative group" style={{ transformStyle: 'preserve-3d' }}>
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-1000 transform group-hover:scale-110"></div>
-              <div className="relative border border-gray-200/50 rounded-3xl bg-white/90 backdrop-blur-sm shadow-2xl hover:shadow-3xl transition-all duration-700 animate-scale-in group overflow-hidden transform-gpu hover:translateY-4 hover:rotateX-10 hover:rotateY-5 hover:translateZ-30">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            {/* Enhanced Performance Overview */}
+            <div className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-lg hover:shadow-primary/5 transition-all duration-500 animate-scale-in group overflow-hidden relative">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
               <div className="p-6 border-b border-gray-200 relative z-10">
                 <h2 className="font-semibold text-gray-900 text-lg flex items-center">
@@ -457,103 +378,84 @@ const Account = () => {
               </div>
             </div>
 
-            {/* 3D Recent Activity */}
-            <div className="relative group" style={{ transformStyle: 'preserve-3d', animationDelay: '200ms' }}>
-              <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-teal-500/20 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-1000 transform group-hover:scale-110"></div>
-              <div className="relative border border-gray-200/50 rounded-3xl bg-white/90 backdrop-blur-sm shadow-2xl hover:shadow-3xl transition-all duration-700 animate-scale-in group overflow-hidden transform-gpu hover:translateY-4 hover:rotateX-10 hover:rotateY-5 hover:translateZ-30">
-                <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-                <div className="p-6 border-b border-gray-200 relative z-10">
-                  <h2 className="font-semibold text-gray-900 text-lg flex items-center">
-                    <div className="w-2 h-2 bg-gradient-to-r from-secondary to-primary rounded-full mr-3 animate-pulse shadow-sm"></div>
-                    Activitate Recentă
-                  </h2>
-                </div>
-                <div className="p-6 relative z-10">
-                  <div className="space-y-3">
-                    {recentActivity.length > 0 ? recentActivity.map((activity, index) => (
-                      <div 
-                        key={index} 
-                        className="flex items-start space-x-4 p-3 rounded-xl hover:bg-gradient-to-r hover:from-primary/5 hover:to-secondary/5 transition-all duration-500 hover:scale-[1.03] cursor-pointer group hover:shadow-md animate-slide-in-right border border-transparent hover:border-primary/10" 
-                        style={{ animationDelay: `${index * 150}ms` }}
-                      >
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center flex-shrink-0 group-hover:from-primary/20 group-hover:to-secondary/20 group-hover:scale-110 transition-all duration-300 shadow-sm">
-                          <activity.icon className="w-4 h-4 text-primary group-hover:text-secondary transition-colors duration-300" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-900 font-medium group-hover:text-primary transition-colors duration-300">
-                            {activity.action}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1 flex items-center group-hover:text-gray-600 transition-colors duration-300">
-                            <Clock className="w-3 h-3 mr-1 group-hover:scale-110 transition-transform duration-300" />
-                            {activity.time}
-                          </p>
-                        </div>
+            {/* Enhanced Recent Activity */}
+            <div className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-lg hover:shadow-secondary/5 transition-all duration-500 animate-scale-in group overflow-hidden relative" style={{ animationDelay: '200ms' }}>
+              <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+              <div className="p-6 border-b border-gray-200 relative z-10">
+                <h2 className="font-semibold text-gray-900 text-lg flex items-center">
+                  <div className="w-2 h-2 bg-gradient-to-r from-secondary to-primary rounded-full mr-3 animate-pulse shadow-sm"></div>
+                  Activitate Recentă
+                </h2>
+              </div>
+              <div className="p-6 relative z-10">
+                <div className="space-y-3">
+                  {recentActivity.length > 0 ? recentActivity.map((activity, index) => (
+                    <div 
+                      key={index} 
+                      className="flex items-start space-x-4 p-3 rounded-xl hover:bg-gradient-to-r hover:from-primary/5 hover:to-secondary/5 transition-all duration-500 hover:scale-[1.03] cursor-pointer group hover:shadow-md animate-slide-in-right border border-transparent hover:border-primary/10" 
+                      style={{ animationDelay: `${index * 150}ms` }}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center flex-shrink-0 group-hover:from-primary/20 group-hover:to-secondary/20 group-hover:scale-110 transition-all duration-300 shadow-sm">
+                        <activity.icon className="w-4 h-4 text-primary group-hover:text-secondary transition-colors duration-300" />
                       </div>
-                    )) : (
-                      <div className="text-center py-8 animate-fade-in">
-                        <div className="w-16 h-16 mx-auto bg-gradient-to-br from-gray-100 to-gray-50 rounded-full flex items-center justify-center mb-4 animate-pulse">
-                          <Activity className="w-8 h-8 text-gray-400" />
-                        </div>
-                        <p className="text-gray-500 text-sm">Nu există activitate recentă</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900 font-medium group-hover:text-primary transition-colors duration-300">
+                          {activity.action}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1 flex items-center group-hover:text-gray-600 transition-colors duration-300">
+                          <Clock className="w-3 h-3 mr-1 group-hover:scale-110 transition-transform duration-300" />
+                          {activity.time}
+                        </p>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )) : (
+                    <div className="text-center py-8 animate-fade-in">
+                      <div className="w-16 h-16 mx-auto bg-gradient-to-br from-gray-100 to-gray-50 rounded-full flex items-center justify-center mb-4 animate-pulse">
+                        <Activity className="w-8 h-8 text-gray-400" />
+                      </div>
+                      <p className="text-gray-500 text-sm">Nu există activitate recentă</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
-          </div>
 
-          {/* 3D Floating Chart */}
-          <div ref={chartRef} className="relative mb-12" style={{ transformStyle: 'preserve-3d' }}>
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-3xl blur-3xl opacity-50 animate-pulse"></div>
-            <div className="relative transform-gpu hover:translateY-6 hover:rotateX-5 hover:translateZ-40 transition-all duration-1000">
-              <ElevenLabsChart />
+          {/* ElevenLabs Chart */}
+          <ElevenLabsChart />
+
+          {/* Agent Overview */}
+          <div className="border border-gray-200 rounded-lg bg-white mt-8">
+            <div className="p-4 border-b border-gray-200">
+              <h2 className="font-medium text-gray-900">Agenții Tăi</h2>
             </div>
-          </div>
-
-          {/* 3D Agent Overview */}
-          <div className="relative group mt-8" style={{ transformStyle: 'preserve-3d' }}>
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-1000"></div>
-            <div className="relative border border-gray-200/50 rounded-3xl bg-white/95 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-700 transform-gpu hover:translateY-2 hover:rotateX-3 hover:translateZ-20">
-              <div className="p-4 border-b border-gray-200">
-                <h2 className="font-medium text-gray-900">Agenții Tăi</h2>
-              </div>
-              <div className="p-4">
-                {userAgents && userAgents.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {userAgents.slice(0, 6).map((agent, index) => (
-                      <div key={index} className="p-3 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-medium text-gray-900 text-sm">{agent.name}</h3>
-                          <Badge variant={agent.is_active ? 'default' : 'secondary'} className="text-xs">
-                            {agent.is_active ? 'activ' : 'paused'}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-gray-600 mb-2">{agent.description || 'Agent AI'}</p>
-                        <p className="text-xs text-gray-500">Creat: {new Date(agent.created_at).toLocaleDateString('ro-RO')}</p>
+            <div className="p-4">
+              {userAgents && userAgents.length > 0 ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {userAgents.slice(0, 6).map((agent, index) => <div key={index} className="p-3 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-medium text-gray-900 text-sm">{agent.name}</h3>
+                        <Badge variant={agent.is_active ? 'default' : 'secondary'} className="text-xs">
+                          {agent.is_active ? 'activ' : 'paused'}
+                        </Badge>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Bot className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500 mb-4">Nu ai încă agenți creați</p>
-                    <Link to="/account/kalina-agents">
-                      <Button className="bg-gray-900 hover:bg-gray-800 text-white">
-                        <Bot className="w-4 h-4 mr-2" />
-                        Creează primul tău agent
-                      </Button>
-                    </Link>
-                  </div>
-                )}
-              </div>
+                      <p className="text-xs text-gray-600 mb-2">{agent.description || 'Agent AI'}</p>
+                      <p className="text-xs text-gray-500">Creat: {new Date(agent.created_at).toLocaleDateString('ro-RO')}</p>
+                    </div>)}
+                </div> : <div className="text-center py-8">
+                  <Bot className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 mb-4">Nu ai încă agenți creați</p>
+                  <Link to="/account/kalina-agents">
+                    <Button className="bg-gray-900 hover:bg-gray-800 text-white">
+                      <Bot className="w-4 h-4 mr-2" />
+                      Creează primul tău agent
+                    </Button>
+                  </Link>
+                </div>}
             </div>
           </div>
         </div>
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
 
 export default Account;
