@@ -109,16 +109,20 @@ const Account = () => {
     return 0;
   };
 
-  // Load detailed conversation data
+  // Load detailed conversation data automatically for all conversations
   useEffect(() => {
     const loadDetailedAnalytics = async () => {
-      const conversationsToLoad = callHistory?.filter(call => call.conversation_id && conversationDurations[call.conversation_id] === undefined) || [];
-      for (const call of conversationsToLoad) {
-        if (call.conversation_id) {
-          await getConversationData(call.conversation_id);
-        }
+      const conversationsToLoad = callHistory?.filter(call => call.conversation_id) || [];
+      
+      if (conversationsToLoad.length > 0) {
+        // Process all conversations in parallel for faster loading
+        const promises = conversationsToLoad.map(call => 
+          call.conversation_id ? getConversationData(call.conversation_id) : Promise.resolve(0)
+        );
+        await Promise.all(promises);
       }
     };
+    
     if (callHistory && callHistory.length > 0) {
       loadDetailedAnalytics();
     }
