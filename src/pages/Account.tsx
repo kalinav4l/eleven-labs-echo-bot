@@ -27,6 +27,35 @@ const Account = () => {
     loading: authLoading
   } = useAuth();
 
+  const {
+    displayName,
+    loading: profileLoading
+  } = useUserProfile();
+
+  const {
+    data: userAgents,
+    isLoading: agentsLoading
+  } = useUserAgents();
+  
+  const {
+    data: userStats,
+    isLoading: statsLoading
+  } = useUserStats();
+  
+  const {
+    data: recentConversations,
+    isLoading: conversationsLoading
+  } = useUserConversations();
+  
+  const {
+    callHistory,
+    isLoading: callHistoryLoading
+  } = useCallHistory();
+  
+  const {
+    savedTranscripts
+  } = useTranscripts();
+
   // Fetch user credits data
   const { data: userCredits } = useQuery({
     queryKey: ['user-credits', user?.id],
@@ -49,6 +78,10 @@ const Account = () => {
     enabled: !!user,
   });
 
+  // State for enhanced analytics data
+  const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
+  const [conversationCredits, setConversationCredits] = useState<Record<string, number>>({});
+
   // Redirect to landing if not authenticated
   if (!authLoading && !user) {
     window.location.href = '/';
@@ -63,33 +96,6 @@ const Account = () => {
       </div>
     );
   }
-  const {
-    displayName,
-    loading: profileLoading
-  } = useUserProfile();
-  const {
-    data: userAgents,
-    isLoading: agentsLoading
-  } = useUserAgents();
-  const {
-    data: userStats,
-    isLoading: statsLoading
-  } = useUserStats();
-  const {
-    data: recentConversations,
-    isLoading: conversationsLoading
-  } = useUserConversations();
-  const {
-    callHistory,
-    isLoading: callHistoryLoading
-  } = useCallHistory();
-  const {
-    savedTranscripts
-  } = useTranscripts();
-
-  // State for enhanced analytics data
-  const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
-  const [conversationCredits, setConversationCredits] = useState<Record<string, number>>({});
 
   const handleSignOut = async () => {
     try {
