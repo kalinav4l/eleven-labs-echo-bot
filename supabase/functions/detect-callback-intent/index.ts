@@ -332,7 +332,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, conversationId, phoneNumber, contactName, agentId } = await req.json();
+    const { text, conversationId, phoneNumber, contactName, agentId, userId } = await req.json();
 
     // Input validation
     if (!text || typeof text !== 'string') {
@@ -360,49 +360,54 @@ serve(async (req) => {
       );
     }
 
-    // Find the agent owner based on agentId
-    if (!agentId) {
-      throw new Error('Agent ID is required to create callback');
-    }
+    // Use transmitted userId if available, otherwise find agent owner
+    let callbackUserId = userId;
+    
+    if (!callbackUserId) {
+      // Fallback: Find the agent owner based on agentId
+      if (!agentId) {
+        throw new Error('Either userId or agentId is required to create callback');
+      }
 
-    // Try to find agent by elevenlabs_agent_id first, then by agent_id
-    let agentData = null;
-    let agentError = null;
-    
-    // First try elevenlabs_agent_id
-    const { data: elevenLabsAgent, error: elevenLabsError } = await supabase
-      .from('kalina_agents')
-      .select('user_id, name')
-      .eq('elevenlabs_agent_id', agentId)
-      .single();
-    
-    if (elevenLabsAgent) {
-      agentData = elevenLabsAgent;
-      console.log('✅ Agent găsit prin elevenlabs_agent_id:', agentId);
-    } else {
-      // Fallback to agent_id column
-      const { data: normalAgent, error: normalError } = await supabase
+      // Try to find agent by elevenlabs_agent_id first, then by agent_id
+      let agentData = null;
+      let agentError = null;
+      
+      // First try elevenlabs_agent_id
+      const { data: elevenLabsAgent, error: elevenLabsError } = await supabase
         .from('kalina_agents')
         .select('user_id, name')
-        .eq('agent_id', agentId)
+        .eq('elevenlabs_agent_id', agentId)
         .single();
       
-      agentData = normalAgent;
-      agentError = normalError;
-      
-      if (normalAgent) {
-        console.log('✅ Agent găsit prin agent_id:', agentId);
+      if (elevenLabsAgent) {
+        agentData = elevenLabsAgent;
+        console.log('✅ Agent găsit prin elevenlabs_agent_id:', agentId);
       } else {
-        console.error('❌ Agent nu a fost găsit în niciuna din coloane pentru:', agentId);
+        // Fallback to agent_id column
+        const { data: normalAgent, error: normalError } = await supabase
+          .from('kalina_agents')
+          .select('user_id, name')
+          .eq('agent_id', agentId)
+          .single();
+        
+        agentData = normalAgent;
+        agentError = normalError;
+        
+        if (normalAgent) {
+          console.log('✅ Agent găsit prin agent_id:', agentId);
+        } else {
+          console.error('❌ Agent nu a fost găsit în niciuna din coloane pentru:', agentId);
+        }
       }
-    }
-    
-    if (!agentData) {
-      console.error('Could not find agent owner for agent:', agentId, { elevenLabsError, agentError });
-      throw new Error(`Agent not found in system: ${agentId}. Asigură-te că agentul există în baza de date.`);
-    }
+      
+      if (!agentData) {
+        console.error('Could not find agent owner for agent:', agentId, { elevenLabsError, agentError });
+        throw new Error(`Agent not found in system: ${agentId}. Asigură-te că agentul există în baza de date.`);
+      }
 
-    const callbackUserId = agentData.user_id;
+      callbackUserId = agentData.user_id;
+    }
     console.log(`Creating callback for agent owner: ${callbackUserId} (agent: ${agentId})`);
 
     // Create callback entry in scheduled_calls

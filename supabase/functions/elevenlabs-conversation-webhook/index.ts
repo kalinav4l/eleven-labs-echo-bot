@@ -149,7 +149,8 @@ serve(async (req) => {
               conversationId: payload.conversation_id,
               phoneNumber: payload.phone_number || conversationDetails?.phone_number,
               contactName: conversationDetails?.contact_name || 'Apelant necunoscut',
-              agentId: payload.agent_id // Use the real ElevenLabs agent_id
+              agentId: payload.agent_id, // Use the real ElevenLabs agent_id
+              userId: userId // Transmit explicit user_id-ul proprietarului agentului
             }
           });
 
