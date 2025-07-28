@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { User, Settings, Bot, FileText, PhoneCall, X, BarChart3, Calendar, Globe, Mail, Workflow, BookOpen, Phone, TestTube, PhoneForwarded } from 'lucide-react';
+import { User, Settings, Bot, FileText, PhoneCall, X, BarChart3, Calendar, Globe, Mail, Workflow, BookOpen, Phone, TestTube, PhoneForwarded, CreditCard } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from '@/hooks/use-mobile';
 interface SidebarProps {
@@ -129,6 +129,10 @@ const Sidebar = ({
           
           {/* Documentation & Settings in bottom corner */}
           <div className="mt-auto space-y-1">
+            <Link to="/pricing" className={`${location.pathname === '/pricing' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
+              <CreditCard className="mr-3 h-4 w-4" />
+              <span>Pricing</span>
+            </Link>
             <Link to="/account/documentation" className={`${location.pathname === '/account/documentation' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
               <BookOpen className="mr-3 h-4 w-4" />
               <span>Documentation</span>
