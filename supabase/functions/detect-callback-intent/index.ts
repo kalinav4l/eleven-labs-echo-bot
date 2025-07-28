@@ -434,7 +434,7 @@ serve(async (req) => {
       console.log('✅ Folosesc userId transmis direct:', callbackUserId);
     }
     
-    console.log(`🎯 Creez callback pentru proprietarul agentului: ${callbackUserId} (agent: ${agentId})`);
+    console.log(`🎯 Creez callback pentru utilizatorul sunat: ${callbackUserId} (numărul: ${phoneNumber})`);
 
     // Create callback entry in scheduled_calls
     const callbackData = {
