@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useCallbacks } from '@/hooks/useCallbacks';
+import { useCallbackOperations } from '@/hooks/useCallbacks';
 import { useUserAgents } from '@/hooks/useUserAgents';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,7 +48,7 @@ const CallbackScheduler = () => {
     client_name: '',
     phone_number: '',
     scheduled_datetime: '',
-    priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
+    priority: 'medium' as 'low' | 'medium' | 'high',
     description: '',
     notes: '',
     callback_reason: ''
@@ -63,7 +63,7 @@ const CallbackScheduler = () => {
     updateCallback: updateCallbackMutation,
     deleteCallback: deleteCallbackMutation,
     executeCallback: executeCallbackMutation
-  } = useCallbacks();
+  } = useCallbackOperations();
 
   const { data: userAgents } = useUserAgents();
 
@@ -78,11 +78,11 @@ const CallbackScheduler = () => {
     setEditForm({
       client_name: callback.client_name,
       phone_number: callback.phone_number,
-      scheduled_datetime: callback.scheduled_datetime.slice(0, 16),
-      priority: callback.priority,
+      scheduled_datetime: callback.scheduled_time.slice(0, 16),
+      priority: callback.priority === 'urgent' ? 'high' : callback.priority,
       description: callback.description || '',
       notes: callback.notes || '',
-      callback_reason: callback.callback_reason || ''
+      callback_reason: callback.reason || ''
     });
     setSelectedCallback(callback);
     setIsEditDialogOpen(true);
@@ -98,15 +98,13 @@ const CallbackScheduler = () => {
 
     updateCallbackMutation.mutate({
       id: selectedCallback.id,
-      updates: {
-        client_name: editForm.client_name,
-        phone_number: editForm.phone_number,
-        scheduled_datetime: editForm.scheduled_datetime,
-        priority: editForm.priority,
-        description: editForm.description,
-        notes: editForm.notes,
-        callback_reason: editForm.callback_reason
-      }
+      client_name: editForm.client_name,
+      phone_number: editForm.phone_number,
+      scheduled_time: editForm.scheduled_datetime,
+      priority: editForm.priority,
+      description: editForm.description,
+      notes: editForm.notes,
+      reason: editForm.callback_reason
     });
     setIsEditDialogOpen(false);
   };
@@ -146,8 +144,8 @@ const CallbackScheduler = () => {
           </div>
           
           {/* Table Rows */}
-          {callbacks.map((callback) => {
-            const isOverdue = new Date(callback.scheduled_datetime) < new Date() && callback.status === 'scheduled';
+            {callbacks.map((callback) => {
+              const isOverdue = new Date(callback.scheduled_time) < new Date() && callback.status === 'scheduled';
             
             return (
               <div 
@@ -172,7 +170,7 @@ const CallbackScheduler = () => {
                 
                 <div className="col-span-2">
                   <div className="text-sm text-gray-600">
-                    {format(new Date(callback.scheduled_datetime), 'dd MMM, HH:mm', { locale: ro })}
+                    {format(new Date(callback.scheduled_time), 'dd MMM, HH:mm', { locale: ro })}
                     {isOverdue && (
                       <div className="text-xs text-red-600 font-medium">Întârziat</div>
                     )}
@@ -264,7 +262,7 @@ const CallbackScheduler = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">📊 Toate</SelectItem>
-                  <SelectItem value="urgent">🔴 Urgent</SelectItem>
+                  
                   <SelectItem value="high">🟠 Mare</SelectItem>
                   <SelectItem value="medium">🟡 Medie</SelectItem>
                   <SelectItem value="low">🟢 Mică</SelectItem>
@@ -353,7 +351,7 @@ const CallbackScheduler = () => {
                   <div>
                     <Label className="text-sm font-medium text-gray-700">Programat pentru</Label>
                     <p className="text-sm text-gray-900 mt-1">
-                      {format(new Date(selectedCallback.scheduled_datetime), 'dd MMMM yyyy, HH:mm', { locale: ro })}
+                      {format(new Date(selectedCallback.scheduled_time), 'dd MMMM yyyy, HH:mm', { locale: ro })}
                     </p>
                   </div>
                   
@@ -369,10 +367,10 @@ const CallbackScheduler = () => {
                     <p className="text-sm text-gray-900 mt-1 capitalize">{selectedCallback.priority}</p>
                   </div>
                   
-                  {selectedCallback.callback_reason && (
+                  {selectedCallback.reason && (
                     <div>
                       <Label className="text-sm font-medium text-gray-700">Motiv callback</Label>
-                      <p className="text-sm text-gray-900 mt-1">{selectedCallback.callback_reason}</p>
+                      <p className="text-sm text-gray-900 mt-1">{selectedCallback.reason}</p>
                     </div>
                   )}
                   
@@ -484,7 +482,7 @@ const CallbackScheduler = () => {
                     <SelectItem value="low">Mică</SelectItem>
                     <SelectItem value="medium">Medie</SelectItem>
                     <SelectItem value="high">Mare</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
+                    
                   </SelectContent>
                 </Select>
               </div>

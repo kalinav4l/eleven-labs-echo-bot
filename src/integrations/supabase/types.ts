@@ -182,6 +182,54 @@ export type Database = {
         }
         Relationships: []
       }
+      callback_requests: {
+        Row: {
+          agent_id: string | null
+          client_name: string
+          created_at: string
+          description: string | null
+          id: string
+          notes: string | null
+          phone_number: string
+          priority: string
+          reason: string | null
+          scheduled_time: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_id?: string | null
+          client_name: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          notes?: string | null
+          phone_number: string
+          priority?: string
+          reason?: string | null
+          scheduled_time: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string | null
+          client_name?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          notes?: string | null
+          phone_number?: string
+          priority?: string
+          reason?: string | null
+          scheduled_time?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       campaign_contacts: {
         Row: {
           call_attempts: number | null
