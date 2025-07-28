@@ -88,11 +88,6 @@ const Sidebar = ({
                 <PhoneForwarded className="mr-3 h-4 w-4" />
                 <span>Callbacks</span>
               </Link>
-
-              <Link to="/account/phone-mapping" className={`${location.pathname === '/account/phone-mapping' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
-                <Phone className="mr-3 h-4 w-4" />
-                <span>My Numbers</span>
-              </Link>
             </div>
           </div>
 

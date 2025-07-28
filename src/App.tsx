@@ -27,7 +27,6 @@ import PhoneNumbers from "./pages/PhoneNumbers";
 import TestCall from "./pages/TestCall";
 import ConversationDetail from "./pages/ConversationDetail";
 import CallbackScheduler from "./pages/CallbackScheduler";
-import PhoneNumberMapping from "./pages/PhoneNumberMapping";
 
 const queryClient = new QueryClient();
 
@@ -59,7 +58,6 @@ function App() {
             <Route path="/account/phone-numbers" element={<PhoneNumbers />} />
             <Route path="/account/test-call" element={<TestCall />} />
             <Route path="/account/callbacks" element={<CallbackScheduler />} />
-            <Route path="/account/phone-mapping" element={<PhoneNumberMapping />} />
             <Route path="/account/settings" element={<AccountSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
