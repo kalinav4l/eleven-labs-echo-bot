@@ -199,14 +199,9 @@ const Account = () => {
     icon: MessageSquare,
     color: 'text-gray-600'
   }, {
-    label: 'Transcripturi',
-    value: totalTranscripts.toString(),
+    label: 'Cost Total ($)',
+    value: `$${(totalSecondsFromCalls / 60 * 0.0015).toFixed(4)}`,
     icon: FileText,
-    color: 'text-gray-600'
-  }, {
-    label: 'Timp Vorbire',
-    value: totalTimeFormatted,
-    icon: Clock,
     color: 'text-gray-600'
   }];
 
