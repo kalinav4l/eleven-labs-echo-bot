@@ -29,11 +29,25 @@ export const useCallbacks = () => {
     queryFn: async () => {
       if (!user) return [];
       
+      // First get the user's agents to find agent_ids
+      const { data: agents, error: agentsError } = await supabase
+        .from('kalina_agents')
+        .select('agent_id')
+        .eq('user_id', user.id);
+
+      if (agentsError) {
+        console.error('Error fetching user agents:', agentsError);
+        throw agentsError;
+      }
+
+      const agentIds = agents?.map(agent => agent.agent_id) || [];
+      
+      // Fetch callbacks for this user (direct calls) OR callbacks made by their agents
       const { data, error } = await supabase
         .from('scheduled_calls')
         .select('*')
-        .eq('user_id', user.id)
         .eq('task_type', 'callback')
+        .or(`user_id.eq.${user.id},agent_id.in.(${agentIds.join(',')})`)
         .order('scheduled_datetime', { ascending: true });
 
       if (error) {
