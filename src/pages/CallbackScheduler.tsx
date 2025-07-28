@@ -585,20 +585,26 @@ const CallbackScheduler = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
               <div>
-                <Label className="text-sm font-medium">Exemplu Payload JSON:</Label>
-                <pre className="bg-muted p-3 rounded text-xs overflow-x-auto mt-1">
+                <Label className="text-sm font-medium">Format Minim (doar 3 câmpuri):</Label>
+                <pre className="bg-green-50 border border-green-200 p-3 rounded text-xs overflow-x-auto mt-1">
 {`{
-  "client_name": "Ion Popescu",
   "phone_number": "+37379123456",
   "callback_time": "30 minutes",
+  "agent_name": "Numele Agentului"
+}`}
+                </pre>
+                
+                <Label className="text-sm font-medium mt-3">Format Complet (opțional):</Label>
+                <pre className="bg-muted p-3 rounded text-xs overflow-x-auto mt-1">
+{`{
+  "phone_number": "+37379123456",
+  "callback_time": "30 minutes", 
+  "agent_name": "Numele Agentului",
+  "client_name": "Ion Popescu",
   "reason": "să mă gândesc la ofertă",
   "priority": "medium",
-  "user_id": "user_uuid_here",
-  "user_email": "user@example.com",
-  "agent_id": "agent_123",
-  "conversation_id": "conv_456",
   "send_sms": true,
-  "sms_message": "Mulțumesc! Te voi suna în {callback_time}."
+  "sms_message": "Te voi suna în {callback_time}!"
 }`}
                 </pre>
               </div>
@@ -606,14 +612,15 @@ const CallbackScheduler = () => {
               <div>
                 <Label className="text-sm font-medium">Identificarea Utilizatorului:</Label>
                 <div className="bg-muted p-3 rounded text-xs mt-1 space-y-2">
-                  <p className="font-medium text-blue-700">Pentru securitate, webhook-ul identifică utilizatorul prin:</p>
+                  <p className="font-medium text-green-700">Webhook-ul identifică automat utilizatorul prin:</p>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                    <li><strong>user_id:</strong> ID-ul direct al utilizatorului (recomandat)</li>
+                    <li><strong>agent_name:</strong> Numele agentului (recomandat - simplu)</li>
+                    <li><strong>user_id:</strong> ID-ul direct al utilizatorului</li>
                     <li><strong>user_email:</strong> Email-ul utilizatorului din sistem</li>
                     <li><strong>agent_id:</strong> ID-ul agentului ElevenLabs asociat</li>
                   </ul>
-                  <p className="text-xs text-orange-600">
-                    ⚠️ Include cel puțin unul dintre aceste câmpuri pentru ca callback-ul să ajungă la utilizatorul corect!
+                  <p className="text-xs text-green-600 bg-green-50 p-2 rounded mt-2">
+                    ✅ Folosește <strong>agent_name</strong> - cel mai simplu mod de identificare!
                   </p>
                 </div>
               </div>

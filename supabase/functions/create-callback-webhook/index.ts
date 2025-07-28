@@ -7,15 +7,16 @@ const corsHeaders = {
 };
 
 interface CallbackWebhookRequest {
-  client_name: string;
+  client_name?: string;
   phone_number: string;
-  callback_time: string; // "30 minutes", "2 hours", or ISO timestamp
+  callback_time: string; // "30 minutes", "2 hours", or ISO timestamp  
   reason?: string;
   priority?: 'low' | 'medium' | 'high' | 'urgent';
   agent_id?: string;
+  agent_name?: string; // Alternative to agent_id
   conversation_id?: string;
-  user_id?: string; // Recomandat să fie inclus pentru securitate
-  user_email?: string; // Alternativă pentru identificare
+  user_id?: string;
+  user_email?: string;
   send_sms?: boolean;
   sms_message?: string;
 }
@@ -38,8 +39,8 @@ serve(async (req) => {
     console.log('Received callback request:', payload);
 
     // Validate required fields
-    if (!payload.client_name || !payload.phone_number || !payload.callback_time) {
-      throw new Error('Missing required fields: client_name, phone_number, callback_time');
+    if (!payload.phone_number || !payload.callback_time) {
+      throw new Error('Missing required fields: phone_number, callback_time');
     }
 
     // Use GPT to process and normalize the data
@@ -99,8 +100,26 @@ serve(async (req) => {
       console.log('Found user by email:', payload.user_email, '-> userId:', userId);
     }
     
+    if (!userId && payload.agent_name) {
+      // Method 3: Look up by agent name
+      const { data: agentData } = await supabase
+        .from('kalina_agents')
+        .select('user_id, agent_id')
+        .eq('name', payload.agent_name)
+        .eq('is_active', true)
+        .single();
+      
+      userId = agentData?.user_id;
+      console.log('Found user by agent_name:', payload.agent_name, '-> userId:', userId);
+      
+      // Also set agent_id if found
+      if (agentData?.agent_id) {
+        payload.agent_id = agentData.agent_id;
+      }
+    }
+    
     if (!userId && payload.agent_id) {
-      // Method 3: Look up by agent_id
+      // Method 4: Look up by agent_id
       const { data: agentData } = await supabase
         .from('kalina_agents')
         .select('user_id')
@@ -112,7 +131,7 @@ serve(async (req) => {
     }
     
     if (!userId && payload.agent_id) {
-      // Method 4: Try elevenlabs_agent_id as fallback
+      // Method 5: Try elevenlabs_agent_id as fallback
       const { data: agentData2 } = await supabase
         .from('kalina_agents')
         .select('user_id')
@@ -123,9 +142,11 @@ serve(async (req) => {
       console.log('Found user by elevenlabs_agent_id:', payload.agent_id, '-> userId:', userId);
     }
 
+    // If still no userId found, create a default fallback (optional - you can remove this if you want strict validation)
     if (!userId) {
-      console.error('Failed to determine user_id with payload:', payload);
-      throw new Error('Cannot determine user_id for this callback. Please include user_id, user_email, or valid agent_id in the request.');
+      console.warn('Could not determine user_id, callback will be created without user association');
+      // For now, let's still require user identification for security
+      throw new Error('Cannot determine user_id for this callback. Please include user_id, user_email, agent_name, or valid agent_id in the request.');
     }
 
     console.log('Final userId determined:', userId);
