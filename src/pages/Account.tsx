@@ -150,8 +150,8 @@ const Account = () => {
   const totalAgents = userAgents?.length || 0;
   const totalCalls = callHistory?.length || 0;
 
-  // Calculate total consumed credits from user_credits table (real credits used)
-  const totalConsumedCredits = userCredits?.used_credits || 0;
+  // Calculate total consumed credits from conversation data (from ElevenLabs API)
+  const totalConsumedCredits = Object.values(conversationCredits).reduce((total, credits) => total + credits, 0);
   const totalConversations = userStats?.total_conversations || 0;
   const totalTranscripts = savedTranscripts?.length || 0;
 
