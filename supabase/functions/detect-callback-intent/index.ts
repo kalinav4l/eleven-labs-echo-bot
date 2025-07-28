@@ -373,31 +373,36 @@ serve(async (req) => {
       let agentData = null;
       let agentError = null;
       
+      console.log('🔍 Căutare proprietar agent pentru callback:', agentId);
+      
       // First try elevenlabs_agent_id
       const { data: elevenLabsAgent, error: elevenLabsError } = await supabase
         .from('kalina_agents')
         .select('user_id, name')
         .eq('elevenlabs_agent_id', agentId)
-        .single();
+        .maybeSingle();
       
       if (elevenLabsAgent) {
         agentData = elevenLabsAgent;
-        console.log('✅ Agent găsit prin elevenlabs_agent_id:', agentId);
+        console.log('✅ Agent găsit prin elevenlabs_agent_id:', agentId, 'Proprietar:', elevenLabsAgent.user_id);
       } else {
+        console.log('⚠️ Agent nu a fost găsit prin elevenlabs_agent_id, încerc prin agent_id...');
+        
         // Fallback to agent_id column
         const { data: normalAgent, error: normalError } = await supabase
           .from('kalina_agents')
           .select('user_id, name')
           .eq('agent_id', agentId)
-          .single();
+          .maybeSingle();
         
         agentData = normalAgent;
         agentError = normalError;
         
         if (normalAgent) {
-          console.log('✅ Agent găsit prin agent_id:', agentId);
+          console.log('✅ Agent găsit prin agent_id:', agentId, 'Proprietar:', normalAgent.user_id);
         } else {
           console.error('❌ Agent nu a fost găsit în niciuna din coloane pentru:', agentId);
+          console.error('Erori:', { elevenLabsError, normalError });
         }
       }
       
@@ -407,8 +412,11 @@ serve(async (req) => {
       }
 
       callbackUserId = agentData.user_id;
+    } else {
+      console.log('✅ Folosesc userId transmis direct:', callbackUserId);
     }
-    console.log(`Creating callback for agent owner: ${callbackUserId} (agent: ${agentId})`);
+    
+    console.log(`🎯 Creez callback pentru proprietarul agentului: ${callbackUserId} (agent: ${agentId})`);
 
     // Create callback entry in scheduled_calls
     const callbackData = {

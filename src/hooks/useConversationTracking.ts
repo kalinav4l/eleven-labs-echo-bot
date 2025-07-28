@@ -58,6 +58,42 @@ export const useConversationTracking = () => {
         console.log('📝 Nu există conversation_id ElevenLabs, folosesc agent_id furnizat:', conversationData.agent_id);
       }
 
+      // Find agent owner for callback purposes
+      let agentOwnerId = null;
+      if (realAgentId) {
+        try {
+          console.log('🔍 Căutare proprietar pentru agentul:', realAgentId);
+          
+          // First try by elevenlabs_agent_id
+          const { data: agentByElevenlabs } = await supabase
+            .from('kalina_agents')
+            .select('user_id, name')
+            .eq('elevenlabs_agent_id', realAgentId)
+            .maybeSingle();
+          
+          if (agentByElevenlabs) {
+            agentOwnerId = agentByElevenlabs.user_id;
+            console.log('✅ Proprietar găsit prin elevenlabs_agent_id:', agentOwnerId);
+          } else {
+            // Fallback to agent_id column  
+            const { data: agentByAgentId } = await supabase
+              .from('kalina_agents')
+              .select('user_id, name')
+              .eq('agent_id', realAgentId)
+              .maybeSingle();
+              
+            if (agentByAgentId) {
+              agentOwnerId = agentByAgentId.user_id;
+              console.log('✅ Proprietar găsit prin agent_id:', agentOwnerId);
+            } else {
+              console.warn('⚠️ Nu s-a găsit proprietar pentru agentul:', realAgentId);
+            }
+          }
+        } catch (error) {
+          console.error('❌ Eroare la căutarea proprietarului agentului:', error);
+        }
+      }
+
       // Check for callback intent in transcript
       const transcriptText = conversationData.transcript
         ?.map((entry: any) => entry.message || entry.text || '')
@@ -73,7 +109,8 @@ export const useConversationTracking = () => {
               conversationId: conversationData.conversation_id,
               phoneNumber: conversationData.phone_number,
               contactName: conversationData.contact_name,
-              agentId: realAgentId // Use the real agent_id instead of the provided one
+              agentId: realAgentId,
+              userId: agentOwnerId // Pass the agent owner's user_id
             }
           });
 
