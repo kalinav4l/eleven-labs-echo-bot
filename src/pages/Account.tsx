@@ -200,7 +200,7 @@ const Account = () => {
     color: 'text-gray-600'
   }, {
     label: 'Cost Total ($)',
-    value: `$${(totalSecondsFromCalls / 60 * 0.0015).toFixed(4)}`,
+    value: `$${(totalSecondsFromCalls / 60 * 0.15).toFixed(4)}`,
     icon: FileText,
     color: 'text-gray-600'
   }, {
