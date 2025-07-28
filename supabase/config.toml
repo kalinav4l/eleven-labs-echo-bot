@@ -22,6 +22,9 @@ enabled = true
 port = 54323
 inspector_port = 8083
 
+[functions.analyze-initiated-conversations]
+verify_jwt = false
+
 [functions.chat-with-agent]
 verify_jwt = false
 

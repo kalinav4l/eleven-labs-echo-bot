@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Phone, MessageSquare, Volume2, Download, CheckCircle, Play, Languages } from 'lucide-react';
+import { Loader2, Phone, MessageSquare, Volume2, Download, CheckCircle, Play, Languages, Search } from 'lucide-react';
 import { useConversationById } from '@/hooks/useConversationById';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -17,6 +17,7 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [translatedSummary, setTranslatedSummary] = useState<string>('');
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isAnalyzingCallback, setIsAnalyzingCallback] = useState(false);
   const {
     toast
   } = useToast();
@@ -114,6 +115,58 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
     } catch (error) {
       console.error('Error translating summary:', error);
       return text;
+    }
+  };
+
+  // Function to analyze conversation for callback intent
+  const analyzeForCallback = async () => {
+    if (!conversationId || !conversationData?.transcript) return;
+    
+    try {
+      setIsAnalyzingCallback(true);
+      
+      // Construct transcript text
+      const transcriptText = conversationData.transcript
+        .map((entry: any) => `${entry.role}: ${entry.message}`)
+        .join('\n');
+
+      // Call detect-callback-intent function
+      const { data, error } = await supabase.functions.invoke('detect-callback-intent', {
+        body: {
+          text: transcriptText,
+          conversationId: conversationId,
+          phoneNumber: conversationData.phoneNumber,
+          contactName: 'Client',
+          agentId: conversation.agent_id,
+          userId: conversation.user_id
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data?.callbackDetected) {
+        toast({
+          title: "Callback detectat!",
+          description: "S-a creat automat o programare pentru acest client.",
+        });
+      } else {
+        toast({
+          title: "Niciun callback detectat",
+          description: "Nu s-a găsit nicio solicitare de reprogramare în transcript.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error analyzing callback:', error);
+      toast({
+        title: "Eroare la analiză",
+        description: "Nu s-a putut analiza conversația pentru callback.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsAnalyzingCallback(false);
     }
   };
 
@@ -333,6 +386,45 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
               </div>
             </CardContent>
           </Card>
+
+          {/* Callback Analysis for Initiated Conversations */}
+          {conversationData?.status === 'initiated' && conversationData?.transcript?.length > 0 && (
+            <Card className="shadow-sm border-orange-200 bg-orange-50">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm text-orange-800">
+                  <Search className="w-4 h-4" />
+                  Detectare Callback Automat
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <p className="text-xs text-orange-700">
+                    Această conversație are statusul "⚡ Initiated". Analizează transcriptul pentru a detecta 
+                    dacă clientul vrea să revină pentru o programare.
+                  </p>
+                  
+                  <Button 
+                    onClick={analyzeForCallback} 
+                    disabled={isAnalyzingCallback}
+                    size="sm" 
+                    className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+                  >
+                    {isAnalyzingCallback ? (
+                      <>
+                        <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                        Analizează...
+                      </>
+                    ) : (
+                      <>
+                        <Search className="w-3 h-3 mr-2" />
+                        Detectează Callback
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Audio Player */}
           {conversation.has_audio && <Card className="shadow-sm">

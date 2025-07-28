@@ -121,6 +121,7 @@ export type Database = {
           agent_id: string | null
           call_date: string
           call_status: string
+          callback_analyzed: boolean | null
           contact_name: string | null
           conversation_id: string | null
           cost_usd: number | null
@@ -130,6 +131,7 @@ export type Database = {
           elevenlabs_history_id: string | null
           id: string
           language: string | null
+          last_status_check: string | null
           phone_number: string
           summary: string | null
           timestamps: string | null
@@ -140,6 +142,7 @@ export type Database = {
           agent_id?: string | null
           call_date?: string
           call_status?: string
+          callback_analyzed?: boolean | null
           contact_name?: string | null
           conversation_id?: string | null
           cost_usd?: number | null
@@ -149,6 +152,7 @@ export type Database = {
           elevenlabs_history_id?: string | null
           id?: string
           language?: string | null
+          last_status_check?: string | null
           phone_number: string
           summary?: string | null
           timestamps?: string | null
@@ -159,6 +163,7 @@ export type Database = {
           agent_id?: string | null
           call_date?: string
           call_status?: string
+          callback_analyzed?: boolean | null
           contact_name?: string | null
           conversation_id?: string | null
           cost_usd?: number | null
@@ -168,6 +173,7 @@ export type Database = {
           elevenlabs_history_id?: string | null
           id?: string
           language?: string | null
+          last_status_check?: string | null
           phone_number?: string
           summary?: string | null
           timestamps?: string | null
