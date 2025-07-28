@@ -164,13 +164,9 @@ const Account = () => {
     return total + duration;
   }, 0) || 0;
 
-  // Format total time as minutes:seconds (convert to hours:minutes for better display)
+  // Format total time as minutes:seconds
   const formatTotalTime = (totalSeconds: number) => {
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}`;
-    }
+    const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
