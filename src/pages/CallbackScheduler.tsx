@@ -316,60 +316,92 @@ const CallbackScheduler = () => {
     }
   };
 
-  const renderCallbackCard = (callback: CallbackRequest) => {
-    const isOverdue = new Date(callback.scheduled_datetime) < new Date() && callback.status === 'scheduled';
-    const statusColor = callback.status === 'completed' ? 'text-green-600' : 
-                       callback.status === 'failed' ? 'text-red-600' :
-                       isOverdue ? 'text-red-600' : 'text-blue-600';
+  const renderNotionTable = () => {
+    const allCallbacks = [...groupedCallbacks.overdue, ...groupedCallbacks.upcoming, ...groupedCallbacks.completed];
+    
+    if (allCallbacks.length === 0) return null;
 
     return (
-      <Card key={callback.id} className="p-3 border hover:shadow-sm transition-shadow">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="font-medium truncate">{callback.client_name}</div>
-            <div className={`text-xs ${statusColor}`}>{callback.status}</div>
-          </div>
-          
-          <div className="text-sm text-muted-foreground">{callback.phone_number}</div>
-          
-          <div className="text-xs text-muted-foreground">
-            {format(new Date(callback.scheduled_datetime), 'dd MMM, HH:mm', { locale: ro })}
-          </div>
-          
-          <div className="flex gap-1 pt-1">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => handleEditCallback(callback)}
-              disabled={callback.status === 'completed'}
-              className="h-7 px-2 text-xs"
-            >
-              Editează
-            </Button>
-            
-            {callback.status === 'scheduled' && (
-              <Button
-                size="sm"
-                onClick={() => executeCallbackMutation.mutate(callback)}
-                disabled={executeCallbackMutation.isPending}
-                className="h-7 px-2 text-xs bg-green-600 hover:bg-green-700"
-              >
-                Sună
-              </Button>
-            )}
-
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => deleteCallbackMutation.mutate(callback.id)}
-              disabled={deleteCallbackMutation.isPending}
-              className="h-7 w-7 p-0"
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
-          </div>
+      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+        {/* Table Header */}
+        <div className="grid grid-cols-12 gap-4 p-3 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-700">
+          <div className="col-span-3">Nume Client</div>
+          <div className="col-span-2">Telefon</div>
+          <div className="col-span-2">Data & Ora</div>
+          <div className="col-span-1">Status</div>
+          <div className="col-span-1">Prioritate</div>
+          <div className="col-span-3">Acțiuni</div>
         </div>
-      </Card>
+        
+        {/* Table Rows */}
+        {allCallbacks.map((callback) => {
+          const isOverdue = new Date(callback.scheduled_datetime) < new Date() && callback.status === 'scheduled';
+          const statusEmoji = callback.status === 'completed' ? '✅' : 
+                             callback.status === 'failed' ? '❌' :
+                             isOverdue ? '🔴' : '🕐';
+          const priorityEmoji = callback.priority === 'urgent' ? '🔴' :
+                               callback.priority === 'high' ? '🟠' :
+                               callback.priority === 'medium' ? '🟡' : '🟢';
+          
+          return (
+            <div key={callback.id} className="grid grid-cols-12 gap-4 p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors items-center">
+              <div className="col-span-3 font-medium text-gray-900 truncate">
+                {callback.client_name}
+              </div>
+              <div className="col-span-2 text-gray-600 text-sm">
+                {callback.phone_number}
+              </div>
+              <div className="col-span-2 text-gray-600 text-sm">
+                {format(new Date(callback.scheduled_datetime), 'dd MMM, HH:mm', { locale: ro })}
+              </div>
+              <div className="col-span-1 text-sm">
+                <span className="flex items-center gap-1">
+                  {statusEmoji}
+                  <span className="capitalize">{callback.status}</span>
+                </span>
+              </div>
+              <div className="col-span-1 text-sm">
+                <span className="flex items-center gap-1">
+                  {priorityEmoji}
+                  <span className="capitalize">{callback.priority}</span>
+                </span>
+              </div>
+              <div className="col-span-3 flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleEditCallback(callback)}
+                  disabled={callback.status === 'completed'}
+                  className="h-8 px-3 text-xs border-gray-300 hover:border-gray-400"
+                >
+                  Editează
+                </Button>
+                
+                {callback.status === 'scheduled' && (
+                  <Button
+                    size="sm"
+                    onClick={() => executeCallbackMutation.mutate(callback)}
+                    disabled={executeCallbackMutation.isPending}
+                    className="h-8 px-3 text-xs bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    Sună
+                  </Button>
+                )}
+
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => deleteCallbackMutation.mutate(callback.id)}
+                  disabled={deleteCallbackMutation.isPending}
+                  className="h-8 w-8 p-0"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     );
   };
 
@@ -431,113 +463,77 @@ const CallbackScheduler = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-4 space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Programări</h1>
-          <div className="flex gap-2">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toate</SelectItem>
-                <SelectItem value="scheduled">Programate</SelectItem>
-                <SelectItem value="completed">Completate</SelectItem>
-                <SelectItem value="failed">Eșuate</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="Prioritate" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toate</SelectItem>
-                <SelectItem value="urgent">Urgent</SelectItem>
-                <SelectItem value="high">Mare</SelectItem>
-                <SelectItem value="medium">Medie</SelectItem>
-                <SelectItem value="low">Mică</SelectItem>
-              </SelectContent>
-            </Select>
+      <div className="max-w-7xl mx-auto p-6 space-y-6 bg-white min-h-screen">
+        {/* Header - Notion style */}
+        <div className="border-b border-gray-200 pb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-semibold text-gray-900 mb-2">📞 Programări Callback</h1>
+              <p className="text-gray-600">
+                Gestionează contactele care au cerut să fie sunați înapoi
+              </p>
+            </div>
+            
+            <div className="flex gap-3">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-36 border-gray-300">
+                  <SelectValue placeholder="Filtrează status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">📋 Toate</SelectItem>
+                  <SelectItem value="scheduled">🕐 Programate</SelectItem>
+                  <SelectItem value="completed">✅ Completate</SelectItem>
+                  <SelectItem value="failed">❌ Eșuate</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                <SelectTrigger className="w-36 border-gray-300">
+                  <SelectValue placeholder="Filtrează prioritate" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">📊 Toate</SelectItem>
+                  <SelectItem value="urgent">🔴 Urgent</SelectItem>
+                  <SelectItem value="high">🟠 Mare</SelectItem>
+                  <SelectItem value="medium">🟡 Medie</SelectItem>
+                  <SelectItem value="low">🟢 Mică</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          {/* Quick Stats - Notion style */}
+          <div className="flex gap-8 mt-4 text-sm text-gray-600">
+            <div className="flex items-center gap-2">
+              <span className="text-red-500">●</span>
+              <span>{groupedCallbacks.overdue.length} întârziate</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-blue-500">●</span>
+              <span>{groupedCallbacks.upcoming.length} programate</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-green-500">●</span>
+              <span>{groupedCallbacks.completed.length} completate</span>
+            </div>
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Card className="p-3">
-            <div className="text-xs text-muted-foreground">Întârziate</div>
-            <div className="text-xl font-bold text-red-600">{groupedCallbacks.overdue.length}</div>
-          </Card>
-          <Card className="p-3">
-            <div className="text-xs text-muted-foreground">Programate</div>
-            <div className="text-xl font-bold text-blue-600">{groupedCallbacks.upcoming.length}</div>
-          </Card>
-          <Card className="p-3">
-            <div className="text-xs text-muted-foreground">Completate</div>
-            <div className="text-xl font-bold text-green-600">{groupedCallbacks.completed.length}</div>
-          </Card>
-          <Card className="p-3">
-            <div className="text-xs text-muted-foreground">Eșuate</div>
-            <div className="text-xl font-bold text-red-600">{groupedCallbacks.failed.length}</div>
-          </Card>
-        </div>
-
-        {/* Content */}
+        {/* Notion-style Table */}
         {isLoading ? (
-          <div className="text-center py-8">
-            <RefreshCw className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
-            <p className="text-muted-foreground mt-2">Se încarcă callback-urile...</p>
+          <div className="text-center py-12">
+            <RefreshCw className="h-8 w-8 animate-spin mx-auto text-gray-400" />
+            <p className="text-gray-500 mt-3">Se încarcă callback-urile...</p>
+          </div>
+        ) : filteredCallbacks.length === 0 ? (
+          <div className="text-center py-12 border border-gray-200 rounded-lg bg-gray-50">
+            <PhoneCall className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Nu există callback-uri</h3>
+            <p className="text-gray-600">
+              Nu ai niciun callback programat în acest moment.
+            </p>
           </div>
         ) : (
-          <div className="space-y-6">
-            {/* Overdue */}
-            {groupedCallbacks.overdue.length > 0 && (
-              <div>
-                <h2 className="text-sm font-medium text-red-600 mb-2">
-                  Întârziate ({groupedCallbacks.overdue.length})
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                  {groupedCallbacks.overdue.map(renderCallbackCard)}
-                </div>
-              </div>
-            )}
-
-            {/* Upcoming */}
-            {groupedCallbacks.upcoming.length > 0 && (
-              <div>
-                <h2 className="text-sm font-medium text-blue-600 mb-2">
-                  Programate ({groupedCallbacks.upcoming.length})
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                  {groupedCallbacks.upcoming.map(renderCallbackCard)}
-                </div>
-              </div>
-            )}
-
-            {/* Completed */}
-            {groupedCallbacks.completed.length > 0 && (
-              <div>
-                <h2 className="text-sm font-medium text-green-600 mb-2">
-                  Completate ({groupedCallbacks.completed.length})
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                  {groupedCallbacks.completed.slice(0, 10).map(renderCallbackCard)}
-                </div>
-              </div>
-            )}
-
-            {filteredCallbacks.length === 0 && (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <PhoneCall className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Nu există callback-uri</h3>
-                  <p className="text-muted-foreground">
-                    Nu ai niciun callback programat în acest moment.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+          renderNotionTable()
         )}
 
         {/* Edit Callback Dialog */}
