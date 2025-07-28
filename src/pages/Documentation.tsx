@@ -81,40 +81,39 @@ const Documentation = () => {
     <section id="overview" className="min-h-screen p-12 relative">
       <div className="max-w-5xl mx-auto">
         <div 
-          className="mb-12 animate-fade-in"
+          className="mb-16 animate-fade-in"
           style={{
             transform: `translateY(${scrollY * 0.1}px)`,
-            filter: `drop-shadow(0 ${Math.min(scrollY * 0.02, 20)}px ${Math.min(scrollY * 0.05, 40)}px rgba(0,0,0,0.1))`
           }}
         >
-          <h1 className="text-8xl font-bold text-black mb-6 animate-slide-in-up bg-gradient-to-r from-black via-gray-800 to-black bg-clip-text">
+          <h1 className="text-7xl font-bold text-black mb-8 animate-slide-in-up">
             Kalina AI
           </h1>
-          <p className="text-3xl text-gray-600 leading-relaxed animate-fade-in animation-delay-300 drop-shadow-lg">
-            Platforma completă de agenți vocali AI pentru automatizarea apelurilor telefonice
+          <p className="text-2xl text-gray-600 leading-relaxed animate-fade-in animation-delay-300">
+            Platforma de agenți vocali AI pentru automatizarea conversațiilor
           </p>
         </div>
 
         <div 
-          className="grid gap-8 md:grid-cols-3 mb-16"
+          className="grid gap-8 md:grid-cols-3"
           style={{
             transform: `translateY(${scrollY * 0.05}px)`,
           }}
         >
-          <div className="p-8 bg-black text-white rounded-2xl hover-scale animate-fade-in animation-delay-500 shadow-2xl hover:shadow-black/50 transition-all duration-500">
-            <Bot className="h-16 w-16 mb-6 animate-pulse drop-shadow-lg" />
-            <h3 className="text-2xl font-bold mb-4">Agenți AI Avansați</h3>
-            <p className="text-gray-300 text-lg">Conversații naturale cu inteligență artificială</p>
+          <div className="liquid-glass p-8 hover-scale animate-fade-in animation-delay-500">
+            <Bot className="h-12 w-12 mb-4 text-black" />
+            <h3 className="text-xl font-bold mb-3 text-black">Agenți AI</h3>
+            <p className="text-gray-700">Conversații naturale inteligente</p>
           </div>
-          <div className="p-8 border-4 border-black rounded-2xl hover-scale animate-fade-in animation-delay-700 shadow-2xl hover:shadow-gray-500/50 transition-all duration-500 bg-white">
-            <Phone className="h-16 w-16 mb-6 text-black animate-pulse drop-shadow-lg" />
-            <h3 className="text-2xl font-bold mb-4 text-black">Apeluri Automate</h3>
-            <p className="text-gray-600 text-lg">Campanii telefonice scalabile și eficiente</p>
+          <div className="liquid-glass p-8 hover-scale animate-fade-in animation-delay-700">
+            <Phone className="h-12 w-12 mb-4 text-black" />
+            <h3 className="text-xl font-bold mb-3 text-black">Apeluri Automate</h3>
+            <p className="text-gray-700">Campanii scalabile</p>
           </div>
-          <div className="p-8 bg-black text-white rounded-2xl hover-scale animate-fade-in animation-delay-1000 shadow-2xl hover:shadow-black/50 transition-all duration-500">
-            <BarChart3 className="h-16 w-16 mb-6 animate-pulse drop-shadow-lg" />
-            <h3 className="text-2xl font-bold mb-4">Analize Detaliate</h3>
-            <p className="text-gray-300 text-lg">Monitorizare performanță în timp real</p>
+          <div className="liquid-glass p-8 hover-scale animate-fade-in animation-delay-1000">
+            <BarChart3 className="h-12 w-12 mb-4 text-black" />
+            <h3 className="text-xl font-bold mb-3 text-black">Analytics</h3>
+            <p className="text-gray-700">Monitorizare performanță</p>
           </div>
         </div>
       </div>
@@ -122,157 +121,89 @@ const Documentation = () => {
   );
 
   const renderHowItWorks = () => (
-    <div className="max-w-5xl">
-      <h1 className="text-5xl font-bold text-black mb-6">Cum Funcționează Kalina AI</h1>
-      <p className="text-xl text-gray-600 mb-12">Înțelegerea completă a fluxului de lucru și arhitecturii sistemului</p>
-      
-      <div className="mb-16">
-        <h2 className="text-3xl font-bold text-black mb-8">Fluxul Principal de Lucru</h2>
+    <section id="how-it-works" className="min-h-screen p-12">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-5xl font-bold text-black mb-8">Cum Funcționează</h1>
+        <p className="text-xl text-gray-600 mb-12">Procesul simplu în 4 pași</p>
+        
         <div className="space-y-8">
-          <div className="flex items-center gap-8">
-            <div className="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center text-2xl font-bold">1</div>
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold text-black mb-3">Creare Agent</h3>
-              <p className="text-gray-600 text-lg">Utilizatorul creează un agent vocal AI cu personalitate, voce și comportament specific. Agentul este configurat cu un system prompt detaliat și conectat la ElevenLabs.</p>
+          <div className="liquid-glass p-8 hover-scale">
+            <div className="flex items-center gap-6">
+              <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center text-xl font-bold">1</div>
+              <div>
+                <h3 className="text-xl font-bold text-black mb-2">Creează Agent</h3>
+                <p className="text-gray-600">Configurează personalitatea și vocea agentului AI</p>
+              </div>
             </div>
           </div>
           
-          <div className="flex items-center gap-8">
-            <div className="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center text-2xl font-bold">2</div>
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold text-black mb-3">Configurare Apel</h3>
-              <p className="text-gray-600 text-lg">Se selectează numărul de telefon, agentul și contactele pentru apel. Sistemul pregătește campania cu parametrii specificați.</p>
+          <div className="liquid-glass p-8 hover-scale">
+            <div className="flex items-center gap-6">
+              <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center text-xl font-bold">2</div>
+              <div>
+                <h3 className="text-xl font-bold text-black mb-2">Configurează Apel</h3>
+                <p className="text-gray-600">Selectează contactele și parametrii campaniei</p>
+              </div>
             </div>
           </div>
           
-          <div className="flex items-center gap-8">
-            <div className="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center text-2xl font-bold">3</div>
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold text-black mb-3">Execuție Apel</h3>
-              <p className="text-gray-600 text-lg">ElevenLabs inițiază apelul către contactul specificat. Agentul AI conduce conversația conform promptului configurat.</p>
+          <div className="liquid-glass p-8 hover-scale">
+            <div className="flex items-center gap-6">
+              <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center text-xl font-bold">3</div>
+              <div>
+                <h3 className="text-xl font-bold text-black mb-2">Lansează</h3>
+                <p className="text-gray-600">Agentul inițiază conversațiile automat</p>
+              </div>
             </div>
           </div>
           
-          <div className="flex items-center gap-8">
-            <div className="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center text-2xl font-bold">4</div>
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold text-black mb-3">Procesare & Analiză</h3>
-              <p className="text-gray-600 text-lg">Conversația este transcrisă, analizată pentru sentiment și intent. Sistemul detectează automat cererile de callback și programează întâlniri.</p>
+          <div className="liquid-glass p-8 hover-scale">
+            <div className="flex items-center gap-6">
+              <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center text-xl font-bold">4</div>
+              <div>
+                <h3 className="text-xl font-bold text-black mb-2">Analizează</h3>
+                <p className="text-gray-600">Urmărește rezultatele și optimizează</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
-
-      <div className="mb-16">
-        <h2 className="text-3xl font-bold text-black mb-8">Integrări Tehnologice</h2>
-        <div className="grid gap-8 md:grid-cols-2">
-          <div className="p-8 border-2 border-black rounded-2xl">
-            <Mic className="h-12 w-12 text-black mb-4" />
-            <h3 className="text-xl font-bold text-black mb-3">ElevenLabs</h3>
-            <p className="text-gray-600">Motor vocal avansat pentru generarea vocii naturale și gestionarea apelurilor telefonice.</p>
-          </div>
-          <div className="p-8 border-2 border-black rounded-2xl">
-            <Database className="h-12 w-12 text-black mb-4" />
-            <h3 className="text-xl font-bold text-black mb-3">Supabase</h3>
-            <p className="text-gray-600">Baza de date și backend pentru stocarea agentilor, conversațiilor și analizelor.</p>
-          </div>
-          <div className="p-8 border-2 border-black rounded-2xl">
-            <Webhook className="h-12 w-12 text-black mb-4" />
-            <h3 className="text-xl font-bold text-black mb-3">Webhooks</h3>
-            <p className="text-gray-600">Comunicare în timp real între ElevenLabs și sistemul nostru pentru actualizări de status.</p>
-          </div>
-          <div className="p-8 border-2 border-black rounded-2xl">
-            <Bot className="h-12 w-12 text-black mb-4" />
-            <h3 className="text-xl font-bold text-black mb-3">OpenAI/GPT</h3>
-            <p className="text-gray-600">Inteligența artificială pentru conversații naturale și analiza conținutului.</p>
-          </div>
-        </div>
-      </div>
-    </div>
+    </section>
   );
 
   const renderQuickstart = () => (
-    <div className="max-w-5xl">
-      <h1 className="text-5xl font-bold text-black mb-6">Ghid de Începere Rapidă</h1>
-      <p className="text-xl text-gray-600 mb-12">Începeți să folosiți Kalina AI în mai puțin de 10 minute</p>
-      
-      <div className="space-y-12">
-        <div className="p-8 bg-black text-white rounded-2xl">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center text-xl font-bold">1</div>
-            <h3 className="text-2xl font-bold">Creați primul agent</h3>
-          </div>
-          <p className="text-gray-300 mb-6">Începeți prin crearea unui agent vocal AI cu personalitate și scop specific.</p>
-          <div className="bg-gray-900 p-4 rounded-lg border border-gray-700">
-            <code className="text-green-400">Navigați la: Dashboard → Agenți → Creați Agent Nou</code>
-          </div>
-          <div className="mt-4 space-y-2">
-            <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-green-400" />
-              <span className="text-sm text-gray-300">Completați informațiile generale</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-green-400" />
-              <span className="text-sm text-gray-300">Scrieți system prompt-ul</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-green-400" />
-              <span className="text-sm text-gray-300">Selectați vocea dorită</span>
+    <section id="quickstart" className="min-h-screen p-12">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-5xl font-bold text-black mb-8">Ghid Rapid</h1>
+        <p className="text-xl text-gray-600 mb-12">Începe în 5 minute</p>
+        
+        <div className="space-y-8">
+          <div className="liquid-glass p-8 hover-scale">
+            <h3 className="text-2xl font-bold text-black mb-4">Pasul 1: Creează primul agent</h3>
+            <p className="text-gray-600 mb-4">Navighează la secțiunea Agenți și creează un nou agent vocal</p>
+            <div className="glass-input p-4 rounded-lg">
+              <code className="text-black">Dashboard → Agenți → Agent Nou</code>
             </div>
           </div>
-        </div>
 
-        <div className="p-8 border-2 border-black rounded-2xl">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center text-xl font-bold">2</div>
-            <h3 className="text-2xl font-bold text-black">Configurați apelul</h3>
-          </div>
-          <p className="text-gray-600 mb-6">Setați parametrii pentru primul apel de test.</p>
-          <div className="bg-gray-100 p-4 rounded-lg border">
-            <code className="text-black">Outbound → Selectați Agent → Selectați Numărul → Adăugați Contact</code>
-          </div>
-          <div className="mt-4 space-y-2">
-            <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-black" />
-              <span className="text-sm text-gray-600">Alegeți agentul creat</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-black" />
-              <span className="text-sm text-gray-600">Selectați numărul de telefon</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-black" />
-              <span className="text-sm text-gray-600">Adăugați contactul pentru test</span>
+          <div className="liquid-glass p-8 hover-scale">
+            <h3 className="text-2xl font-bold text-black mb-4">Pasul 2: Configurează agentul</h3>
+            <p className="text-gray-600 mb-4">Setează personalitatea și instrucțiunile agentului</p>
+            <div className="glass-input p-4 rounded-lg">
+              <code className="text-black">Prompt → Voce → Mesaj de început</code>
             </div>
           </div>
-        </div>
 
-        <div className="p-8 bg-black text-white rounded-2xl">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center text-xl font-bold">3</div>
-            <h3 className="text-2xl font-bold">Lansați și monitorizați</h3>
-          </div>
-          <p className="text-gray-300 mb-6">Inițiați apelul de test și monitorizați performanțele.</p>
-          <div className="bg-gray-900 p-4 rounded-lg border border-gray-700">
-            <code className="text-green-400">Lansare Apel → Analytics → Istoric Conversații</code>
-          </div>
-          <div className="mt-4 space-y-2">
-            <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-green-400" />
-              <span className="text-sm text-gray-300">Urmăriți apelul în timp real</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-green-400" />
-              <span className="text-sm text-gray-300">Analizați transcrierea conversației</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-green-400" />
-              <span className="text-sm text-gray-300">Optimizați agentul bazat pe rezultate</span>
+          <div className="liquid-glass p-8 hover-scale">
+            <h3 className="text-2xl font-bold text-black mb-4">Pasul 3: Lansează primul apel</h3>
+            <p className="text-gray-600 mb-4">Testează agentul cu un apel de probă</p>
+            <div className="glass-input p-4 rounded-lg">
+              <code className="text-black">Outbound → Selectează Agent → Apel Test</code>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 
   const renderArchitecture = () => (
@@ -627,8 +558,8 @@ const Documentation = () => {
     <DashboardLayout>
       <div className="flex h-screen bg-white">
         {/* Sidebar */}
-        <div className="w-80 border-r-2 border-black flex flex-col bg-white animate-slide-in-left">
-          <div className="p-8 border-b-2 border-black animate-fade-in">
+        <div className="w-80 flex flex-col bg-white animate-slide-in-left liquid-glass">
+          <div className="p-8 animate-fade-in">
             <h1 className="text-3xl font-bold text-black animate-pulse">Documentație</h1>
             <p className="text-gray-600 mt-2">Ghid complet Kalina AI</p>
           </div>
@@ -636,8 +567,8 @@ const Documentation = () => {
           <nav className="flex-1 p-6 animate-fade-in animation-delay-500">
             <div className="space-y-8">
               {menuSections.map((section, sectionIndex) => (
-                <div key={section.title} className="animate-fade-in" style={{animationDelay: `${(sectionIndex + 1) * 200}ms`}}>
-                  <h3 className="text-xs font-bold text-black uppercase tracking-widest mb-4 border-b border-gray-200 pb-2">
+                <div key={section.title} className="animate-fade-in liquid-glass p-4 rounded-xl" style={{animationDelay: `${(sectionIndex + 1) * 200}ms`}}>
+                  <h3 className="text-xs font-bold text-black uppercase tracking-widest mb-3">
                     {section.title}
                   </h3>
                   <div className="space-y-2">
@@ -647,14 +578,14 @@ const Documentation = () => {
                         <button
                           key={item.id}
                           onClick={() => scrollToSection(item.id)}
-                          className={`w-full flex items-center gap-4 px-4 py-3 text-left rounded-xl transition-all duration-300 text-sm font-medium hover-scale animate-slide-in-right ${
+                          className={`w-full flex items-center gap-4 px-4 py-3 text-left rounded-xl transition-all duration-300 text-sm font-medium hover-scale animate-slide-in-right liquid-glass ${
                             activeSection === item.id
-                              ? 'bg-black text-white transform scale-105 shadow-lg'
-                              : 'text-gray-700 hover:text-black hover:bg-gray-100 hover:shadow-md'
+                              ? 'bg-black text-white transform scale-105'
+                              : 'text-gray-700 hover:text-black'
                           }`}
                           style={{animationDelay: `${(sectionIndex * 100) + (itemIndex * 50)}ms`}}
                         >
-                          <Icon className="h-5 w-5 animate-pulse" />
+                          <Icon className="h-5 w-5" />
                           {item.title}
                         </button>
                       );
