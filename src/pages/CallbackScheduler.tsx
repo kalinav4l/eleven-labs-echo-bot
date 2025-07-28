@@ -36,6 +36,10 @@ interface CallbackRequest {
   original_conversation_id?: string;
   callback_reason?: string;
   created_at: string;
+  created_via_webhook?: boolean;
+  webhook_payload?: any;
+  sms_sent?: boolean;
+  sms_response?: any;
 }
 
 const CallbackScheduler = () => {
@@ -325,6 +329,12 @@ const CallbackScheduler = () => {
               <User className="h-4 w-4 text-muted-foreground" />
               <CardTitle className="text-base">{callback.client_name}</CardTitle>
               {isOverdue && <AlertCircle className="h-4 w-4 text-red-500" />}
+              {callback.created_via_webhook && (
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                  <MessageSquare className="h-3 w-3 mr-1" />
+                  Webhook
+                </Badge>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className={getPriorityColor(callback.priority)}>
@@ -334,6 +344,11 @@ const CallbackScheduler = () => {
                 {statusInfo.icon}
                 <span className="ml-1">{callback.status}</span>
               </Badge>
+              {callback.sms_sent && (
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                  SMS Trimis
+                </Badge>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -531,6 +546,73 @@ const CallbackScheduler = () => {
             </Select>
           </div>
         </div>
+
+        {/* Webhook Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              Webhook pentru Callback-uri Automate
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Folosește această adresă pentru a crea callback-uri automat din agentul tău
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label className="text-sm font-medium">Adresa Webhook</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <Input
+                  value="https://pwfczzxwjfxomqzhhwvj.supabase.co/functions/v1/create-callback-webhook"
+                  readOnly
+                  className="flex-1 text-xs bg-muted"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    navigator.clipboard.writeText("https://pwfczzxwjfxomqzhhwvj.supabase.co/functions/v1/create-callback-webhook");
+                    toast({
+                      title: "Copiat!",
+                      description: "Adresa webhook a fost copiată în clipboard",
+                    });
+                  }}
+                >
+                  Copiază
+                </Button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div>
+                <Label className="text-sm font-medium">Exemplu Payload JSON:</Label>
+                <pre className="bg-muted p-3 rounded text-xs overflow-x-auto mt-1">
+{`{
+  "client_name": "Ion Popescu",
+  "phone_number": "+37379123456",
+  "callback_time": "30 minutes",
+  "reason": "să mă gândesc la ofertă",
+  "priority": "medium",
+  "agent_id": "agent_123",
+  "conversation_id": "conv_456",
+  "send_sms": true
+}`}
+                </pre>
+              </div>
+              
+              <div>
+                <Label className="text-sm font-medium">Configurare Agent ElevenLabs:</Label>
+                <div className="bg-muted p-3 rounded text-xs mt-1">
+                  <p className="mb-2 font-medium">În promptul agentului adaugă:</p>
+                  <p className="text-muted-foreground">
+                    "Când clientul cere callback, extrage numele, telefonul, timpul și motivul, 
+                    apoi trimite datele la webhook-ul de callback pentru programare automată."
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

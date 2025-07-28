@@ -18,6 +18,10 @@ export interface CallbackRequest {
   original_conversation_id?: string;
   callback_reason?: string;
   created_at: string;
+  created_via_webhook?: boolean;
+  webhook_payload?: any;
+  sms_sent?: boolean;
+  sms_response?: any;
 }
 
 export const useCallbacks = () => {

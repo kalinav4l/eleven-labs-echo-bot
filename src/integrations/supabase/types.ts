@@ -974,16 +974,21 @@ export type Database = {
           caller_number: string | null
           client_name: string
           created_at: string
+          created_via_webhook: boolean | null
           description: string | null
           id: string
           notes: string | null
+          original_conversation_id: string | null
           phone_number: string
           priority: string | null
           scheduled_datetime: string
+          sms_response: Json | null
+          sms_sent: boolean | null
           status: string | null
           task_type: string | null
           updated_at: string
           user_id: string
+          webhook_payload: Json | null
         }
         Insert: {
           agent_id?: string | null
@@ -991,16 +996,21 @@ export type Database = {
           caller_number?: string | null
           client_name: string
           created_at?: string
+          created_via_webhook?: boolean | null
           description?: string | null
           id?: string
           notes?: string | null
+          original_conversation_id?: string | null
           phone_number: string
           priority?: string | null
           scheduled_datetime: string
+          sms_response?: Json | null
+          sms_sent?: boolean | null
           status?: string | null
           task_type?: string | null
           updated_at?: string
           user_id: string
+          webhook_payload?: Json | null
         }
         Update: {
           agent_id?: string | null
@@ -1008,16 +1018,21 @@ export type Database = {
           caller_number?: string | null
           client_name?: string
           created_at?: string
+          created_via_webhook?: boolean | null
           description?: string | null
           id?: string
           notes?: string | null
+          original_conversation_id?: string | null
           phone_number?: string
           priority?: string | null
           scheduled_datetime?: string
+          sms_response?: Json | null
+          sms_sent?: boolean | null
           status?: string | null
           task_type?: string | null
           updated_at?: string
           user_id?: string
+          webhook_payload?: Json | null
         }
         Relationships: []
       }
