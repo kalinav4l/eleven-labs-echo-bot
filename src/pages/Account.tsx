@@ -303,6 +303,48 @@ const Account = () => {
         </div>
 
         <div className="px-6 py-8">
+          {/* Cost and Time Summary Cards - Similar to the provided image */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">
+                      COST TOTAL ($)
+                    </p>
+                    <p className="text-3xl font-bold text-gray-900">
+                      ${totalCost.toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-gray-100 rounded-lg">
+                    <FileText className="w-6 h-6 text-gray-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">
+                      TIMP VORBIRE
+                    </p>
+                    <p className="text-3xl font-bold text-gray-900">
+                      {totalTimeFormatted}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {Math.floor(totalSecondsFromCalls / 60)} minute și {totalSecondsFromCalls % 60} secunde
+                    </p>
+                  </div>
+                  <div className="p-3 bg-gray-100 rounded-lg">
+                    <Clock className="w-6 h-6 text-gray-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Animated Quick Stats with Staggered Animation */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {quickStats.map((stat, index) => (
