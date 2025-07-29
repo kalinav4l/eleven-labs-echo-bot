@@ -47,6 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
     // Set up auth state listener
@@ -57,8 +58,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         setLoading(false);
 
-        if (event === 'SIGNED_IN') {
-          // Show welcome animation
+        if (event === 'SIGNED_IN' && !isInitialLoad) {
+          // Show welcome animation only on actual sign-in, not on session restoration
           setShowWelcome(true);
           // Defer data fetching to prevent deadlocks
           setTimeout(() => {
@@ -73,6 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      setIsInitialLoad(false); // Mark initial load as complete
     });
 
     return () => subscription.unsubscribe();
