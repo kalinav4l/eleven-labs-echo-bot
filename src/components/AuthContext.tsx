@@ -48,7 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [wasUserNull, setWasUserNull] = useState(true);
+  const [hasExistingSession, setHasExistingSession] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener
@@ -56,38 +56,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (event, session) => {
         console.log('Auth state change:', event, session?.user?.email);
         
-        // Check if this is a real login (user was null before)
-        const wasNotLoggedIn = wasUserNull && !user;
-        
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
 
-        if (event === 'SIGNED_IN' && wasNotLoggedIn) {
-          // Show welcome animation only on actual login
+        // Show animation only for actual login events, not when already have session on load
+        if (event === 'SIGNED_IN' && !hasExistingSession) {
           setShowWelcome(true);
-          // Defer data fetching to prevent deadlocks
           setTimeout(() => {
             console.log('User signed in successfully');
           }, 0);
         }
-        
-        // Update wasUserNull state
-        setWasUserNull(!session?.user);
       }
     );
 
-    // Check for existing session
+    // Check for existing session on app load
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
-      setIsInitialLoad(false); // Mark initial load as complete
-      setWasUserNull(!session?.user); // Set based on existing session
+      setIsInitialLoad(false);
+      
+      // If we already have a session, mark it so we don't show animation on SIGNED_IN events
+      if (session?.user) {
+        setHasExistingSession(true);
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, [user, wasUserNull]);
+  }, [hasExistingSession]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -178,7 +175,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Reset states
       setShowWelcome(false);
-      setWasUserNull(true);
+      setHasExistingSession(false);
       
       // Attempt global sign out
       try {
@@ -197,7 +194,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setSession(null);
       setShowWelcome(false);
-      setWasUserNull(true);
+      setHasExistingSession(false);
     }
   };
 
