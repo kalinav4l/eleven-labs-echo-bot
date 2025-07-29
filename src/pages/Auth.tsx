@@ -128,79 +128,115 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Glass Effects */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/3 left-1/3 w-72 h-72 bg-gradient-to-r from-green-200/30 to-emerald-200/30 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/3 right-1/3 w-72 h-72 bg-gradient-to-r from-blue-200/30 to-cyan-200/30 rounded-full blur-3xl"></div>
+    <div className="auth-dark-page">
+      {/* Animated Background Elements */}
+      <div className="auth-bg-elements">
+        <div className="floating-element element-1"></div>
+        <div className="floating-element element-2"></div>
+        <div className="floating-element element-3"></div>
+        <div className="floating-element element-4"></div>
+        <div className="floating-element element-5"></div>
+        <div className="floating-element element-6"></div>
       </div>
 
-      <Card className="w-full max-w-md mx-4 sm:mx-0 liquid-glass relative z-10 animate-fade-in">
-        <CardHeader className="text-center">
-          <CardTitle className="text-foreground text-2xl font-semibold">
-            {isLogin ? 'Conectare' : 'Înregistrare'}
-          </CardTitle>
-          <CardDescription className="text-muted-foreground">
-            {isLogin 
-              ? 'Conectează-te la contul tău' 
-              : 'Creează un cont nou pentru acces complet'
-            }
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Gradient Lines */}
+      <div className="auth-gradient-lines">
+        <div className="gradient-line line-1"></div>
+        <div className="gradient-line line-2"></div>
+        <div className="gradient-line line-3"></div>
+      </div>
+
+      {/* Particle System */}
+      <div className="auth-particles">
+        {Array.from({ length: 30 }, (_, i) => (
+          <div
+            key={i}
+            className="auth-particle"
+            style={{
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${3 + Math.random() * 4}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-header">
+            <h1 className="auth-title">
+              {isLogin ? 'CONECTARE' : 'ÎNREGISTRARE'}
+            </h1>
+            <div className="auth-title-line"></div>
+            <p className="auth-subtitle">
+              {isLogin 
+                ? 'Acces la platforma KALINA' 
+                : 'Creează un cont nou pentru acces complet'
+              }
+            </p>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="auth-form">
             {!isLogin && (
-              <>
-                <Input
-                  type="text"
-                  placeholder="Prenume"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  required={!isLogin}
-                  className="glass-input"
-                  disabled={loading}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  spellCheck="false"
-                />
-                <Input
-                  type="text"
-                  placeholder="Nume"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  required={!isLogin}
-                  className="glass-input"
-                  disabled={loading}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  spellCheck="false"
-                />
-              </>
+              <div className="auth-row">
+                <div className="auth-input-group">
+                  <Input
+                    type="text"
+                    placeholder="Prenume"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required={!isLogin}
+                    className="auth-input"
+                    disabled={loading}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
+                  />
+                </div>
+                <div className="auth-input-group">
+                  <Input
+                    type="text"
+                    placeholder="Nume"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    required={!isLogin}
+                    className="auth-input"
+                    disabled={loading}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
+                  />
+                </div>
+              </div>
             )}
-            <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="glass-input"
-              disabled={loading}
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-              spellCheck="false"
-            />
-            <div className="relative">
+            
+            <div className="auth-input-group">
+              <Input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="auth-input"
+                disabled={loading}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+              />
+            </div>
+            
+            <div className="auth-input-group auth-password-group">
               <Input
                 type={showPassword ? "text" : "password"}
-                placeholder={isLogin ? "Parolă" : "Parolă (minim 6 caractere)"}
+                placeholder={isLogin ? "Parolă" : "Parolă (minim 8 caractere)"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={isLogin ? undefined : 6}
-                className="glass-input pr-10"
+                minLength={isLogin ? undefined : 8}
+                className="auth-input auth-password-input"
                 disabled={loading}
                 autoComplete="off"
                 autoCorrect="off"
@@ -210,37 +246,37 @@ const Auth = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                className="auth-password-toggle"
                 disabled={loading}
                 title={showPassword ? "Ascunde parola" : "Arată parola"}
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
             
-            
             {error && (
-              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-                <p className="text-destructive text-sm">{error}</p>
+              <div className="auth-error">
+                <p>{error}</p>
               </div>
             )}
 
             {success && (
-              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
-                <p className="text-green-600 text-sm">{success}</p>
+              <div className="auth-success">
+                <p>{success}</p>
               </div>
             )}
             
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
+              className="auth-submit-btn"
             >
-              {loading ? 'Se procesează...' : (isLogin ? 'Conectare' : 'Înregistrare')}
+              <span>{loading ? 'SE PROCESEAZĂ...' : (isLogin ? 'CONECTARE' : 'ÎNREGISTRARE')}</span>
+              <div className="auth-btn-glow"></div>
             </Button>
           </form>
           
-          <div className="mt-4 text-center">
+          <div className="auth-switch">
             <button
               onClick={() => {
                 setIsLogin(!isLogin);
@@ -252,7 +288,7 @@ const Auth = () => {
                 setLastName('');
                 setShowPassword(false);
               }}
-              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+              className="auth-switch-btn"
               disabled={loading}
             >
               {isLogin 
@@ -261,8 +297,8 @@ const Auth = () => {
               }
             </button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };
