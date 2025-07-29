@@ -21,6 +21,8 @@ interface AdminUser {
   balance_usd: number;
   total_calls: number;
   total_minutes: number;
+  total_spent_usd: number;
+  plan: string;
   created_at: string;
   last_sign_in: string | null;
 }
