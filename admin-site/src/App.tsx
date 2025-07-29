@@ -26,7 +26,7 @@ function AppRoutes() {
   const { user, loading, isAdmin } = useAuth();
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Se încarcă...</div>;
+    return <div className="flex items-center justify-center min-h-screen bg-background text-foreground">Se încarcă...</div>;
   }
 
   if (!user || !isAdmin) {
@@ -35,8 +35,7 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/admin/*" element={<AdminDashboard />} />
-      <Route path="*" element={<Navigate to="/admin" replace />} />
+      <Route path="/*" element={<AdminDashboard />} />
     </Routes>
   );
 }
