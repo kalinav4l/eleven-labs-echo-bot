@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +23,7 @@ import CreditsPlanDisplay from '@/components/CreditsPlanDisplay';
 import { calculateCostFromSeconds } from '@/utils/costCalculations';
 
 const Account = () => {
+  const navigate = useNavigate();
   const {
     user,
     signOut,
@@ -169,8 +170,7 @@ const Account = () => {
 
   // Redirect to landing if not authenticated
   if (!authLoading && !user) {
-    window.location.href = '/';
-    return null;
+    return <Navigate to="/auth" replace />;
   }
 
   // Show loading while checking auth
@@ -185,8 +185,10 @@ const Account = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
+      navigate('/auth');
     } catch (error) {
       console.error('Error signing out:', error);
+      navigate('/auth');
     }
   };
 

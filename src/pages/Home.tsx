@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '@/components/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -26,12 +26,11 @@ const Home = () => {
             </p>
             
             <div className="flex gap-4">
-              <Button 
-                onClick={() => window.location.href = '/account'}
-                className="bg-foreground text-background hover:bg-foreground/90"
-              >
-                Contul meu
-              </Button>
+              <Link to="/account">
+                <Button className="bg-foreground text-background hover:bg-foreground/90">
+                  Contul meu
+                </Button>
+              </Link>
               
               <Button 
                 onClick={signOut}

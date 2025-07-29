@@ -104,11 +104,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data.user) {
-        console.log('Sign in successful, redirecting...');
-        // Force page reload for clean state
-        setTimeout(() => {
-          window.location.href = '/account';
-        }, 100);
+        console.log('Sign in successful');
+        // Don't force reload - let React Router handle navigation
       }
 
       return { error: null };
@@ -177,12 +174,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.warn('Sign out warning:', err);
       }
       
-      // Force page reload for clean state
-      window.location.href = '/auth';
+      // Clear user and session state
+      setUser(null);
+      setSession(null);
+      
     } catch (error) {
       console.error('Sign out error:', error);
-      // Force reload anyway
-      window.location.href = '/auth';
+      // Clear state anyway
+      setUser(null);
+      setSession(null);
     }
   };
 

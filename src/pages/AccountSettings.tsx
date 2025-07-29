@@ -41,7 +41,7 @@ const AccountSettings = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
-      navigate('/');
+      navigate('/auth');
       toast({
         title: "Signed out",
         description: "You have been signed out successfully."
@@ -96,7 +96,7 @@ const AccountSettings = () => {
       }
 
       await signOut();
-      navigate('/');
+      navigate('/auth');
       toast({
         title: "Account deleted",
         description: "Your account has been deleted successfully."
