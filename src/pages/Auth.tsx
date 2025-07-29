@@ -141,7 +141,7 @@ const Auth = () => {
           
           {/* Logo/Title */}
           <div className="auth-visual-title">
-            <h1 className="my-0 py-[222px]">KALINA</h1>
+            <h1 className="my-0 py-[222px]">KALLINA</h1>
             <p>AI Voice Platform</p>
           </div>
         </div>
@@ -152,7 +152,7 @@ const Auth = () => {
         <div className="auth-clean-card">
           <div className="auth-clean-header">
             <h2>{isLogin ? 'CONECTARE' : 'ÎNREGISTRARE'}</h2>
-            <p>Acces la platforma KALINA</p>
+            
           </div>
           
           <form onSubmit={handleSubmit} className="auth-clean-form">
