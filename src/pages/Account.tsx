@@ -89,27 +89,17 @@ const Account = () => {
     if (!conversationId || conversationDurations[conversationId] !== undefined) {
       return conversationDurations[conversationId] || 0;
     }
-    
-    console.log(`Processing conversation: ${conversationId}`);
-    
     try {
       const { data } = await supabase.functions.invoke('get-elevenlabs-conversation', {
         body: { conversationId }
       });
-      
-      console.log(`Conversation data received:`, data?.metadata);
-      
       if (data?.metadata) {
         const duration = Math.round(data.metadata.call_duration_secs || 0);
-        // Use the actual cost from ElevenLabs instead of calculating it
-        const costUsd = parseFloat(data.metadata.cost || '0');
-        
-        console.log(`Using ElevenLabs cost: $${costUsd} for ${duration} seconds`);
+        // Calculate cost based on call duration, not ElevenLabs cost
+        const costUsd = calculateCostFromSeconds(duration);
         
         // Deduct cost from user balance and update statistics
         if (costUsd > 0 && user?.id) {
-          console.log(`Attempting to deduct $${costUsd} from user ${user.id}`);
-          
           try {
             const { data: deductResult, error: deductError } = await supabase.rpc('deduct_balance', {
               p_user_id: user.id,
@@ -118,20 +108,17 @@ const Account = () => {
               p_conversation_id: conversationId
             });
 
-            console.log('Deduct balance result:', { deductResult, deductError });
-
             if (!deductError && deductResult) {
               // Update user statistics with spending
-              const { error: statsError } = await supabase.rpc('update_user_statistics_with_spending', {
+              await supabase.rpc('update_user_statistics_with_spending', {
                 p_user_id: user.id,
                 p_duration_seconds: duration,
                 p_cost_usd: costUsd
               });
               
-              console.log('Statistics update error:', statsError);
-              console.log(`Successfully deducted $${costUsd} for conversation ${conversationId}`);
+              console.log(`Deducted $${costUsd} for conversation ${conversationId}`);
             } else {
-              console.error('Failed to deduct balance:', deductError);
+              console.warn('Failed to deduct balance:', deductError);
             }
           } catch (error) {
             console.error('Error deducting balance:', error);
