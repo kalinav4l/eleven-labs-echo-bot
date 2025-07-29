@@ -84,7 +84,7 @@ const Account = () => {
   const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
   const [conversationCosts, setConversationCosts] = useState<Record<string, number>>({});
 
-  // Function to get conversation data from ElevenLabs
+  // Function to get conversation data from ElevenLabs and deduct costs
   const getConversationData = async (conversationId: string) => {
     if (!conversationId || conversationDurations[conversationId] !== undefined) {
       return conversationDurations[conversationId] || 0;
@@ -97,6 +97,34 @@ const Account = () => {
         const duration = Math.round(data.metadata.call_duration_secs || 0);
         // Calculate cost based on call duration, not ElevenLabs cost
         const costUsd = calculateCostFromSeconds(duration);
+        
+        // Deduct cost from user balance and update statistics
+        if (costUsd > 0 && user?.id) {
+          try {
+            const { data: deductResult, error: deductError } = await supabase.rpc('deduct_balance', {
+              p_user_id: user.id,
+              p_amount: costUsd,
+              p_description: `Apel conversație ${conversationId}`,
+              p_conversation_id: conversationId
+            });
+
+            if (!deductError && deductResult) {
+              // Update user statistics with spending
+              await supabase.rpc('update_user_statistics_with_spending', {
+                p_user_id: user.id,
+                p_duration_seconds: duration,
+                p_cost_usd: costUsd
+              });
+              
+              console.log(`Deducted $${costUsd} for conversation ${conversationId}`);
+            } else {
+              console.warn('Failed to deduct balance:', deductError);
+            }
+          } catch (error) {
+            console.error('Error deducting balance:', error);
+          }
+        }
+        
         setConversationDurations(prev => ({ ...prev, [conversationId]: duration }));
         setConversationCosts(prev => ({ ...prev, [conversationId]: costUsd }));
         return duration;
