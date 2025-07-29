@@ -160,7 +160,8 @@ serve(async (req) => {
         language: 'ro',
         conversation_id: payload.conversation_id,
         elevenlabs_history_id: payload.conversation_id,
-        duration_seconds: payload.duration_seconds || 0
+        duration_seconds: payload.duration_seconds || 0,
+        cost_processed: true // Mark as processed since we deducted the cost
       };
 
       const { data: callData, error: callError } = await supabase
