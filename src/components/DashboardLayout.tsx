@@ -6,12 +6,10 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/components/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { BlockedUserOverlay } from './BlockedUserOverlay';
-import { DashboardReveal } from '@/components/transition/DashboardReveal';
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userBlocked, setUserBlocked] = useState(false);
-  const [isRevealing, setIsRevealing] = useState(false);
   const isMobile = useIsMobile();
   const { user } = useAuth();
 
@@ -61,44 +59,33 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     };
   }, [user]);
 
-  // Check for reveal trigger from URL params or localStorage
-  useEffect(() => {
-    const shouldReveal = localStorage.getItem('fluidRevealActive');
-    if (shouldReveal === 'true') {
-      setIsRevealing(true);
-      localStorage.removeItem('fluidRevealActive');
-    }
-  }, []);
-
   return (
-    <DashboardReveal isRevealing={isRevealing}>
-      <div className="flex h-screen overflow-hidden bg-white">
-        <BlockedUserOverlay isBlocked={userBlocked} />
+    <div className="flex h-screen overflow-hidden bg-white">
+      <BlockedUserOverlay isBlocked={userBlocked} />
+      
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile header with menu button */}
+        {isMobile && (
+          <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center lg:hidden">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-lg p-2"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <h1 className="ml-3 text-lg font-semibold text-gray-900">Kalina AI</h1>
+          </header>
+        )}
         
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Mobile header with menu button */}
-          {isMobile && (
-            <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center lg:hidden">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-lg p-2"
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-              <h1 className="ml-3 text-lg font-semibold text-gray-900">Kalina AI</h1>
-            </header>
-          )}
-          
-          <main className="flex-1 overflow-y-auto bg-white">
-            <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-6 dashboard-cards">
-              {children}
-            </div>
-          </main>
-        </div>
+        <main className="flex-1 overflow-y-auto bg-white">
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-6">
+            {children}
+          </div>
+        </main>
       </div>
-    </DashboardReveal>
+    </div>
   );
 };
 

@@ -1,13 +1,11 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff } from 'lucide-react';
-import { FluidReveal } from '@/components/transition/FluidReveal';
-import { useFluidReveal } from '@/hooks/useFluidReveal';
 
 const Auth = () => {
   const { user, signIn, signUp } = useAuth();
@@ -20,8 +18,6 @@ const Auth = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const submitButtonRef = useRef<HTMLButtonElement>(null);
-  const { isActive, startReveal, onRevealComplete } = useFluidReveal();
 
   // Password validation
   const validatePassword = (password: string): string | null => {
@@ -76,8 +72,8 @@ const Auth = () => {
           
           setError(errorMessage);
         } else {
-          // Start fluid reveal animation
-          startReveal(submitButtonRef.current || undefined);
+          // Redirect to home page after successful login
+          window.location.href = '/';
         }
       } else {
         // Enhanced validation for sign up
@@ -222,7 +218,6 @@ const Auth = () => {
             )}
             
             <Button
-              ref={submitButtonRef}
               type="submit"
               disabled={loading}
               className="w-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
@@ -254,15 +249,6 @@ const Auth = () => {
           </div>
         </CardContent>
       </Card>
-      
-      <FluidReveal
-        isActive={isActive}
-        triggerElement={submitButtonRef.current}
-        onComplete={() => {
-          onRevealComplete();
-          window.location.href = '/';
-        }}
-      />
     </div>
   );
 };
