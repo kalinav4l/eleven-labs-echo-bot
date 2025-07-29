@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff } from 'lucide-react';
 const Auth = () => {
+  const navigate = useNavigate();
   const {
     user,
     signIn,
@@ -69,7 +70,7 @@ const Auth = () => {
           setError(errorMessage);
         } else {
           // Redirect to home page after successful login
-          window.location.href = '/';
+          navigate('/');
         }
       } else {
         // Enhanced validation for sign up
