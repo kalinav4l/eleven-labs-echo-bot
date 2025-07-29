@@ -122,7 +122,7 @@ const Auth = () => {
       <div className="auth-visual-section">
         <div className="auth-3d-container">
           {/* Audio Wave Visualization */}
-          <div className="audio-wave-3d">
+          <div className="audio-wave-3d px-[33px] py-[240px] my-0">
             {Array.from({
             length: 50
           }, (_, i) => <div key={i} className="wave-bar-3d" style={{
@@ -140,7 +140,7 @@ const Auth = () => {
           
           {/* Logo/Title */}
           <div className="auth-visual-title">
-            <h1>KALINA</h1>
+            <h1 className="my-0 py-[235px]">KALINA</h1>
             <p>AI Voice Platform</p>
           </div>
         </div>
@@ -155,90 +155,43 @@ const Auth = () => {
           </div>
           
           <form onSubmit={handleSubmit} className="auth-clean-form">
-            {!isLogin && (
-              <div className="auth-clean-row">
-                <input 
-                  type="text" 
-                  placeholder="Prenume" 
-                  value={firstName} 
-                  onChange={e => setFirstName(e.target.value)} 
-                  required={!isLogin} 
-                  className="auth-clean-input" 
-                  disabled={loading} 
-                />
-                <input 
-                  type="text" 
-                  placeholder="Nume" 
-                  value={lastName} 
-                  onChange={e => setLastName(e.target.value)} 
-                  required={!isLogin} 
-                  className="auth-clean-input" 
-                  disabled={loading} 
-                />
-              </div>
-            )}
+            {!isLogin && <div className="auth-clean-row">
+                <input type="text" placeholder="Prenume" value={firstName} onChange={e => setFirstName(e.target.value)} required={!isLogin} className="auth-clean-input" disabled={loading} />
+                <input type="text" placeholder="Nume" value={lastName} onChange={e => setLastName(e.target.value)} required={!isLogin} className="auth-clean-input" disabled={loading} />
+              </div>}
             
-            <input 
-              type="email" 
-              placeholder="Email" 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
-              required 
-              className="auth-clean-input" 
-              disabled={loading} 
-            />
+            <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required className="auth-clean-input" disabled={loading} />
             
             <div className="auth-clean-password">
-              <input 
-                type={showPassword ? "text" : "password"} 
-                placeholder="Parolă" 
-                value={password} 
-                onChange={e => setPassword(e.target.value)} 
-                required 
-                className="auth-clean-input" 
-                disabled={loading} 
-              />
-              <button 
-                type="button" 
-                onClick={() => setShowPassword(!showPassword)} 
-                className="auth-clean-toggle" 
-                disabled={loading}
-              >
+              <input type={showPassword ? "text" : "password"} placeholder="Parolă" value={password} onChange={e => setPassword(e.target.value)} required className="auth-clean-input" disabled={loading} />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="auth-clean-toggle" disabled={loading}>
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
             
-            {error && (
-              <div className="auth-clean-error">
+            {error && <div className="auth-clean-error">
                 {error}
-              </div>
-            )}
+              </div>}
 
-            {success && (
-              <div className="auth-clean-success">
+            {success && <div className="auth-clean-success">
                 {success}
-              </div>
-            )}
+              </div>}
             
             <button type="submit" disabled={loading} className="auth-clean-submit">
               {loading ? 'SE PROCESEAZĂ...' : isLogin ? 'CONECTARE' : 'ÎNREGISTRARE'}
             </button>
           </form>
           
-          <button 
-            onClick={() => {
-              setIsLogin(!isLogin);
-              setError('');
-              setSuccess('');
-              setEmail('');
-              setPassword('');
-              setFirstName('');
-              setLastName('');
-              setShowPassword(false);
-            }} 
-            className="auth-clean-switch" 
-            disabled={loading}
-          >
+          <button onClick={() => {
+          setIsLogin(!isLogin);
+          setError('');
+          setSuccess('');
+          setEmail('');
+          setPassword('');
+          setFirstName('');
+          setLastName('');
+          setShowPassword(false);
+        }} className="auth-clean-switch" disabled={loading}>
             {isLogin ? 'Nu ai cont? Înregistrează-te' : 'Ai deja cont? Conectează-te'}
           </button>
         </div>
