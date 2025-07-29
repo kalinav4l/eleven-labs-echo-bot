@@ -15,7 +15,7 @@ export const useUserStats = () => {
         .from('user_statistics')
         .select('*')
         .eq('user_id', user.id)
-        .maybeSingle();
+        .single();
 
       if (error) {
         console.error('Error fetching user statistics:', error);
@@ -25,22 +25,11 @@ export const useUserStats = () => {
           total_messages: 0,
           total_voice_calls: 0,
           total_minutes_talked: 0,
-          total_spent_usd: 0,
-          current_spent_usd: 0,
           agents_used: 0
         };
       }
 
-      // Return data or default values if no record exists
-      return data || {
-        total_conversations: 0,
-        total_messages: 0,
-        total_voice_calls: 0,
-        total_minutes_talked: 0,
-        total_spent_usd: 0,
-        current_spent_usd: 0,
-        agents_used: 0
-      };
+      return data;
     },
     enabled: !!user,
   });

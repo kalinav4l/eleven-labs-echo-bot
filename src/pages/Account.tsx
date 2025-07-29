@@ -68,7 +68,7 @@ const Account = () => {
         .from('user_balance')
         .select('balance_usd')
         .eq('user_id', user.id)
-        .maybeSingle();
+        .single();
 
       if (error) {
         console.error('Error fetching balance:', error);
@@ -151,28 +151,32 @@ const Account = () => {
 
   // Calculate real stats from user data
   const totalAgents = userAgents?.length || 0;
-  const totalCalls = userStats?.total_voice_calls || callHistory?.length || 0;
+  const totalCalls = callHistory?.length || 0;
 
-  // Use cost data from user_statistics instead of manual calculation
-  const totalCost = userStats?.current_spent_usd || 0;
+  // Calculate total cost from conversation data (in USD)
+  const totalCost = Object.values(conversationCosts).reduce((total, cost) => total + cost, 0);
   const totalConversations = userStats?.total_conversations || 0;
   const totalTranscripts = savedTranscripts?.length || 0;
   const currentBalance = userBalance?.balance_usd || 0;
-  
-  // Use total_minutes_talked from user_statistics (already converted from seconds)
-  const totalMinutes = userStats?.total_minutes_talked || 0;
 
 
-  // Format total time as minutes:seconds from user_statistics (already in minutes)
-  const formatTotalTime = (totalMinutes: number) => {
-    const minutes = Math.floor(totalMinutes);
-    const seconds = Math.round((totalMinutes % 1) * 60);
+
+  // Calculate total seconds from both sources - prioritize ElevenLabs data when available
+  const totalSecondsFromCalls = callHistory?.reduce((total, call) => {
+    // Use ElevenLabs conversation duration if available, otherwise fallback to duration_seconds
+    const duration = call.conversation_id && conversationDurations[call.conversation_id] !== undefined ? conversationDurations[call.conversation_id] : call.duration_seconds || 0;
+    return total + duration;
+  }, 0) || 0;
+
+  // Format total time as minutes:seconds
+  const formatTotalTime = (totalSeconds: number) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
-  
-  const totalTimeFormatted = formatTotalTime(totalMinutes);
-  const averageCallDurationMins = totalCalls > 0 ? totalMinutes / totalCalls : 0;
-  const averageCallDurationFormatted = formatTotalTime(averageCallDurationMins);
+  const totalTimeFormatted = formatTotalTime(totalSecondsFromCalls);
+  const averageCallDurationSecs = totalCalls > 0 ? Math.round(totalSecondsFromCalls / totalCalls) : 0;
+  const averageCallDurationFormatted = formatTotalTime(averageCallDurationSecs);
   const quickStats = [{
     label: 'Agenți Activi',
     value: totalAgents.toString(),
@@ -200,7 +204,7 @@ const Account = () => {
     color: 'text-gray-600'
   }, {
     label: 'Timp Vorbire',
-    value: `${Math.floor(totalMinutes)}:${Math.round((totalMinutes % 1) * 60).toString().padStart(2, '0')}`,
+    value: totalTimeFormatted,
     icon: Clock,
     color: 'text-gray-600'
   }];
@@ -326,7 +330,7 @@ const Account = () => {
                       {totalTimeFormatted}
                     </p>
                     <p className="text-sm text-gray-500 mt-1">
-                      {Math.floor(totalMinutes)} minute și {Math.round((totalMinutes % 1) * 60)} secunde
+                      {Math.floor(totalSecondsFromCalls / 60)} minute și {totalSecondsFromCalls % 60} secunde
                     </p>
                   </div>
                   <div className="p-3 bg-gray-100 rounded-lg">
