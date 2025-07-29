@@ -28,6 +28,7 @@ import Documentation from "./pages/Documentation";
 import PhoneNumbers from "./pages/PhoneNumbers";
 import TestCall from "./pages/TestCall";
 import ConversationDetail from "./pages/ConversationDetail";
+import VoiceDemo from "./pages/VoiceDemo";
 import CallbackScheduler from "./pages/CallbackScheduler";
 import Pricing from "./pages/Pricing";
 import Admin from "./pages/Admin";
@@ -70,6 +71,7 @@ function AppWithWelcome() {
         <Route path="/account/agent-consultant" element={<AgentConsultant />} />
         <Route path="/account/callback-scheduler" element={<CallbackScheduler />} />
         <Route path="/account/documentation" element={<Documentation />} />
+        <Route path="/account/voice-demo" element={<VoiceDemo />} />
         <Route path="/account/settings" element={<AccountSettings />} />
 
         {/* Catch-all for 404 */}
