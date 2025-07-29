@@ -34,7 +34,7 @@ serve(async (req) => {
       .from('user_balance')
       .select('balance_usd')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     if (balanceError) {
       console.error('Error checking balance:', balanceError);
