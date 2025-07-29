@@ -95,12 +95,8 @@ const Account = () => {
       });
       if (data?.metadata) {
         const duration = Math.round(data.metadata.call_duration_secs || 0);
-        const cost = data.metadata.cost || 0;
-        const llmCharge = data.metadata.charging?.llm_charge || 0;
-        const callCharge = data.metadata.charging?.call_charge || 0;
-        // Convert to USD cost using standard rate
-        const totalCost = cost ? calculateCostFromSeconds(cost) : calculateCostFromSeconds(llmCharge + callCharge);
-        const costUsd = totalCost;
+        // Calculate cost based on call duration, not ElevenLabs cost
+        const costUsd = calculateCostFromSeconds(duration);
         setConversationDurations(prev => ({ ...prev, [conversationId]: duration }));
         setConversationCosts(prev => ({ ...prev, [conversationId]: costUsd }));
         return duration;
