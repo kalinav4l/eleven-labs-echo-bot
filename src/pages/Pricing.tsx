@@ -51,7 +51,8 @@ const PricingPage = () => {
   const getDisplayPrice = (plan: any) => {
     if (plan.name === 'ENTERPRISE') return 'Custom';
     const price = isAnnual ? plan.price_yearly : plan.price_monthly;
-    return price === 0 ? 'GRATUIT' : `$${(price / 100).toFixed(0)}`;
+    if (price === 0) return 'GRATUIT';
+    return `$${(price / 100).toFixed(0)}`;
   };
 
   const getButtonText = (plan: any) => {
