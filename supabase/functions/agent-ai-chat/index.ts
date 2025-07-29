@@ -85,10 +85,45 @@ serve(async (req) => {
             }
           }
         }
+      },
+      {
+        type: "function",
+        function: {
+          name: "test_data_connection",
+          description: "Test database connection and show sample data",
+          parameters: {
+            type: "object",
+            properties: {
+              limit: { type: "number", description: "Number of records to return" }
+            }
+          }
+        }
       }
     ];
 
     // Function implementations
+    async function testDataConnection(params: any) {
+      console.log('Testing data connection for user:', userId);
+      
+      const { data, error } = await supabase
+        .from('conversation_analytics_cache')
+        .select('conversation_id, agent_id, call_date, contact_name, phone_number')
+        .eq('user_id', userId)
+        .order('call_date', { ascending: false })
+        .limit(params.limit || 5);
+      
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
+      
+      console.log('Found', data?.length || 0, 'conversations for user');
+      return {
+        total_found: data?.length || 0,
+        conversations: data || [],
+        user_id: userId
+      };
+    }
     async function queryConversationAnalytics(params: any) {
       console.log('Querying conversation analytics:', params);
       
@@ -361,6 +396,9 @@ serve(async (req) => {
           break;
         case 'get_conversation_trends':
           functionResult = await getConversationTrends(functionArgs);
+          break;
+        case 'test_data_connection':
+          functionResult = await testDataConnection(functionArgs);
           break;
         default:
           functionResult = { error: 'Unknown function' };

@@ -44,6 +44,11 @@ const AgentAI = () => {
     },
     {
       icon: <Database className="w-4 h-4" />,
+      text: "Testează conexiunea - arată-mi 3 conversații recente",
+      category: "Test"
+    },
+    {
+      icon: <Database className="w-4 h-4" />,
       text: "Dă-mi numerele clienților nemulțumiți din ultimele conversații",
       category: "Contact"
     }
