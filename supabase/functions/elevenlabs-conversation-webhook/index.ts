@@ -94,6 +94,50 @@ serve(async (req) => {
         console.warn('Could not retrieve conversation details from ElevenLabs:', error);
       }
 
+      // Calculate cost based on duration (0.15 per minute)
+      const COST_PER_MINUTE = 0.15;
+      const durationSeconds = payload.duration_seconds || 0;
+      const durationMinutes = durationSeconds / 60;
+      const calculatedCost = Math.round(durationMinutes * COST_PER_MINUTE * 100) / 100; // Round to 2 decimals
+      const finalCost = payload.cost_usd || calculatedCost; // Use payload cost if available, otherwise calculated cost
+      
+      console.log(`💰 Cost calculation: ${durationSeconds}s = ${durationMinutes.toFixed(2)}min = $${calculatedCost}`);
+      console.log(`💳 Final cost to deduct: $${finalCost}`);
+
+      // Deduct balance from user account if cost > 0
+      if (finalCost > 0) {
+        console.log(`💳 Deducting $${finalCost} from user ${userId} balance...`);
+        
+        const { data: deductResult, error: deductError } = await supabase
+          .rpc('deduct_balance', {
+            p_user_id: userId,
+            p_amount: finalCost,
+            p_description: `Apel vocal cu ${agentName} - ${durationSeconds}s`,
+            p_conversation_id: payload.conversation_id
+          });
+
+        if (deductError) {
+          console.error('❌ Error deducting balance:', deductError);
+          console.warn('⚠️ Balance deduction failed, but call will still be recorded');
+        } else if (deductResult) {
+          console.log('✅ Balance deducted successfully');
+          
+          // Update user statistics with call cost
+          try {
+            await supabase.rpc('update_user_statistics_with_spending', {
+              p_user_id: userId,
+              p_duration_seconds: durationSeconds,
+              p_cost_usd: finalCost
+            });
+            console.log('✅ User statistics updated');
+          } catch (statsError) {
+            console.warn('⚠️ Failed to update user statistics:', statsError);
+          }
+        } else {
+          console.warn('⚠️ Balance deduction returned false - insufficient funds or other issue');
+        }
+      }
+
       // Create call history record
       const callRecord = {
         user_id: userId,
@@ -111,7 +155,7 @@ serve(async (req) => {
           conversation_details: conversationDetails
         }),
         call_date: new Date().toISOString(),
-        cost_usd: payload.cost_usd || 0,
+        cost_usd: finalCost, // Use the calculated/final cost
         agent_id: payload.agent_id, // This is the real ElevenLabs agent_id
         language: 'ro',
         conversation_id: payload.conversation_id,

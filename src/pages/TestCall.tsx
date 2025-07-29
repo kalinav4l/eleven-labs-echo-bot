@@ -4,13 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Phone, PlayCircle, Loader2, MessageSquare, RefreshCw } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Phone, PlayCircle, Loader2, MessageSquare, RefreshCw, Wallet, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
 import TestCallHistory from '@/components/TestCallHistory';
 import { useTestCallHistory } from '@/hooks/useTestCallHistory';
 import { AgentSelector } from '@/components/outbound/AgentSelector';
+import { COST_PER_MINUTE, calculateCostFromMinutes } from '@/utils/costCalculations';
 const TestCall = () => {
   const [agentId, setAgentId] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -18,9 +21,37 @@ const TestCall = () => {
   const [conversationId, setConversationId] = useState('');
   const [conversation, setConversation] = useState(null);
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
+  const [userBalance, setUserBalance] = useState<number>(0);
   const { toast } = useToast();
   const { user } = useAuth();
   const { history, addToHistory, updateHistoryItem, clearHistory } = useTestCallHistory();
+
+  // Fetch user balance
+  const fetchBalance = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_balance')
+        .select('balance_usd')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      setUserBalance(data?.balance_usd || 0);
+    } catch (error) {
+      console.error('Error fetching balance:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchBalance();
+  }, [user]);
+
+  // Calculate estimated cost for a 1-minute call
+  const estimatedCostPerMinute = COST_PER_MINUTE;
+  const availableMinutes = Math.floor(userBalance / COST_PER_MINUTE);
+  const hasInsufficientBalance = userBalance < estimatedCostPerMinute;
   const handleTestCall = async () => {
     if (!agentId || !phoneNumber) {
       toast({
@@ -30,10 +61,21 @@ const TestCall = () => {
       });
       return;
     }
+
     if (!user) {
       toast({
         title: "Eroare de autentificare",
         description: "Trebuie să fiți conectat pentru a iniția un apel",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check if user has sufficient balance for at least 1 minute
+    if (hasInsufficientBalance) {
+      toast({
+        title: "Sold insuficient",
+        description: `Ai nevoie de cel puțin $${estimatedCostPerMinute.toFixed(2)} pentru un apel de test. Soldul tău: $${userBalance.toFixed(2)}`,
         variant: "destructive"
       });
       return;
@@ -267,9 +309,45 @@ const TestCall = () => {
               </p>
             </div>
 
-            
+            {/* Balance and Cost Information */}
+            <div className="space-y-3 p-4 bg-muted/50 rounded-lg border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Wallet className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium">Soldul tău</span>
+                </div>
+                <Badge variant={hasInsufficientBalance ? "destructive" : "secondary"}>
+                  ${userBalance.toFixed(2)}
+                </Badge>
+              </div>
+              
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Cost per minut:</span>
+                  <span className="font-medium">${estimatedCostPerMinute.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Minute disponibile:</span>
+                  <span className="font-medium">{availableMinutes} minute</span>
+                </div>
+              </div>
 
-            <Button onClick={handleTestCall} disabled={isLoading || !agentId || !phoneNumber} className="w-full" size="lg">
+              {hasInsufficientBalance && (
+                <Alert className="border-destructive/50 bg-destructive/10">
+                  <AlertTriangle className="h-4 w-4 text-destructive" />
+                  <AlertDescription className="text-destructive">
+                    Sold insuficient pentru apeluri. Îți recomandăm să reîncarci contul.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+
+            <Button 
+              onClick={handleTestCall} 
+              disabled={isLoading || !agentId || !phoneNumber || hasInsufficientBalance} 
+              className={`w-full ${hasInsufficientBalance ? 'opacity-50 cursor-not-allowed' : ''}`} 
+              size="lg"
+            >
               {isLoading ? <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Se inițiază apelul...
