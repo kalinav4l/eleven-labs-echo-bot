@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
@@ -22,52 +23,66 @@ serve(async (req) => {
       throw new Error('Message and userId are required');
     }
 
+    console.log('Processing message:', message, 'for user:', userId);
+
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // System functions for querying data
-    const systemFunctions = [
+    // System tools for OpenAI
+    const tools = [
       {
-        name: "query_conversation_analytics",
-        description: "Search and analyze conversation data from analytics cache",
-        parameters: {
-          type: "object",
-          properties: {
-            search_query: { type: "string", description: "What to search for in conversations" },
-            date_range: { type: "string", description: "Date range filter (e.g., 'last_week', 'last_month')" },
-            agent_filter: { type: "string", description: "Filter by specific agent" }
+        type: "function",
+        function: {
+          name: "query_conversation_analytics",
+          description: "Search and analyze conversation data from analytics cache",
+          parameters: {
+            type: "object",
+            properties: {
+              search_query: { type: "string", description: "What to search for in conversations" },
+              date_range: { type: "string", description: "Date range filter (e.g., 'last_week', 'last_month')" },
+              agent_filter: { type: "string", description: "Filter by specific agent" }
+            }
           }
         }
       },
       {
-        name: "get_phone_numbers_by_criteria",
-        description: "Extract phone numbers of callers based on specific criteria",
-        parameters: {
-          type: "object",
-          properties: {
-            criteria: { type: "string", description: "Criteria for filtering (e.g., 'asked about price', 'unhappy customers')" },
-            limit: { type: "number", description: "Maximum number of results" }
+        type: "function",
+        function: {
+          name: "get_phone_numbers_by_criteria",
+          description: "Extract phone numbers of callers based on specific criteria",
+          parameters: {
+            type: "object",
+            properties: {
+              criteria: { type: "string", description: "Criteria for filtering (e.g., 'asked about price', 'unhappy customers')" },
+              limit: { type: "number", description: "Maximum number of results" }
+            }
           }
         }
       },
       {
-        name: "analyze_agent_performance",
-        description: "Analyze performance metrics for agents",
-        parameters: {
-          type: "object",
-          properties: {
-            agent_id: { type: "string", description: "Specific agent ID or 'all' for comparison" },
-            metric: { type: "string", description: "Performance metric (e.g., 'success_rate', 'duration', 'satisfaction')" }
+        type: "function",
+        function: {
+          name: "analyze_agent_performance",
+          description: "Analyze performance metrics for agents",
+          parameters: {
+            type: "object",
+            properties: {
+              agent_id: { type: "string", description: "Specific agent ID or 'all' for comparison" },
+              metric: { type: "string", description: "Performance metric (e.g., 'success_rate', 'duration', 'satisfaction')" }
+            }
           }
         }
       },
       {
-        name: "get_conversation_trends",
-        description: "Get trends and statistics from conversations",
-        parameters: {
-          type: "object",
-          properties: {
-            period: { type: "string", description: "Time period (e.g., 'last_30_days', 'this_month')" },
-            metric: { type: "string", description: "What to analyze (e.g., 'common_questions', 'response_patterns')" }
+        type: "function",
+        function: {
+          name: "get_conversation_trends",
+          description: "Get trends and statistics from conversations",
+          parameters: {
+            type: "object",
+            properties: {
+              period: { type: "string", description: "Time period (e.g., 'last_30_days', 'this_month')" },
+              metric: { type: "string", description: "What to analyze (e.g., 'common_questions', 'response_patterns')" }
+            }
           }
         }
       }
@@ -254,8 +269,8 @@ serve(async (req) => {
       // Analyze trends based on metric
       const trends: any = {
         total_conversations: data.length,
-        success_rate: (data.filter(c => c.call_status === 'success').length / data.length) * 100,
-        avg_duration: data.reduce((sum, c) => sum + (c.duration_seconds || 0), 0) / data.length,
+        success_rate: data.length > 0 ? (data.filter(c => c.call_status === 'success').length / data.length) * 100 : 0,
+        avg_duration: data.length > 0 ? data.reduce((sum, c) => sum + (c.duration_seconds || 0), 0) / data.length : 0,
         common_questions: []
       };
 
@@ -284,7 +299,7 @@ serve(async (req) => {
       return trends;
     }
 
-    // Call GPT with functions
+    // Call GPT with tools
     const gptResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -309,13 +324,14 @@ serve(async (req) => {
             content: message
           }
         ],
-        functions: systemFunctions,
-        function_call: 'auto',
+        tools: tools,
+        tool_choice: 'auto',
         temperature: 0.3
       }),
     });
 
     const gptData = await gptResponse.json();
+    console.log('GPT Response:', JSON.stringify(gptData, null, 2));
     
     if (gptData.error) {
       throw new Error(gptData.error.message);
@@ -323,10 +339,13 @@ serve(async (req) => {
 
     let result = gptData.choices[0].message;
 
-    // Handle function calls
-    if (result.function_call) {
-      const functionName = result.function_call.name;
-      const functionArgs = JSON.parse(result.function_call.arguments);
+    // Handle tool calls (new format)
+    if (result.tool_calls && result.tool_calls.length > 0) {
+      const toolCall = result.tool_calls[0];
+      const functionName = toolCall.function.name;
+      const functionArgs = JSON.parse(toolCall.function.arguments);
+      
+      console.log('Calling function:', functionName, 'with args:', functionArgs);
       
       let functionResult;
       
@@ -343,7 +362,11 @@ serve(async (req) => {
         case 'get_conversation_trends':
           functionResult = await getConversationTrends(functionArgs);
           break;
+        default:
+          functionResult = { error: 'Unknown function' };
       }
+
+      console.log('Function result:', functionResult);
 
       // Send function result back to GPT
       const followUpResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -357,7 +380,7 @@ serve(async (req) => {
           messages: [
             {
               role: 'system',
-              content: 'Analiza rezultatele și oferă un răspuns clar și util în română.'
+              content: 'Analizează rezultatele și oferă un răspuns clar și util în română.'
             },
             {
               role: 'user',
@@ -366,11 +389,11 @@ serve(async (req) => {
             {
               role: 'assistant',
               content: null,
-              function_call: result.function_call
+              tool_calls: result.tool_calls
             },
             {
-              role: 'function',
-              name: functionName,
+              role: 'tool',
+              tool_call_id: toolCall.id,
               content: JSON.stringify(functionResult)
             }
           ],
@@ -379,13 +402,14 @@ serve(async (req) => {
       });
 
       const followUpData = await followUpResponse.json();
+      console.log('Follow-up response:', followUpData);
       result = followUpData.choices[0].message;
     }
 
     return new Response(
       JSON.stringify({ 
-        response: result.content,
-        functionCalled: result.function_call?.name || null
+        response: result.content || 'Am analizat datele tale.',
+        functionCalled: result.tool_calls?.[0]?.function?.name || null
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -396,7 +420,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error.message || 'Unknown error',
-        response: 'Scuze, am întâmpinat o problemă. Te rog să încerci din nou.'
+        response: 'Scuze, am întâmpinat o problemă tehnică. Te rog să încerci din nou.'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
