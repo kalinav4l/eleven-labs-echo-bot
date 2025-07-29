@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Users, Phone, CreditCard, Activity } from 'lucide-react';
+import { Search, Users, Phone, CreditCard, Activity, Edit, DollarSign } from 'lucide-react';
+import { UserEditModal } from '@/components/UserEditModal';
 
 interface AdminUser {
   user_id: string;
@@ -42,6 +43,8 @@ const Admin = () => {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [loadingData, setLoadingData] = useState(true);
+  const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   // Check if user is the specific admin user
   const isSpecificAdmin = user?.id === 'a698e3c2-f0e6-4f42-8955-971d91e725ce' && 
@@ -73,6 +76,7 @@ const Admin = () => {
       const totalUsers = users.length;
       const totalCalls = users.reduce((sum, user) => sum + user.total_calls, 0);
       const totalRevenue = users.reduce((sum, user) => sum + user.balance_usd, 0);
+      const totalSpent = users.reduce((sum, user) => sum + user.total_spent_usd, 0);
       const bannedUsers = users.filter(user => user.account_type === 'banned').length;
       
       setStats({
@@ -218,10 +222,13 @@ const Admin = () => {
                         <tr className="border-b bg-muted/50">
                           <th className="h-12 px-4 text-left font-medium">Utilizator</th>
                           <th className="h-12 px-4 text-left font-medium">Rol</th>
+                          <th className="h-12 px-4 text-left font-medium">Plan</th>
                           <th className="h-12 px-4 text-left font-medium">Status</th>
                           <th className="h-12 px-4 text-left font-medium">Sold</th>
+                          <th className="h-12 px-4 text-left font-medium">Cheltuit</th>
                           <th className="h-12 px-4 text-left font-medium">Apeluri</th>
                           <th className="h-12 px-4 text-left font-medium">Înregistrat</th>
+                          <th className="h-12 px-4 text-left font-medium">Acțiuni</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -246,6 +253,13 @@ const Admin = () => {
                             </td>
                             <td className="h-12 px-4">
                               <Badge 
+                                variant={user.plan === 'enterprise' ? 'default' : user.plan === 'pro' ? 'secondary' : 'outline'}
+                              >
+                                {user.plan}
+                              </Badge>
+                            </td>
+                            <td className="h-12 px-4">
+                              <Badge 
                                 variant={user.account_type === 'banned' ? 'destructive' : 'outline'}
                               >
                                 {user.account_type}
@@ -254,6 +268,11 @@ const Admin = () => {
                             <td className="h-12 px-4">
                               <div className="font-medium">
                                 ${user.balance_usd.toFixed(2)}
+                              </div>
+                            </td>
+                            <td className="h-12 px-4">
+                              <div className="font-medium text-red-600">
+                                ${user.total_spent_usd.toFixed(2)}
                               </div>
                             </td>
                             <td className="h-12 px-4">
@@ -269,6 +288,19 @@ const Admin = () => {
                                 {new Date(user.created_at).toLocaleDateString('ro-RO')}
                               </div>
                             </td>
+                            <td className="h-12 px-4">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setEditingUser(user);
+                                  setEditModalOpen(true);
+                                }}
+                              >
+                                <Edit className="h-4 w-4 mr-1" />
+                                Editează
+                              </Button>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -279,6 +311,13 @@ const Admin = () => {
             </div>
           </CardContent>
         </Card>
+
+        <UserEditModal
+          user={editingUser}
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+          onUserUpdated={fetchUsers}
+        />
       </div>
     </DashboardLayout>
   );
