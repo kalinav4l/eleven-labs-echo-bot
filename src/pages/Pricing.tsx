@@ -133,7 +133,10 @@ const PricingPage = () => {
     return (
       <DashboardLayout>
         <div className="min-h-screen flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin" />
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Se încarcă planurile...</p>
+          </div>
         </div>
       </DashboardLayout>
     );
