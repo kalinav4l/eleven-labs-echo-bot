@@ -48,6 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [hasShownWelcome, setHasShownWelcome] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener
@@ -58,9 +59,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         setLoading(false);
 
-        if (event === 'SIGNED_IN') {
-          // Show welcome animation
+        if (event === 'SIGNED_IN' && !isInitialLoad && !hasShownWelcome) {
+          // Show welcome animation only on actual login, not on page refresh
           setShowWelcome(true);
+          setHasShownWelcome(true);
           // Defer data fetching to prevent deadlocks
           setTimeout(() => {
             console.log('User signed in successfully');
@@ -167,6 +169,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Clean up auth state first
       cleanupAuthState();
       
+      // Reset welcome animation state
+      setHasShownWelcome(false);
+      setShowWelcome(false);
+      
       // Attempt global sign out
       try {
         await supabase.auth.signOut({ scope: 'global' });
@@ -180,9 +186,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
     } catch (error) {
       console.error('Sign out error:', error);
-      // Clear state anyway
+      // Clear state anyway and reset flags
       setUser(null);
       setSession(null);
+      setHasShownWelcome(false);
+      setShowWelcome(false);
     }
   };
 
