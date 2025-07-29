@@ -117,85 +117,132 @@ const Auth = () => {
       setLoading(false);
     }
   };
-  return <div className="auth-minimal-page">
-      {/* Left Side - 3D Vocal Visualization */}
-      <div className="auth-visual-section">
-        <div className="auth-3d-container">
-          {/* Audio Wave Visualization */}
-          <div className="audio-wave-3d px-[33px] py-[240px] my-0">
-            {Array.from({
-            length: 50
-          }, (_, i) => <div key={i} className="wave-bar-3d" style={{
-            animationDelay: `${i * 0.1}s`,
-            height: `${20 + Math.random() * 80}px`,
-            left: `${i * 100 / 50}%`
-          }} />)}
-          </div>
-          
-          {/* Simple Pulse Rings */}
-          <div className="pulse-rings">
-            <div className="pulse-ring ring-1"></div>
-            <div className="pulse-ring ring-2"></div>
-          </div>
-          
-          {/* Logo/Title */}
-          <div className="auth-visual-title">
-            <h1 className="my-0 py-[222px]">KALINA</h1>
-            <p>AI Voice Platform</p>
-          </div>
+  return (
+    <div className="min-h-screen flex">
+      {/* Left Side - Visual Section */}
+      <div className="flex-1 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden">
+        <div className="text-center z-10">
+          <h1 className="text-8xl font-black text-gray-900 mb-4 tracking-wider">KALINA</h1>
+          <p className="text-xl text-gray-600 font-light tracking-wide">AI Voice Platform</p>
+        </div>
+        
+        {/* Floating circles animation */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="circle-float circle-1"></div>
+          <div className="circle-float circle-2"></div>
+          <div className="circle-float circle-3"></div>
+          <div className="circle-float circle-4"></div>
+          <div className="circle-float circle-5"></div>
         </div>
       </div>
 
-      {/* Right Side - Clean White Login */}
-      <div className="auth-clean-section">
-        <div className="auth-clean-card">
-          <div className="auth-clean-header">
-            <h2>{isLogin ? 'CONECTARE' : 'ÎNREGISTRARE'}</h2>
-            <p>Acces la platforma KALINA</p>
+      {/* Right Side - Liquid Glass Login */}
+      <div className="flex-1 flex items-center justify-center bg-gray-50 relative">
+        {/* Subtle animated background */}
+        <div className="absolute inset-0 liquid-bg-animation"></div>
+        
+        <div className="liquid-glass w-full max-w-md mx-8 p-8">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              {isLogin ? 'CONECTARE' : 'ÎNREGISTRARE'}
+            </h2>
+            <p className="text-gray-600">Acces la platforma KALINA</p>
           </div>
           
-          <form onSubmit={handleSubmit} className="auth-clean-form">
-            {!isLogin && <div className="auth-clean-row">
-                <input type="text" placeholder="Prenume" value={firstName} onChange={e => setFirstName(e.target.value)} required={!isLogin} className="auth-clean-input" disabled={loading} />
-                <input type="text" placeholder="Nume" value={lastName} onChange={e => setLastName(e.target.value)} required={!isLogin} className="auth-clean-input" disabled={loading} />
-              </div>}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {!isLogin && (
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  placeholder="Prenume"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required={!isLogin}
+                  className="glass-input w-full px-4 py-3 text-sm"
+                  disabled={loading}
+                />
+                <input
+                  type="text"
+                  placeholder="Nume"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required={!isLogin}
+                  className="glass-input w-full px-4 py-3 text-sm"
+                  disabled={loading}
+                />
+              </div>
+            )}
             
-            <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required className="auth-clean-input" disabled={loading} />
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="glass-input w-full px-4 py-3 text-sm"
+              disabled={loading}
+            />
             
-            <div className="auth-clean-password">
-              <input type={showPassword ? "text" : "password"} placeholder="Parolă" value={password} onChange={e => setPassword(e.target.value)} required className="auth-clean-input" disabled={loading} />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="auth-clean-toggle" disabled={loading}>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Parolă"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="glass-input w-full px-4 py-3 pr-12 text-sm"
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                disabled={loading}
+              >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
             
-            {error && <div className="auth-clean-error">
+            {error && (
+              <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
                 {error}
-              </div>}
+              </div>
+            )}
 
-            {success && <div className="auth-clean-success">
+            {success && (
+              <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">
                 {success}
-              </div>}
+              </div>
+            )}
             
-            <button type="submit" disabled={loading} className="auth-clean-submit">
+            <button
+              type="submit"
+              disabled={loading}
+              className="glass-button w-full py-3 rounded-lg font-medium text-sm transition-all disabled:opacity-50"
+            >
               {loading ? 'SE PROCESEAZĂ...' : isLogin ? 'CONECTARE' : 'ÎNREGISTRARE'}
             </button>
           </form>
           
-          <button onClick={() => {
-          setIsLogin(!isLogin);
-          setError('');
-          setSuccess('');
-          setEmail('');
-          setPassword('');
-          setFirstName('');
-          setLastName('');
-          setShowPassword(false);
-        }} className="auth-clean-switch" disabled={loading}>
+          <button
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setError('');
+              setSuccess('');
+              setEmail('');
+              setPassword('');
+              setFirstName('');
+              setLastName('');
+              setShowPassword(false);
+            }}
+            className="w-full mt-6 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            disabled={loading}
+          >
             {isLogin ? 'Nu ai cont? Înregistrează-te' : 'Ai deja cont? Conectează-te'}
           </button>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
 export default Auth;
