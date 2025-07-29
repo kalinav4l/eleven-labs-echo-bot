@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       agent_documents: {
         Row: {
           agent_id: string
@@ -1348,6 +1378,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_statistics: {
         Row: {
           agents_used: number
@@ -1539,6 +1593,41 @@ export type Database = {
         Args: { p_user_email: string; p_amount: number; p_description?: string }
         Returns: boolean
       }
+      admin_ban_user: {
+        Args: {
+          p_target_user_id: string
+          p_ban_status: boolean
+          p_admin_user_id: string
+        }
+        Returns: boolean
+      }
+      admin_change_role: {
+        Args: {
+          p_target_user_id: string
+          p_new_role: Database["public"]["Enums"]["app_role"]
+          p_admin_user_id: string
+        }
+        Returns: boolean
+      }
+      admin_get_all_users: {
+        Args: { p_admin_user_id: string }
+        Returns: {
+          user_id: string
+          email: string
+          first_name: string
+          last_name: string
+          account_type: string
+          user_role: Database["public"]["Enums"]["app_role"]
+          total_credits: number
+          used_credits: number
+          remaining_credits: number
+          balance_usd: number
+          total_calls: number
+          total_minutes: number
+          created_at: string
+          last_sign_in: string
+        }[]
+      }
       admin_get_user_credits: {
         Args: { p_user_email: string }
         Returns: {
@@ -1549,6 +1638,25 @@ export type Database = {
           remaining_credits: number
           created_at: string
         }[]
+      }
+      admin_modify_balance: {
+        Args: {
+          p_target_user_id: string
+          p_balance_amount: number
+          p_operation: string
+          p_admin_user_id: string
+        }
+        Returns: boolean
+      }
+      admin_modify_credits: {
+        Args: {
+          p_target_user_id: string
+          p_credit_amount: number
+          p_operation: string
+          p_admin_user_id: string
+          p_description?: string
+        }
+        Returns: boolean
       }
       cosine_similarity: {
         Args: { vec1: Json; vec2: Json }
@@ -1569,6 +1677,17 @@ export type Database = {
           p_amount: number
           p_description?: string
           p_conversation_id?: string
+        }
+        Returns: boolean
+      }
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
         }
         Returns: boolean
       }
@@ -1607,7 +1726,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1734,6 +1853,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
