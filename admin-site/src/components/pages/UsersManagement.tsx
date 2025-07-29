@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Search, Ban, CreditCard, DollarSign, Shield, UserCheck, UserX } from 'lucide-react';
 import { UserActionsDialog } from '../dialogs/UserActionsDialog';
+import { UserEditDialog } from '../dialogs/UserEditDialog';
 
 export function UsersManagement() {
   const { user } = useAuth();
@@ -16,6 +17,8 @@ export function UsersManagement() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [editUser, setEditUser] = useState<AdminUser | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
 
   const fetchUsers = async () => {
@@ -54,6 +57,17 @@ export function UsersManagement() {
     setActionDialogOpen(false);
     setSelectedUser(null);
     fetchUsers(); // Refresh the users list
+  };
+
+  const handleEditUser = (user: AdminUser) => {
+    setEditUser(user);
+    setShowEditDialog(true);
+  };
+
+  const handleEditComplete = () => {
+    setEditUser(null);
+    setShowEditDialog(false);
+    fetchUsers();
   };
 
   if (loading) {
@@ -160,13 +174,22 @@ export function UsersManagement() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleUserAction(adminUser)}
-                    >
-                      Acțiuni
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditUser(adminUser)}
+                      >
+                        Editează
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleUserAction(adminUser)}
+                      >
+                        Acțiuni
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -183,6 +206,13 @@ export function UsersManagement() {
           onActionComplete={handleActionComplete}
         />
       )}
+      
+      <UserEditDialog
+        user={editUser}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onUserUpdated={handleEditComplete}
+      />
     </div>
   );
 }
