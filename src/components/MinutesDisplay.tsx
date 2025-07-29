@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
-import { CreditCard, Plus } from 'lucide-react';
+import { DollarSign, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,19 +10,19 @@ const MinutesDisplay = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const { data: credits, isLoading } = useQuery({
-    queryKey: ['user-credits', user?.id],
+  const { data: balance, isLoading } = useQuery({
+    queryKey: ['user-balance', user?.id],
     queryFn: async () => {
       if (!user) return null;
       
       const { data, error } = await supabase
-        .from('user_credits')
-        .select('remaining_credits, total_credits, used_credits')
+        .from('user_balance')
+        .select('balance_usd')
         .eq('user_id', user.id)
         .single();
 
       if (error) {
-        console.error('Error fetching credits:', error);
+        console.error('Error fetching balance:', error);
         return null;
       }
 
@@ -36,7 +35,7 @@ const MinutesDisplay = () => {
     return null;
   }
 
-  const usedCredits = credits?.used_credits ?? 0;
+  const currentBalance = balance?.balance_usd ?? 0;
 
   const handleUpgrade = () => {
     navigate('/pricing');
@@ -45,9 +44,9 @@ const MinutesDisplay = () => {
   return (
     <div className="flex items-center space-x-2">
       <div className="flex items-center space-x-2 px-3 py-2 bg-gray-100 rounded-lg">
-        <CreditCard className="w-4 h-4 text-gray-600" />
+        <DollarSign className="w-4 h-4 text-gray-600" />
         <span className="text-sm text-gray-700 font-medium">
-          {usedCredits} credite
+          ${currentBalance.toFixed(2)}
         </span>
       </div>
       <Button
@@ -56,7 +55,7 @@ const MinutesDisplay = () => {
         className="bg-black hover:bg-gray-800 text-white px-3 py-2"
       >
         <Plus className="w-4 h-4 mr-1" />
-        Upgrade
+        Add Funds
       </Button>
     </div>
   );

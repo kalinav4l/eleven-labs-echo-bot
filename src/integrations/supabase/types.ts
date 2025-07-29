@@ -1499,6 +1499,22 @@ export type Database = {
         }
         Returns: boolean
       }
+      admin_get_all_users: {
+        Args: { p_admin_user_id: string }
+        Returns: {
+          user_id: string
+          email: string
+          first_name: string
+          last_name: string
+          account_type: string
+          user_role: Database["public"]["Enums"]["app_role"]
+          balance_usd: number
+          total_calls: number
+          total_minutes: number
+          created_at: string
+          last_sign_in: string
+        }[]
+      }
       admin_modify_balance: {
         Args: {
           p_target_user_id: string

@@ -57,20 +57,20 @@ const Account = () => {
     savedTranscripts
   } = useTranscripts();
 
-  // Fetch user credits data
-  const { data: userCredits } = useQuery({
-    queryKey: ['user-credits', user?.id],
+  // Fetch user balance data
+  const { data: userBalance } = useQuery({
+    queryKey: ['user-balance', user?.id],
     queryFn: async () => {
       if (!user) return null;
       
       const { data, error } = await supabase
-        .from('user_credits')
-        .select('used_credits, total_credits, remaining_credits')
+        .from('user_balance')
+        .select('balance_usd')
         .eq('user_id', user.id)
         .single();
 
       if (error) {
-        console.error('Error fetching credits:', error);
+        console.error('Error fetching balance:', error);
         return null;
       }
 
@@ -81,7 +81,7 @@ const Account = () => {
 
   // State for enhanced analytics data
   const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
-  const [conversationCredits, setConversationCredits] = useState<Record<string, number>>({});
+  const [conversationCosts, setConversationCosts] = useState<Record<string, number>>({});
 
   // Function to get conversation data from ElevenLabs
   const getConversationData = async (conversationId: string) => {
@@ -97,11 +97,11 @@ const Account = () => {
         const cost = data.metadata.cost || 0;
         const llmCharge = data.metadata.charging?.llm_charge || 0;
         const callCharge = data.metadata.charging?.call_charge || 0;
-        // Cost is already in credits, no need to multiply by 1
-        const totalCost = cost || (llmCharge + callCharge);
-        const credits = Math.round(totalCost);
+        // Convert to USD cost (cost is in credits, convert at $0.15/minute)
+        const totalCost = cost ? cost * 0.15 / 60 : (llmCharge + callCharge) * 0.15 / 60;
+        const costUsd = totalCost;
         setConversationDurations(prev => ({ ...prev, [conversationId]: duration }));
-        setConversationCredits(prev => ({ ...prev, [conversationId]: credits }));
+        setConversationCosts(prev => ({ ...prev, [conversationId]: costUsd }));
         return duration;
       }
     } catch (error) {
@@ -156,10 +156,11 @@ const Account = () => {
   const totalAgents = userAgents?.length || 0;
   const totalCalls = callHistory?.length || 0;
 
-  // Calculate total consumed credits from conversation data (from ElevenLabs API)
-  const totalConsumedCredits = Object.values(conversationCredits).reduce((total, credits) => total + credits, 0);
+  // Calculate total cost from conversation data (in USD)
+  const totalCost = Object.values(conversationCosts).reduce((total, cost) => total + cost, 0);
   const totalConversations = userStats?.total_conversations || 0;
   const totalTranscripts = savedTranscripts?.length || 0;
+  const currentBalance = userBalance?.balance_usd || 0;
 
 
 
@@ -190,8 +191,8 @@ const Account = () => {
     icon: Phone,
     color: 'text-gray-600'
   }, {
-    label: 'Credite Consumate',
-    value: totalConsumedCredits.toString(),
+    label: 'Sold Curent',
+    value: `$${currentBalance.toFixed(2)}`,
     icon: CreditCard,
     color: 'text-gray-600'
   }, {
@@ -201,7 +202,7 @@ const Account = () => {
     color: 'text-gray-600'
   }, {
     label: 'Cost Total ($)',
-    value: `$${(totalSecondsFromCalls / 60 * 0.15).toFixed(2)}`,
+    value: `$${totalCost.toFixed(2)}`,
     icon: FileText,
     color: 'text-gray-600'
   }, {
@@ -337,15 +338,15 @@ const Account = () => {
                       <Zap className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900 group-hover:text-blue-900 transition-colors duration-300">Credite Consumate</p>
-                      <p className="text-xs text-gray-500">Total utilizate</p>
+                      <p className="font-medium text-gray-900 group-hover:text-blue-900 transition-colors duration-300">Sold Curent</p>
+                      <p className="text-xs text-gray-500">Disponibil</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-xl font-bold text-gray-900 group-hover:text-blue-900 transition-colors duration-300">
-                      <AnimatedCounter target={totalConsumedCredits} />
+                      <AnimatedCounter target={currentBalance} />
                     </p>
-                    <p className="text-xs text-gray-500">credite</p>
+                    <p className="text-xs text-gray-500">USD</p>
                   </div>
                 </div>
                 

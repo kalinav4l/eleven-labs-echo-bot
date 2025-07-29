@@ -107,7 +107,6 @@ export function UsersManagement() {
                 <TableHead>Utilizator</TableHead>
                 <TableHead>Rol</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Credite</TableHead>
                 <TableHead>Sold</TableHead>
                 <TableHead>Apeluri</TableHead>
                 <TableHead>Înregistrat</TableHead>
@@ -146,12 +145,6 @@ export function UsersManagement() {
                           <span className="text-green-600">Activ</span>
                         </>
                       )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      <div>{adminUser.remaining_credits} / {adminUser.total_credits}</div>
-                      <div className="text-muted-foreground">Folosite: {adminUser.used_credits}</div>
                     </div>
                   </TableCell>
                   <TableCell>

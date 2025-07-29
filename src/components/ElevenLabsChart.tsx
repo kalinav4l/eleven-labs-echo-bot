@@ -6,15 +6,15 @@ import { useElevenLabsStats } from '@/hooks/useElevenLabsStats';
 import LoadingSpinner from './LoadingSpinner';
 
 const ElevenLabsChart: React.FC = () => {
-  const { data: statsData, isLoading, error } = useElevenLabsStats();
+  const { stats, loading } = useElevenLabsStats();
 
-  if (isLoading) {
+  if (loading) {
     return (
       <Card className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-all duration-300 animate-[slideInUp_0.8s_ease-out_0.4s_both]">
         <CardHeader className="p-6 border-b border-gray-200">
           <CardTitle className="font-semibold text-gray-900 text-lg flex items-center">
             <div className="w-2 h-2 bg-gray-900 rounded-full mr-3 animate-pulse" />
-            Statistici Apeluri
+            Statistici Cheltuieli
             <TrendingUp className="w-5 h-5 ml-2 text-gray-600" />
           </CardTitle>
         </CardHeader>
@@ -25,13 +25,13 @@ const ElevenLabsChart: React.FC = () => {
     );
   }
 
-  if (error || !statsData) {
+  if (!stats) {
     return (
       <Card className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-all duration-300 animate-[slideInUp_0.8s_ease-out_0.4s_both]">
         <CardHeader className="p-6 border-b border-gray-200">
           <CardTitle className="font-semibold text-gray-900 text-lg flex items-center">
             <div className="w-2 h-2 bg-gray-900 rounded-full mr-3 animate-pulse" />
-            Statistici Apeluri
+            Statistici Cheltuieli
             <TrendingUp className="w-5 h-5 ml-2 text-gray-600" />
           </CardTitle>
         </CardHeader>
@@ -42,6 +42,11 @@ const ElevenLabsChart: React.FC = () => {
     );
   }
 
+  const chartData = stats.monthlyData.map(item => ({
+    month: item.month,
+    amount: item.amount
+  }));
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -50,8 +55,7 @@ const ElevenLabsChart: React.FC = () => {
           {payload.map((entry: any, index: number) => (
             <p key={index} className="text-xs text-gray-600">
               <span className="inline-block w-3 h-3 rounded-full mr-2" style={{ backgroundColor: entry.color }} />
-              {entry.name === 'calls' && `Apeluri: ${entry.value}`}
-              {entry.name === 'credits' && `Credite: ${entry.value}`}
+              Cost: ${entry.value.toFixed(2)}
             </p>
           ))}
         </div>
@@ -63,17 +67,23 @@ const ElevenLabsChart: React.FC = () => {
   return (
     <Card className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-all duration-300 animate-[slideInUp_0.8s_ease-out_0.4s_both]">
       <CardHeader className="p-6 border-b border-gray-200">
-        <CardTitle className="font-semibold text-gray-900 text-lg flex items-center">
-          <div className="w-2 h-2 bg-gray-900 rounded-full mr-3 animate-pulse" />
-          Statistici Apeluri
-          <TrendingUp className="w-5 h-5 ml-2 text-gray-600" />
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="font-semibold text-gray-900 text-lg flex items-center">
+            <div className="w-2 h-2 bg-gray-900 rounded-full mr-3 animate-pulse" />
+            Statistici Cheltuieli
+            <TrendingUp className="w-5 h-5 ml-2 text-gray-600" />
+          </CardTitle>
+          <div className="text-right">
+            <div className="text-2xl font-bold">${stats.totalSpend.toFixed(2)}</div>
+            <div className="text-xs text-gray-500">Total cheltuit</div>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="p-6">
         <div className="h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
-              data={statsData}
+              data={chartData}
               margin={{
                 top: 20,
                 right: 30,
@@ -88,7 +98,7 @@ const ElevenLabsChart: React.FC = () => {
                 vertical={false}
               />
               <XAxis 
-                dataKey="date" 
+                dataKey="month" 
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 12, fill: '#6b7280' }}
@@ -98,69 +108,42 @@ const ElevenLabsChart: React.FC = () => {
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 12, fill: '#6b7280' }}
-                domain={[0, 'dataMax + 10']}
+                domain={[0, 'dataMax + 1']}
+                tickFormatter={(value) => `$${value}`}
               />
               <Tooltip content={<CustomTooltip />} />
               
-              {/* Apeluri Line */}
+              {/* Amount Line */}
               <Line
                 type="monotone"
-                dataKey="calls"
+                dataKey="amount"
                 stroke="#374151"
-                strokeWidth={2}
+                strokeWidth={3}
                 dot={{ 
                   fill: '#374151', 
                   strokeWidth: 2, 
-                  r: 4,
+                  r: 5,
                   className: 'animate-pulse'
                 }}
                 activeDot={{ 
-                  r: 6, 
+                  r: 8, 
                   fill: '#111827',
                   stroke: '#ffffff',
-                  strokeWidth: 2,
+                  strokeWidth: 3,
                   className: 'animate-bounce'
                 }}
                 animationDuration={2000}
                 animationEasing="ease-in-out"
               />
-              
-              {/* Credite Line */}
-              <Line
-                type="monotone"
-                dataKey="credits"
-                stroke="#6b7280"
-                strokeWidth={2}
-                strokeDasharray="5 5"
-                dot={{ 
-                  fill: '#6b7280', 
-                  strokeWidth: 2, 
-                  r: 3,
-                  className: 'animate-pulse'
-                }}
-                activeDot={{ 
-                  r: 5, 
-                  fill: '#374151',
-                  stroke: '#ffffff',
-                  strokeWidth: 2
-                }}
-                animationDuration={2500}
-                animationEasing="ease-in-out"
-                animationBegin={500}
-              />
             </LineChart>
           </ResponsiveContainer>
         </div>
         
-        {/* Legenda */}
+        {/* Legend */}
         <div className="flex items-center justify-center space-x-6 mt-4 pt-4 border-t border-gray-100">
           <div className="flex items-center">
             <div className="w-4 h-0.5 bg-gray-800 mr-2"></div>
-            <span className="text-xs text-gray-600">Apeluri</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-4 h-0.5 bg-gray-500 mr-2" style={{ backgroundImage: 'repeating-linear-gradient(to right, #6b7280 0, #6b7280 3px, transparent 3px, transparent 8px)' }}></div>
-            <span className="text-xs text-gray-600">Credite</span>
+            <span className="text-xs text-gray-600">Cheltuieli Lunare ($)</span>
           </div>
         </div>
       </CardContent>

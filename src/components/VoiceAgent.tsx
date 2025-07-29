@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { useGuestRateLimit } from '@/hooks/useGuestRateLimit';
-import { useCreditTracking } from '@/hooks/useCreditTracking';
 import GuestLimitModal from '@/components/GuestLimitModal';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,7 +8,6 @@ import { supabase } from '@/integrations/supabase/client';
 const VoiceAgent = () => {
   const { user } = useAuth();
   const { guestUsage, isLimitReached, remainingUses, incrementGuestUsage } = useGuestRateLimit();
-  const { deductCredits, trackConversation } = useCreditTracking();
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [currentConversation, setCurrentConversation] = useState<any>(null);
 
@@ -43,9 +41,22 @@ const VoiceAgent = () => {
       }
     }
 
-    // For authenticated users, track conversation and potentially deduct credits
+    // For authenticated users, track conversation in USD
     if (user) {
-      const conversation = await trackConversation('default-agent', 'Assistant Vocal');
+      // Create conversation record for tracking
+      const { data: conversation } = await supabase
+        .from('conversations')
+        .insert({
+          agent_id: 'default-agent',
+          agent_name: 'Assistant Vocal',
+          user_id: user.id,
+          message_count: 0,
+          duration_minutes: 0,
+          cost_usd: 0
+        })
+        .select()
+        .single();
+      
       setCurrentConversation(conversation);
     }
 
@@ -55,21 +66,23 @@ const VoiceAgent = () => {
 
   const handleConversationEnd = async (durationMinutes: number) => {
     if (user && currentConversation && durationMinutes > 0) {
-      const creditsToDeduct = Math.ceil(durationMinutes * 10); // 10 credits per minute
+      const costUsd = durationMinutes * 0.15; // $0.15 per minute
       
-      const success = await deductCredits(
-        creditsToDeduct,
-        `Convorbire vocală - ${durationMinutes} minute`,
-        currentConversation.id
-      );
+      // Deduct from user balance
+      const { error: balanceError } = await supabase.rpc('deduct_balance', {
+        p_user_id: user.id,
+        p_amount: costUsd,
+        p_description: `Convorbire vocală - ${durationMinutes} minute`,
+        p_conversation_id: currentConversation.id
+      });
 
-      if (success) {
-        // Update conversation with final duration and credits
+      if (!balanceError) {
+        // Update conversation with final duration and cost
         await supabase
           .from('conversations')
           .update({
             duration_minutes: durationMinutes,
-            credits_used: creditsToDeduct,
+            cost_usd: costUsd,
             updated_at: new Date().toISOString()
           })
           .eq('id', currentConversation.id);

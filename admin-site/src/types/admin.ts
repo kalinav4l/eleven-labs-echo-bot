@@ -5,9 +5,6 @@ export interface AdminUser {
   last_name: string;
   account_type: string;
   user_role: 'admin' | 'moderator' | 'user';
-  total_credits: number;
-  used_credits: number;
-  remaining_credits: number;
   balance_usd: number;
   total_calls: number;
   total_minutes: number;

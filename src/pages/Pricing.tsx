@@ -94,35 +94,21 @@ const PricingPage = () => {
       return;
     }
     try {
-      const packageName = planName === 'BRONZE' ? 'Bronze Plan' : 'Silver Plan';
-      const {
-        data: packages
-      } = await supabase.from('credit_packages').select('*').eq('name', packageName).single();
-      if (!packages) {
-        toast({
-          title: "Eroare",
-          description: "Pachetul selectat nu este disponibil momentan.",
-          variant: "destructive"
-        });
-        return;
-      }
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('create-checkout', {
-        body: {
-          package_id: packages.id
-        }
+      // For now, we'll just show a message since we removed credit packages
+      toast({
+        title: "Funcționalitate în dezvoltare",
+        description: "Sistemul de plăți va fi disponibil în curând. Contactează-ne pentru upgrade manual.",
       });
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
+      
+      // Redirect to contact for manual upgrade
+      if (planName === 'BRONZE' || planName === 'SILVER') {
+        window.open('mailto:contact@company.com?subject=Plan Upgrade Request', '_blank');
       }
     } catch (error) {
-      console.error('Error creating checkout:', error);
+      console.error('Error:', error);
       toast({
         title: "Eroare",
-        description: "Nu am putut inițializa procesul de plată. Te rugăm să încerci din nou.",
+        description: "Te rugăm să încerci din nou sau contactează-ne direct.",
         variant: "destructive"
       });
     }

@@ -18,9 +18,6 @@ interface AdminUser {
   last_name: string;
   account_type: string;
   user_role: 'admin' | 'moderator' | 'user';
-  total_credits: number;
-  used_credits: number;
-  remaining_credits: number;
   balance_usd: number;
   total_calls: number;
   total_minutes: number;
@@ -220,7 +217,6 @@ const Admin = () => {
                           <th className="h-12 px-4 text-left font-medium">Utilizator</th>
                           <th className="h-12 px-4 text-left font-medium">Rol</th>
                           <th className="h-12 px-4 text-left font-medium">Status</th>
-                          <th className="h-12 px-4 text-left font-medium">Credite</th>
                           <th className="h-12 px-4 text-left font-medium">Sold</th>
                           <th className="h-12 px-4 text-left font-medium">Apeluri</th>
                           <th className="h-12 px-4 text-left font-medium">Înregistrat</th>
@@ -252,14 +248,6 @@ const Admin = () => {
                               >
                                 {user.account_type}
                               </Badge>
-                            </td>
-                            <td className="h-12 px-4">
-                              <div className="text-sm">
-                                <div>{user.remaining_credits} / {user.total_credits}</div>
-                                <div className="text-muted-foreground text-xs">
-                                  Folosite: {user.used_credits}
-                                </div>
-                              </div>
                             </td>
                             <td className="h-12 px-4">
                               <div className="font-medium">
