@@ -204,24 +204,6 @@ const ConversationAnalytics = () => {
           </div>
         </div>
 
-        {/* Cache Status Info */}
-        <Card className="border-l-4 border-l-blue-500">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Database className="w-5 h-5 text-blue-500" />
-                <span className="font-medium">Cache Status:</span>
-                <span className="text-sm text-muted-foreground">
-                  {cachedConversations.length} conversații în cache
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Clock className="w-4 h-4" />
-                <span>Auto-refresh pentru conversații recente (&lt;10min)</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Mobile-Responsive Filters */}
         <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 py-3 hover:bg-gray-50 transition-colors duration-200 rounded-lg px-3">
@@ -420,16 +402,15 @@ const ConversationAnalytics = () => {
                              call.call_status === 'success' ? '✓ Success' : '? Unknown'}
                           </div>
                         </td>
-                        <td className="p-3">
-                          {conversationData?.isCached ? (
-                            <div className="text-xs text-blue-600 flex items-center gap-1">
-                              <Database className="w-3 h-3" />
-                              {formatLastUpdated(conversationData.lastUpdated)}
-                            </div>
-                          ) : (
-                            <div className="text-xs text-muted-foreground">Nu este în cache</div>
-                          )}
-                        </td>
+                         <td className="p-3">
+                           <div className="flex items-center justify-center">
+                             {conversationData?.isCached ? (
+                               <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                             ) : (
+                               <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                             )}
+                           </div>
+                         </td>
                         <td className="p-3">
                           <div className="flex items-center gap-2">
                             {call.conversation_id && (
