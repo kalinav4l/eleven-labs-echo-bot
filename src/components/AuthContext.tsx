@@ -49,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [showWelcome, setShowWelcome] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [hasExistingSession, setHasExistingSession] = useState(false);
+  const [isRealLogin, setIsRealLogin] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener
@@ -60,9 +61,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         setLoading(false);
 
-        // Show animation only for actual login events, not when already have session on load
-        if (event === 'SIGNED_IN' && !hasExistingSession) {
+        // Show animation only for real login events, not session restoration
+        if (event === 'SIGNED_IN' && isRealLogin) {
           setShowWelcome(true);
+          setIsRealLogin(false); // Reset flag after showing animation
           setTimeout(() => {
             console.log('User signed in successfully');
           }, 0);
@@ -84,12 +86,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     return () => subscription.unsubscribe();
-  }, [hasExistingSession]);
+  }, [isRealLogin]);
 
   const signIn = async (email: string, password: string) => {
     try {
       // Clean up existing state first
       cleanupAuthState();
+      
+      // Set flag to indicate this is a real login attempt
+      setIsRealLogin(true);
       
       // Attempt global sign out first
       try {
@@ -106,6 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Sign in error:', error);
+        setIsRealLogin(false); // Reset flag on error
         return { error };
       }
 
@@ -176,6 +182,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Reset states
       setShowWelcome(false);
       setHasExistingSession(false);
+      setIsRealLogin(false);
       
       // Attempt global sign out
       try {
