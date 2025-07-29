@@ -23,7 +23,7 @@ const PricingPage = () => {
       minutes: 33,
       description: 'Perfect pentru testare',
       features: [
-        '33 credite incluse',
+        '33 minute incluse',
         'Toate funcționalitățile AI',
         'Fără card de credit',
         'Support prin email'
@@ -38,8 +38,8 @@ const PricingPage = () => {
       minutes: 660,
       description: 'Pentru utilizatori ocazionali',
       features: [
-        '660 credite incluse',
-        '$0.15/credit suplimentar',
+        '660 minute incluse',
+        '$0.15/minut suplimentar',
         'Analytics de bază',
         'Priority support',
         'Integrări API'
@@ -54,8 +54,8 @@ const PricingPage = () => {
       minutes: 3333,
       description: 'Pentru utilizatori activi',
       features: [
-        '3,333 credite incluse',
-        '$0.15/credit suplimentar',
+        '3,333 minute incluse',
+        '$0.15/minut suplimentar',
         'Analytics avansate',
         'Priority support',
         'Rapoarte detaliate',
@@ -71,7 +71,7 @@ const PricingPage = () => {
       minutes: 'Nelimitate',
       description: 'Pentru companii mari',
       features: [
-        'Credite nelimitate',
+        'Minute nelimitate',
         'Prețuri personalizate',
         'White-label complet',
         'Account manager dedicat',
