@@ -48,26 +48,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [hasShownWelcome, setHasShownWelcome] = useState(false);
+  const [wasUserNull, setWasUserNull] = useState(true);
 
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth state change:', event, session?.user?.email);
+        
+        // Check if this is a real login (user was null before)
+        const wasNotLoggedIn = wasUserNull && !user;
+        
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
 
-        if (event === 'SIGNED_IN' && !isInitialLoad && !hasShownWelcome) {
-          // Show welcome animation only on actual login, not on page refresh
+        if (event === 'SIGNED_IN' && wasNotLoggedIn) {
+          // Show welcome animation only on actual login
           setShowWelcome(true);
-          setHasShownWelcome(true);
           // Defer data fetching to prevent deadlocks
           setTimeout(() => {
             console.log('User signed in successfully');
           }, 0);
         }
+        
+        // Update wasUserNull state
+        setWasUserNull(!session?.user);
       }
     );
 
@@ -77,10 +83,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       setLoading(false);
       setIsInitialLoad(false); // Mark initial load as complete
+      setWasUserNull(!session?.user); // Set based on existing session
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [user, wasUserNull]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -169,9 +176,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Clean up auth state first
       cleanupAuthState();
       
-      // Reset welcome animation state
-      setHasShownWelcome(false);
+      // Reset states
       setShowWelcome(false);
+      setWasUserNull(true);
       
       // Attempt global sign out
       try {
@@ -189,8 +196,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Clear state anyway and reset flags
       setUser(null);
       setSession(null);
-      setHasShownWelcome(false);
       setShowWelcome(false);
+      setWasUserNull(true);
     }
   };
 
