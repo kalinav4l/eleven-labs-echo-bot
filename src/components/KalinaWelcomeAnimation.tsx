@@ -98,6 +98,16 @@ export const KalinaWelcomeAnimation: React.FC<KalinaWelcomeAnimationProps> = ({ 
         </div>
       )}
       
+      {/* Animated Border */}
+      {showText && (
+        <div className="animated-border">
+          <div className="border-line border-top"></div>
+          <div className="border-line border-right"></div>
+          <div className="border-line border-bottom"></div>
+          <div className="border-line border-left"></div>
+        </div>
+      )}
+      
       {/* Main Content */}
       <div className="kalina-welcome-content">
         {showText && (
@@ -117,8 +127,16 @@ export const KalinaWelcomeAnimation: React.FC<KalinaWelcomeAnimationProps> = ({ 
               <div className="kalina-glow"></div>
             </div>
             
-            <div className="kalina-tagline">
-              <span className="tagline-text">AI Voice Assistant</span>
+            {/* Voice Recording Animation */}
+            <div className="voice-recording-animation">
+              <div className="recording-line">
+                <div className="recording-dot"></div>
+                <div className="recording-dot"></div>
+                <div className="recording-dot"></div>
+                <div className="recording-dot"></div>
+                <div className="recording-dot"></div>
+              </div>
+              <div className="recording-glow"></div>
             </div>
             
             <div className="kalina-welcome-dots">
