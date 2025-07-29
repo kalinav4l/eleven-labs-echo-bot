@@ -101,10 +101,10 @@ const Account = () => {
       
       if (data?.metadata) {
         const duration = Math.round(data.metadata.call_duration_secs || 0);
-        // Calculate cost based on call duration, not ElevenLabs cost
-        const costUsd = calculateCostFromSeconds(duration);
+        // Use the actual cost from ElevenLabs instead of calculating it
+        const costUsd = parseFloat(data.metadata.cost || '0');
         
-        console.log(`Calculated cost: $${costUsd} for ${duration} seconds`);
+        console.log(`Using ElevenLabs cost: $${costUsd} for ${duration} seconds`);
         
         // Deduct cost from user balance and update statistics
         if (costUsd > 0 && user?.id) {
