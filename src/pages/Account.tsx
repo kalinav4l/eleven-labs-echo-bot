@@ -19,6 +19,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import AnimatedCounter from '@/components/AnimatedCounter';
 import SkeletonCard from '@/components/SkeletonCard';
 import ElevenLabsChart from '@/components/ElevenLabsChart';
+import CreditsPlanDisplay from '@/components/CreditsPlanDisplay';
 
 const Account = () => {
   const {
@@ -287,9 +288,12 @@ const Account = () => {
                   Gestionează agenții tăi AI și urmărește performanțele
                 </p>
               </div>
-              <Button onClick={handleSignOut} variant="outline" className="border-gray-300 hover:border-gray-400 text-gray-700 animate-[slideInRight_0.6s_ease-out] hover:scale-105 transition-transform">
-                Ieșire
-              </Button>
+              <div className="flex items-center space-x-4">
+                <CreditsPlanDisplay />
+                <Button onClick={handleSignOut} variant="outline" className="border-gray-300 hover:border-gray-400 text-gray-700 animate-[slideInRight_0.6s_ease-out] hover:scale-105 transition-transform">
+                  Ieșire
+                </Button>
+              </div>
             </div>
           </div>
         </div>

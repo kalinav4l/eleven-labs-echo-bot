@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
-import CreditsPlanDisplay from './CreditsPlanDisplay';
 import { Menu } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -14,27 +13,16 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Desktop header with credits and plan display */}
-        {!isMobile && (
-          <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-            <div className="flex-1" />
-            <CreditsPlanDisplay />
-          </header>
-        )}
-        
         {/* Mobile header with menu button */}
         {isMobile && (
-          <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between lg:hidden">
-            <div className="flex items-center">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-lg p-2"
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-              <h1 className="ml-3 text-lg font-semibold text-gray-900">Kalina AI</h1>
-            </div>
-            <CreditsPlanDisplay />
+          <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center lg:hidden">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-lg p-2"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <h1 className="ml-3 text-lg font-semibold text-gray-900">Kalina AI</h1>
           </header>
         )}
         
