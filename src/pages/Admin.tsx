@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Users, Phone, CreditCard, Activity, Edit, DollarSign, Ban, UserCheck } from 'lucide-react';
+import { Search, Users, Phone, CreditCard, Activity, Edit, DollarSign, Ban, UserCheck, Trash2, Plus, TrendingUp } from 'lucide-react';
 import { UserEditModal } from '@/components/UserEditModal';
 
 interface AdminUser {
@@ -69,12 +69,74 @@ const Admin = () => {
         description: `Utilizatorul a fost ${newBanStatus ? 'blocat' : 'deblocat'} cu succes.`,
       });
 
-      fetchUsers(); // Refresh the users list
+      fetchUsers();
     } catch (error) {
       console.error('Error blocking/unblocking user:', error);
       toast({
         title: "Eroare",
         description: "Nu am putut modifica statusul utilizatorului.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAddCredits = async (targetUser: AdminUser, amount: number) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase.rpc('admin_modify_balance', {
+        p_target_user_id: targetUser.user_id,
+        p_balance_amount: amount,
+        p_operation: 'add',
+        p_admin_user_id: user.id
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Succes",
+        description: `Am adăugat ${amount} USD în contul utilizatorului.`,
+      });
+
+      fetchUsers();
+    } catch (error) {
+      console.error('Error adding credits:', error);
+      toast({
+        title: "Eroare",
+        description: "Nu am putut adăuga credite.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteUser = async (targetUser: AdminUser) => {
+    if (!user) return;
+    
+    if (!confirm(`Sigur vrei să ștergi utilizatorul ${targetUser.first_name} ${targetUser.last_name}?`)) {
+      return;
+    }
+
+    try {
+      // For now, we'll just ban the user since there's no delete function
+      const { error } = await supabase.rpc('admin_ban_user', {
+        p_target_user_id: targetUser.user_id,
+        p_ban_status: true,
+        p_admin_user_id: user.id
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Succes",
+        description: "Utilizatorul a fost blocat permanent.",
+      });
+
+      fetchUsers();
+    } catch (error) {
+      console.error('Error banning user:', error);
+      toast({
+        title: "Eroare",
+        description: "Nu am putut bloca utilizatorul.",
         variant: "destructive"
       });
     }
@@ -225,21 +287,39 @@ const Admin = () => {
         {/* Users Management */}
         <Card>
           <CardHeader>
-            <CardTitle>Gestionare Utilizatori</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Gestionare Utilizatori
+              <Badge variant="secondary" className="ml-auto">
+                {filteredUsers.length} utilizatori
+              </Badge>
+            </CardTitle>
             <CardDescription>
               Vedeți și gestionați toți utilizatorii platformei
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Search className="h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Căutați utilizatori..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="max-w-sm"
-                />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Căutați utilizatori..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="max-w-sm"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.location.reload()}
+                  >
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Reîmprospătează
+                  </Button>
+                </div>
               </div>
 
               {loadingData ? (
@@ -326,7 +406,7 @@ const Admin = () => {
                               </div>
                             </td>
                             <td className="h-12 px-4">
-                              <div className="flex gap-2">
+                              <div className="flex gap-1 flex-wrap">
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -334,26 +414,42 @@ const Admin = () => {
                                     setEditingUser(user);
                                     setEditModalOpen(true);
                                   }}
+                                  className="h-8"
                                 >
-                                  <Edit className="h-4 w-4 mr-1" />
-                                  Editează
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const amount = parseFloat(prompt('Introduceți suma pentru adăugare (USD):') || '0');
+                                    if (amount > 0) {
+                                      handleAddCredits(user, amount);
+                                    }
+                                  }}
+                                  className="h-8"
+                                >
+                                  <Plus className="h-3 w-3" />
                                 </Button>
                                 <Button
                                   variant={user.account_type === 'banned' ? 'default' : 'destructive'}
                                   size="sm"
                                   onClick={() => handleBlockUser(user)}
+                                  className="h-8"
                                 >
                                   {user.account_type === 'banned' ? (
-                                    <>
-                                      <UserCheck className="h-4 w-4 mr-1" />
-                                      Deblocare
-                                    </>
+                                    <UserCheck className="h-3 w-3" />
                                   ) : (
-                                    <>
-                                      <Ban className="h-4 w-4 mr-1" />
-                                      Blocare
-                                    </>
+                                    <Ban className="h-3 w-3" />
                                   )}
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDeleteUser(user)}
+                                  className="h-8"
+                                >
+                                  <Trash2 className="h-3 w-3" />
                                 </Button>
                               </div>
                             </td>
