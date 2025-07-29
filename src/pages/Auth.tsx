@@ -132,12 +132,10 @@ const Auth = () => {
           }} />)}
           </div>
           
-          {/* Animated Circles Behind KALINA */}
-          <div className="kalina-circles">
-            <div className="kalina-circle circle-1"></div>
-            <div className="kalina-circle circle-2"></div>
-            <div className="kalina-circle circle-3"></div>
-            <div className="kalina-circle circle-4"></div>
+          {/* Simple Pulse Rings */}
+          <div className="pulse-rings">
+            <div className="pulse-ring ring-1"></div>
+            <div className="pulse-ring ring-2"></div>
           </div>
           
           {/* Logo/Title */}
@@ -148,9 +146,9 @@ const Auth = () => {
         </div>
       </div>
 
-      {/* Right Side - Liquid Glass Login */}
-      <div className="auth-liquid-section">
-        <div className="auth-liquid-card">
+      {/* Right Side - Clean White Login */}
+      <div className="auth-clean-section">
+        <div className="auth-clean-card">
           <div className="auth-clean-header">
             <h2>{isLogin ? 'CONECTARE' : 'ÎNREGISTRARE'}</h2>
             <p>Acces la platforma KALINA</p>
