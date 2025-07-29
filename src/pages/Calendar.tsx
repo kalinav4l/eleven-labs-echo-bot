@@ -592,43 +592,35 @@ const Calendar = () => {
   return (
     <TooltipProvider>
       <DashboardLayout>
-        <div className="p-6 bg-white min-h-screen">
-          <div className="mb-8">
+        <div className="bg-white min-h-screen">
+          {/* Header */}
+          <div className="px-6 py-4 border-b border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+                <h1 className="text-xl font-medium text-gray-900">
                   Calendar Inteligent AI
                 </h1>
-                <p className="text-gray-600">Gestionează agenți, campanii și taskuri automatizate</p>
+                <p className="text-sm text-gray-500 mt-1">Gestionează agenți, campanii și taskuri automatizate</p>
               </div>
               
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    onClick={() => setShowIntelligentCreator(true)}
-                    disabled={isProcessingAI}
-                    className="bg-purple-600 hover:bg-purple-700 text-white"
-                  >
-                    {isProcessingAI ? (
-                      <>
-                        <Lightbulb className="h-4 w-4 mr-2 animate-pulse" />
-                        Generez...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        ✨ Buton Fermecat
-                      </>
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <p className="font-medium">Creator Inteligent de Campanii</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Funcția unică care analizează toate datele tale pentru a crea campanii personalizate și optimizate automat.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
+              <Button 
+                onClick={() => setShowIntelligentCreator(true)}
+                disabled={isProcessingAI}
+                className="bg-purple-600 hover:bg-purple-700 text-white text-sm"
+                size="sm"
+              >
+                {isProcessingAI ? (
+                  <>
+                    <Lightbulb className="h-4 w-4 mr-2 animate-pulse" />
+                    Generez...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    ✨ Buton Fermecat
+                  </>
+                )}
+              </Button>
             </div>
           </div>
 
@@ -778,78 +770,60 @@ const Calendar = () => {
             </div>
           )}
 
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Total Programate</p>
-                    <p className="text-2xl font-semibold text-gray-900">{scheduledCalls.length}</p>
-                  </div>
-                  <CalendarDays className="h-8 w-8 text-gray-400" />
+          {/* Stats and Actions Section */}
+          <div className="px-6 py-4">
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+              <div className="text-center">
+                <div className="text-lg font-medium text-gray-900 mb-1">{scheduledCalls.length}</div>
+                <div className="text-sm text-gray-500 flex items-center justify-center">
+                  <CalendarDays className="h-4 w-4 mr-1" />
+                  Total Programate
                 </div>
-              </CardContent>
-            </Card>
+              </div>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Azi</p>
-                    <p className="text-2xl font-semibold text-gray-900">{todayCalls.length}</p>
-                  </div>
-                  <Clock className="h-8 w-8 text-gray-400" />
+              <div className="text-center">
+                <div className="text-lg font-medium text-gray-900 mb-1">{todayCalls.length}</div>
+                <div className="text-sm text-gray-500 flex items-center justify-center">
+                  <Clock className="h-4 w-4 mr-1" />
+                  Azi
                 </div>
-              </CardContent>
-            </Card>
+              </div>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Campanii Active</p>
-                    <p className="text-2xl font-semibold text-gray-900">
-                      {scheduledCalls.filter(call => call.task_type === 'campaign').length}
-                    </p>
-                  </div>
-                  <Target className="h-8 w-8 text-gray-400" />
+              <div className="text-center">
+                <div className="text-lg font-medium text-gray-900 mb-1">
+                  {scheduledCalls.filter(call => call.task_type === 'campaign').length}
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">AI Tasks</p>
-                    <p className="text-2xl font-semibold text-gray-900">
-                      {scheduledCalls.filter(call => call.auto_generated).length}
-                    </p>
-                  </div>
-                  <BrainCircuit className="h-8 w-8 text-gray-400" />
+                <div className="text-sm text-gray-500 flex items-center justify-center">
+                  <Target className="h-4 w-4 mr-1" />
+                  Campanii Active
                 </div>
-              </CardContent>
-            </Card>
+              </div>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Finalizate</p>
-                    <p className="text-2xl font-semibold text-gray-900">
-                      {scheduledCalls.filter(call => call.status === 'completed').length}
-                    </p>
-                  </div>
-                  <CheckCircle className="h-8 w-8 text-gray-400" />
+              <div className="text-center">
+                <div className="text-lg font-medium text-gray-900 mb-1">
+                  {scheduledCalls.filter(call => call.auto_generated).length}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                <div className="text-sm text-gray-500 flex items-center justify-center">
+                  <BrainCircuit className="h-4 w-4 mr-1" />
+                  AI Tasks
+                </div>
+              </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-3 mb-6">
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <div className="text-center">
+                <div className="text-lg font-medium text-gray-900 mb-1">
+                  {scheduledCalls.filter(call => call.status === 'completed').length}
+                </div>
+                <div className="text-sm text-gray-500 flex items-center justify-center">
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  Finalizate
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3 mb-6">
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
@@ -1005,91 +979,97 @@ const Calendar = () => {
               <Bot className="h-4 w-4 mr-2" />
               Instrucțiuni AI
             </Button>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Calendar */}
-            <div className="lg:col-span-2">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                  <CardTitle className="text-xl text-gray-900">
-                    {currentDate.toLocaleDateString('ro-RO', { 
-                      month: 'long', 
-                      year: 'numeric' 
-                    })}
-                  </CardTitle>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={goToPreviousMonth}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={goToNextMonth}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-7 gap-1 mb-4">
-                    {['Dum', 'Lun', 'Mar', 'Mie', 'Joi', 'Vin', 'Sâm'].map(day => (
-                      <div key={day} className="p-2 text-center text-sm font-medium text-gray-600">
-                        {day}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-7 gap-1">
-                    {calendarDays.map((day, index) => {
-                      const isCurrentMonth = day.getMonth() === currentDate.getMonth();
-                      const isToday = day.toDateString() === new Date().toDateString();
-                      const callsForDay = getCallsForDate(day);
-                      
-                      return (
-                        <div
-                          key={index}
-                          onClick={() => handleDateClick(day)}
-                          className={`
-                            p-2 min-h-[80px] border rounded-lg cursor-pointer transition-all duration-200
-                            ${isCurrentMonth ? 'bg-white hover:bg-gray-50' : 'bg-gray-50 text-gray-400'}
-                            ${isToday ? 'bg-blue-50 border-blue-200' : 'border-gray-200'}
-                          `}
-                        >
-                          <div className="text-sm font-medium mb-1">{day.getDate()}</div>
-                          <div className="space-y-1">
-                            {callsForDay.slice(0, 2).map((call, callIndex) => (
-                              <div
-                                key={callIndex}
-                                className={`text-xs p-1 rounded-md flex items-center gap-1 ${
-                                  call.auto_generated 
-                                    ? 'bg-purple-50 text-purple-700 border border-purple-200' 
-                                    : call.task_type === 'campaign'
-                                    ? 'bg-green-50 text-green-700 border border-green-200'
-                                    : 'bg-blue-50 text-blue-700 border border-blue-200'
-                                }`}
-                              >
-                                {getTaskTypeIcon(call.task_type || 'call')}
-                                <span className="truncate">{call.client_name}</span>
-                                {call.auto_generated && <Sparkles className="h-2 w-2" />}
-                              </div>
-                            ))}
-                            {callsForDay.length > 2 && (
-                              <div className="text-xs text-gray-500 font-medium">
-                                +{callsForDay.length - 2} mai mult
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
             </div>
+
+            {/* Main Layout with Calendar and Sidebar */}
+            <div className="flex flex-col lg:flex-row gap-6">
+              {/* Notion-style Calendar */}
+              <div className="flex-1">
+                <div className="bg-white">
+                  {/* Calendar Header */}
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                    <h2 className="text-xl font-medium text-gray-900">
+                      {currentDate.toLocaleDateString('ro-RO', { 
+                        month: 'long', 
+                        year: 'numeric' 
+                      })}
+                    </h2>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={goToPreviousMonth}
+                        className="h-8 w-8 p-0 hover:bg-gray-100"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={goToNextMonth}
+                        className="h-8 w-8 p-0 hover:bg-gray-100"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* Calendar Grid */}
+                  <div className="px-6 py-4">
+                    {/* Week Days Header */}
+                    <div className="grid grid-cols-7 border-b border-gray-100">
+                      {['Dum', 'Lun', 'Mar', 'Mie', 'Joi', 'Vin', 'Sâm'].map(day => (
+                        <div key={day} className="py-3 text-center text-sm font-medium text-gray-500 uppercase tracking-wide">
+                          {day}
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Calendar Days */}
+                    <div className="grid grid-cols-7">
+                      {calendarDays.map((day, index) => {
+                        const isCurrentMonth = day.getMonth() === currentDate.getMonth();
+                        const isToday = day.toDateString() === new Date().toDateString();
+                        const callsForDay = getCallsForDate(day);
+                        
+                        return (
+                          <div
+                            key={index}
+                            onClick={() => handleDateClick(day)}
+                            className={`
+                              relative p-3 min-h-[120px] border-r border-b border-gray-100 cursor-pointer hover:bg-gray-50/50 transition-colors
+                              ${!isCurrentMonth ? 'text-gray-300' : 'text-gray-900'}
+                              ${isToday ? 'bg-blue-50/30' : ''}
+                            `}
+                          >
+                            <div className={`text-sm mb-2 ${isToday ? 'font-semibold text-blue-600' : 'font-medium'}`}>
+                              {day.getDate()}
+                            </div>
+                            
+                            {/* Task Items */}
+                            <div className="space-y-1">
+                              {callsForDay.slice(0, 3).map((call, callIndex) => (
+                                <div
+                                  key={callIndex}
+                                  className="px-2 py-1 text-xs rounded-sm bg-blue-500 text-white truncate cursor-pointer hover:bg-blue-600 transition-colors"
+                                  title={call.client_name}
+                                >
+                                  {call.client_name.length > 12 ? `${call.client_name.substring(0, 12)}...` : call.client_name}
+                                </div>
+                              ))}
+                              {callsForDay.length > 3 && (
+                                <div className="text-xs text-gray-500 px-2">
+                                  +{callsForDay.length - 3} mai mult
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
 
             {/* Sidebar */}
             <div>
@@ -1191,6 +1171,7 @@ const Calendar = () => {
                   </div>
                 </CardContent>
               </Card>
+            </div>
             </div>
           </div>
 
