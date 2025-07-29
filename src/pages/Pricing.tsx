@@ -206,20 +206,7 @@ const PricingPage = () => {
 
           {/* Trust Indicators */}
           <div className="text-center mt-16">
-            <div className="flex items-center justify-center gap-8 text-sm text-gray-600">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>Fără contracte</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span>Anulare oricând</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                <span>Support 24/7</span>
-              </div>
-            </div>
+            
           </div>
         </div>
       </div>
