@@ -137,12 +137,12 @@ serve(async (req) => {
             properties: {
               include_examples: { type: "boolean", description: "Include example queries" }
             }
-          }
-        },
-        {
-          type: "function",
-          function: {
-            name: "get_all_conversation_data",
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "get_all_conversation_data",
             description: "Get all conversation data including call history, analytics cache, and detailed transcripts",
             parameters: {
               type: "object",
