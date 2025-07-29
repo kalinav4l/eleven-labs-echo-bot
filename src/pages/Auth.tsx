@@ -128,115 +128,117 @@ const Auth = () => {
   };
 
   return (
-    <div className="auth-dark-page">
-      {/* Animated Background Elements */}
-      <div className="auth-bg-elements">
-        <div className="floating-element element-1"></div>
-        <div className="floating-element element-2"></div>
-        <div className="floating-element element-3"></div>
-        <div className="floating-element element-4"></div>
-        <div className="floating-element element-5"></div>
-        <div className="floating-element element-6"></div>
-      </div>
-
-      {/* Gradient Lines */}
-      <div className="auth-gradient-lines">
-        <div className="gradient-line line-1"></div>
-        <div className="gradient-line line-2"></div>
-        <div className="gradient-line line-3"></div>
-      </div>
-
-      {/* Particle System */}
-      <div className="auth-particles">
-        {Array.from({ length: 30 }, (_, i) => (
-          <div
-            key={i}
-            className="auth-particle"
-            style={{
-              left: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${3 + Math.random() * 4}s`,
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="auth-container">
-        <div className="auth-card">
-          <div className="auth-header">
-            <h1 className="auth-title">
-              {isLogin ? 'CONECTARE' : 'ÎNREGISTRARE'}
-            </h1>
-            <div className="auth-title-line"></div>
-            <p className="auth-subtitle">
-              {isLogin 
-                ? 'Acces la platforma KALINA' 
-                : 'Creează un cont nou pentru acces complet'
-              }
-            </p>
+    <div className="auth-minimal-page">
+      {/* Left Side - 3D Vocal Visualization */}
+      <div className="auth-visual-section">
+        <div className="auth-3d-container">
+          {/* Audio Wave Visualization */}
+          <div className="audio-wave-3d">
+            {Array.from({ length: 50 }, (_, i) => (
+              <div
+                key={i}
+                className="wave-bar-3d"
+                style={{
+                  animationDelay: `${i * 0.1}s`,
+                  height: `${20 + Math.random() * 80}px`,
+                  left: `${(i * 100) / 50}%`
+                }}
+              />
+            ))}
           </div>
           
-          <form onSubmit={handleSubmit} className="auth-form">
+          {/* Floating Sound Orbs */}
+          <div className="sound-orbs">
+            {Array.from({ length: 8 }, (_, i) => (
+              <div
+                key={i}
+                className="sound-orb"
+                style={{
+                  animationDelay: `${i * 0.5}s`,
+                  left: `${Math.random() * 80 + 10}%`,
+                  top: `${Math.random() * 80 + 10}%`,
+                }}
+              />
+            ))}
+          </div>
+          
+          {/* Pulse Rings */}
+          <div className="pulse-rings">
+            <div className="pulse-ring ring-1"></div>
+            <div className="pulse-ring ring-2"></div>
+            <div className="pulse-ring ring-3"></div>
+          </div>
+          
+          {/* Logo/Title */}
+          <div className="auth-visual-title">
+            <h1>KALINA</h1>
+            <p>AI Voice Platform</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side - Minimal Login */}
+      <div className="auth-form-section">
+        <div className="auth-minimal-card">
+          <div className="auth-minimal-header">
+            <h2>{isLogin ? 'CONECTARE' : 'ÎNREGISTRARE'}</h2>
+            <p>Acces la platforma KALINA</p>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="auth-minimal-form">
             {!isLogin && (
-              <div className="auth-row">
-                <div className="auth-input-group">
-                  <Input
-                    type="text"
-                    placeholder="Prenume"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    required={!isLogin}
-                    className="auth-input"
-                    disabled={loading}
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                  />
-                </div>
-                <div className="auth-input-group">
-                  <Input
-                    type="text"
-                    placeholder="Nume"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    required={!isLogin}
-                    className="auth-input"
-                    disabled={loading}
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                  />
-                </div>
+              <div className="auth-minimal-row">
+                <input
+                  type="text"
+                  placeholder="Prenume"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required={!isLogin}
+                  className="auth-minimal-input"
+                  disabled={loading}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                />
+                <input
+                  type="text"
+                  placeholder="Nume"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required={!isLogin}
+                  className="auth-minimal-input"
+                  disabled={loading}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                />
               </div>
             )}
             
-            <div className="auth-input-group">
-              <Input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="auth-input"
-                disabled={loading}
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck="false"
-              />
-            </div>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="auth-minimal-input"
+              disabled={loading}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
+            />
             
-            <div className="auth-input-group auth-password-group">
-              <Input
+            <div className="auth-minimal-password">
+              <input
                 type={showPassword ? "text" : "password"}
-                placeholder={isLogin ? "Parolă" : "Parolă (minim 8 caractere)"}
+                placeholder="Parolă"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={isLogin ? undefined : 8}
-                className="auth-input auth-password-input"
+                className="auth-minimal-input"
                 disabled={loading}
                 autoComplete="off"
                 autoCorrect="off"
@@ -246,57 +248,53 @@ const Auth = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="auth-password-toggle"
+                className="auth-minimal-toggle"
                 disabled={loading}
-                title={showPassword ? "Ascunde parola" : "Arată parola"}
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
             
             {error && (
-              <div className="auth-error">
-                <p>{error}</p>
+              <div className="auth-minimal-error">
+                {error}
               </div>
             )}
 
             {success && (
-              <div className="auth-success">
-                <p>{success}</p>
+              <div className="auth-minimal-success">
+                {success}
               </div>
             )}
             
-            <Button
+            <button
               type="submit"
               disabled={loading}
-              className="auth-submit-btn"
+              className="auth-minimal-submit"
             >
-              <span>{loading ? 'SE PROCESEAZĂ...' : (isLogin ? 'CONECTARE' : 'ÎNREGISTRARE')}</span>
-              <div className="auth-btn-glow"></div>
-            </Button>
+              {loading ? 'SE PROCESEAZĂ...' : (isLogin ? 'CONECTARE' : 'ÎNREGISTRARE')}
+            </button>
           </form>
           
-          <div className="auth-switch">
-            <button
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setError('');
-                setSuccess('');
-                setEmail('');
-                setPassword('');
-                setFirstName('');
-                setLastName('');
-                setShowPassword(false);
-              }}
-              className="auth-switch-btn"
-              disabled={loading}
-            >
-              {isLogin 
-                ? 'Nu ai cont? Înregistrează-te' 
-                : 'Ai deja cont? Conectează-te'
-              }
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setError('');
+              setSuccess('');
+              setEmail('');
+              setPassword('');
+              setFirstName('');
+              setLastName('');
+              setShowPassword(false);
+            }}
+            className="auth-minimal-switch"
+            disabled={loading}
+          >
+            {isLogin 
+              ? 'Nu ai cont? Înregistrează-te' 
+              : 'Ai deja cont? Conectează-te'
+            }
+          </button>
         </div>
       </div>
     </div>
