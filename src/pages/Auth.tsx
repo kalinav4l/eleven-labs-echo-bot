@@ -1,13 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff } from 'lucide-react';
-import { TransitionLoader } from '@/components/transition/TransitionLoader';
-import { usePageTransition } from '@/hooks/usePageTransition';
 
 const Auth = () => {
   const { user, signIn, signUp } = useAuth();
@@ -20,21 +18,6 @@ const Auth = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showDissolve, setShowDissolve] = useState(false);
-  
-  const { isTransitioning, progress, startTransition } = usePageTransition({
-    duration: 3000
-  });
-
-  useEffect(() => {
-    const handleTransitionStart = () => {
-      setShowDissolve(true);
-      startTransition();
-    };
-
-    window.addEventListener('authTransitionStart', handleTransitionStart);
-    return () => window.removeEventListener('authTransitionStart', handleTransitionStart);
-  }, [startTransition]);
 
   // Password validation
   const validatePassword = (password: string): string | null => {
@@ -89,8 +72,8 @@ const Auth = () => {
           
           setError(errorMessage);
         } else {
-          // Success - transition will be handled by event listener
-          console.log('Login successful, transition starting');
+          // Redirect to home page after successful login
+          window.location.href = '/';
         }
       } else {
         // Enhanced validation for sign up
@@ -145,10 +128,7 @@ const Auth = () => {
   };
 
   return (
-    <>
-      <TransitionLoader isVisible={isTransitioning} progress={progress} />
-      
-      <div className={`min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center p-4 relative overflow-hidden transition-all duration-800 ${showDissolve ? 'animate-dissolve' : ''}`}>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background Glass Effects */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/3 left-1/3 w-72 h-72 bg-gradient-to-r from-green-200/30 to-emerald-200/30 rounded-full blur-3xl"></div>
@@ -270,7 +250,6 @@ const Auth = () => {
         </CardContent>
       </Card>
     </div>
-    </>
   );
 };
 

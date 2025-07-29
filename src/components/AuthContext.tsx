@@ -97,13 +97,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data.user) {
-        console.log('Sign in successful, starting transition...');
-        // Trigger transition event
-        window.dispatchEvent(new CustomEvent('authTransitionStart'));
-        // Delay navigation to allow transition
+        console.log('Sign in successful, redirecting...');
+        // Force page reload for clean state
         setTimeout(() => {
           window.location.href = '/account';
-        }, 800);
+        }, 100);
       }
 
       return { error: null };
@@ -149,12 +147,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // If user was created and logged in immediately
       if (data.user && data.session) {
-        console.log('User created and logged in immediately, starting transition...');
-        // Trigger transition event
-        window.dispatchEvent(new CustomEvent('authTransitionStart'));
-        setTimeout(() => {
-          window.location.href = '/account';
-        }, 800);
+        console.log('User created and logged in immediately');
         return { error: null };
       }
 
