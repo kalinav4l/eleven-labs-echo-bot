@@ -58,8 +58,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         setLoading(false);
 
-        if (event === 'SIGNED_IN' && !isInitialLoad) {
-          // Show welcome animation only on actual sign-in, not on session restoration
+        if (event === 'SIGNED_IN') {
+          // Show welcome animation
           setShowWelcome(true);
           // Defer data fetching to prevent deadlocks
           setTimeout(() => {
