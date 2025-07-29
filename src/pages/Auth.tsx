@@ -179,6 +179,22 @@ const Auth = () => {
 
       {/* Right Side - Minimal Login */}
       <div className="auth-form-section">
+        {/* Floating particles around form */}
+        <div className="form-particles">
+          {Array.from({ length: 12 }, (_, i) => (
+            <div
+              key={i}
+              className="form-particle"
+              style={{
+                left: `${20 + Math.random() * 60}%`,
+                top: `${20 + Math.random() * 60}%`,
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${2 + Math.random() * 2}s`,
+              }}
+            />
+          ))}
+        </div>
+        
         <div className="auth-minimal-card">
           <div className="auth-minimal-header">
             <h2>{isLogin ? 'CONECTARE' : 'ÎNREGISTRARE'}</h2>
