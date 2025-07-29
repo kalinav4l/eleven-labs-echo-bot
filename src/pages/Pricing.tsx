@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Check, Star, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Check, Star, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -11,69 +11,55 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 const PricingPage = () => {
   const [isAnnual, setIsAnnual] = useState(false);
+  const [plans, setPlans] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processingPlan, setProcessingPlan] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const { ref: headerRef, isVisible: headerVisible } = useScrollReveal('up', 0.2);
   const { ref: toggleRef, isVisible: toggleVisible } = useScrollReveal('up', 0.4);
   const { ref: cardsRef, isVisible: cardsVisible } = useScrollReveal('up', 0.6);
-  const plans = [{
-    name: 'GRATUIT',
-    monthlyPrice: 0,
-    annualPrice: 0,
-    minutes: 33,
-    description: 'Perfect pentru testare',
-    features: ['33 minute incluse', 'Toate funcționalitățile AI', 'Fără card de credit', 'Support prin email'],
-    buttonText: 'Începe Gratuit',
-    popular: false
-  }, {
-    name: 'BRONZE',
-    monthlyPrice: 99,
-    annualPrice: 87.12,
-    // 12% discount
-    minutes: 660,
-    description: 'Pentru utilizatori ocazionali',
-    features: ['660 minute incluse', '$0.15/minut suplimentar', 'Analytics de bază', 'Priority support', 'Integrări API'],
-    buttonText: 'Alege Bronze',
-    popular: true
-  }, {
-    name: 'SILVER',
-    monthlyPrice: 500,
-    annualPrice: 440,
-    // 12% discount
-    minutes: 3333,
-    description: 'Pentru utilizatori activi',
-    features: ['3,333 minute incluse', '$0.15/minut suplimentar', 'Analytics avansate', 'Priority support', 'Rapoarte detaliate', 'White-label basic'],
-    buttonText: 'Alege Silver',
-    popular: false
-  }, {
-    name: 'ENTERPRISE',
-    monthlyPrice: 'Custom',
-    annualPrice: 'Custom',
-    minutes: 'Nelimitate',
-    description: 'Pentru companii mari',
-    features: ['Minute nelimitate', 'Prețuri personalizate', 'White-label complet', 'Account manager dedicat', 'Integrări personalizate', 'SLA garantat'],
-    buttonText: 'Contactează-ne',
-    popular: false
-  }];
+
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('credit_packages')
+          .select('*')
+          .eq('is_active', true)
+          .order('price_monthly', { ascending: true });
+
+        if (error) throw error;
+
+        setPlans(data || []);
+      } catch (error) {
+        console.error('Error fetching plans:', error);
+        toast({
+          title: "Eroare",
+          description: "Nu am putut încărca planurile. Te rugăm să încerci din nou.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlans();
+  }, [toast]);
   const getDisplayPrice = (plan: any) => {
-    if (plan.monthlyPrice === 'Custom') return 'Custom';
-    const price = isAnnual ? plan.annualPrice : plan.monthlyPrice;
-    return price === 0 ? 'GRATUIT' : `$${price}`;
+    if (plan.name === 'ENTERPRISE') return 'Custom';
+    const price = isAnnual ? plan.price_yearly : plan.price_monthly;
+    return price === 0 ? 'GRATUIT' : `$${(price / 100).toFixed(0)}`;
   };
-  const getRecommendedPlan = (minutes: number) => {
-    if (minutes <= 5) return 'GRATUIT';
-    if (minutes <= 200) return 'BRONZE';
-    if (minutes <= 500) return 'SILVER';
-    return 'ENTERPRISE';
+
+  const getButtonText = (plan: any) => {
+    if (plan.name === 'GRATUIT') return 'Începe Gratuit';
+    if (plan.name === 'ENTERPRISE') return 'Contactează-ne';
+    return `Alege ${plan.name}`;
   };
-  const calculateCost = (minutes: number) => {
-    if (minutes <= 5) return 0;
-    if (minutes <= 200) return isAnnual ? 26.4 : 30;
-    if (minutes <= 500) return isAnnual ? 66 : 75;
-    return minutes * 0.15;
-  };
-  const handlePlanSelect = async (planName: string) => {
+
+  const handlePlanSelect = async (plan: any) => {
     if (!user) {
       navigate('/auth');
       toast({
@@ -82,37 +68,76 @@ const PricingPage = () => {
       });
       return;
     }
-    if (planName === 'GRATUIT') {
-      toast({
-        title: "Plan gratuit activ",
-        description: "Ai deja acces la planul gratuit de 5 minute."
-      });
-      return;
-    }
-    if (planName === 'ENTERPRISE') {
-      window.open('mailto:contact@company.com?subject=Enterprise Plan Inquiry', '_blank');
-      return;
-    }
+
+    setProcessingPlan(plan.id);
+
     try {
-      // For now, we'll just show a message since we removed credit packages
-      toast({
-        title: "Funcționalitate în dezvoltare",
-        description: "Sistemul de plăți va fi disponibil în curând. Contactează-ne pentru upgrade manual.",
-      });
-      
-      // Redirect to contact for manual upgrade
-      if (planName === 'BRONZE' || planName === 'SILVER') {
-        window.open('mailto:contact@company.com?subject=Plan Upgrade Request', '_blank');
+      if (plan.name === 'GRATUIT') {
+        toast({
+          title: "Plan gratuit activ",
+          description: "Ai deja acces la planul gratuit."
+        });
+        setProcessingPlan(null);
+        return;
       }
-    } catch (error) {
+
+      if (plan.name === 'ENTERPRISE') {
+        window.open('mailto:support@kalina.ai?subject=Enterprise Plan Inquiry', '_blank');
+        setProcessingPlan(null);
+        return;
+      }
+
+      // Call create-checkout edge function
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { 
+          packageId: plan.id,
+          isAnnual: isAnnual
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.contact_required) {
+        toast({
+          title: "Contact Necesar",
+          description: data.message
+        });
+        window.open(`mailto:${data.contact_email}`, '_blank');
+        return;
+      }
+
+      if (data.success && data.redirect_url) {
+        // Free plan activated
+        window.location.href = data.redirect_url;
+        return;
+      }
+
+      if (data.url) {
+        // Open Stripe checkout in a new tab
+        window.open(data.url, '_blank');
+      }
+
+    } catch (error: any) {
       console.error('Error:', error);
       toast({
         title: "Eroare",
-        description: "Te rugăm să încerci din nou sau contactează-ne direct.",
+        description: error.message || "Te rugăm să încerci din nou sau contactează-ne direct.",
         variant: "destructive"
       });
+    } finally {
+      setProcessingPlan(null);
     }
   };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </DashboardLayout>
+    );
+  }
   return <DashboardLayout>
       <div className="min-h-screen py-12 bg-white relative overflow-hidden">
         {/* Liquid Glass Background Effects */}
@@ -191,13 +216,13 @@ const PricingPage = () => {
               <Card 
                 key={plan.name} 
                 className={`relative bg-white/90 backdrop-blur-md border rounded-2xl p-8 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-gray-500/20 group ${
-                  plan.popular 
+                  plan.is_popular 
                     ? 'border-2 border-black shadow-2xl shadow-black/10 transform scale-105 bg-gradient-to-b from-white/95 to-gray-50/95' 
                     : 'border-gray-200 hover:border-gray-300 bg-gradient-to-b from-white/90 to-gray-50/90'
                 }`}
                 style={{ 
                   animationDelay: `${index * 0.2}s`,
-                  background: plan.popular 
+                  background: plan.is_popular 
                     ? 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)' 
                     : 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.9) 100%)'
                 }}
@@ -205,7 +230,7 @@ const PricingPage = () => {
                 {/* Liquid Glass Overlay */}
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
                 
-                {plan.popular && (
+                {plan.is_popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 animate-bounce">
                     <span className="bg-black text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
                       Most Popular
@@ -224,33 +249,41 @@ const PricingPage = () => {
                   <div className="mb-6">
                     <div className="text-4xl font-bold text-gray-900 group-hover:scale-110 transition-transform duration-300">
                       {getDisplayPrice(plan)}
-                      {plan.monthlyPrice !== 'Custom' && plan.monthlyPrice !== 0 && (
+                      {plan.name !== 'ENTERPRISE' && plan.price_monthly > 0 && (
                         <span className="text-lg font-normal text-gray-600">
-                          /{isAnnual ? 'yr' : 'mo'}
+                          /{isAnnual ? 'an' : 'lună'}
                         </span>
                       )}
                     </div>
-                    {isAnnual && plan.monthlyPrice !== 'Custom' && typeof plan.monthlyPrice === 'number' && plan.monthlyPrice > 0 && (
+                    {isAnnual && plan.name !== 'ENTERPRISE' && plan.price_monthly > 0 && (
                       <div className="text-sm text-green-600 font-medium mt-1 animate-pulse">
-                        Save ${((plan.monthlyPrice as number) * 12 - (plan.annualPrice as number) * 12).toFixed(0)}/yr
+                        Economisești ${((plan.price_monthly * 12 - plan.price_yearly) / 100).toFixed(0)}/an
                       </div>
                     )}
                   </div>
 
                   <Button 
-                    onClick={() => handlePlanSelect(plan.name)} 
+                    onClick={() => handlePlanSelect(plan)} 
+                    disabled={processingPlan === plan.id}
                     className={`w-full mb-6 transition-all duration-300 hover:scale-105 hover:shadow-lg ${
-                      plan.popular 
+                      plan.is_popular 
                         ? 'bg-black hover:bg-gray-800 text-white shadow-lg' 
                         : 'bg-gray-900 hover:bg-black text-white'
                     }`} 
                     size="lg"
                   >
-                    {plan.buttonText}
+                    {processingPlan === plan.id ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Procesez...
+                      </>
+                    ) : (
+                      getButtonText(plan)
+                    )}
                   </Button>
 
                   <ul className="space-y-3 text-left">
-                    {plan.features.map((feature, featureIndex) => (
+                    {plan.features && plan.features.map((feature: string, featureIndex: number) => (
                       <li 
                         key={featureIndex} 
                         className="flex items-start gap-3 transition-all duration-300 hover:translate-x-1"

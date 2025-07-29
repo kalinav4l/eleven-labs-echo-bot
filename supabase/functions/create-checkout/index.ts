@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { packageId } = await req.json();
+    const { packageId, isAnnual = false } = await req.json();
     
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -38,6 +38,30 @@ serve(async (req) => {
       throw new Error("Package not found");
     }
 
+    // Skip Stripe for free plan
+    if (creditPackage.name === 'GRATUIT') {
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: "Plan gratuit activat cu succes",
+        redirect_url: `${req.headers.get("origin")}/account?payment=success`
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // Contact support for enterprise plan
+    if (creditPackage.name === 'ENTERPRISE') {
+      return new Response(JSON.stringify({ 
+        contact_required: true,
+        message: "Pentru planul Enterprise, vă rugăm să ne contactați",
+        contact_email: "support@kalina.ai"
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
     });
@@ -49,6 +73,12 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
+    // Determine price based on billing cycle
+    const price = isAnnual ? creditPackage.price_yearly : creditPackage.price_monthly;
+    const priceDescription = isAnnual ? 
+      `${creditPackage.credits.toLocaleString()} credite - Plan Anual (Reducere 16%)` : 
+      `${creditPackage.credits.toLocaleString()} credite - Plan Lunar`;
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -58,20 +88,22 @@ serve(async (req) => {
             currency: "usd",
             product_data: { 
               name: creditPackage.name,
-              description: `${creditPackage.credits.toLocaleString()} credite`
+              description: priceDescription
             },
-            unit_amount: creditPackage.price_usd,
+            unit_amount: price,
           },
           quantity: 1,
         },
       ],
       mode: "payment",
-      success_url: `${req.headers.get("origin")}/account?payment=success`,
+      success_url: `${req.headers.get("origin")}/account?payment=success&plan=${creditPackage.name.toLowerCase()}`,
       cancel_url: `${req.headers.get("origin")}/pricing?payment=canceled`,
       metadata: {
         user_id: user.id,
         package_id: packageId,
+        package_name: creditPackage.name,
         credits: creditPackage.credits.toString(),
+        billing_cycle: isAnnual ? 'annual' : 'monthly',
       },
     });
 
