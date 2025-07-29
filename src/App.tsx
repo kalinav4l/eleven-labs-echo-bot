@@ -16,6 +16,7 @@ import Outbound from "./pages/Outbound";
 import Calls from "./pages/Calls";
 import Calendar from "./pages/Calendar";
 import ConversationAnalytics from "./pages/ConversationAnalytics";
+import AgentAI from "./pages/AgentAI";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import AgentConsultant from "./pages/AgentConsultant";
@@ -51,6 +52,7 @@ function App() {
             
             <Route path="/account/conversation-analytics" element={<ConversationAnalytics />} />
             <Route path="/account/conversation-analytics/:conversationId" element={<ConversationDetail />} />
+            <Route path="/account/agent-ai" element={<AgentAI />} />
             <Route path="/account/transcript" element={<Transcript />} />
             <Route path="/account/outbound" element={<Outbound />} />
             <Route path="/account/calls" element={<Calls />} />

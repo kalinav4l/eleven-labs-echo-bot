@@ -61,6 +61,11 @@ const Sidebar = ({
                 <BarChart3 className="mr-3 h-4 w-4" />
                 <span>Analytics</span>
               </Link>
+
+              <Link to="/account/agent-ai" className={`${location.pathname === '/account/agent-ai' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
+                <Bot className="mr-3 h-4 w-4" />
+                <span>Agent AI</span>
+              </Link>
             </div>
           </div>
 
