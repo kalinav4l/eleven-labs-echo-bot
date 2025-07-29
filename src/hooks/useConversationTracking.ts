@@ -124,6 +124,12 @@ export const useConversationTracking = () => {
         }
       }
 
+      // Calculate cost based on duration: $0.15 per minute
+      const durationSeconds = conversationData.duration_seconds || 0;
+      const durationMinutes = durationSeconds / 60;
+      const calculatedCost = Math.round(durationMinutes * 0.15 * 100) / 100; // Round to 2 decimals
+      const finalCost = conversationData.cost_usd || calculatedCost;
+
       // Create the call history record using the real agent_id
       const callRecord = {
         user_id: user.id,
@@ -140,12 +146,12 @@ export const useConversationTracking = () => {
           original_agent_id: conversationData.agent_id // Keep track of original for debugging
         }),
         call_date: new Date().toISOString(),
-        cost_usd: conversationData.cost_usd || 0,
+        cost_usd: finalCost,
         agent_id: realAgentId, // Use real agent_id
         language: 'ro',
         conversation_id: conversationData.conversation_id,
         elevenlabs_history_id: conversationData.elevenlabs_history_id,
-        duration_seconds: conversationData.duration_seconds || 0
+        duration_seconds: durationSeconds
       };
 
       const { data, error } = await supabase
@@ -160,6 +166,40 @@ export const useConversationTracking = () => {
       }
 
       console.log('Conversation saved successfully:', data);
+
+      // Update user statistics with new spending data
+      try {
+        console.log('📊 Actualizez statisticile utilizatorului...');
+        const { data: statsResult, error: statsError } = await supabase.rpc('update_user_statistics_with_spending', {
+          p_user_id: user.id,
+          p_duration_seconds: durationSeconds,
+          p_cost_usd: finalCost
+        });
+
+        if (statsError) {
+          console.warn('⚠️ Eroare la actualizarea statisticilor:', statsError);
+        } else {
+          console.log('✅ Statistici actualizate cu succes');
+        }
+
+        // Deduct cost from user balance
+        console.log('💰 Deduc costul din balanta utilizatorului...');
+        const { data: balanceResult, error: balanceError } = await supabase.rpc('deduct_balance', {
+          p_user_id: user.id,
+          p_amount: finalCost,
+          p_description: `Apel ${durationMinutes.toFixed(1)} minute - ${conversationData.agent_name}`,
+          p_conversation_id: data.id
+        });
+
+        if (balanceError) {
+          console.warn('⚠️ Eroare la deducerea din balanță:', balanceError);
+        } else {
+          console.log('✅ Balanța actualizată cu succes');
+        }
+      } catch (error) {
+        console.warn('❌ Eroare la actualizarea datelor financiare:', error);
+      }
+
       return data;
     },
     onSuccess: () => {

@@ -1352,10 +1352,13 @@ export type Database = {
         Row: {
           agents_used: number
           created_at: string
+          current_spent_usd: number | null
           id: string
+          max_spending_reached_at: string | null
           total_conversations: number
           total_messages: number
           total_minutes_talked: number
+          total_spent_usd: number | null
           total_voice_calls: number
           updated_at: string
           user_id: string
@@ -1363,10 +1366,13 @@ export type Database = {
         Insert: {
           agents_used?: number
           created_at?: string
+          current_spent_usd?: number | null
           id?: string
+          max_spending_reached_at?: string | null
           total_conversations?: number
           total_messages?: number
           total_minutes_talked?: number
+          total_spent_usd?: number | null
           total_voice_calls?: number
           updated_at?: string
           user_id: string
@@ -1374,10 +1380,13 @@ export type Database = {
         Update: {
           agents_used?: number
           created_at?: string
+          current_spent_usd?: number | null
           id?: string
+          max_spending_reached_at?: string | null
           total_conversations?: number
           total_messages?: number
           total_minutes_talked?: number
+          total_spent_usd?: number | null
           total_voice_calls?: number
           updated_at?: string
           user_id?: string
@@ -1587,6 +1596,14 @@ export type Database = {
           document_name: string
           rank: number
         }[]
+      }
+      update_user_statistics_with_spending: {
+        Args: {
+          p_user_id: string
+          p_duration_seconds: number
+          p_cost_usd: number
+        }
+        Returns: boolean
       }
     }
     Enums: {
