@@ -474,6 +474,99 @@
   animation-delay: 3s;
 }
 
+/* Phone Visualization */
+.phone-visualization {
+  position: absolute;
+  top: 10%;
+  right: 10%;
+  z-index: 5;
+  opacity: 0;
+  animation: phoneAppear 1s ease-out 1s forwards;
+}
+
+.phone-icon {
+  width: 60px;
+  height: 60px;
+  color: rgba(255, 255, 255, 0.8);
+  animation: phoneGlow 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(120, 119, 198, 0.5));
+}
+
+.phone-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.sound-waves-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.sound-wave {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80px;
+  height: 80px;
+  border: 2px solid rgba(120, 119, 198, 0.4);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: soundWaveExpand 2s ease-out infinite;
+}
+
+.voice-bars {
+  position: absolute;
+  bottom: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 3px;
+  align-items: end;
+}
+
+.voice-bar {
+  width: 4px;
+  background: linear-gradient(to top, rgba(120, 119, 198, 0.8), rgba(255, 255, 255, 0.6));
+  border-radius: 2px;
+  animation: voiceBarPulse 0.8s ease-in-out infinite alternate;
+}
+
+/* Phone Call Effect in Corner */
+.phone-call-corner {
+  position: absolute;
+  bottom: 15%;
+  left: 10%;
+  z-index: 5;
+  opacity: 0;
+  animation: phoneCallAppear 1s ease-out 2s forwards;
+}
+
+.calling-animation {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 20px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 25px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.call-icon {
+  width: 24px;
+  height: 24px;
+  color: #4ade80;
+  animation: callIconPulse 1s ease-in-out infinite;
+}
+
+.call-text {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  font-weight: 500;
+}
+
 /* Keyframes */
 @keyframes bgShift {
   0%, 100% { transform: scale(1) rotate(0deg); }
@@ -588,5 +681,73 @@
   50% {
     transform: translateY(-20px) rotate(180deg);
     opacity: 0.3;
+  }
+}
+
+@keyframes phoneAppear {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes phoneGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 10px rgba(120, 119, 198, 0.5));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(120, 119, 198, 0.8));
+    transform: scale(1.05);
+  }
+}
+
+@keyframes soundWaveExpand {
+  0% {
+    width: 60px;
+    height: 60px;
+    opacity: 0.8;
+  }
+  100% {
+    width: 160px;
+    height: 160px;
+    opacity: 0;
+  }
+}
+
+@keyframes voiceBarPulse {
+  0% {
+    height: 20px;
+    opacity: 0.6;
+  }
+  100% {
+    height: 60px;
+    opacity: 1;
+  }
+}
+
+@keyframes phoneCallAppear {
+  0% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes callIconPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
   }
 }

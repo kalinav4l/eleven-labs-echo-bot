@@ -159,6 +159,10 @@ const Auth = () => {
                   required={!isLogin}
                   className="glass-input"
                   disabled={loading}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
                 />
                 <Input
                   type="text"
@@ -168,6 +172,10 @@ const Auth = () => {
                   required={!isLogin}
                   className="glass-input"
                   disabled={loading}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
                 />
               </>
             )}
@@ -179,7 +187,10 @@ const Auth = () => {
               required
               className="glass-input"
               disabled={loading}
-              autoComplete="email"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
             />
             <div className="relative">
               <Input
@@ -191,7 +202,10 @@ const Auth = () => {
                 minLength={isLogin ? undefined : 6}
                 className="glass-input pr-10"
                 disabled={loading}
-                autoComplete={isLogin ? "current-password" : "new-password"}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
               />
               <button
                 type="button"
