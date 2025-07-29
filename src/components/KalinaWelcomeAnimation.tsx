@@ -114,7 +114,7 @@ export const KalinaWelcomeAnimation: React.FC<KalinaWelcomeAnimationProps> = ({ 
           <>
             <div className="kalina-logo-container">
               <h1 className="kalina-welcome-text">
-                {'KALINA'.split('').map((letter, index) => (
+                {'KALLINA'.split('').map((letter, index) => (
                   <span
                     key={index}
                     className="kalina-letter"
