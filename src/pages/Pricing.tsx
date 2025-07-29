@@ -32,6 +32,7 @@ const PricingPage = () => {
 
         if (error) throw error;
 
+        console.log('Plans loaded:', data);
         setPlans(data || []);
       } catch (error) {
         console.error('Error fetching plans:', error);
@@ -136,6 +137,20 @@ const PricingPage = () => {
           <div className="text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
             <p className="text-gray-600">Se încarcă planurile...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Debug: Check if plans are empty
+  if (!loading && plans.length === 0) {
+    return (
+      <DashboardLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-gray-600 mb-4">Nu s-au găsit planuri active.</p>
+            <Button onClick={() => window.location.reload()}>Reîncarcă</Button>
           </div>
         </div>
       </DashboardLayout>
