@@ -6,12 +6,28 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/components/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { BlockedUserOverlay } from './BlockedUserOverlay';
+import { DashboardEntrance } from './transition/DashboardEntrance';
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userBlocked, setUserBlocked] = useState(false);
+  const [isEntering, setIsEntering] = useState(false);
   const isMobile = useIsMobile();
   const { user } = useAuth();
+
+  // Check if this is a fresh login by looking for transition in sessionStorage
+  useEffect(() => {
+    const hasTransitioned = sessionStorage.getItem('dashboardTransitioned');
+    if (!hasTransitioned && user) {
+      setIsEntering(true);
+      sessionStorage.setItem('dashboardTransitioned', 'true');
+      
+      // Clear the flag after some time to allow for fresh transitions
+      setTimeout(() => {
+        sessionStorage.removeItem('dashboardTransitioned');
+      }, 5000);
+    }
+  }, [user]);
 
   useEffect(() => {
     const checkUserStatus = async () => {
@@ -81,7 +97,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         
         <main className="flex-1 overflow-y-auto bg-white">
           <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-6">
-            {children}
+            <DashboardEntrance isEntering={isEntering}>
+              {children}
+            </DashboardEntrance>
           </div>
         </main>
       </div>
