@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { User, Settings, Bot, FileText, PhoneCall, X, BarChart3, Calendar, Globe, Mail, Workflow, BookOpen, Phone, TestTube, PhoneForwarded, CreditCard } from 'lucide-react';
+import { User, Settings, Bot, FileText, PhoneCall, X, BarChart3, Calendar, Globe, Mail, Workflow, BookOpen, Phone, TestTube, PhoneForwarded, CreditCard, Shield } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from './AuthContext';
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -13,6 +14,11 @@ const Sidebar = ({
 }: SidebarProps) => {
   const location = useLocation();
   const isMobile = useIsMobile();
+  const { user } = useAuth();
+  
+  // Check if user is the specific admin user
+  const isSpecificAdmin = user?.id === 'a698e3c2-f0e6-4f42-8955-971d91e725ce' && 
+                         user?.email === 'mariusvirlan109@gmail.com';
   return <>
       {/* Mobile overlay */}
       {isMobile && isOpen && <div className="fixed inset-0 bg-black/10 backdrop-blur-sm z-30 lg:hidden" onClick={onClose} />}
@@ -129,6 +135,14 @@ const Sidebar = ({
           
           {/* Documentation & Settings in bottom corner */}
           <div className="mt-auto space-y-1">
+            {/* Admin Panel - Only for specific user */}
+            {isSpecificAdmin && (
+              <Link to="/admin" className={`${location.pathname === '/admin' ? 'bg-red-100 text-red-900 border border-red-200' : 'text-red-600 hover:bg-red-50 hover:text-red-900 border border-red-200'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors shadow-sm`} onClick={isMobile ? onClose : undefined}>
+                <Shield className="mr-3 h-4 w-4" />
+                <span className="font-semibold">Admin Panel</span>
+              </Link>
+            )}
+            
             <Link to="/pricing" className={`${location.pathname === '/pricing' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
               <CreditCard className="mr-3 h-4 w-4" />
               <span>Pricing</span>

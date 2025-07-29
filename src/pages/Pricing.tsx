@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, Star, ArrowRight, Shield } from 'lucide-react';
+import { Check, Star, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -14,10 +14,6 @@ const PricingPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  
-  // Check if user is the specific admin user
-  const isSpecificAdmin = user?.id === 'a698e3c2-f0e6-4f42-8955-971d91e725ce' && 
-                         user?.email === 'mariusvirlan109@gmail.com';
   const { ref: headerRef, isVisible: headerVisible } = useScrollReveal('up', 0.2);
   const { ref: toggleRef, isVisible: toggleVisible } = useScrollReveal('up', 0.4);
   const { ref: cardsRef, isVisible: cardsVisible } = useScrollReveal('up', 0.6);
@@ -141,22 +137,6 @@ const PricingPage = () => {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          {/* Admin Panel Link - Only for specific user */}
-          {isSpecificAdmin && (
-            <div className="mb-8 flex justify-center">
-              <div className="bg-gradient-to-r from-gray-900 to-black p-1 rounded-2xl shadow-2xl">
-                <Button 
-                  onClick={() => navigate('/admin')}
-                  className="bg-white text-black hover:bg-gray-100 px-6 py-3 rounded-xl font-semibold flex items-center gap-3 transition-all duration-300 hover:scale-105"
-                >
-                  <Shield className="w-5 h-5" />
-                  Panel de Administrare
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-
           {/* Header */}
           <div 
             ref={headerRef}
