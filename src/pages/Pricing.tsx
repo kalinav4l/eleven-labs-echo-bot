@@ -146,17 +146,21 @@ const PricingPage = () => {
 
   // Debug: Check if plans are empty
   if (!loading && plans.length === 0) {
+    console.log('No plans found, loading state:', loading);
     return (
       <DashboardLayout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <p className="text-gray-600 mb-4">Nu s-au găsit planuri active.</p>
+            <p className="text-sm text-gray-500 mb-4">Loading: {loading.toString()}</p>
             <Button onClick={() => window.location.reload()}>Reîncarcă</Button>
           </div>
         </div>
       </DashboardLayout>
     );
   }
+
+  console.log('Rendering pricing page with plans:', plans.length, 'Loading:', loading);
   return <DashboardLayout>
       <div className="min-h-screen py-12 bg-white relative overflow-hidden">
         {/* Liquid Glass Background Effects */}
@@ -225,11 +229,7 @@ const PricingPage = () => {
           {/* Pricing Cards */}
           <div 
             ref={cardsRef}
-            className={`grid lg:grid-cols-4 md:grid-cols-2 gap-8 transition-all duration-1200 ease-out ${
-              cardsVisible 
-                ? 'opacity-100 translate-y-0' 
-                : 'opacity-0 translate-y-12'
-            }`}
+            className="grid lg:grid-cols-4 md:grid-cols-2 gap-8 opacity-100 translate-y-0"
           >
             {plans.map((plan, index) => (
               <Card 
