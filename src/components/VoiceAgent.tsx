@@ -4,6 +4,7 @@ import { useGuestRateLimit } from '@/hooks/useGuestRateLimit';
 import GuestLimitModal from '@/components/GuestLimitModal';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { calculateCostFromMinutes } from '@/utils/costCalculations';
 
 const VoiceAgent = () => {
   const { user } = useAuth();
@@ -66,7 +67,7 @@ const VoiceAgent = () => {
 
   const handleConversationEnd = async (durationMinutes: number) => {
     if (user && currentConversation && durationMinutes > 0) {
-      const costUsd = durationMinutes * 0.15; // $0.15 per minute
+      const costUsd = calculateCostFromMinutes(durationMinutes);
       
       // Deduct from user balance
       const { error: balanceError } = await supabase.rpc('deduct_balance', {

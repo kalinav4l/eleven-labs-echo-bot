@@ -20,6 +20,7 @@ import AnimatedCounter from '@/components/AnimatedCounter';
 import SkeletonCard from '@/components/SkeletonCard';
 import ElevenLabsChart from '@/components/ElevenLabsChart';
 import CreditsPlanDisplay from '@/components/CreditsPlanDisplay';
+import { calculateCostFromSeconds } from '@/utils/costCalculations';
 
 const Account = () => {
   const {
@@ -97,8 +98,8 @@ const Account = () => {
         const cost = data.metadata.cost || 0;
         const llmCharge = data.metadata.charging?.llm_charge || 0;
         const callCharge = data.metadata.charging?.call_charge || 0;
-        // Convert to USD cost (cost is in credits, convert at $0.15/minute)
-        const totalCost = cost ? cost * 0.15 / 60 : (llmCharge + callCharge) * 0.15 / 60;
+        // Convert to USD cost using standard rate
+        const totalCost = cost ? calculateCostFromSeconds(cost) : calculateCostFromSeconds(llmCharge + callCharge);
         const costUsd = totalCost;
         setConversationDurations(prev => ({ ...prev, [conversationId]: duration }));
         setConversationCosts(prev => ({ ...prev, [conversationId]: costUsd }));

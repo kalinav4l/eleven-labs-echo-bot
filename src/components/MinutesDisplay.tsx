@@ -2,9 +2,10 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
-import { DollarSign, Plus } from 'lucide-react';
+import { DollarSign, Plus, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { convertBalanceToMinutes } from '@/utils/costCalculations';
 
 const MinutesDisplay = () => {
   const { user } = useAuth();
@@ -36,6 +37,7 @@ const MinutesDisplay = () => {
   }
 
   const currentBalance = balance?.balance_usd ?? 0;
+  const availableMinutes = convertBalanceToMinutes(currentBalance);
 
   const handleUpgrade = () => {
     navigate('/pricing');
@@ -47,6 +49,12 @@ const MinutesDisplay = () => {
         <DollarSign className="w-4 h-4 text-gray-600" />
         <span className="text-sm text-gray-700 font-medium">
           ${currentBalance.toFixed(2)}
+        </span>
+      </div>
+      <div className="flex items-center space-x-2 px-3 py-2 bg-blue-50 rounded-lg">
+        <Clock className="w-4 h-4 text-blue-600" />
+        <span className="text-sm text-blue-700 font-medium">
+          {availableMinutes} min
         </span>
       </div>
       <Button

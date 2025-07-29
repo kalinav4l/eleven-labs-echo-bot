@@ -2,6 +2,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
+import { calculateCostFromSeconds } from '@/utils/costCalculations';
 
 export interface ConversationData {
   agent_id: string;
@@ -126,8 +127,7 @@ export const useConversationTracking = () => {
 
       // Calculate cost based on duration: $0.15 per minute
       const durationSeconds = conversationData.duration_seconds || 0;
-      const durationMinutes = durationSeconds / 60;
-      const calculatedCost = Math.round(durationMinutes * 0.15 * 100) / 100; // Round to 2 decimals
+      const calculatedCost = calculateCostFromSeconds(durationSeconds);
       const finalCost = conversationData.cost_usd || calculatedCost;
 
       // Create the call history record using the real agent_id
@@ -187,7 +187,7 @@ export const useConversationTracking = () => {
         const { data: balanceResult, error: balanceError } = await supabase.rpc('deduct_balance', {
           p_user_id: user.id,
           p_amount: finalCost,
-          p_description: `Apel ${durationMinutes.toFixed(1)} minute - ${conversationData.agent_name}`,
+          p_description: `Apel ${(durationSeconds / 60).toFixed(1)} minute - ${conversationData.agent_name}`,
           p_conversation_id: data.id
         });
 
