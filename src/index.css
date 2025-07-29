@@ -1901,3 +1901,579 @@
     transform: translate(-50%, -50%) scale(1.2);
   }
 }
+
+/* ==== SPECTACULAR GLASS AUTHENTICATION STYLES ==== */
+
+/* Glass Section */
+.auth-glass-section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 100vh;
+  padding: 2rem;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.98) 0%, 
+    rgba(248, 250, 252, 0.95) 50%, 
+    rgba(241, 245, 249, 0.92) 100%);
+  overflow: hidden;
+}
+
+/* Background Animations */
+.auth-glass-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Geometric Shapes */
+.geometric-shapes {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.geometric-shape {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, 
+    rgba(148, 163, 184, 0.15), 
+    rgba(203, 213, 225, 0.1));
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 50%;
+  animation: geometricFloat 6s ease-in-out infinite;
+}
+
+/* Light Rays */
+.light-rays {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+}
+
+.light-ray {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 60%;
+  background: linear-gradient(to bottom, 
+    transparent, 
+    rgba(148, 163, 184, 0.3), 
+    rgba(203, 213, 225, 0.2), 
+    transparent);
+  transform-origin: center top;
+  animation: lightRayRotate 8s linear infinite;
+}
+
+/* Particle System */
+.particle-system {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 50%;
+  animation: particleFloat 5s ease-in-out infinite;
+}
+
+/* Breathing Rings */
+.breathing-rings {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.breathing-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 50%;
+  animation: breathingPulse 4s ease-in-out infinite;
+}
+
+.breathing-ring.ring-1 {
+  width: 200px;
+  height: 200px;
+  animation-delay: 0s;
+}
+
+.breathing-ring.ring-2 {
+  width: 350px;
+  height: 350px;
+  animation-delay: 1.3s;
+}
+
+.breathing-ring.ring-3 {
+  width: 500px;
+  height: 500px;
+  animation-delay: 2.6s;
+}
+
+/* Glass Card */
+.auth-glass-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 3rem 2.5rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  position: relative;
+  z-index: 10;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.05),
+    0 0 60px rgba(148, 163, 184, 0.1);
+  animation: cardBreathe 6s ease-in-out infinite;
+}
+
+/* Glass Card Effects */
+.auth-glass-card::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, 
+    rgba(255, 255, 255, 0.3) 0%, 
+    rgba(148, 163, 184, 0.2) 25%, 
+    rgba(255, 255, 255, 0.3) 50%, 
+    rgba(203, 213, 225, 0.2) 75%, 
+    rgba(255, 255, 255, 0.3) 100%);
+  border-radius: 22px;
+  z-index: -1;
+  animation: glassGlowRotate 8s linear infinite;
+}
+
+.auth-glass-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.6), 
+    transparent);
+  border-radius: 20px 20px 0 0;
+  animation: glassTopShine 4s ease-in-out infinite;
+}
+
+/* Glass Header */
+.auth-glass-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  position: relative;
+}
+
+.auth-glass-header::before {
+  content: '';
+  position: absolute;
+  bottom: -1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(71, 85, 105, 0.3), 
+    transparent);
+  animation: headerUnderlineGlow 3s ease-in-out infinite;
+}
+
+.auth-glass-header h2 {
+  color: #1e293b;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin: 0 0 0.5rem 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.auth-glass-header p {
+  color: rgba(30, 41, 59, 0.7);
+  font-size: 0.9rem;
+  margin: 0;
+  font-weight: 400;
+}
+
+/* Glass Form */
+.auth-glass-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: relative;
+}
+
+.auth-glass-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Glass Input Groups with Focus Effects */
+.glass-input-group {
+  position: relative;
+}
+
+.glass-input-group::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, 
+    rgba(148, 163, 184, 0.0), 
+    rgba(59, 130, 246, 0.2), 
+    rgba(148, 163, 184, 0.0));
+  border-radius: 10px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.glass-input-group:focus-within::before {
+  opacity: 1;
+  animation: inputFocusGlow 2s ease-in-out infinite;
+}
+
+.auth-glass-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(148, 163, 184, 0.3) !important;
+  border-radius: 8px !important;
+  padding: 1rem 1.25rem !important;
+  color: #1e293b !important;
+  font-size: 0.95rem !important;
+  transition: all 0.3s ease !important;
+  outline: none !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03) !important;
+  backdrop-filter: blur(10px);
+}
+
+.auth-glass-input::placeholder {
+  color: rgba(30, 41, 59, 0.5) !important;
+  font-weight: 400;
+}
+
+.auth-glass-input:focus {
+  border-color: rgba(59, 130, 246, 0.5) !important;
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.05),
+    0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  transform: translateY(-1px);
+}
+
+.auth-glass-input:hover:not(:focus) {
+  border-color: rgba(148, 163, 184, 0.5) !important;
+  transform: translateY(-0.5px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Glass Password Field */
+.auth-glass-password {
+  position: relative;
+}
+
+.auth-glass-toggle {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: rgba(30, 41, 59, 0.6);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0.25rem;
+  border-radius: 4px;
+}
+
+.auth-glass-toggle:hover {
+  color: rgba(30, 41, 59, 0.9);
+  background: rgba(148, 163, 184, 0.1);
+}
+
+/* Error and Success Messages */
+.auth-glass-error {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  padding: 0.875rem;
+  color: #dc2626;
+  font-size: 0.9rem;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  animation: messageSlideIn 0.3s ease-out;
+}
+
+.auth-glass-success {
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 8px;
+  padding: 0.875rem;
+  color: #059669;
+  font-size: 0.9rem;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  animation: messageSlideIn 0.3s ease-out;
+}
+
+/* Glass Submit Button with Ripple Effect */
+.auth-glass-submit {
+  width: 100%;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 1.125rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  margin-top: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(30, 41, 59, 0.2);
+}
+
+.auth-glass-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(30, 41, 59, 0.3);
+  background: linear-gradient(135deg, #334155 0%, #475569 100%);
+}
+
+.auth-glass-submit:active {
+  transform: translateY(0);
+}
+
+.auth-glass-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.button-text {
+  position: relative;
+  z-index: 2;
+}
+
+.button-ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transition: width 0.6s ease, height 0.6s ease;
+}
+
+.auth-glass-submit:active .button-ripple {
+  width: 300px;
+  height: 300px;
+}
+
+/* Glass Switch Button */
+.auth-glass-switch {
+  background: none;
+  border: none;
+  color: rgba(30, 41, 59, 0.7);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1.5rem;
+  text-align: center;
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-glass-switch::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    rgba(30, 41, 59, 0.3), 
+    rgba(59, 130, 246, 0.6), 
+    rgba(30, 41, 59, 0.3));
+  transition: width 0.3s ease;
+}
+
+.auth-glass-switch:hover {
+  color: rgba(30, 41, 59, 0.9);
+  background: rgba(148, 163, 184, 0.05);
+}
+
+.auth-glass-switch:hover::before {
+  width: 100%;
+}
+
+.auth-glass-switch:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ==== SPECTACULAR ANIMATIONS ==== */
+
+/* Geometric Shapes Animation */
+@keyframes geometricFloat {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg) scale(1); 
+    opacity: 0.3; 
+  }
+  33% { 
+    transform: translateY(-15px) rotate(120deg) scale(1.1); 
+    opacity: 0.6; 
+  }
+  66% { 
+    transform: translateY(10px) rotate(240deg) scale(0.9); 
+    opacity: 0.4; 
+  }
+}
+
+/* Light Ray Rotation */
+@keyframes lightRayRotate {
+  0% { 
+    transform: rotate(0deg); 
+    opacity: 0.3; 
+  }
+  50% { 
+    opacity: 0.7; 
+  }
+  100% { 
+    transform: rotate(360deg); 
+    opacity: 0.3; 
+  }
+}
+
+/* Particle Float */
+@keyframes particleFloat {
+  0% { 
+    transform: translateY(100vh) translateX(0px); 
+    opacity: 0; 
+  }
+  10% { 
+    opacity: 1; 
+  }
+  90% { 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translateY(-20px) translateX(20px); 
+    opacity: 0; 
+  }
+}
+
+/* Breathing Pulse */
+@keyframes breathingPulse {
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(1); 
+    opacity: 0.2; 
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(1.05); 
+    opacity: 0.4; 
+  }
+}
+
+/* Card Breathing */
+@keyframes cardBreathe {
+  0%, 100% { 
+    transform: scale(1); 
+    box-shadow: 
+      0 20px 40px rgba(0, 0, 0, 0.05),
+      0 0 60px rgba(148, 163, 184, 0.1);
+  }
+  50% { 
+    transform: scale(1.002); 
+    box-shadow: 
+      0 25px 50px rgba(0, 0, 0, 0.08),
+      0 0 80px rgba(148, 163, 184, 0.15);
+  }
+}
+
+/* Glass Glow Rotation */
+@keyframes glassGlowRotate {
+  0% { transform: rotate(0deg); opacity: 0.3; }
+  50% { opacity: 0.6; }
+  100% { transform: rotate(360deg); opacity: 0.3; }
+}
+
+/* Glass Top Shine */
+@keyframes glassTopShine {
+  0%, 100% { 
+    opacity: 0.4; 
+    transform: translateX(-100%); 
+  }
+  50% { 
+    opacity: 0.8; 
+    transform: translateX(100%); 
+  }
+}
+
+/* Header Underline Glow */
+@keyframes headerUnderlineGlow {
+  0%, 100% { 
+    opacity: 0.3; 
+    transform: translateX(-50%) scaleX(1); 
+  }
+  50% { 
+    opacity: 0.8; 
+    transform: translateX(-50%) scaleX(1.2); 
+  }
+}
+
+/* Input Focus Glow */
+@keyframes inputFocusGlow {
+  0%, 100% { 
+    opacity: 0.6; 
+    transform: scale(1); 
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.01); 
+  }
+}
+
+/* Message Slide In */
+@keyframes messageSlideIn {
+  0% { 
+    opacity: 0; 
+    transform: translateY(-10px); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}

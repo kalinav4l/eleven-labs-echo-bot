@@ -158,52 +158,153 @@ const Auth = () => {
         </div>
       </div>
 
-      {/* Right Side - Clean White Login */}
-      <div className="auth-form-section bg-slate-50">
-        <div className="auth-minimal-card bg-zinc-400">
-          <div className="auth-minimal-header">
+      {/* Right Side - Spectacular White Glass Login */}
+      <div className="auth-glass-section">
+        {/* Background Animations */}
+        <div className="auth-glass-background">
+          {/* Geometric Shapes */}
+          <div className="geometric-shapes">
+            {Array.from({ length: 6 }, (_, i) => (
+              <div key={i} className="geometric-shape" style={{
+                animationDelay: `${i * 0.7}s`,
+                left: `${Math.random() * 80 + 10}%`,
+                top: `${Math.random() * 80 + 10}%`
+              }} />
+            ))}
+          </div>
+          
+          {/* Light Rays */}
+          <div className="light-rays">
+            {Array.from({ length: 4 }, (_, i) => (
+              <div key={i} className="light-ray" style={{
+                animationDelay: `${i * 1.2}s`,
+                transform: `rotate(${i * 45}deg)`
+              }} />
+            ))}
+          </div>
+          
+          {/* Particle System */}
+          <div className="particle-system">
+            {Array.from({ length: 15 }, (_, i) => (
+              <div key={i} className="particle" style={{
+                animationDelay: `${i * 0.3}s`,
+                left: `${Math.random() * 100}%`,
+                animationDuration: `${4 + Math.random() * 2}s`
+              }} />
+            ))}
+          </div>
+          
+          {/* Breathing Rings */}
+          <div className="breathing-rings">
+            <div className="breathing-ring ring-1"></div>
+            <div className="breathing-ring ring-2"></div>
+            <div className="breathing-ring ring-3"></div>
+          </div>
+        </div>
+        
+        {/* Glass Card */}
+        <div className="auth-glass-card">
+          <div className="auth-glass-header">
             <h2>{isLogin ? 'CONECTARE' : 'ÎNREGISTRARE'}</h2>
             <p>Acces la platforma KALINA</p>
           </div>
           
-          <form onSubmit={handleSubmit} className="auth-minimal-form">
-            {!isLogin && <div className="auth-minimal-row">
-                <input type="text" placeholder="Prenume" value={firstName} onChange={e => setFirstName(e.target.value)} required={!isLogin} className="auth-minimal-input" disabled={loading} autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck="false" />
-                <input type="text" placeholder="Nume" value={lastName} onChange={e => setLastName(e.target.value)} required={!isLogin} className="auth-minimal-input" disabled={loading} autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck="false" />
-              </div>}
+          <form onSubmit={handleSubmit} className="auth-glass-form">
+            {!isLogin && (
+              <div className="auth-glass-row">
+                <div className="glass-input-group">
+                  <input 
+                    type="text" 
+                    placeholder="Prenume" 
+                    value={firstName} 
+                    onChange={e => setFirstName(e.target.value)} 
+                    required={!isLogin} 
+                    className="auth-glass-input" 
+                    disabled={loading} 
+                  />
+                </div>
+                <div className="glass-input-group">
+                  <input 
+                    type="text" 
+                    placeholder="Nume" 
+                    value={lastName} 
+                    onChange={e => setLastName(e.target.value)} 
+                    required={!isLogin} 
+                    className="auth-glass-input" 
+                    disabled={loading} 
+                  />
+                </div>
+              </div>
+            )}
             
-            <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required className="auth-minimal-input" disabled={loading} autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck="false" />
-            
-            <div className="auth-minimal-password">
-              <input type={showPassword ? "text" : "password"} placeholder="Parolă" value={password} onChange={e => setPassword(e.target.value)} required className="auth-minimal-input" disabled={loading} autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck="false" />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="auth-minimal-toggle" disabled={loading}>
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+            <div className="glass-input-group">
+              <input 
+                type="email" 
+                placeholder="Email" 
+                value={email} 
+                onChange={e => setEmail(e.target.value)} 
+                required 
+                className="auth-glass-input" 
+                disabled={loading} 
+              />
             </div>
             
-            {error && <div className="auth-minimal-error">
-                {error}
-              </div>}
-
-            {success && <div className="auth-minimal-success">
-                {success}
-              </div>}
+            <div className="glass-input-group">
+              <div className="auth-glass-password">
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  placeholder="Parolă" 
+                  value={password} 
+                  onChange={e => setPassword(e.target.value)} 
+                  required 
+                  className="auth-glass-input" 
+                  disabled={loading} 
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)} 
+                  className="auth-glass-toggle" 
+                  disabled={loading}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
             
-            <button type="submit" disabled={loading} className="auth-minimal-submit">
-              {loading ? 'SE PROCESEAZĂ...' : isLogin ? 'CONECTARE' : 'ÎNREGISTRARE'}
+            {error && (
+              <div className="auth-glass-error">
+                {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="auth-glass-success">
+                {success}
+              </div>
+            )}
+            
+            <button type="submit" disabled={loading} className="auth-glass-submit">
+              <span className="button-text">
+                {loading ? 'SE PROCESEAZĂ...' : isLogin ? 'CONECTARE' : 'ÎNREGISTRARE'}
+              </span>
+              <div className="button-ripple"></div>
             </button>
           </form>
           
-          <button onClick={() => {
-          setIsLogin(!isLogin);
-          setError('');
-          setSuccess('');
-          setEmail('');
-          setPassword('');
-          setFirstName('');
-          setLastName('');
-          setShowPassword(false);
-        }} className="auth-minimal-switch" disabled={loading}>
+          <button 
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setError('');
+              setSuccess('');
+              setEmail('');
+              setPassword('');
+              setFirstName('');
+              setLastName('');
+              setShowPassword(false);
+            }} 
+            className="auth-glass-switch" 
+            disabled={loading}
+          >
             {isLogin ? 'Nu ai cont? Înregistrează-te' : 'Ai deja cont? Conectează-te'}
           </button>
         </div>
