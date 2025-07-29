@@ -98,10 +98,82 @@ serve(async (req) => {
             }
           }
         }
+      },
+      {
+        type: "function",
+        function: {
+          name: "get_analytics_overview",
+          description: "Get overview of available analytics data and explain what Agent AI can analyze",
+          parameters: {
+            type: "object",
+            properties: {
+              include_examples: { type: "boolean", description: "Include example queries" }
+            }
+          }
+        }
       }
     ];
 
     // Function implementations
+    async function getAnalyticsOverview(params: any) {
+      console.log('Getting analytics overview for user:', userId);
+      
+      const { data: conversations, error } = await supabase
+        .from('conversation_analytics_cache')
+        .select('*')
+        .eq('user_id', userId)
+        .limit(5);
+      
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
+
+      const overview = {
+        total_conversations: conversations?.length || 0,
+        data_types_available: [
+          "Transcripturi complete ale conversațiilor",
+          "Informații despre agenți (nume, ID-uri, performanță)",
+          "Date și ore ale apelurilor", 
+          "Numere de telefon și nume contacte",
+          "Status-uri apeluri (success/failed)",
+          "Durată conversații în secunde",
+          "Costuri și credite folosite",
+          "Analize sentiment și emoții"
+        ],
+        example_questions: [
+          "Câte conversații au fost în ultima săptămână?",
+          "Care sunt cei mai performanți agenți?",
+          "Arată-mi clienții care au întrebat despre preț",
+          "Ce întrebări frecvente primesc?",
+          "Care sunt numerele clienților nemulțumiți?",
+          "Cum evoluează volumul de apeluri?",
+          "Care agent are cea mai bună rată de succes?",
+          "Cât timp durează în medie o conversație?"
+        ],
+        capabilities: [
+          "Căutare în transcripturi după cuvinte cheie",
+          "Filtrare după agenți, date, status",
+          "Extragere numere telefon după criterii",
+          "Calcul statistici și metrici",
+          "Analiză performanță agenți",
+          "Identificare tendințe și pattern-uri",
+          "Export date în format structurat"
+        ]
+      };
+
+      if (conversations && conversations.length > 0) {
+        overview.sample_data = {
+          agents_found: [...new Set(conversations.map(c => c.agent_name).filter(Boolean))],
+          date_range: {
+            oldest: conversations.reduce((min, c) => c.call_date < min ? c.call_date : min, conversations[0].call_date),
+            newest: conversations.reduce((max, c) => c.call_date > max ? c.call_date : max, conversations[0].call_date)
+          }
+        };
+      }
+
+      return overview;
+    }
     async function testDataConnection(params: any) {
       console.log('Testing data connection for user:', userId);
       
@@ -346,13 +418,29 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Ești un asistent AI specialist în analiza datelor de conversații. Poți să:
-            1. Analizezi conversațiile din cache-ul de analiză
-            2. Extragi numere de telefon bazate pe criterii specifice
-            3. Analizezi performanța agenților
-            4. Identifici tendințe în conversații
-            
-            Răspunde în română și fii concis dar informativ. Când folosești funcțiile, explică ce ai găsit.`
+            content: `Ești un asistent AI specialist în analiza datelor de conversații din platforma Kalina AI. 
+
+DESPRE DATELE DISPONIBILE:
+- Ai acces la conversațiile utilizatorului din cache-ul de analiză
+- Poți căuta în transcripturi, analiza performanța agenților, extrage contacte
+- Datele includ: transcripturi complete, informații agenți, numere telefon, date/ore, costuri, durată
+
+CAPACITĂȚI PRINCIPALE:
+1. Căutare în transcripturi după cuvinte cheie (preț, oferte, nemulțumiri)
+2. Analiză performanță agenți (rata de succes, durată medie, numărul de apeluri)
+3. Extragere numere telefon după criterii (clienți interesați, nemulțumiți, etc.)
+4. Statistici și tendințe (întrebări frecvente, evoluția volumului)
+
+STIL DE RĂSPUNS:
+- Răspunde în română, concis dar informativ
+- Când folosești funcțiile, explică ce ai găsit
+- Oferă insights și recomandări practice
+- Dacă nu găsești date, sugerează criterii alternative
+
+CÂND NU AI DATE:
+- Verifică dacă utilizatorul are conversații în cache
+- Sugerează să verifice în secțiunea Analytics dacă datele sunt disponibile
+- Oferă ajutor pentru a înțelege ce tipuri de întrebări poți răspunde`
           },
           {
             role: 'user',
@@ -399,6 +487,9 @@ serve(async (req) => {
           break;
         case 'test_data_connection':
           functionResult = await testDataConnection(functionArgs);
+          break;
+        case 'get_analytics_overview':
+          functionResult = await getAnalyticsOverview(functionArgs);
           break;
         default:
           functionResult = { error: 'Unknown function' };

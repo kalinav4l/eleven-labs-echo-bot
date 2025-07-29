@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
+import DashboardLayout from '@/components/DashboardLayout';
 import { Send, Bot, User, Lightbulb, Database, TrendingUp, Phone, Users } from 'lucide-react';
 
 interface Message {
@@ -27,6 +28,11 @@ const AgentAI = () => {
 
   // Predefined suggestions
   const suggestions = [
+    {
+      icon: <Lightbulb className="w-4 h-4" />,
+      text: "Explică-mi ce date ai disponibile și ce pot să întreb",
+      category: "Început"
+    },
     {
       icon: <Phone className="w-4 h-4" />,
       text: "Arată-mi toți clienții care au întrebat despre preț în ultima săptămână",
@@ -128,14 +134,14 @@ const AgentAI = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-6 max-w-4xl">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground">Agent AI</h1>
-          <p className="text-muted-foreground mt-2">
-            Întreabă-mă orice despre datele tale din conversații. Pot să analizez, să caut, și să extrag informații complexe.
-          </p>
-        </div>
+    <DashboardLayout>
+      <div className="space-y-6">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-foreground">Agent AI</h1>
+        <p className="text-muted-foreground mt-2">
+          Întreabă-mă orice despre datele tale din conversații. Pot să analizez, să caut, și să extrag informații complexe.
+        </p>
+      </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Chat Area */}
@@ -295,7 +301,7 @@ const AgentAI = () => {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
