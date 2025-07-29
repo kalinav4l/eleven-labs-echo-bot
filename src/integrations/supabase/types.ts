@@ -552,74 +552,6 @@ export type Database = {
         }
         Relationships: []
       }
-      credit_packages: {
-        Row: {
-          created_at: string
-          credits: number
-          id: string
-          name: string
-          price_usd: number
-          stripe_price_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          credits: number
-          id?: string
-          name: string
-          price_usd: number
-          stripe_price_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          credits?: number
-          id?: string
-          name?: string
-          price_usd?: number
-          stripe_price_id?: string | null
-        }
-        Relationships: []
-      }
-      credit_transactions: {
-        Row: {
-          amount: number
-          conversation_id: string | null
-          created_at: string
-          description: string | null
-          id: string
-          stripe_session_id: string | null
-          transaction_type: string
-          user_id: string
-        }
-        Insert: {
-          amount: number
-          conversation_id?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          stripe_session_id?: string | null
-          transaction_type: string
-          user_id: string
-        }
-        Update: {
-          amount?: number
-          conversation_id?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          stripe_session_id?: string | null
-          transaction_type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "credit_transactions_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "conversations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       custom_voices: {
         Row: {
           created_at: string
@@ -1294,36 +1226,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_credits: {
-        Row: {
-          created_at: string
-          id: string
-          remaining_credits: number | null
-          total_credits: number
-          updated_at: string
-          used_credits: number
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          remaining_credits?: number | null
-          total_credits?: number
-          updated_at?: string
-          used_credits?: number
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          remaining_credits?: number | null
-          total_credits?: number
-          updated_at?: string
-          used_credits?: number
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_dashboard_preferences: {
         Row: {
           created_at: string
@@ -1581,18 +1483,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      add_credits: {
-        Args: {
-          p_user_id: string
-          p_amount: number
-          p_stripe_session_id?: string
-        }
-        Returns: boolean
-      }
-      admin_add_credits: {
-        Args: { p_user_email: string; p_amount: number; p_description?: string }
-        Returns: boolean
-      }
       admin_ban_user: {
         Args: {
           p_target_user_id: string
@@ -1609,36 +1499,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      admin_get_all_users: {
-        Args: { p_admin_user_id: string }
-        Returns: {
-          user_id: string
-          email: string
-          first_name: string
-          last_name: string
-          account_type: string
-          user_role: Database["public"]["Enums"]["app_role"]
-          total_credits: number
-          used_credits: number
-          remaining_credits: number
-          balance_usd: number
-          total_calls: number
-          total_minutes: number
-          created_at: string
-          last_sign_in: string
-        }[]
-      }
-      admin_get_user_credits: {
-        Args: { p_user_email: string }
-        Returns: {
-          user_id: string
-          email: string
-          total_credits: number
-          used_credits: number
-          remaining_credits: number
-          created_at: string
-        }[]
-      }
       admin_modify_balance: {
         Args: {
           p_target_user_id: string
@@ -1648,30 +1508,11 @@ export type Database = {
         }
         Returns: boolean
       }
-      admin_modify_credits: {
-        Args: {
-          p_target_user_id: string
-          p_credit_amount: number
-          p_operation: string
-          p_admin_user_id: string
-          p_description?: string
-        }
-        Returns: boolean
-      }
       cosine_similarity: {
         Args: { vec1: Json; vec2: Json }
         Returns: number
       }
       deduct_balance: {
-        Args: {
-          p_user_id: string
-          p_amount: number
-          p_description?: string
-          p_conversation_id?: string
-        }
-        Returns: boolean
-      }
-      deduct_credits: {
         Args: {
           p_user_id: string
           p_amount: number
