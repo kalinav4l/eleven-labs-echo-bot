@@ -46,7 +46,7 @@ function AppWithWelcome() {
         />
       )}
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Navigate to="/account" replace />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/admin" element={<Admin />} />
