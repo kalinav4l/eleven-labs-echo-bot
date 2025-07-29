@@ -140,7 +140,7 @@ const Auth = () => {
           
           {/* Logo/Title */}
           <div className="auth-visual-title">
-            <h1 className="my-0 py-[235px]">KALINA</h1>
+            <h1 className="my-0 py-[222px]">KALINA</h1>
             <p>AI Voice Platform</p>
           </div>
         </div>
