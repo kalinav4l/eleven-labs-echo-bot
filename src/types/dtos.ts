@@ -53,6 +53,7 @@ export interface ConversationConfigCreate {
 
 export interface AgentCreate {
     language?: string;
+    timezone?: string;
     prompt: PromptCreate;
 }
 
@@ -143,6 +144,7 @@ export interface TranslationUpdate {
 export interface AgentDetailsUpdate {
     first_message?: string;
     language?: string;
+    timezone?: string;
     dynamic_variables?: { [key: string]: any };
     prompt?: PromptConfigUpdate;
 }
@@ -414,6 +416,7 @@ export interface Translation {
 export interface AgentDetails {
     first_message: string;
     language: string;
+    timezone?: string;
     dynamic_variables: { [key: string]: any };
     prompt: PromptConfig;
 }

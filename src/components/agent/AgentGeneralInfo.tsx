@@ -9,6 +9,7 @@ import { Copy } from 'lucide-react';
 import { VOICES, LANGUAGES } from '@/constants/constants';
 import { useClipboard } from '@/hooks/useClipboard';
 import CreativitySelector from '@/components/CreativitySelector';
+import TimezoneSelector from '@/components/TimezoneSelector';
 import {AgentResponse} from "@/types/dtos.ts";
 
 interface AgentGeneralInfoProps {
@@ -126,6 +127,20 @@ const AgentGeneralInfo: React.FC<AgentGeneralInfoProps> = ({ agentData, setAgent
             onChange={handleCreativityChange} 
           />
         </div>
+
+        <TimezoneSelector
+          value={agentData.conversation_config?.agent?.timezone || ''}
+          onChange={(timezone) => setAgentData({
+            ...agentData,
+            conversation_config: {
+              ...agentData.conversation_config,
+              agent: {
+                ...agentData.conversation_config?.agent,
+                timezone: timezone
+              }
+            }
+          })}
+        />
       </CardContent>
     </Card>
   );
