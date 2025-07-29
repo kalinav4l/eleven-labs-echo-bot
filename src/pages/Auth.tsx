@@ -132,22 +132,10 @@ const Auth = () => {
           }} />)}
           </div>
           
-          {/* Floating Sound Orbs */}
-          <div className="sound-orbs">
-            {Array.from({
-            length: 8
-          }, (_, i) => <div key={i} className="sound-orb" style={{
-            animationDelay: `${i * 0.5}s`,
-            left: `${Math.random() * 80 + 10}%`,
-            top: `${Math.random() * 80 + 10}%`
-          }} />)}
-          </div>
-          
-          {/* Pulse Rings */}
+          {/* Simple Pulse Rings */}
           <div className="pulse-rings">
             <div className="pulse-ring ring-1"></div>
             <div className="pulse-ring ring-2"></div>
-            <div className="pulse-ring ring-3"></div>
           </div>
           
           {/* Logo/Title */}
@@ -158,136 +146,82 @@ const Auth = () => {
         </div>
       </div>
 
-      {/* Right Side - Spectacular White Glass Login */}
-      <div className="auth-glass-section">
-        {/* Background Animations */}
-        <div className="auth-glass-background">
-          {/* Geometric Shapes */}
-          <div className="geometric-shapes">
-            {Array.from({ length: 6 }, (_, i) => (
-              <div key={i} className="geometric-shape" style={{
-                animationDelay: `${i * 0.7}s`,
-                left: `${Math.random() * 80 + 10}%`,
-                top: `${Math.random() * 80 + 10}%`
-              }} />
-            ))}
-          </div>
-          
-          {/* Light Rays */}
-          <div className="light-rays">
-            {Array.from({ length: 4 }, (_, i) => (
-              <div key={i} className="light-ray" style={{
-                animationDelay: `${i * 1.2}s`,
-                transform: `rotate(${i * 45}deg)`
-              }} />
-            ))}
-          </div>
-          
-          {/* Particle System */}
-          <div className="particle-system">
-            {Array.from({ length: 15 }, (_, i) => (
-              <div key={i} className="particle" style={{
-                animationDelay: `${i * 0.3}s`,
-                left: `${Math.random() * 100}%`,
-                animationDuration: `${4 + Math.random() * 2}s`
-              }} />
-            ))}
-          </div>
-          
-          {/* Breathing Rings */}
-          <div className="breathing-rings">
-            <div className="breathing-ring ring-1"></div>
-            <div className="breathing-ring ring-2"></div>
-            <div className="breathing-ring ring-3"></div>
-          </div>
-        </div>
-        
-        {/* Glass Card */}
-        <div className="auth-glass-card">
-          <div className="auth-glass-header">
+      {/* Right Side - Clean White Login */}
+      <div className="auth-clean-section">
+        <div className="auth-clean-card">
+          <div className="auth-clean-header">
             <h2>{isLogin ? 'CONECTARE' : 'ÎNREGISTRARE'}</h2>
             <p>Acces la platforma KALINA</p>
           </div>
           
-          <form onSubmit={handleSubmit} className="auth-glass-form">
+          <form onSubmit={handleSubmit} className="auth-clean-form">
             {!isLogin && (
-              <div className="auth-glass-row">
-                <div className="glass-input-group">
-                  <input 
-                    type="text" 
-                    placeholder="Prenume" 
-                    value={firstName} 
-                    onChange={e => setFirstName(e.target.value)} 
-                    required={!isLogin} 
-                    className="auth-glass-input" 
-                    disabled={loading} 
-                  />
-                </div>
-                <div className="glass-input-group">
-                  <input 
-                    type="text" 
-                    placeholder="Nume" 
-                    value={lastName} 
-                    onChange={e => setLastName(e.target.value)} 
-                    required={!isLogin} 
-                    className="auth-glass-input" 
-                    disabled={loading} 
-                  />
-                </div>
+              <div className="auth-clean-row">
+                <input 
+                  type="text" 
+                  placeholder="Prenume" 
+                  value={firstName} 
+                  onChange={e => setFirstName(e.target.value)} 
+                  required={!isLogin} 
+                  className="auth-clean-input" 
+                  disabled={loading} 
+                />
+                <input 
+                  type="text" 
+                  placeholder="Nume" 
+                  value={lastName} 
+                  onChange={e => setLastName(e.target.value)} 
+                  required={!isLogin} 
+                  className="auth-clean-input" 
+                  disabled={loading} 
+                />
               </div>
             )}
             
-            <div className="glass-input-group">
+            <input 
+              type="email" 
+              placeholder="Email" 
+              value={email} 
+              onChange={e => setEmail(e.target.value)} 
+              required 
+              className="auth-clean-input" 
+              disabled={loading} 
+            />
+            
+            <div className="auth-clean-password">
               <input 
-                type="email" 
-                placeholder="Email" 
-                value={email} 
-                onChange={e => setEmail(e.target.value)} 
+                type={showPassword ? "text" : "password"} 
+                placeholder="Parolă" 
+                value={password} 
+                onChange={e => setPassword(e.target.value)} 
                 required 
-                className="auth-glass-input" 
+                className="auth-clean-input" 
                 disabled={loading} 
               />
-            </div>
-            
-            <div className="glass-input-group">
-              <div className="auth-glass-password">
-                <input 
-                  type={showPassword ? "text" : "password"} 
-                  placeholder="Parolă" 
-                  value={password} 
-                  onChange={e => setPassword(e.target.value)} 
-                  required 
-                  className="auth-glass-input" 
-                  disabled={loading} 
-                />
-                <button 
-                  type="button" 
-                  onClick={() => setShowPassword(!showPassword)} 
-                  className="auth-glass-toggle" 
-                  disabled={loading}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
+              <button 
+                type="button" 
+                onClick={() => setShowPassword(!showPassword)} 
+                className="auth-clean-toggle" 
+                disabled={loading}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
             
             {error && (
-              <div className="auth-glass-error">
+              <div className="auth-clean-error">
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="auth-glass-success">
+              <div className="auth-clean-success">
                 {success}
               </div>
             )}
             
-            <button type="submit" disabled={loading} className="auth-glass-submit">
-              <span className="button-text">
-                {loading ? 'SE PROCESEAZĂ...' : isLogin ? 'CONECTARE' : 'ÎNREGISTRARE'}
-              </span>
-              <div className="button-ripple"></div>
+            <button type="submit" disabled={loading} className="auth-clean-submit">
+              {loading ? 'SE PROCESEAZĂ...' : isLogin ? 'CONECTARE' : 'ÎNREGISTRARE'}
             </button>
           </form>
           
@@ -302,7 +236,7 @@ const Auth = () => {
               setLastName('');
               setShowPassword(false);
             }} 
-            className="auth-glass-switch" 
+            className="auth-clean-switch" 
             disabled={loading}
           >
             {isLogin ? 'Nu ai cont? Înregistrează-te' : 'Ai deja cont? Conectează-te'}
