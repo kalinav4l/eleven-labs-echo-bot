@@ -211,9 +211,10 @@ export const UserEditModal: React.FC<UserEditModalProps> = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="starter">Starter</SelectItem>
-                  <SelectItem value="pro">Pro</SelectItem>
-                  <SelectItem value="enterprise">Enterprise</SelectItem>
+                  <SelectItem value="starter">Starter (Gratuit)</SelectItem>
+                  <SelectItem value="bronze">Bronze ($99/mo)</SelectItem>
+                  <SelectItem value="silver">Silver ($500/mo)</SelectItem>
+                  <SelectItem value="enterprise">Enterprise (Custom)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

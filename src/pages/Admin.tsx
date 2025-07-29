@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Users, Phone, CreditCard, Activity, Edit, DollarSign } from 'lucide-react';
+import { Search, Users, Phone, CreditCard, Activity, Edit, DollarSign, Ban, UserCheck } from 'lucide-react';
 import { UserEditModal } from '@/components/UserEditModal';
 
 interface AdminUser {
@@ -49,6 +49,36 @@ const Admin = () => {
   // Check if user is the specific admin user
   const isSpecificAdmin = user?.id === 'a698e3c2-f0e6-4f42-8955-971d91e725ce' && 
                          user?.email === 'mariusvirlan109@gmail.com';
+
+  const handleBlockUser = async (targetUser: AdminUser) => {
+    if (!user) return;
+
+    try {
+      const newBanStatus = targetUser.account_type !== 'banned';
+      
+      const { error } = await supabase.rpc('admin_ban_user', {
+        p_target_user_id: targetUser.user_id,
+        p_ban_status: newBanStatus,
+        p_admin_user_id: user.id
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Succes",
+        description: `Utilizatorul a fost ${newBanStatus ? 'blocat' : 'deblocat'} cu succes.`,
+      });
+
+      fetchUsers(); // Refresh the users list
+    } catch (error) {
+      console.error('Error blocking/unblocking user:', error);
+      toast({
+        title: "Eroare",
+        description: "Nu am putut modifica statusul utilizatorului.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const fetchUsers = async () => {
     if (!user) return;
@@ -233,15 +263,22 @@ const Admin = () => {
                       </thead>
                       <tbody>
                         {filteredUsers.map((user) => (
-                          <tr key={user.user_id} className="border-b">
+                          <tr key={user.user_id} className={`border-b ${user.account_type === 'banned' ? 'bg-red-50 dark:bg-red-950/20' : ''}`}>
                             <td className="h-12 px-4">
-                              <div>
-                                <div className="font-medium">
-                                  {user.first_name} {user.last_name}
+                              <div className="flex items-center gap-2">
+                                <div>
+                                  <div className="font-medium">
+                                    {user.first_name} {user.last_name}
+                                  </div>
+                                  <div className="text-muted-foreground text-xs">
+                                    {user.email}
+                                  </div>
                                 </div>
-                                <div className="text-muted-foreground text-xs">
-                                  {user.email}
-                                </div>
+                                {user.account_type === 'banned' && (
+                                  <div className="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">
+                                    BLOCK
+                                  </div>
+                                )}
                               </div>
                             </td>
                             <td className="h-12 px-4">
@@ -253,16 +290,16 @@ const Admin = () => {
                             </td>
                             <td className="h-12 px-4">
                               <Badge 
-                                variant={user.plan === 'enterprise' ? 'default' : user.plan === 'pro' ? 'secondary' : 'outline'}
+                                variant={user.plan === 'enterprise' ? 'default' : user.plan === 'silver' ? 'secondary' : user.plan === 'bronze' ? 'outline' : 'outline'}
                               >
-                                {user.plan}
+                                {user.plan === 'starter' ? 'GRATUIT' : user.plan.toUpperCase()}
                               </Badge>
                             </td>
                             <td className="h-12 px-4">
                               <Badge 
                                 variant={user.account_type === 'banned' ? 'destructive' : 'outline'}
                               >
-                                {user.account_type}
+                                {user.account_type === 'banned' ? 'BLOCAT' : user.account_type}
                               </Badge>
                             </td>
                             <td className="h-12 px-4">
@@ -289,17 +326,36 @@ const Admin = () => {
                               </div>
                             </td>
                             <td className="h-12 px-4">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setEditingUser(user);
-                                  setEditModalOpen(true);
-                                }}
-                              >
-                                <Edit className="h-4 w-4 mr-1" />
-                                Editează
-                              </Button>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingUser(user);
+                                    setEditModalOpen(true);
+                                  }}
+                                >
+                                  <Edit className="h-4 w-4 mr-1" />
+                                  Editează
+                                </Button>
+                                <Button
+                                  variant={user.account_type === 'banned' ? 'default' : 'destructive'}
+                                  size="sm"
+                                  onClick={() => handleBlockUser(user)}
+                                >
+                                  {user.account_type === 'banned' ? (
+                                    <>
+                                      <UserCheck className="h-4 w-4 mr-1" />
+                                      Deblocare
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Ban className="h-4 w-4 mr-1" />
+                                      Blocare
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
                             </td>
                           </tr>
                         ))}
