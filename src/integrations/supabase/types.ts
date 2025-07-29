@@ -154,7 +154,6 @@ export type Database = {
           callback_analyzed: boolean | null
           contact_name: string | null
           conversation_id: string | null
-          cost_processed: boolean | null
           cost_usd: number | null
           created_at: string
           dialog_json: string | null
@@ -176,7 +175,6 @@ export type Database = {
           callback_analyzed?: boolean | null
           contact_name?: string | null
           conversation_id?: string | null
-          cost_processed?: boolean | null
           cost_usd?: number | null
           created_at?: string
           dialog_json?: string | null
@@ -198,7 +196,6 @@ export type Database = {
           callback_analyzed?: boolean | null
           contact_name?: string | null
           conversation_id?: string | null
-          cost_processed?: boolean | null
           cost_usd?: number | null
           created_at?: string
           dialog_json?: string | null

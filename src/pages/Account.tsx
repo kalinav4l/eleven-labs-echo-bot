@@ -83,20 +83,60 @@ const Account = () => {
   // State for enhanced analytics data
   const [conversationDurations, setConversationDurations] = useState<Record<string, number>>({});
   const [conversationCosts, setConversationCosts] = useState<Record<string, number>>({});
-  const [conversationDataLoaded, setConversationDataLoaded] = useState(false);
 
-  // Function to get conversation data from ElevenLabs for display only (no deduction)
+  // Function to get conversation data from ElevenLabs and deduct costs
   const getConversationData = async (conversationId: string) => {
     if (!conversationId || conversationDurations[conversationId] !== undefined) {
       return conversationDurations[conversationId] || 0;
     }
+    
+    console.log(`Processing conversation: ${conversationId}`);
+    
     try {
       const { data } = await supabase.functions.invoke('get-elevenlabs-conversation', {
         body: { conversationId }
       });
+      
+      console.log(`Conversation data received:`, data?.metadata);
+      
       if (data?.metadata) {
         const duration = Math.round(data.metadata.call_duration_secs || 0);
+        // Calculate cost based on call duration, not ElevenLabs cost
         const costUsd = calculateCostFromSeconds(duration);
+        
+        console.log(`Calculated cost: $${costUsd} for ${duration} seconds`);
+        
+        // Deduct cost from user balance and update statistics
+        if (costUsd > 0 && user?.id) {
+          console.log(`Attempting to deduct $${costUsd} from user ${user.id}`);
+          
+          try {
+            const { data: deductResult, error: deductError } = await supabase.rpc('deduct_balance', {
+              p_user_id: user.id,
+              p_amount: costUsd,
+              p_description: `Apel conversație ${conversationId}`,
+              p_conversation_id: conversationId
+            });
+
+            console.log('Deduct balance result:', { deductResult, deductError });
+
+            if (!deductError && deductResult) {
+              // Update user statistics with spending
+              const { error: statsError } = await supabase.rpc('update_user_statistics_with_spending', {
+                p_user_id: user.id,
+                p_duration_seconds: duration,
+                p_cost_usd: costUsd
+              });
+              
+              console.log('Statistics update error:', statsError);
+              console.log(`Successfully deducted $${costUsd} for conversation ${conversationId}`);
+            } else {
+              console.error('Failed to deduct balance:', deductError);
+            }
+          } catch (error) {
+            console.error('Error deducting balance:', error);
+          }
+        }
         
         setConversationDurations(prev => ({ ...prev, [conversationId]: duration }));
         setConversationCosts(prev => ({ ...prev, [conversationId]: costUsd }));
@@ -108,32 +148,24 @@ const Account = () => {
     return 0;
   };
 
-  // Load detailed conversation data with 10-minute delay
+  // Load detailed conversation data automatically for all conversations
   useEffect(() => {
     const loadDetailedAnalytics = async () => {
       const conversationsToLoad = callHistory?.filter(call => call.conversation_id) || [];
       
       if (conversationsToLoad.length > 0) {
-        console.log('Waiting 10 minutes before loading conversation data...');
-        
-        // Wait 10 minutes (600,000 ms) before loading conversation data
-        setTimeout(async () => {
-          console.log('Loading conversation data after 10-minute delay...');
-          
-          const promises = conversationsToLoad.map(call => 
-            call.conversation_id ? getConversationData(call.conversation_id) : Promise.resolve(0)
-          );
-          await Promise.all(promises);
-          setConversationDataLoaded(true);
-          console.log('Conversation data loaded successfully');
-        }, 600000); // 10 minutes
+        // Process all conversations in parallel for faster loading
+        const promises = conversationsToLoad.map(call => 
+          call.conversation_id ? getConversationData(call.conversation_id) : Promise.resolve(0)
+        );
+        await Promise.all(promises);
       }
     };
     
-    if (callHistory && callHistory.length > 0 && !conversationDataLoaded) {
+    if (callHistory && callHistory.length > 0) {
       loadDetailedAnalytics();
     }
-  }, [callHistory?.length, conversationDataLoaded]);
+  }, [callHistory?.length]);
 
   // Redirect to landing if not authenticated
   if (!authLoading && !user) {
@@ -162,8 +194,8 @@ const Account = () => {
   const totalAgents = userAgents?.length || 0;
   const totalCalls = callHistory?.length || 0;
 
-  // Calculate total cost from call history database records (costs already processed by webhook)
-  const totalCost = callHistory?.reduce((total, call) => total + (call.cost_usd || 0), 0) || 0;
+  // Calculate total cost from conversation data (in USD)
+  const totalCost = Object.values(conversationCosts).reduce((total, cost) => total + cost, 0);
   const totalConversations = userStats?.total_conversations || 0;
   const totalTranscripts = savedTranscripts?.length || 0;
   const currentBalance = userBalance?.balance_usd || 0;
