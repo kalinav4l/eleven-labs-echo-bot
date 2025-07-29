@@ -131,7 +131,14 @@ const PricingPage = () => {
       <div className="min-h-screen py-12 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
-          
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Planuri și Prețuri
+            </h1>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Alege planul perfect pentru nevoile tale. Transparent, flexibil și fără surprize.
+            </p>
+          </div>
 
           {/* Monthly/Yearly Toggle */}
           <div className="flex items-center justify-center mb-12">
