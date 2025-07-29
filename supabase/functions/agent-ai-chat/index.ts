@@ -27,6 +27,34 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // STEP 1: Check user balance before processing
+    const COST_PER_QUESTION = 0.08; // USD per question
+    
+    const { data: balanceData, error: balanceError } = await supabase
+      .from('user_balance')
+      .select('balance_usd')
+      .eq('user_id', userId)
+      .single();
+
+    if (balanceError) {
+      console.error('Error checking balance:', balanceError);
+      throw new Error('Nu am putut verifica balanța contului.');
+    }
+
+    const currentBalance = balanceData?.balance_usd || 0;
+    
+    if (currentBalance < COST_PER_QUESTION) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'insufficient_balance',
+          response: `Sold insuficient! Ai nevoie de $${COST_PER_QUESTION} pentru a pune o întrebare. Soldul tău curent: $${currentBalance.toFixed(2)}. Te rog să îți reîncarci contul.`,
+          required_balance: COST_PER_QUESTION,
+          current_balance: currentBalance
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // System tools for OpenAI
     const tools = [
       {
@@ -110,6 +138,21 @@ serve(async (req) => {
               include_examples: { type: "boolean", description: "Include example queries" }
             }
           }
+        },
+        {
+          type: "function",
+          function: {
+            name: "get_all_conversation_data",
+            description: "Get all conversation data including call history, analytics cache, and detailed transcripts",
+            parameters: {
+              type: "object",
+              properties: {
+                include_transcripts: { type: "boolean", description: "Include full transcripts" },
+                date_filter: { type: "string", description: "Date filter (last_week, last_month, all)" },
+                limit: { type: "number", description: "Limit results" }
+              }
+            }
+          }
         }
       }
     ];
@@ -173,6 +216,60 @@ serve(async (req) => {
       }
 
       return overview;
+    }
+
+    async function getAllConversationData(params: any) {
+      console.log('Getting all conversation data for user:', userId);
+      
+      // Get data from multiple sources for comprehensive analysis
+      const [analyticsData, callHistoryData] = await Promise.all([
+        // Analytics cache data
+        supabase
+          .from('conversation_analytics_cache')
+          .select('*')
+          .eq('user_id', userId)
+          .order('call_date', { ascending: false })
+          .limit(params.limit || 100),
+        
+        // Call history data
+        supabase
+          .from('call_history')
+          .select('*')
+          .eq('user_id', userId)
+          .order('call_date', { ascending: false })
+          .limit(params.limit || 100)
+      ]);
+
+      if (analyticsData.error) {
+        console.error('Analytics data error:', analyticsData.error);
+      }
+      
+      if (callHistoryData.error) {
+        console.error('Call history data error:', callHistoryData.error);
+      }
+
+      const combinedData = {
+        analytics_cache: analyticsData.data || [],
+        call_history: callHistoryData.data || [],
+        total_analytics_conversations: analyticsData.data?.length || 0,
+        total_call_history: callHistoryData.data?.length || 0,
+        data_sources: ['conversation_analytics_cache', 'call_history']
+      };
+
+      // Add summary statistics
+      if (analyticsData.data && analyticsData.data.length > 0) {
+        combinedData.summary = {
+          unique_agents: [...new Set(analyticsData.data.map(c => c.agent_id).filter(Boolean))].length,
+          date_range: {
+            oldest: analyticsData.data.reduce((min, c) => c.call_date < min ? c.call_date : min, analyticsData.data[0].call_date),
+            newest: analyticsData.data.reduce((max, c) => c.call_date > max ? c.call_date : max, analyticsData.data[0].call_date)
+          },
+          success_rate: ((analyticsData.data.filter(c => c.call_status === 'success').length / analyticsData.data.length) * 100).toFixed(1),
+          avg_duration: analyticsData.data.reduce((sum, c) => sum + (c.duration_seconds || 0), 0) / analyticsData.data.length
+        };
+      }
+
+      return combinedData;
     }
     async function testDataConnection(params: any) {
       console.log('Testing data connection for user:', userId);
@@ -491,6 +588,9 @@ CÂND NU AI DATE:
         case 'get_analytics_overview':
           functionResult = await getAnalyticsOverview(functionArgs);
           break;
+        case 'get_all_conversation_data':
+          functionResult = await getAllConversationData(functionArgs);
+          break;
         default:
           functionResult = { error: 'Unknown function' };
       }
@@ -535,10 +635,28 @@ CÂND NU AI DATE:
       result = followUpData.choices[0].message;
     }
 
+    // STEP 2: Deduct cost from user balance after successful processing
+    const { error: deductError } = await supabase
+      .from('user_balance')
+      .update({ 
+        balance_usd: currentBalance - COST_PER_QUESTION,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', userId);
+
+    if (deductError) {
+      console.error('Error deducting balance:', deductError);
+      // Continue anyway - don't fail the response if balance deduction fails
+    } else {
+      console.log(`Deducted $${COST_PER_QUESTION} from user ${userId}. New balance: $${(currentBalance - COST_PER_QUESTION).toFixed(2)}`);
+    }
+
     return new Response(
       JSON.stringify({ 
         response: result.content || 'Am analizat datele tale.',
-        functionCalled: result.tool_calls?.[0]?.function?.name || null
+        functionCalled: result.tool_calls?.[0]?.function?.name || null,
+        cost_deducted: COST_PER_QUESTION,
+        remaining_balance: (currentBalance - COST_PER_QUESTION).toFixed(2)
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

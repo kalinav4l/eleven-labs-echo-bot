@@ -16,6 +16,8 @@ interface Message {
   sender: 'user' | 'ai';
   timestamp: Date;
   functionCalled?: string;
+  costDeducted?: number;
+  remainingBalance?: string;
 }
 
 const AgentAI = () => {
@@ -24,7 +26,30 @@ const AgentAI = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [userBalance, setUserBalance] = useState<number>(0);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  // Fetch user balance
+  const fetchBalance = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_balance')
+        .select('balance_usd')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error) throw error;
+      setUserBalance(data?.balance_usd || 0);
+    } catch (error) {
+      console.error('Error fetching balance:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchBalance();
+  }, [user]);
 
   // Predefined suggestions
   const suggestions = [
@@ -81,6 +106,19 @@ const AgentAI = () => {
     setIsLoading(true);
 
     try {
+      // Check balance before sending
+      const COST_PER_QUESTION = 0.08;
+      if (userBalance < COST_PER_QUESTION) {
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: `Sold insuficient! Ai nevoie de $${COST_PER_QUESTION} pentru a pune o întrebare. Soldul tău curent: $${userBalance.toFixed(2)}. Te rog să îți reîncarci contul.`,
+          sender: 'ai',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('agent-ai-chat', {
         body: {
           message: message,
@@ -92,6 +130,18 @@ const AgentAI = () => {
         throw new Error(error.message);
       }
 
+      // Handle insufficient balance response
+      if (data.error === 'insufficient_balance') {
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: data.response,
+          sender: 'ai',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+        return;
+      }
+
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: data.response || 'Nu am putut procesa cererea.',
@@ -101,6 +151,16 @@ const AgentAI = () => {
       };
 
       setMessages(prev => [...prev, aiMessage]);
+
+      // Update balance if cost was deducted
+      if (data.costDeducted && data.remainingBalance) {
+        setUserBalance(parseFloat(data.remainingBalance));
+        
+        toast({
+          title: "Întrebare procesată",
+          description: `Cost: $${data.costDeducted} | Sold rămas: $${data.remainingBalance}`,
+        });
+      }
 
     } catch (error: any) {
       console.error('Error sending message:', error);
@@ -136,12 +196,20 @@ const AgentAI = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground">Agent AI</h1>
-        <p className="text-muted-foreground mt-2">
-          Întreabă-mă orice despre datele tale din conversații. Pot să analizez, să caut, și să extrag informații complexe.
-        </p>
-      </div>
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Agent AI</h1>
+              <p className="text-muted-foreground mt-2">
+                Întreabă-mă orice despre datele tale din conversații. Cost: $0.08 per întrebare.
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">Sold disponibil</p>
+              <p className="text-2xl font-bold text-primary">${userBalance.toFixed(2)}</p>
+            </div>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Chat Area */}
@@ -227,11 +295,15 @@ const AgentAI = () => {
                     <Input
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
-                      placeholder="Întreabă despre conversațiile tale..."
-                      disabled={isLoading}
+                      placeholder={userBalance >= 0.08 ? "Întreabă despre conversațiile tale..." : "Sold insuficient pentru întrebări"}
+                      disabled={isLoading || !inputMessage.trim() || userBalance < 0.08}
                       className="flex-1"
                     />
-                    <Button type="submit" disabled={isLoading || !inputMessage.trim()}>
+                    <Button 
+                      type="submit" 
+                      disabled={isLoading || !inputMessage.trim() || userBalance < 0.08}
+                      className={userBalance < 0.08 ? "bg-gray-400" : ""}
+                    >
                       <Send className="w-4 h-4" />
                     </Button>
                   </form>
@@ -280,21 +352,27 @@ const AgentAI = () => {
                 <CardTitle className="text-lg">Capacități</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Database className="w-4 h-4" />
-                  <span>Căutare în transcripturi</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4" />
-                  <span>Extragere numere telefon</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4" />
-                  <span>Analiză performanță agenți</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4" />
-                  <span>Statistici și tendințe</span>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Database className="w-4 h-4" />
+                    <span>Acces complet la toate datele din analitică</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-4 h-4" />
+                    <span>Extragere numere telefon după criterii</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    <span>Analiză performanță agenți</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4" />
+                    <span>Statistici și tendințe detaliate</span>
+                  </div>
+                  <div className="mt-4 p-3 bg-muted rounded-lg">
+                    <p className="text-xs font-medium">Cost per întrebare: $0.08</p>
+                    <p className="text-xs">Soldul tău: ${userBalance.toFixed(2)}</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
