@@ -288,11 +288,13 @@ const Account = () => {
                   Gestionează agenții tăi AI și urmărește performanțele
                 </p>
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
                 <CreditsPlanDisplay />
-                <Button onClick={handleSignOut} variant="outline" className="border-gray-300 hover:border-gray-400 text-gray-700 animate-[slideInRight_0.6s_ease-out] hover:scale-105 transition-transform">
-                  Ieșire
-                </Button>
+                <div className="relative overflow-hidden bg-white/20 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105 liquid-glass cursor-pointer animate-[slideInRight_0.6s_ease-out]" onClick={handleSignOut}>
+                  <div className="px-4 py-2.5 flex items-center justify-center min-w-[80px]">
+                    <span className="text-sm font-medium text-gray-900">Ieșire</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

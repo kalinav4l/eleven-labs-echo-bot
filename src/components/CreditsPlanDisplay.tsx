@@ -72,14 +72,13 @@ const CreditsPlanDisplay = () => {
   return (
     <div className="flex items-center space-x-3 animate-fade-in">
       {/* Balance Display - Liquid Glass Style */}
-      <div className="relative overflow-hidden bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group liquid-glass">
-        <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        <div className="relative px-4 py-2.5 flex items-center space-x-3">
-          <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center shadow-sm">
+      <div className="relative overflow-hidden bg-white/20 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105 liquid-glass">
+        <div className="px-4 py-2.5 flex items-center space-x-3">
+          <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
             <DollarSign className="w-4 h-4 text-white" />
           </div>
           <div>
-            <div className="text-lg font-semibold text-gray-900">
+            <div className="text-base font-semibold text-gray-900">
               ${balanceUsd.toFixed(2)}
             </div>
             <div className="text-xs text-gray-600">
@@ -89,31 +88,26 @@ const CreditsPlanDisplay = () => {
         </div>
       </div>
 
-      {/* Plan Display - Liquid Glass Style */}
-      <div className="relative">
-        <Badge 
-          variant="secondary" 
-          className={`${currentPlan.color} ${currentPlan.textColor} border-0 px-4 py-2.5 text-sm font-medium shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer liquid-glass`}
-        >
+      {/* Plan Display - Same Size as Other Buttons */}
+      <div className="relative overflow-hidden bg-white/20 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105 liquid-glass">
+        <div className="px-4 py-2.5 flex items-center justify-center min-w-[80px]">
           <div className="flex items-center space-x-2">
-            <PlanIcon className="w-4 h-4" />
-            <span>{currentPlan.name}</span>
+            <PlanIcon className="w-4 h-4 text-green-500" />
+            <span className="text-sm font-medium text-gray-900">{currentPlan.name}</span>
           </div>
-        </Badge>
+        </div>
       </div>
 
-      {/* Upgrade Button - Minimalist Green */}
+      {/* Upgrade Button - Same Style and Size */}
       {currentPlan.name !== 'Silver' && (
-        <Button
-          onClick={handleUpgrade}
-          size="sm"
-          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2.5 font-medium shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 border-0 liquid-glass"
-        >
-          <div className="flex items-center space-x-2">
-            <Crown className="w-4 h-4" />
-            <span>Upgrade</span>
+        <div className="relative overflow-hidden bg-white/20 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105 liquid-glass cursor-pointer" onClick={handleUpgrade}>
+          <div className="px-4 py-2.5 flex items-center justify-center min-w-[80px]">
+            <div className="flex items-center space-x-2">
+              <Crown className="w-4 h-4 text-gray-700" />
+              <span className="text-sm font-medium text-gray-900">Upgrade</span>
+            </div>
           </div>
-        </Button>
+        </div>
       )}
     </div>
   );
