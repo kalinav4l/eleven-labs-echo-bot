@@ -95,24 +95,26 @@ const OptimizedSidebar = ({ isOpen, onClose }: SidebarProps) => {
       }
 
       try {
-        const { data, error } = await supabase
+        const response = await supabase
           .from('user_dashboard_preferences')
           .select('sidebar_sections, sidebar_compact')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (error || !data) {
+        if (response.error) {
+          console.error('Error loading sidebar preferences:', response.error);
           setSections(defaultSections);
           return;
         }
 
-        if (data.sidebar_sections) {
-          setSections(data.sidebar_sections);
+        const data = response.data as any;
+        if (data && data.sidebar_sections) {
+          setSections(data.sidebar_sections as SidebarSection[]);
         } else {
           setSections(defaultSections);
         }
 
-        if (data.sidebar_compact !== null) {
+        if (data && data.sidebar_compact !== null && data.sidebar_compact !== undefined) {
           setIsCompact(data.sidebar_compact);
         }
       } catch (error) {
