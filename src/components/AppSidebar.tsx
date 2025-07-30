@@ -67,7 +67,7 @@ export function AppSidebar() {
         </Link>
       </SidebarHeader>
 
-      <SidebarContent className="p-2">
+      <SidebarContent className="p-0 space-y-0">
         {/* Home */}
         <SidebarGroup>
           <SidebarGroupContent>
