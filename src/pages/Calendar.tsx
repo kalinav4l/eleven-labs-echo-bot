@@ -3,81 +3,64 @@ import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Clock, User, Phone, Filter, Search, RefreshCw } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, isSameMonth } from 'date-fns';
+import { ro } from 'date-fns/locale';
+import { useCallbackOperations } from '@/hooks/useCallbacks';
+import { CalendarEventModal } from '@/components/CalendarEventModal';
+import { CalendarEventDetailsModal } from '@/components/CalendarEventDetailsModal';
 
 const Calendar = () => {
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
+
+  const { callbacks, refetch, isLoading } = useCallbackOperations();
 
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
-  // Sample tasks data matching Notion style
-  const tasks = [
-    { id: 1, title: "Telefonie Terra-Vita", date: "2024-12-02" },
-    { id: 2, title: "Pregatise Strategiile de conectare tale...", date: "2024-12-02" },
-    { id: 3, title: "Demo apeluri Profitrello", date: "2024-12-02" },
-    { id: 4, title: "Demo apeluri Ultraservice", date: "2024-12-02" },
-    { id: 5, title: "Agent audio ca sa testeze cu de...", date: "2024-12-03" },
-    { id: 6, title: "De restabilit conexiunile si toll cli...", date: "2024-12-03" },
-    { id: 7, title: "Agent audio pentru Biliago", date: "2024-12-03" },
-    { id: 8, title: "concurenti pentru ai voice calls", date: "2024-12-03" },
-    { id: 9, title: "Start conectare Bicompiex Telefon...", date: "2024-12-06" },
-    { id: 10, title: "De facut functionlitati ai automat...", date: "2024-12-08" },
-    { id: 11, title: "De facut cont demo pentru...", date: "2024-12-08" },
-    { id: 12, title: "Inregistrare pentru affiliate prog...", date: "2024-12-08" },
-    { id: 13, title: "Markus, avem nevole de conturi...", date: "2024-12-08" },
-    { id: 14, title: "Automatizator de postari...", date: "2024-12-08" },
-    { id: 15, title: "Markus, deci este Prompiuul desp...", date: "2024-12-08" },
-    { id: 16, title: "demo Apeluri Credite pentru toti", date: "2024-12-13" },
-    { id: 17, title: "Scrapping ultraservice", date: "2024-12-14" },
-    { id: 18, title: "Preing Telegram channels (news) to extract content ideas", date: "2024-12-14" },
-    { id: 19, title: "De implementat cea soluti pe kalina...", date: "2024-12-15" },
-    { id: 20, title: "Revolute si identificarea integra...", date: "2024-12-15" },
-    { id: 21, title: "Markus, adauga te rog si la noi turnii...", date: "2024-12-15" },
-    { id: 22, title: "Avem nevol urgent de vocea la biruri...", date: "2024-12-15" },
-    { id: 23, title: "Pentru cand putem conecta protectii...", date: "2024-12-15" },
-    { id: 24, title: "Urgent automatizare pentru Bi", date: "2024-12-20" },
-    { id: 25, title: "Este necesar de creat primi agenti d...", date: "2024-12-21" },
-    { id: 26, title: "Este necesar de inceput crearea age...", date: "2024-12-21" },
-    { id: 27, title: "Markus, urgent Trebule de dubl...", date: "2024-12-21" },
-  ];
-
   const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+    "Ianuarie", "Februarie", "Martie", "Aprilie", "Mai", "Iunie",
+    "Iulie", "August", "Septembrie", "Octombrie", "Noiembrie", "Decembrie"
   ];
 
-  const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const daysOfWeek = ["Dum", "Lun", "Mar", "Mie", "Joi", "Vin", "Sâm"];
 
-  const getDaysInMonth = (date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
+  // Generate calendar days using date-fns
+  const calendarDays = eachDayOfInterval({
+    start: startOfMonth(currentDate),
+    end: endOfMonth(currentDate)
+  });
 
-    const days = [];
-    
-    // Add empty cells for days before the first day of the month
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
-    }
-    
-    // Add all days of the month
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push(day);
-    }
-    
-    return days;
-  };
-
-  const getTasksForDate = (day: number) => {
-    if (!day) return [];
-    const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return tasks.filter(task => task.date === dateStr);
+  // Get all days including empty cells for the grid
+  const firstDayOfWeek = startOfMonth(currentDate).getDay();
+  const emptyCellsAtStart = Array(firstDayOfWeek).fill(null);
+  
+  const getEventsForDate = (date: Date) => {
+    return callbacks.filter(callback => {
+      const callbackDate = new Date(callback.scheduled_time || callback.scheduled_datetime);
+      return isSameDay(callbackDate, date);
+    }).filter(callback => {
+      // Apply filters
+      const matchesSearch = !searchTerm || 
+        callback.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        callback.phone_number.includes(searchTerm);
+      const matchesStatus = statusFilter === 'all' || callback.status === statusFilter;
+      const matchesPriority = priorityFilter === 'all' || callback.priority === priorityFilter;
+      
+      return matchesSearch && matchesStatus && matchesPriority;
+    });
   };
 
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -92,7 +75,48 @@ const Calendar = () => {
     });
   };
 
-  const days = getDaysInMonth(currentDate);
+  const goToToday = () => {
+    setCurrentDate(new Date());
+  };
+
+  const handleCellClick = (date: Date) => {
+    setSelectedDate(date);
+    setShowEventModal(true);
+  };
+
+  const handleEventClick = (event: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedEvent(event);
+    setShowDetailsModal(true);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'scheduled':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'completed':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'failed':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'overdue':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'border-l-red-500';
+      case 'medium':
+        return 'border-l-yellow-500';
+      case 'low':
+        return 'border-l-green-500';
+      default:
+        return 'border-l-gray-300';
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -100,7 +124,10 @@ const Calendar = () => {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <div className="flex items-center gap-6">
-            <h1 className="text-xl font-semibold text-gray-900">Tasks</h1>
+            <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5" />
+              Calendar Programări
+            </h1>
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
@@ -124,15 +151,72 @@ const Calendar = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="text-sm text-gray-600 hover:bg-gray-100">
-              Today
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={goToToday}
+              className="text-sm text-gray-600 hover:bg-gray-100"
+            >
+              Astăzi
             </Button>
-            <Button variant="ghost" size="sm" className="text-sm text-gray-600 hover:bg-gray-100">
-              Calendar Deadlines
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => refetch()}
+              className="text-sm text-gray-600 hover:bg-gray-100"
+              disabled={isLoading}
+            >
+              <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+              Reîmprospătează
             </Button>
-            <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white text-sm">
-              New
+            <Button 
+              size="sm" 
+              onClick={() => setShowEventModal(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-sm"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Programare Nouă
             </Button>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Caută după nume client sau telefon..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toate</SelectItem>
+                <SelectItem value="scheduled">Programate</SelectItem>
+                <SelectItem value="completed">Completate</SelectItem>
+                <SelectItem value="failed">Eșuate</SelectItem>
+                <SelectItem value="overdue">Întârziate</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Prioritate" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toate</SelectItem>
+                <SelectItem value="high">Înaltă</SelectItem>
+                <SelectItem value="medium">Medie</SelectItem>
+                <SelectItem value="low">Scăzută</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -146,52 +230,88 @@ const Calendar = () => {
               </div>
             ))}
             
+            {/* Empty cells at start */}
+            {emptyCellsAtStart.map((_, index) => (
+              <div key={`empty-${index}`} className="bg-gray-50 border-r border-b border-gray-200 min-h-[140px]" />
+            ))}
+            
             {/* Calendar days */}
-            {days.map((day, index) => {
-              const dayTasks = getTasksForDate(day);
-              const isToday = day && 
-                new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toDateString() === 
-                new Date().toDateString();
+            {calendarDays.map((date) => {
+              const dayEvents = getEventsForDate(date);
+              const isCurrentDay = isToday(date);
+              const isCurrentMonth = isSameMonth(date, currentDate);
               
               return (
                 <div
-                  key={index}
-                  className="bg-white border-r border-b border-gray-200 min-h-[140px] p-1 relative"
+                  key={date.toISOString()}
+                  className={`bg-white border-r border-b border-gray-200 min-h-[140px] p-2 relative cursor-pointer hover:bg-gray-50 ${
+                    !isCurrentMonth ? 'bg-gray-50 text-gray-400' : ''
+                  }`}
+                  onClick={() => handleCellClick(date)}
                 >
-                  {day && (
-                    <>
-                      <div className={`text-xs mb-1 px-1 pt-1 ${
-                        isToday ? 'text-red-600 font-semibold' : 'text-gray-400'
-                      }`}>
-                        {day}
+                  <div className={`text-sm mb-2 font-medium ${
+                    isCurrentDay ? 'text-blue-600 bg-blue-100 rounded-full w-6 h-6 flex items-center justify-center' : 'text-gray-900'
+                  }`}>
+                    {format(date, 'd')}
+                  </div>
+                  
+                  <div className="space-y-1">
+                    {dayEvents.slice(0, 3).map((event) => (
+                      <div
+                        key={event.id}
+                        className={`text-xs p-1.5 rounded cursor-pointer hover:shadow-sm border-l-4 ${getPriorityColor(event.priority)} ${getStatusColor(event.status)}`}
+                        onClick={(e) => handleEventClick(event, e)}
+                        style={{
+                          fontSize: '10px',
+                          lineHeight: '12px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3 flex-shrink-0" />
+                          <span className="font-medium">
+                            {format(new Date(event.scheduled_time || event.scheduled_datetime), 'HH:mm')}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <User className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{event.client_name}</span>
+                        </div>
                       </div>
-                      <div className="space-y-0.5">
-                        {dayTasks.map((task, taskIndex) => (
-                          <div
-                            key={task.id}
-                            className="bg-white border border-gray-200 text-gray-700 text-xs px-1.5 py-0.5 rounded text-left cursor-pointer hover:bg-gray-50"
-                            style={{
-                              fontSize: '11px',
-                              lineHeight: '14px',
-                              maxWidth: '100%',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
-                            }}
-                          >
-                            <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1.5 flex-shrink-0"></span>
-                            {task.title}
-                          </div>
-                        ))}
+                    ))}
+                    {dayEvents.length > 3 && (
+                      <div className="text-xs text-gray-500 p-1 text-center">
+                        +{dayEvents.length - 3} mai multe
                       </div>
-                    </>
-                  )}
+                    )}
+                  </div>
                 </div>
               );
             })}
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      <CalendarEventModal
+        isOpen={showEventModal}
+        onClose={() => {
+          setShowEventModal(false);
+          setSelectedDate(null);
+        }}
+        selectedDate={selectedDate}
+      />
+
+      <CalendarEventDetailsModal
+        isOpen={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false);
+          setSelectedEvent(null);
+        }}
+        event={selectedEvent}
+      />
     </DashboardLayout>
   );
 };
