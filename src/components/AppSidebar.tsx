@@ -56,8 +56,8 @@ export function AppSidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <Sidebar className="border-r">
-      <SidebarHeader className="border-b p-4">
+    <Sidebar>
+      <SidebarHeader className="p-4">
         <Link to="/account" className="flex items-center gap-3 text-lg font-semibold text-foreground hover:text-foreground/80 transition-colors">
           <Avatar className="w-8 h-8">
             <AvatarImage alt="Kalina AI" src="/lovable-uploads/f617a44e-5bc3-46cb-8232-3110c0cee83d.png" />
@@ -169,7 +169,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t p-2">
+      <SidebarFooter className="p-2">
         <SidebarMenu>
           {/* Admin Panel - Only for specific user */}
           {isSpecificAdmin && (
