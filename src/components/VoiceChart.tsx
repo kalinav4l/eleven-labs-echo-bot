@@ -2,11 +2,11 @@ import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp } from 'lucide-react';
-import { useElevenLabsStats } from '@/hooks/useElevenLabsStats';
+import { useVoiceStats } from '@/hooks/useVoiceStats';
 import LoadingSpinner from './LoadingSpinner';
 
-const ElevenLabsChart: React.FC = () => {
-  const { stats, loading } = useElevenLabsStats();
+const VoiceChart: React.FC = () => {
+  const { stats, loading } = useVoiceStats();
 
   if (loading) {
     return (
@@ -151,4 +151,4 @@ const ElevenLabsChart: React.FC = () => {
   );
 };
 
-export default ElevenLabsChart;
+export default VoiceChart;

@@ -195,7 +195,7 @@ export const DetailedCallDebugPanel: React.FC<DetailedCallDebugPanelProps> = ({
           <div className="space-y-2 text-sm">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span>1. Inițiere apel către ElevenLabs API</span>
+              <span>1. Inițiere apel către serviciul vocal</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>

@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/components/AuthContext';
-import { ElevenLabsController } from '@/controllers/ElevenLabsController';
+import { VoiceController } from '@/controllers/VoiceController';
 
 interface DeleteAgentFromElevenLabsParams {
   agentId: string;
@@ -80,8 +80,8 @@ export const useAgentOperations = () => {
     }
 
     try {
-      // Get the original agent data from ElevenLabs
-      const originalAgentData = await ElevenLabsController.getAgent(originalAgent.agent_id);
+      // Get the original agent data from Voice Service
+      const originalAgentData = await VoiceController.getAgent(originalAgent.agent_id);
       
       // Create new agent with modified name
       const duplicatedName = `${originalAgent.name} (Copie)`;
@@ -92,7 +92,7 @@ export const useAgentOperations = () => {
       };
 
       console.log('Creating duplicated agent:', createAgentRequest);
-      const newAgentResponse = await ElevenLabsController.createAgent(createAgentRequest);
+      const newAgentResponse = await VoiceController.createAgent(createAgentRequest);
 
       // Save the duplicated agent to database
       const { data: newAgentRecord, error: dbError } = await supabase

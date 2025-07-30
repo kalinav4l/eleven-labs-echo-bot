@@ -18,7 +18,7 @@ import StatCard from '@/components/StatCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AnimatedCounter from '@/components/AnimatedCounter';
 import SkeletonCard from '@/components/SkeletonCard';
-import ElevenLabsChart from '@/components/ElevenLabsChart';
+import VoiceChart from '@/components/VoiceChart';
 import CreditsPlanDisplay from '@/components/CreditsPlanDisplay';
 import { calculateCostFromSeconds } from '@/utils/costCalculations';
 
@@ -528,8 +528,8 @@ const Account = () => {
             </div>
           </div>
 
-          {/* ElevenLabs Chart */}
-          <ElevenLabsChart />
+          {/* Voice Chart */}
+          <VoiceChart />
 
           {/* Agent Overview */}
           <div className="border border-gray-200 rounded-lg bg-white mt-8">

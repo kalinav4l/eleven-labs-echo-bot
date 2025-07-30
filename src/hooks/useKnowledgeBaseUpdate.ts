@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
-import { ElevenLabsController } from "@/controllers/ElevenLabsController.ts";
+import { VoiceController } from "@/controllers/VoiceController";
 import {
     AgentResponse,
     AgentUpdateRequest,
@@ -58,16 +58,16 @@ export const useKnowledgeBaseUpdate = ({
           }
       }
       console.log(JSON.stringify(agentUpdateRequest))
-      const response = await ElevenLabsController.updateAgent(agentId, agentUpdateRequest);
+      const response = await VoiceController.updateAgent(agentId, agentUpdateRequest);
         console.log("response=" + JSON.stringify(response))
       toast({
         title: "Succes!",
-        description: "Knowledge Base-ul agentului a fost actualizat cu succes în ElevenLabs.",
+        description: "Knowledge Base-ul agentului a fost actualizat cu succes în serviciul vocal.",
       });
 
       if (shouldReload && onAgentRefresh) {
         try {
-          const refreshedAgent = await ElevenLabsController.getAgent(agentId);
+          const refreshedAgent = await VoiceController.getAgent(agentId);
           onAgentRefresh(refreshedAgent);
           processAgentKnowledgeBase(refreshedAgent);
         } catch (error) {

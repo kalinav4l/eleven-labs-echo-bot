@@ -510,7 +510,7 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-medium text-gray-600">Provider:</span>
-                          <span className="text-xs">ElevenLabs</span>
+                          <span className="text-xs">Serviciu Vocal</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-medium text-gray-600">Encoding:</span>

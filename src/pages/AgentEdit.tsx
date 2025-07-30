@@ -18,7 +18,7 @@ import AgentSystemPrompt from '@/components/agent/AgentSystemPrompt';
 import AgentFirstMessage from '@/components/agent/AgentFirstMessage';
 import AgentToolConnection from '@/components/agent/AgentToolConnection';
 import { AgentResponse, LanguagePreset } from "@/types/dtos.ts";
-import { ElevenLabsController } from "@/controllers/ElevenLabsController.ts";
+import { VoiceController } from "@/controllers/VoiceController";
 import { supabase } from '@/integrations/supabase/client';
 const AgentEdit = () => {
   const {
@@ -85,7 +85,7 @@ const AgentEdit = () => {
     const fetchAgentData = async () => {
       if (!agentId) return;
       try {
-        const data = await ElevenLabsController.getAgent(agentId);
+        const data = await VoiceController.getAgent(agentId);
         setAgentData(data);
         setOriginalAgentData(JSON.parse(JSON.stringify(data))); // Deep copy
 
@@ -183,8 +183,8 @@ const AgentEdit = () => {
     if (!agentId || !agentData) return;
     setIsSaving(true);
     try {
-      const updatePayload = ElevenLabsController.prepareUpdatePayload(agentData, multilingualMessages);
-      const data = await ElevenLabsController.updateAgent(agentId, updatePayload);
+      const updatePayload = VoiceController.prepareUpdatePayload(agentData, multilingualMessages);
+      const data = await VoiceController.updateAgent(agentId, updatePayload);
       handleAgentDataRefresh(data);
 
       // Update agent name in database if it was changed

@@ -9,8 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Users, Phone, CreditCard, Activity, Edit, DollarSign, Ban, UserCheck, Trash2, Plus, TrendingUp } from 'lucide-react';
+import { Search, Users, Phone, CreditCard, Activity, Edit, DollarSign, Ban, UserCheck, Trash2, Plus, TrendingUp, Settings } from 'lucide-react';
 import { UserEditModal } from '@/components/UserEditModal';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ApiKeyManager from '@/components/admin/ApiKeyManager';
 
 interface AdminUser {
   user_id: string;
@@ -269,6 +271,20 @@ const Admin = () => {
             </Button>
           </div>
 
+          <Tabs defaultValue="users" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="users" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Utilizatori
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Configurări
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="users" className="space-y-6">
+
           {/* Search Bar */}
           <div className="mb-6">
             <div className="relative max-w-md">
@@ -414,6 +430,12 @@ const Admin = () => {
             onOpenChange={setEditModalOpen}
             onUserUpdated={fetchUsers}
           />
+            </TabsContent>
+
+            <TabsContent value="settings" className="space-y-6">
+              <ApiKeyManager />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </DashboardLayout>

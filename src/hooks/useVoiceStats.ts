@@ -8,7 +8,7 @@ interface ElevenLabsStats {
   dailyData: Array<{ date: string; amount: number }>;
 }
 
-export const useElevenLabsStats = () => {
+export const useVoiceStats = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState<ElevenLabsStats>({
     totalSpend: 0,

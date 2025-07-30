@@ -9,7 +9,7 @@ import {
 } from '../types/dtos';
 import { supabase } from '@/integrations/supabase/client';
 
-export class ElevenLabsController {
+export class VoiceController {
   // All ElevenLabs API calls now go through Supabase Edge Functions
   // to use the API key stored securely in Supabase Secrets
   

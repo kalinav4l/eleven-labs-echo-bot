@@ -9,7 +9,7 @@ import { LANGUAGE_MAP } from '@/constants/constants';
 import { toast } from '@/components/ui/use-toast';
 import { TranslationController } from '../controllers/TranslationController';
 import { AgentResponse } from '../types/dtos';
-import { ElevenLabsController } from "@/controllers/ElevenLabsController.ts";
+import { VoiceController } from "@/controllers/VoiceController";
 
 interface MultilingualFirstMessageModalProps {
   isOpen: boolean;
@@ -82,10 +82,10 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
 
     try {
       // Prepare the update payload with only language_presets changes
-      const updatePayload = ElevenLabsController.prepareUpdatePayload(agentData, localMessages);
+      const updatePayload = VoiceController.prepareUpdatePayload(agentData, localMessages);
 
       // Make the API call to update the agent
-      await ElevenLabsController.updateAgent(agentId, updatePayload);
+      await VoiceController.updateAgent(agentId, updatePayload);
 
       toast({
         title: "Succes!",
@@ -93,7 +93,7 @@ const MultilingualFirstMessageModal: React.FC<MultilingualFirstMessageModalProps
       });
 
       // Fetch fresh agent data to get the updated state
-      const refreshedAgentData = await ElevenLabsController.getAgent(agentId);
+      const refreshedAgentData = await VoiceController.getAgent(agentId);
 
       // Extract the updated multilingual messages
       const updatedMessages: Record<string, string> = {};
