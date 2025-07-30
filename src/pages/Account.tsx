@@ -116,7 +116,7 @@ const Account = () => {
               p_user_id: user.id,
               p_amount: costUsd,
               p_description: `Apel conversație ${conversationId}`,
-              p_conversation_id: conversationId
+              p_conversation_id: null // Nu folosim conversation_id pentru ElevenLabs IDs
             });
 
             console.log('Deduct balance result:', { deductResult, deductError });

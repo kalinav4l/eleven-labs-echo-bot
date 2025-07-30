@@ -188,7 +188,7 @@ export const useConversationTracking = () => {
           p_user_id: user.id,
           p_amount: finalCost,
           p_description: `Apel ${(durationSeconds / 60).toFixed(1)} minute - ${conversationData.agent_name}`,
-          p_conversation_id: data.id
+          p_conversation_id: data.id // Aici folosim UUID-ul valid din tabela conversations
         });
 
         if (balanceError) {

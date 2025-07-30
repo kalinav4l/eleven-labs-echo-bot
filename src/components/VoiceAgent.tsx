@@ -74,7 +74,7 @@ const VoiceAgent = () => {
         p_user_id: user.id,
         p_amount: costUsd,
         p_description: `Convorbire vocală - ${durationMinutes} minute`,
-        p_conversation_id: currentConversation.id
+        p_conversation_id: currentConversation.id // Aici folosim UUID-ul valid din tabela conversations
       });
 
       if (!balanceError) {
