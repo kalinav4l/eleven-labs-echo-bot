@@ -13,6 +13,7 @@ import { Search, Users, Phone, CreditCard, Activity, Edit, DollarSign, Ban, User
 import { UserEditModal } from '@/components/UserEditModal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ApiKeyManager from '@/components/admin/ApiKeyManager';
+import SidebarCustomizer from '@/components/admin/SidebarCustomizer';
 
 interface AdminUser {
   user_id: string;
@@ -272,14 +273,18 @@ const Admin = () => {
           </div>
 
           <Tabs defaultValue="users" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Utilizatori
               </TabsTrigger>
               <TabsTrigger value="settings" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" />
-                Configurări
+                Configurări API
+              </TabsTrigger>
+              <TabsTrigger value="sidebar" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Personalizare Sidebar
               </TabsTrigger>
             </TabsList>
 
@@ -434,6 +439,10 @@ const Admin = () => {
 
             <TabsContent value="settings" className="space-y-6">
               <ApiKeyManager />
+            </TabsContent>
+
+            <TabsContent value="sidebar" className="space-y-6">
+              <SidebarCustomizer />
             </TabsContent>
           </Tabs>
         </div>
