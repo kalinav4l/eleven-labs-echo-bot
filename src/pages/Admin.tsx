@@ -46,9 +46,31 @@ const Admin = () => {
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
 
-  // Check if user is the specific admin user
-  const isSpecificAdmin = user?.id === 'a698e3c2-f0e6-4f42-8955-971d91e725ce' && 
-                         user?.email === 'mariusvirlan109@gmail.com';
+  // Check if user has admin role through database
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [checkingAdminStatus, setCheckingAdminStatus] = useState(true);
+
+  const checkAdminStatus = async () => {
+    if (!user) {
+      setIsAdmin(false);
+      setCheckingAdminStatus(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('is_admin_user', {
+        _user_id: user.id
+      });
+
+      if (error) throw error;
+      setIsAdmin(data || false);
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      setIsAdmin(false);
+    } finally {
+      setCheckingAdminStatus(false);
+    }
+  };
 
   const handleBlockUser = async (targetUser: AdminUser) => {
     if (!user) return;
@@ -184,10 +206,14 @@ const Admin = () => {
   };
 
   useEffect(() => {
-    if (user && isSpecificAdmin) {
+    checkAdminStatus();
+  }, [user]);
+
+  useEffect(() => {
+    if (user && isAdmin) {
       fetchUsers();
     }
-  }, [user, isSpecificAdmin]);
+  }, [user, isAdmin]);
 
   useEffect(() => {
     if (users.length > 0) {
@@ -196,7 +222,7 @@ const Admin = () => {
     }
   }, [users]);
 
-  if (loading) {
+  if (loading || checkingAdminStatus) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-lg">Se încarcă...</div>
@@ -204,7 +230,12 @@ const Admin = () => {
     );
   }
 
-  if (!user || !isSpecificAdmin) {
+  if (!user || !isAdmin) {
+    toast({
+      title: "Acces restricționat",
+      description: "Nu aveți permisiuni de administrator.",
+      variant: "destructive"
+    });
     return <Navigate to="/pricing" replace />;
   }
 

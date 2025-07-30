@@ -529,9 +529,16 @@
     }
 
     escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
+      if (!text || typeof text !== 'string') return '';
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;',
+        '/': '&#x2F;'
+      };
+      return String(text).replace(/[&<>"'\/]/g, function(m) { return map[m]; });
     }
   }
 

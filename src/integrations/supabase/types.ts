@@ -154,6 +154,7 @@ export type Database = {
           callback_analyzed: boolean | null
           contact_name: string | null
           conversation_id: string | null
+          cost_processed: boolean | null
           cost_usd: number | null
           created_at: string
           dialog_json: string | null
@@ -175,6 +176,7 @@ export type Database = {
           callback_analyzed?: boolean | null
           contact_name?: string | null
           conversation_id?: string | null
+          cost_processed?: boolean | null
           cost_usd?: number | null
           created_at?: string
           dialog_json?: string | null
@@ -196,6 +198,7 @@ export type Database = {
           callback_analyzed?: boolean | null
           contact_name?: string | null
           conversation_id?: string | null
+          cost_processed?: boolean | null
           cost_usd?: number | null
           created_at?: string
           dialog_json?: string | null
@@ -1598,6 +1601,20 @@ export type Database = {
         Args: {
           _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
+      is_admin_user: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
+      log_admin_action: {
+        Args: {
+          p_admin_user_id: string
+          p_action: string
+          p_target_user_id?: string
+          p_details?: Json
+          p_ip_address?: unknown
         }
         Returns: boolean
       }
