@@ -155,16 +155,15 @@ export default function PhoneNumbers() {
           allowed_numbers: formData.inbound_allowed_numbers ? formData.inbound_allowed_numbers.split(',').map(s => s.trim()) : []
         }
       };
-      const response = await fetch('https://api.elevenlabs.io/v1/convai/phone-numbers', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'xi-api-key': 'ELEVENLABS_API_KEY'
-        },
-        body: JSON.stringify(sipData)
+      // Call our edge function instead of calling ElevenLabs directly
+      const { data: result, error } = await supabase.functions.invoke('create-phone-number', {
+        body: sipData
       });
-      const result = await response.json();
-      if (response.ok) {
+      
+      if (error) {
+        throw new Error(error.message || 'A apărut o eroare la configurarea SIP trunk-ului');
+      }
+      if (result) {
         // Get current user
         const {
           data: {
