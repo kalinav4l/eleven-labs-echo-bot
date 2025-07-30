@@ -100,7 +100,7 @@ const Sidebar = ({
                 <span>Test Call</span>
               </Link>
 
-              <Link to="/account/callbacks" className={`${location.pathname === '/account/callbacks' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
+              <Link to="/account/callback-scheduler" className={`${location.pathname === '/account/callback-scheduler' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
                 <PhoneForwarded className="mr-3 h-4 w-4" />
                 <span>Callbacks</span>
               </Link>
