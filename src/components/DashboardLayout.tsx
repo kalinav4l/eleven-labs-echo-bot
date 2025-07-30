@@ -1,17 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
-import Sidebar from './Sidebar';
-import { Menu } from 'lucide-react';
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from './AppSidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/components/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { BlockedUserOverlay } from './BlockedUserOverlay';
+import { Button } from "@/components/ui/button";
+import { LogOut } from 'lucide-react';
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userBlocked, setUserBlocked] = useState(false);
-  const isMobile = useIsMobile();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const checkUserStatus = async () => {
@@ -59,33 +59,50 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     };
   }, [user]);
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   return (
-    <div className="flex h-screen overflow-hidden bg-white">
-      <BlockedUserOverlay isBlocked={userBlocked} />
-      
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile header with menu button */}
-        {isMobile && (
-          <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center lg:hidden">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-lg p-2"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            <h1 className="ml-3 text-lg font-semibold text-gray-900">Kalina AI</h1>
-          </header>
-        )}
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <BlockedUserOverlay isBlocked={userBlocked} />
         
-        <main className="flex-1 overflow-y-auto bg-white">
-          <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-6">
-            {children}
-          </div>
-        </main>
+        <AppSidebar />
+        
+        <div className="flex-1 flex flex-col">
+          {/* Header */}
+          <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+            <div className="flex h-14 items-center px-4 gap-4">
+              <SidebarTrigger className="-ml-1" />
+              
+              <div className="flex-1" />
+              
+              <Button 
+                onClick={handleSignOut} 
+                variant="ghost" 
+                size="sm"
+                className="gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </Button>
+            </div>
+          </header>
+          
+          {/* Main Content */}
+          <main className="flex-1 overflow-y-auto">
+            <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-6">
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
