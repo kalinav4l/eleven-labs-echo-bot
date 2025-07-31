@@ -4,6 +4,7 @@ import { useCallSessionTracking } from '@/hooks/useCallSessionTracking';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
 import { useSMSService } from './useSMSService';
+import { validateUserHasPhoneNumber } from '@/utils/phoneNumberUtils';
 
 interface SMSConfig {
   enabled: boolean;
@@ -315,6 +316,24 @@ export const useCallInitiation = ({
         variant: "destructive",
       });
       return;
+    }
+
+    // Validate user has phone number before starting batch
+    if (user?.id) {
+      const phoneValidation = await validateUserHasPhoneNumber(user.id);
+      if (!phoneValidation.hasPhone) {
+        toast({
+          title: "Număr de telefon lipsă",
+          description: phoneValidation.error || "Nu aveți un număr de telefon înregistrat",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      toast({
+        title: "Număr de telefon găsit",
+        description: `Apelurile vor fi făcute de pe: ${phoneValidation.phoneNumber?.phone_number}`,
+      });
     }
 
     setIsProcessingBatch(true);

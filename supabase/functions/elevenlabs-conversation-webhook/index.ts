@@ -138,10 +138,26 @@ serve(async (req) => {
         }
       }
 
+      // Extract phone numbers correctly from conversation details
+      let callerNumber = null;
+      let phoneNumber = payload.phone_number || 'Unknown';
+      
+      if (conversationDetails?.metadata?.phone_call) {
+        const phoneCall = conversationDetails.metadata.phone_call;
+        callerNumber = phoneCall.agent_number || null; // Number we call FROM
+        phoneNumber = phoneCall.external_number || payload.phone_number || 'Unknown'; // Number we call TO
+        console.log('Phone numbers extracted from conversation:', {
+          callerNumber,
+          phoneNumber,
+          originalPayloadPhone: payload.phone_number
+        });
+      }
+
       // Create call history record
       const callRecord = {
         user_id: userId,
-        phone_number: payload.phone_number || conversationDetails?.phone_number || 'Unknown',
+        phone_number: phoneNumber,
+        caller_number: callerNumber,
         contact_name: conversationDetails?.contact_name || 'Apel ElevenLabs',
         call_status: payload.status === 'completed' ? 'success' : 'failed',
         summary: `Conversație cu ${agentName} - ${payload.duration_seconds || 0}s`,
