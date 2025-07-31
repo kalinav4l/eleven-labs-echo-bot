@@ -152,6 +152,7 @@ export type Database = {
           call_date: string
           call_status: string
           callback_analyzed: boolean | null
+          caller_number: string | null
           contact_name: string | null
           conversation_id: string | null
           cost_processed: boolean | null
@@ -174,6 +175,7 @@ export type Database = {
           call_date?: string
           call_status?: string
           callback_analyzed?: boolean | null
+          caller_number?: string | null
           contact_name?: string | null
           conversation_id?: string | null
           cost_processed?: boolean | null
@@ -196,6 +198,7 @@ export type Database = {
           call_date?: string
           call_status?: string
           callback_analyzed?: boolean | null
+          caller_number?: string | null
           contact_name?: string | null
           conversation_id?: string | null
           cost_processed?: boolean | null

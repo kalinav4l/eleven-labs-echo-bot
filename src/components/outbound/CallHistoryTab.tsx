@@ -54,7 +54,16 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-gray-900 truncate">{call.contact_name}</h3>
-                    <p className="text-sm text-gray-600 truncate">{call.phone_number}</p>
+                    <div className="space-y-1">
+                      <p className="text-sm text-gray-600 truncate">
+                        <span className="font-medium">Sunat: </span>{call.phone_number}
+                      </p>
+                      {call.caller_number && (
+                        <p className="text-sm text-blue-600 truncate">
+                          <span className="font-medium">De pe: </span>{call.caller_number}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center gap-2 ml-4">
                     {call.call_status === 'success' ? (

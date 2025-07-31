@@ -405,9 +405,15 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                     <CardContent className="space-y-4">
                       <div className="bg-white p-4 rounded-lg border">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-600">Număr telefon:</span>
-                          <span className="text-lg font-bold text-red-600">{conversation.customer_phone || 'Nedisponibil'}</span>
+                          <span className="text-sm font-medium text-gray-600">Număr sunat:</span>
+                          <span className="text-lg font-bold text-red-600">{conversation.external_number || conversation.customer_phone || 'Nedisponibil'}</span>
                         </div>
+                        {conversation.agent_number && (
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-gray-600">Apelat de pe:</span>
+                            <span className="text-lg font-bold text-blue-600">{conversation.agent_number}</span>
+                          </div>
+                        )}
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-gray-600">Locație:</span>
                           <span className="font-medium text-gray-800">{conversation.customer_location || 'Nedisponibilă'}</span>

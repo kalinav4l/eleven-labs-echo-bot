@@ -6,6 +6,7 @@ import { useAuth } from '@/components/AuthContext';
 export interface CallHistoryRecord {
   id: string;
   phone_number: string;
+  caller_number?: string;
   contact_name: string;
   call_status: 'success' | 'failed' | 'busy' | 'no-answer' | 'unknown' | 'initiated' | 'done';
   summary: string;
@@ -63,6 +64,7 @@ export const useCallHistory = () => {
         return {
           id: record.id,
           phone_number: record.phone_number || '',
+          caller_number: record.caller_number || '',
           contact_name: record.contact_name || record.phone_number || 'Necunoscut',
           call_status: record.call_status || 'unknown',
           summary: record.summary || '',
