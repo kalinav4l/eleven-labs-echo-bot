@@ -144,14 +144,14 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
     });
   };
   return <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl max-h-[90vh] w-[95vw] overflow-hidden">
-        <DialogHeader className="pb-4 border-b">
+      <DialogContent className="max-w-7xl max-h-[90vh] w-[95vw] overflow-hidden flex flex-col">
+        <DialogHeader className="pb-4 border-b flex-shrink-0">
           <DialogTitle className="flex items-center gap-3 text-xl">
             <MessageSquare className="w-6 h-6 text-primary" />
             Detalii Conversație
           </DialogTitle>
         </DialogHeader>
-        <div className="overflow-y-auto max-h-[calc(90vh-100px)] pr-2">
+        <div className="overflow-y-auto flex-1 min-h-0 pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
 
         {isLoading && <div className="flex items-center justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin mr-2" />
