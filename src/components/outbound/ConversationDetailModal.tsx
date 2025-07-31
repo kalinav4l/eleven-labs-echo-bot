@@ -339,8 +339,8 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="max-h-[500px] overflow-y-auto">
+                     <div className="bg-gray-50 rounded-lg p-4">
+                       <div className="max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
                         {conversation.transcript && conversation.transcript.length > 0 ? (
                           <div className="space-y-4">
                             {conversation.transcript.map((entry: any, index: number) => {
