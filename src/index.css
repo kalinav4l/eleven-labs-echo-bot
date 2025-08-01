@@ -1589,7 +1589,8 @@
 @media (max-width: 768px) {
   .auth-minimal-page {
     grid-template-columns: 1fr;
-    grid-template-rows: 40% 60%;
+    grid-template-rows: 35% 65%;
+    overflow-y: auto;
   }
 }
 
@@ -2087,15 +2088,16 @@
   justify-content: center;
   position: relative;
   min-height: 100vh;
-  padding: 2rem;
+  padding: 1rem;
   background: #ffffff;
+  overflow-y: auto;
 }
 
 /* Clean Card */
 .auth-clean-card {
   width: 100%;
   max-width: 420px;
-  padding: 3rem 2.5rem;
+  padding: 2rem 1.5rem;
   border-radius: 28px;
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(25px);
@@ -2111,6 +2113,16 @@
   position: relative;
   z-index: 2;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  margin: auto;
+}
+
+@media (max-width: 768px) {
+  .auth-clean-card {
+    padding: 1.5rem 1rem;
+    border-radius: 20px;
+    margin: 1rem auto;
+    max-width: 95%;
+  }
 }
 
 .auth-clean-card:hover {
@@ -2159,6 +2171,13 @@
   gap: 1rem;
 }
 
+@media (max-width: 480px) {
+  .auth-clean-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
 /* Clean Inputs */
 .auth-clean-input {
   width: 100%;
@@ -2169,12 +2188,19 @@
   border-radius: 16px !important;
   padding: 1rem 1.25rem !important;
   color: #1f2937 !important;
-  font-size: 0.95rem !important;
+  font-size: 16px !important; /* Prevents zoom on iOS */
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   outline: none !important;
   box-shadow: 
     0 4px 16px rgba(0, 0, 0, 0.05),
     inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  min-height: 44px; /* Touch target size */
+}
+
+@media (max-width: 768px) {
+  .auth-clean-input {
+    padding: 0.875rem 1rem !important;
+  }
 }
 
 .auth-clean-input::placeholder {
@@ -2252,7 +2278,7 @@
   padding: 1.125rem;
   color: #1f2937;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 16px; /* Prevents zoom on iOS */
   letter-spacing: 0.5px;
   cursor: pointer;
   margin-top: 0.5rem;
@@ -2260,6 +2286,14 @@
   box-shadow: 
     0 4px 16px rgba(0, 0, 0, 0.05),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  min-height: 44px; /* Touch target size */
+}
+
+@media (max-width: 768px) {
+  .auth-clean-submit {
+    padding: 1rem;
+    font-size: 16px;
+  }
 }
 
 .auth-clean-submit:hover {
