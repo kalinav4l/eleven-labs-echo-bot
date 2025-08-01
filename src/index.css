@@ -161,6 +161,8 @@
 		/* Disable user selection for better touch experience */
 		-webkit-touch-callout: none;
 		-webkit-tap-highlight-color: transparent;
+		/* Prevent horizontal scroll on mobile */
+		overflow-x: hidden;
 	}
 }
 
@@ -291,6 +293,65 @@
   .pull-to-refresh {
     position: relative;
     overflow: hidden;
+  }
+  
+  /* Global mobile optimizations */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  html {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+  
+  /* Prevent horizontal scroll on all elements */
+  * {
+    box-sizing: border-box;
+  }
+  
+  .container, .max-w-7xl, .max-w-4xl {
+    overflow-x: hidden;
+    width: 100%;
+  }
+  
+  /* Global mobile viewport fixes */
+  @media (max-width: 768px) {
+    .container {
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
+    
+    h1 { font-size: 1.875rem; }
+    h2 { font-size: 1.5rem; }
+    h3 { font-size: 1.25rem; }
+    
+    /* Fix common layout issues */
+    .grid {
+      overflow-x: hidden;
+    }
+    
+    /* Ensure cards don't overflow */
+    .relative {
+      overflow-x: hidden;
+    }
+    
+    /* Mobile-first responsive classes */
+    .space-y-6 {
+      @apply space-y-3;
+    }
+    
+    .space-y-8 {
+      @apply space-y-4;
+    }
+    
+    .gap-6 {
+      @apply gap-3;
+    }
+    
+    .gap-8 {
+      @apply gap-4;
+    }
   }
   
   .pull-to-refresh::before {
@@ -1588,9 +1649,18 @@
 
 @media (max-width: 768px) {
   .auth-minimal-page {
-    grid-template-columns: 1fr;
-    grid-template-rows: 35% 65%;
+    display: block;
+    background: #ffffff;
     overflow-y: auto;
+  }
+  
+  .auth-visual-section {
+    display: none; /* Ascunde partea neagră pe mobile */
+  }
+  
+  .auth-clean-section {
+    min-height: 100vh;
+    padding: 2rem 1rem;
   }
 }
 

@@ -73,7 +73,7 @@ const KalinaAgents = () => {
     setTestCallAgent(agent);
   };
   if (isLoading) {
-    return <DashboardLayout>
+  return <DashboardLayout>
       <div className="p-6 space-y-6">
         <div className="flex justify-center items-center min-h-[400px]">
           <div className="text-gray-500">Se încarcă agenții...</div>
