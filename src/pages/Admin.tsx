@@ -233,11 +233,13 @@ const Admin = () => {
   }
 
   if (!user || !isAdmin) {
-    toast({
-      title: "Acces restricționat",
-      description: "Nu aveți permisiuni de administrator.",
-      variant: "destructive"
-    });
+    React.useEffect(() => {
+      toast({
+        title: "Acces restricționat",
+        description: "Nu aveți permisiuni de administrator.",
+        variant: "destructive"
+      });
+    }, []);
     return <Navigate to="/pricing" replace />;
   }
 
