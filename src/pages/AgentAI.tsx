@@ -179,7 +179,7 @@ const AgentAI = () => {
 
         {/* Chat Area - Full Width */}
         <div className="w-full">
-          <Card className={`${isMobile ? 'h-[calc(100vh-200px)]' : 'h-[600px]'} flex flex-col mobile-card`}>
+          <Card className={`${isMobile ? 'h-[calc(100vh-12rem)] min-h-[400px]' : 'h-[600px]'} flex flex-col mobile-card`}>
             <CardHeader className={`border-b ${isMobile ? 'p-4' : ''}`}>
               <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-lg' : ''}`}>
                 <Bot className={`text-primary ${isMobile ? 'w-5 h-5' : 'w-5 h-5'}`} />

@@ -342,50 +342,50 @@ const Account = () => {
         </div>
 
         <div className="px-6 py-8">
-          {/* Cost and Time Summary Cards - Similar to the provided image */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Cost and Time Summary Cards - Mobile Optimized */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-8">
             <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
-              <CardContent className="p-6">
+              <CardContent className="p-3 sm:p-6">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">
-                      COST TOTAL ($)
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2 truncate">
+                      COST TOTAL
                     </p>
-                    <p className="text-3xl font-bold text-gray-900">
+                    <p className="text-xl sm:text-3xl font-bold text-gray-900 truncate">
                       ${totalCost.toFixed(2)}
                     </p>
                   </div>
-                  <div className="p-3 bg-gray-100 rounded-lg">
-                    <FileText className="w-6 h-6 text-gray-600" />
+                  <div className="p-2 sm:p-3 bg-gray-100 rounded-lg flex-shrink-0 ml-2">
+                    <FileText className="w-4 h-4 sm:w-6 sm:h-6 text-gray-600" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
-              <CardContent className="p-6">
+              <CardContent className="p-3 sm:p-6">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2 truncate">
                       TIMP VORBIRE
                     </p>
-                    <p className="text-3xl font-bold text-gray-900">
+                    <p className="text-xl sm:text-3xl font-bold text-gray-900 truncate">
                       {totalTimeFormatted}
                     </p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {Math.floor(totalSecondsFromCalls / 60)} minute și {totalSecondsFromCalls % 60} secunde
+                    <p className="text-xs sm:text-sm text-gray-500 mt-1 truncate">
+                      {Math.floor(totalSecondsFromCalls / 60)}m {totalSecondsFromCalls % 60}s
                     </p>
                   </div>
-                  <div className="p-3 bg-gray-100 rounded-lg">
-                    <Clock className="w-6 h-6 text-gray-600" />
+                  <div className="p-2 sm:p-3 bg-gray-100 rounded-lg flex-shrink-0 ml-2">
+                    <Clock className="w-4 h-4 sm:w-6 sm:h-6 text-gray-600" />
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Animated Quick Stats with Staggered Animation */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {/* Animated Quick Stats with Staggered Animation - Mobile Optimized */}
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 lg:gap-6 mb-4 sm:mb-8">
             {quickStats.map((stat, index) => (
               <div 
                 key={index} 

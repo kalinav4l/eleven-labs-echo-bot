@@ -245,8 +245,9 @@
   /* Mobile-optimized cards */
   .mobile-card {
     @apply rounded-lg sm:rounded-xl;
-    @apply p-3 sm:p-4 lg:p-6;
+    @apply p-2 sm:p-4 lg:p-6;
     @apply shadow-md hover:shadow-lg;
+    @apply overflow-hidden;
     transition: all 0.2s ease;
   }
   
@@ -265,6 +266,25 @@
     @apply text-base; /* Prevents zoom on iOS */
     @apply rounded-lg;
     @apply px-3 sm:px-4;
+    @apply overflow-hidden;
+  }
+  
+  /* Mobile grid optimizations */
+  .mobile-grid-2 {
+    @apply grid grid-cols-2 gap-2 sm:gap-4;
+  }
+  
+  .mobile-grid-1-2 {
+    @apply grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4;
+  }
+  
+  /* Text truncation utilities */
+  .mobile-truncate {
+    @apply truncate text-xs sm:text-sm;
+  }
+  
+  .mobile-text-responsive {
+    @apply text-sm sm:text-base lg:text-lg;
   }
   
   /* Pull to refresh indicator */
