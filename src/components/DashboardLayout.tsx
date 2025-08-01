@@ -6,13 +6,14 @@ import { useAuth } from '@/components/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { BlockedUserOverlay } from './BlockedUserOverlay';
 import { Button } from "@/components/ui/button";
-import { LogOut } from 'lucide-react';
+import { LogOut, Menu } from 'lucide-react';
 const DashboardLayout = ({
   children
 }: {
   children: React.ReactNode;
 }) => {
   const [userBlocked, setUserBlocked] = useState(false);
+  const isMobile = useIsMobile();
   const {
     user,
     signOut
@@ -61,20 +62,32 @@ const DashboardLayout = ({
     }
   };
   return <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full bg-background mobile-safe-area">
         <BlockedUserOverlay isBlocked={userBlocked} />
         
         <AppSidebar />
         
         <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-            
-          </header>
+          {/* Mobile Header */}
+          {isMobile && (
+            <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 h-16 flex items-center px-4">
+              <div className="flex items-center justify-between w-full">
+                <SidebarTrigger className="touch-target">
+                  <Menu className="h-6 w-6" />
+                </SidebarTrigger>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-semibold">Kalina AI</span>
+                </div>
+                <Button variant="ghost" size="icon" onClick={handleSignOut} className="touch-target">
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </div>
+            </header>
+          )}
           
           {/* Main Content */}
           <main className="flex-1 overflow-y-auto">
-            <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-6">
+            <div className={`max-w-7xl mx-auto ${isMobile ? 'px-3 py-3' : 'px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-6'}`}>
               {children}
             </div>
           </main>

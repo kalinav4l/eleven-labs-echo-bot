@@ -68,6 +68,21 @@ export default {
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
 			},
+			spacing: {
+				'mobile': 'var(--spacing-mobile)',
+				'tablet': 'var(--spacing-tablet)',
+				'desktop': 'var(--spacing-desktop)',
+			},
+			minHeight: {
+				'touch': 'var(--mobile-touch-target)',
+			},
+			minWidth: {
+				'touch': 'var(--mobile-touch-target)',
+			},
+			boxShadow: {
+				'mobile': 'var(--shadow-mobile)',
+				'mobile-hover': 'var(--shadow-mobile-hover)',
+			},
 			keyframes: {
 				'accordion-down': {
 					from: {
