@@ -151,7 +151,7 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
             Detalii Conversație
           </DialogTitle>
         </DialogHeader>
-        <div className="overflow-y-auto flex-1 min-h-0 pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+        <div className="flex-1 min-h-0">
 
         {isLoading && <div className="flex items-center justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin mr-2" />
@@ -185,8 +185,7 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="overview" className="space-y-6 mt-6">
-                <div className="max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
+              <TabsContent value="overview" className="space-y-6 mt-6 max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pr-2">
                   {/* Summary Card */}
                   <Card className="elevenlabs-card">
@@ -277,11 +276,9 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                       </div>
                     </CardContent>
                    </Card>}
-                </div>
               </TabsContent>
 
-              <TabsContent value="transcription" className="space-y-6 mt-6">
-                <div className="max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 pr-2">
+              <TabsContent value="transcription" className="space-y-6 mt-6 max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 pr-2">
                 {/* Audio Player Section */}
                 {conversation.has_audio && (
                   <Card className="elevenlabs-card">
@@ -342,8 +339,7 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                     <div className="bg-gray-50 rounded-lg p-4">
-                       <div className="max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
+                      <div className="bg-gray-50 rounded-lg p-4">
                         {conversation.transcript && conversation.transcript.length > 0 ? (
                           <div className="space-y-4">
                             {conversation.transcript.map((entry: any, index: number) => {
@@ -391,14 +387,11 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                           </div>
                         )}
                       </div>
-                    </div>
-                  </CardContent>
+                    </CardContent>
                   </Card>
-                </div>
               </TabsContent>
 
-              <TabsContent value="client-data" className="space-y-6 mt-6">
-                <div className="max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 pr-2">
+              <TabsContent value="client-data" className="space-y-6 mt-6 max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 pr-2">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <Card className="elevenlabs-card">
                     <CardHeader className="pb-3">
@@ -448,11 +441,9 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                     </CardContent>
                   </Card>
                 </div>
-                </div>
               </TabsContent>
 
-              <TabsContent value="phone-call" className="space-y-6 mt-6">
-                <div className="max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 pr-2">
+              <TabsContent value="phone-call" className="space-y-6 mt-6 max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 pr-2">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Call Details */}
                   <Card className="shadow-lg border-0 bg-gradient-to-br from-cyan-50 to-blue-100">
@@ -532,7 +523,6 @@ export const ConversationDetailModal: React.FC<ConversationDetailModalProps> = (
                       </div>
                     </CardContent>
                   </Card>
-                </div>
                 </div>
               </TabsContent>
             </Tabs>
