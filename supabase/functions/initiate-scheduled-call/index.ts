@@ -146,7 +146,7 @@ serve(async (req) => {
     let contextInstructions = '';
     if (contactData && !contactError) {
       contextInstructions = `Context apel: Vorbești cu ${contactData.nume}${contactData.locatie ? ` din ${contactData.locatie}` : ''}${contactData.tara ? `, ${contactData.tara}` : ''}. ${contactData.info ? `Informații: ${contactData.info}` : ''}`;
-      console.log('✅ Contact context found:', contactInstructions);
+      console.log('✅ Contact context found:', contextInstructions);
     } else {
       console.log('ℹ️ No contact context found for:', phone_number);
     }
