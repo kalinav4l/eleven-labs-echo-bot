@@ -49,6 +49,7 @@ export interface AgentCreateRequest {
 export interface ConversationConfigCreate {
     agent: AgentCreate;
     tts: TtsCreate;
+    turn?: TurnCreate;
 }
 
 export interface AgentCreate {
@@ -64,6 +65,12 @@ export interface PromptCreate {
 export interface TtsCreate {
     model_id: string;
     voice_id: string;
+}
+
+export interface TurnCreate {
+    mode?: string;
+    turn_timeout?: number;
+    silence_end_call_timeout?: number;
 }
 
 export interface AgentCreateResponse {

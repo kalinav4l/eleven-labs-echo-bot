@@ -88,6 +88,11 @@ export const useAgentCreation = ({
           voice_id: selectedVoice,
           model_id: API_CONFIG.DEFAULT_MODEL_ID,
         },
+        turn: {
+          mode: "server_vad",
+          turn_timeout: 3000,
+          silence_end_call_timeout: 30000,
+        },
       };
 
       const createAgentRequest: CreateAgentRequest = {
