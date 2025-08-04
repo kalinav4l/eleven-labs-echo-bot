@@ -35,7 +35,30 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const payload: CallbackWebhookRequest = await req.json();
+    // Only process POST requests with JSON data
+    if (req.method !== 'POST') {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Only POST requests are supported'
+      }), {
+        status: 405,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    let payload: CallbackWebhookRequest;
+    try {
+      payload = await req.json();
+    } catch (e) {
+      console.error('Invalid JSON in request body:', e);
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Invalid JSON in request body'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     console.log('Received callback request:', payload);
 
     // Validate required fields
@@ -56,7 +79,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
