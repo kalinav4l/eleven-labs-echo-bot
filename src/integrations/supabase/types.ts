@@ -403,6 +403,116 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_interactions: {
+        Row: {
+          agent_id: string | null
+          call_status: string | null
+          contact_id: string
+          conversation_id: string | null
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          interaction_date: string
+          interaction_type: string
+          notes: string | null
+          summary: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_id?: string | null
+          call_status?: string | null
+          contact_id: string
+          conversation_id?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          interaction_date?: string
+          interaction_type?: string
+          notes?: string | null
+          summary?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string | null
+          call_status?: string | null
+          contact_id?: string
+          conversation_id?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          interaction_date?: string
+          interaction_type?: string
+          notes?: string | null
+          summary?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_interactions_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts_database"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contacts_database: {
+        Row: {
+          company: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          info: string | null
+          last_contact_date: string | null
+          locatie: string | null
+          notes: string | null
+          nume: string
+          status: string | null
+          tags: string[] | null
+          tara: string | null
+          telefon: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          info?: string | null
+          last_contact_date?: string | null
+          locatie?: string | null
+          notes?: string | null
+          nume: string
+          status?: string | null
+          tags?: string[] | null
+          tara?: string | null
+          telefon: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          info?: string | null
+          last_contact_date?: string | null
+          locatie?: string | null
+          notes?: string | null
+          nume?: string
+          status?: string | null
+          tags?: string[] | null
+          tara?: string | null
+          telefon?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversation_analytics_cache: {
         Row: {
           agent_id: string | null

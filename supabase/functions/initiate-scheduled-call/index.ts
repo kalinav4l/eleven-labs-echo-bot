@@ -133,12 +133,82 @@ serve(async (req) => {
     const callerNumber = userPhone.phone_number
 
     console.log('User phone details:', { agentPhoneId, callerNumber, user_id })
+
+    // Fetch contact information from the contacts database
+    let contactInfo = null
+    const { data: contactData, error: contactError } = await supabase
+      .from('contacts_database')
+      .select('*')
+      .eq('user_id', user_id)
+      .eq('telefon', phone_number)
+      .single()
+
+    if (!contactError && contactData) {
+      contactInfo = contactData
+      console.log('📋 Contact info found:', contactInfo)
+    } else {
+      console.log('ℹ️ No contact info found for phone number:', phone_number)
+    }
+
+    // Fetch contact interaction history
+    let interactionHistory = []
+    if (contactInfo) {
+      const { data: historyData, error: historyError } = await supabase
+        .from('contact_interactions')
+        .select('*')
+        .eq('user_id', user_id)
+        .eq('contact_id', contactInfo.id)
+        .order('interaction_date', { ascending: false })
+        .limit(5)
+
+      if (!historyError && historyData) {
+        interactionHistory = historyData
+        console.log('📚 Interaction history found:', interactionHistory.length, 'interactions')
+      }
+    }
+
+    // Build context for the agent with contact information
+    let contextInstructions = ""
+    if (contactInfo) {
+      contextInstructions = `INFORMAȚII CONTACT:
+- Nume: ${contactInfo.nume}
+- Telefon: ${contactInfo.telefon}
+- Email: ${contactInfo.email || 'N/A'}
+- Companie: ${contactInfo.company || 'N/A'}
+- Locație: ${contactInfo.locatie || 'N/A'}, ${contactInfo.tara || 'N/A'}
+- Status: ${contactInfo.status}
+- Note: ${contactInfo.notes || 'Nu există note'}
+- Info suplimentare: ${contactInfo.info || 'Nu există informații suplimentare'}
+
+ISTORIC INTERACȚIUNI ANTERIOARE:
+${interactionHistory.length > 0 ? 
+  interactionHistory.map(h => 
+    `- ${h.interaction_date}: ${h.interaction_type} (${h.call_status || 'N/A'}) - ${h.summary || 'Fără sumar'}`
+  ).join('\n')
+  : 'Prima interacțiune cu acest contact'}
+
+Folosește aceste informații pentru a personaliza conversația și a face referire la interacțiunile anterioare dacă este relevant.`
+    } else {
+      contextInstructions = `CONTACT NOU:
+- Telefon: ${phone_number}
+- Nume: ${contact_name || 'Necunoscut'}
+
+Acest este un contact nou, fără istoric anterior de interacțiuni.`
+    }
+
     console.log(`🚀 Inițiere apel pentru ${phone_number} cu agentul ${agent_id} pentru utilizatorul ${user_id} de pe ${callerNumber}`)
 
     const requestBody = {
       agent_id: agent_id,
       agent_phone_number_id: agentPhoneId,
-      to_number: phone_number
+      to_number: phone_number,
+      conversation_config_override: {
+        agent: {
+          prompt: {
+            prompt: contextInstructions
+          }
+        }
+      }
     }
 
     console.log('📤 Request body pentru ElevenLabs:', JSON.stringify(requestBody, null, 2))

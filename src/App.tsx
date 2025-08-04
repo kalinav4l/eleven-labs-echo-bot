@@ -32,6 +32,7 @@ import VoiceDemo from "./pages/VoiceDemo";
 import CallbackScheduler from "./pages/CallbackScheduler";
 import Pricing from "./pages/Pricing";
 import Admin from "./pages/Admin";
+import Contacts from "./pages/Contacts";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ function AppWithWelcome() {
         <Route path="/account/conversation/:conversationId" element={<ConversationDetail />} />
         <Route path="/account/transcript" element={<Transcript />} />
         <Route path="/account/outbound" element={<Outbound />} />
+        <Route path="/account/contacts" element={<Contacts />} />
         <Route path="/account/calls" element={<Calls />} />
         <Route path="/account/scraping" element={<Scraping />} />
         <Route path="/account/phone-numbers" element={<PhoneNumbers />} />
