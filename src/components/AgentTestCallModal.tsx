@@ -29,6 +29,7 @@ export const AgentTestCallModal: React.FC<AgentTestCallModalProps> = ({
 }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [userBalance, setUserBalance] = useState<number>(0);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const { user } = useAuth();
   
   const { initiateCall, isInitiating } = useCallInitiation({
@@ -36,7 +37,7 @@ export const AgentTestCallModal: React.FC<AgentTestCallModalProps> = ({
     phoneNumber: phoneNumber
   });
 
-  // Fetch user balance
+  // Fetch user balance and check admin status
   const fetchBalance = async () => {
     if (!user) return;
     
@@ -54,15 +55,32 @@ export const AgentTestCallModal: React.FC<AgentTestCallModalProps> = ({
     }
   };
 
+  const checkAdminStatus = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase.rpc('is_admin_user', {
+        _user_id: user.id
+      });
+      
+      if (error) throw error;
+      setIsAdmin(data || false);
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      setIsAdmin(false);
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       fetchBalance();
+      checkAdminStatus();
     }
   }, [user, isOpen]);
 
   const estimatedCostPerMinute = COST_PER_MINUTE;
   const availableMinutes = Math.floor(userBalance / COST_PER_MINUTE);
-  const hasInsufficientBalance = userBalance < estimatedCostPerMinute;
+  const hasInsufficientBalance = !isAdmin && userBalance < estimatedCostPerMinute;
 
   const handleTestCall = async () => {
     if (!phoneNumber.trim()) return;
@@ -122,23 +140,33 @@ export const AgentTestCallModal: React.FC<AgentTestCallModalProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Wallet className="w-4 h-4 text-[#0A5B4C]" />
-                <span className="text-sm font-medium text-gray-900">Soldul tău</span>
+                <span className="text-sm font-medium text-gray-900">
+                  {isAdmin ? 'Administrator (nelimitat)' : 'Soldul tău'}
+                </span>
               </div>
-              <Badge variant={hasInsufficientBalance ? "destructive" : "secondary"}>
-                ${userBalance.toFixed(2)}
+              <Badge variant={hasInsufficientBalance ? "destructive" : isAdmin ? "default" : "secondary"}>
+                {isAdmin ? 'ADMIN' : `$${userBalance.toFixed(2)}`}
               </Badge>
             </div>
             
-            <div className="space-y-1 text-xs text-gray-600">
-              <div className="flex justify-between">
-                <span>Cost per minut:</span>
-                <span className="font-medium">${estimatedCostPerMinute.toFixed(2)}</span>
+            {!isAdmin && (
+              <div className="space-y-1 text-xs text-gray-600">
+                <div className="flex justify-between">
+                  <span>Cost per minut:</span>
+                  <span className="font-medium">${estimatedCostPerMinute.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Minute disponibile:</span>
+                  <span className="font-medium">{availableMinutes} minute</span>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span>Minute disponibile:</span>
-                <span className="font-medium">{availableMinutes} minute</span>
+            )}
+            
+            {isAdmin && (
+              <div className="text-xs text-green-700 bg-green-50 p-2 rounded border border-green-200">
+                <span className="font-medium">✓ Apeluri nelimitate ca administrator</span>
               </div>
-            </div>
+            )}
 
             {hasInsufficientBalance && (
               <Alert className="border-red-200 bg-red-50">
