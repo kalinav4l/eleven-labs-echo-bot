@@ -561,10 +561,10 @@ export const useCallInitiation = ({
           ));
         }
         
-        // Brief pause before next contact
+        // Extended pause before next contact to avoid ElevenLabs rate limiting
         if (i < contacts.length - 1) {
-          logStep(`BATCH: Brief pause before next contact (${i + 2}/${contacts.length})`);
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          logStep(`BATCH: Waiting 10 seconds before next contact (${i + 2}/${contacts.length})`);
+          await new Promise(resolve => setTimeout(resolve, 10000));
         }
       }
 
