@@ -135,10 +135,27 @@ serve(async (req) => {
     console.log('User phone details:', { agentPhoneId, callerNumber, user_id })
     console.log(`🚀 Inițiere apel pentru ${phone_number} cu agentul ${agent_id} pentru utilizatorul ${user_id} de pe ${callerNumber}`)
 
+    // Get contact context from database
+    const { data: contactData, error: contactError } = await supabase
+      .from('contacts_database')
+      .select('nume, telefon, info, locatie, tara')
+      .eq('telefon', phone_number.replace(/[\s\-\(\)]/g, ''))
+      .eq('user_id', user_id)
+      .maybeSingle()
+
+    let contextInstructions = '';
+    if (contactData && !contactError) {
+      contextInstructions = `Context apel: Vorbești cu ${contactData.nume}${contactData.locatie ? ` din ${contactData.locatie}` : ''}${contactData.tara ? `, ${contactData.tara}` : ''}. ${contactData.info ? `Informații: ${contactData.info}` : ''}`;
+      console.log('✅ Contact context found:', contactInstructions);
+    } else {
+      console.log('ℹ️ No contact context found for:', phone_number);
+    }
+
     const requestBody = {
       agent_id: agent_id,
       agent_phone_number_id: agentPhoneId,
-      to_number: phone_number
+      to_number: phone_number,
+      ...(contextInstructions && { context: contextInstructions })
     }
 
     console.log('📤 Request body pentru ElevenLabs:', JSON.stringify(requestBody, null, 2))

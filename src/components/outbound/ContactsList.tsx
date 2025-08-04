@@ -10,6 +10,7 @@ interface Contact {
   phone: string;
   country: string;
   location: string;
+  info?: string;
 }
 
 interface ContactsListProps {
@@ -57,12 +58,18 @@ export const ContactsList: React.FC<ContactsListProps> = ({
                 disabled={isProcessingBatch}
               />
               <div className="flex-1">
-                <span className="font-medium">{contact.name}</span>
-                <span className="text-sm text-gray-600 ml-2">{contact.phone}</span>
+                <div>
+                  <span className="font-medium">{contact.name}</span>
+                  <span className="text-sm text-gray-600 ml-2">{contact.phone}</span>
+                </div>
+                {contact.info && (
+                  <div className="text-xs text-gray-500 mt-1">{contact.info}</div>
+                )}
               </div>
-              <span className="text-xs text-gray-500">
-                {contact.country}
-              </span>
+              <div className="text-xs text-gray-500 text-right">
+                <div>{contact.location}</div>
+                <div>{contact.country}</div>
+              </div>
             </div>
           ))}
         </div>

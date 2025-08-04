@@ -403,6 +403,42 @@ export type Database = {
         }
         Relationships: []
       }
+      contacts_database: {
+        Row: {
+          created_at: string | null
+          id: string
+          info: string | null
+          locatie: string | null
+          nume: string
+          tara: string | null
+          telefon: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          info?: string | null
+          locatie?: string | null
+          nume: string
+          tara?: string | null
+          telefon: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          info?: string | null
+          locatie?: string | null
+          nume?: string
+          tara?: string | null
+          telefon?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversation_analytics_cache: {
         Row: {
           agent_id: string | null

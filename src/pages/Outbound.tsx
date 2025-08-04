@@ -16,12 +16,14 @@ import { BatchConfigPanel } from '@/components/outbound/BatchConfigPanel';
 import { BatchStatusPanel } from '@/components/outbound/BatchStatusPanel';
 import { ContactsList } from '@/components/outbound/ContactsList';
 import { CSVUploadSection } from '@/components/outbound/CSVUploadSection';
+import { ContactsManager } from '@/components/outbound/ContactsManager';
 interface Contact {
   id: string;
   name: string;
   phone: string;
   country: string;
   location: string;
+  info?: string;
 }
 interface SMSConfig {
   enabled: boolean;
@@ -100,6 +102,7 @@ const Outbound = () => {
       const phoneIndex = headers.findIndex(h => h.includes('phone') || h.includes('telefon'));
       const countryIndex = headers.findIndex(h => h.includes('country') || h.includes('tara'));
       const locationIndex = headers.findIndex(h => h.includes('location') || h.includes('locatie'));
+      const infoIndex = headers.findIndex(h => h.includes('info') || h.includes('informatii'));
       if (phoneIndex === -1) {
         toast({
           title: "Eroare",
@@ -115,7 +118,8 @@ const Outbound = () => {
           name: nameIndex >= 0 ? values[nameIndex] || `Contact ${index + 1}` : `Contact ${index + 1}`,
           phone: values[phoneIndex] || '',
           country: countryIndex >= 0 ? values[countryIndex] || 'Necunoscut' : 'Necunoscut',
-          location: locationIndex >= 0 ? values[locationIndex] || 'Necunoscut' : 'Necunoscut'
+          location: locationIndex >= 0 ? values[locationIndex] || 'Necunoscut' : 'Necunoscut',
+          info: infoIndex >= 0 ? values[infoIndex] || undefined : undefined
         };
       }).filter(contact => contact.phone);
       setContacts(parsedContacts);
@@ -171,7 +175,7 @@ const Outbound = () => {
     }, 2000);
   };
   const downloadTemplate = () => {
-    const csvContent = "nume,telefon,tara,locatie\nJohn Doe,+40712345678,Romania,Bucuresti\nJane Smith,+40798765432,Romania,Cluj";
+    const csvContent = "nume,telefon,info,locatie,tara\nJohn Doe,+40712345678,Client important - preferă dimineața,Bucuresti,Romania\nJane Smith,+40798765432,Antreprenor local - interesat de servicii premium,Cluj,Romania";
     const blob = new Blob([csvContent], {
       type: 'text/csv;charset=utf-8;'
     });
@@ -302,6 +306,17 @@ const Outbound = () => {
                   </div>
                   <CallHistoryTab callHistory={callHistory} isLoading={historyLoading} />
                 </div>}
+
+              {/* Contacts Management Section */}
+              {activeSection === 'contacts' && <div className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold text-gray-900">Gestionare Contacte</h2>
+                    <Button variant="outline" size="sm" onClick={() => setActiveSection(null)}>
+                      ← Înapoi
+                    </Button>
+                  </div>
+                  <ContactsManager />
+                </div>}
             </div>
           </div>
 
@@ -329,6 +344,13 @@ const Outbound = () => {
                   <div className="flex items-center gap-3">
                     <History className="w-4 h-4" />
                     <span className="text-sm font-medium">Istoric</span>
+                  </div>
+                </button>
+                
+                <button onClick={() => setActiveSection('contacts')} className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${activeSection === 'contacts' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-50 border border-gray-200'}`}>
+                  <div className="flex items-center gap-3">
+                    <Phone className="w-4 h-4" />
+                    <span className="text-sm font-medium">Gestionare Contacte</span>
                   </div>
                 </button>
               </div>

@@ -12,6 +12,7 @@ interface Contact {
   phone: string;
   country: string;
   location: string;
+  info?: string;
 }
 
 interface CallStatus {
