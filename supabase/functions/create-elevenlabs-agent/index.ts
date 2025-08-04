@@ -21,21 +21,7 @@ serve(async (req) => {
       throw new Error('ElevenLabs API key not configured in Supabase Secrets')
     }
 
-    // Enhanced configuration with proper turn detection settings
-    const enhancedBody = {
-      ...body,
-      conversation_config: {
-        ...body.conversation_config,
-        turn: {
-          mode: "server_vad",
-          turn_timeout: 3000,
-          silence_end_call_timeout: 30000,
-          ...body.conversation_config?.turn
-        }
-      }
-    };
-
-    console.log('Creating ElevenLabs agent with enhanced request:', JSON.stringify(enhancedBody, null, 2))
+    console.log('Creating ElevenLabs agent with request:', JSON.stringify(body, null, 2))
 
     const response = await fetch('https://api.elevenlabs.io/v1/convai/agents/create', {
       method: 'POST',
@@ -43,7 +29,7 @@ serve(async (req) => {
         'Xi-Api-Key': elevenLabsApiKey,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(enhancedBody),
+      body: JSON.stringify(body),
     })
 
     if (!response.ok) {

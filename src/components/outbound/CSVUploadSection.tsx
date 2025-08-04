@@ -41,10 +41,7 @@ export const CSVUploadSection: React.FC<CSVUploadSectionProps> = ({
           </Button>
         </div>
         <p className="text-sm text-gray-600">
-          CSV-ul trebuie să conțină coloanele: <strong>nume, telefon, info, locatie, tara</strong>
-        </p>
-        <p className="text-xs text-gray-500 mt-1">
-          Câmpul "info" poate conține detalii suplimentare despre contact (ex: preferințe, istoric, etc.)
+          CSV-ul trebuie să conțină coloanele: nume, telefon, tara, locatie
         </p>
       </CardContent>
     </Card>

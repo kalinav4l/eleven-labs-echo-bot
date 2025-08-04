@@ -72,29 +72,6 @@ export const useCreateCallback = () => {
     mutationFn: async (callbackData: Omit<CallbackRequest, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       if (!user) throw new Error('User not authenticated');
 
-      // Try to save contact to database if not exists
-      if (callbackData.client_name && callbackData.phone_number) {
-        const normalizedPhone = callbackData.phone_number.replace(/[\s\-\(\)]/g, '');
-        
-        try {
-          await supabase
-            .from('contacts_database')
-            .upsert({
-              user_id: user.id,
-              nume: callbackData.client_name,
-              telefon: normalizedPhone,
-              info: callbackData.description || 'Contact din callback',
-              locatie: '',
-              tara: ''
-            }, {
-              onConflict: 'user_id,telefon',
-              ignoreDuplicates: true
-            });
-        } catch (contactError) {
-          console.log('Contact already exists or error saving:', contactError);
-        }
-      }
-
       const { data, error } = await supabase
         .from('scheduled_calls')
         .insert({

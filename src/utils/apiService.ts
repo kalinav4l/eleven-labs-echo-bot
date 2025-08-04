@@ -21,11 +21,6 @@ export interface AgentConfig {
 export interface ConversationConfig {
   agent: AgentConfig;
   tts: TTSConfig;
-  turn?: {
-    mode?: string;
-    turn_timeout?: number;
-    silence_end_call_timeout?: number;
-  };
 }
 
 export interface CreateAgentRequest {
