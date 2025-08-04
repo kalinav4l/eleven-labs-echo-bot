@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { User, Settings, Bot, FileText, PhoneCall, X, BarChart3, Calendar, Globe, Mail, Workflow, BookOpen, Phone, TestTube, PhoneForwarded, CreditCard, Shield, Mic } from 'lucide-react';
+import { User, Settings, Bot, FileText, PhoneCall, X, BarChart3, Calendar, Globe, Mail, Workflow, BookOpen, Phone, TestTube, PhoneForwarded, CreditCard, Shield, Mic, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from './AuthContext';
@@ -113,6 +113,11 @@ const Sidebar = ({
               Data & Tools
             </p>
             <div className="space-y-1">
+              <Link to="/account/contacts" className={`${location.pathname === '/account/contacts' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
+                <Users className="mr-3 h-4 w-4" />
+                <span>Contacts</span>
+              </Link>
+
               <Link to="/account/transcript" className={`${location.pathname === '/account/transcript' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
                 <FileText className="mr-3 h-4 w-4" />
                 <span>Transcripts</span>
