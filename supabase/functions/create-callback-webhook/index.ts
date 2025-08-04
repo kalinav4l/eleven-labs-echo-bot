@@ -66,50 +66,42 @@ serve(async (req) => {
       throw new Error('Missing required fields: phone_number, callback_time');
     }
 
-    // Use GPT to process and normalize the data
-    const openAIKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIKey) {
-      throw new Error('OpenAI API key not configured');
+    // Process callback time to scheduled datetime
+    let scheduledDatetime;
+    const now = new Date();
+    
+    // Parse callback_time and create scheduled datetime
+    const callbackTime = payload.callback_time.toLowerCase();
+    if (callbackTime.includes('minute')) {
+      const minutes = parseInt(callbackTime.match(/\d+/)?.[0] || '5');
+      scheduledDatetime = new Date(now.getTime() + minutes * 60 * 1000);
+    } else if (callbackTime.includes('hour')) {
+      const hours = parseInt(callbackTime.match(/\d+/)?.[0] || '1');
+      scheduledDatetime = new Date(now.getTime() + hours * 60 * 60 * 1000);
+    } else if (callbackTime.includes('tomorrow')) {
+      scheduledDatetime = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    } else {
+      // Default to 10 minutes
+      scheduledDatetime = new Date(now.getTime() + 10 * 60 * 1000);
     }
 
-    const gptResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a callback scheduler assistant. Process the given callback request and return a JSON object with:
-            - normalized_phone: phone number in +373 format (convert 0 prefix to +373)
-            - scheduled_datetime: ISO timestamp for when to call back (use current time + requested time)
-            - priority: normalized priority (low/medium/high/urgent)
-            - description: formatted description including reason
-            - client_name: normalized client name
-            
-            Current time: ${new Date().toISOString()}
-            
-            Return ONLY valid JSON, no other text.`
-          },
-          {
-            role: 'user',
-            content: JSON.stringify(payload)
-          }
-        ],
-        temperature: 0.1,
-      }),
-    });
-
-    const gptData = await gptResponse.json();
-    if (!gptData.choices?.[0]?.message?.content) {
-      throw new Error('Failed to process callback data with GPT');
+    // Normalize phone number
+    let normalizedPhone = payload.phone_number;
+    if (normalizedPhone.startsWith('0')) {
+      normalizedPhone = '+373' + normalizedPhone.substring(1);
+    } else if (!normalizedPhone.startsWith('+')) {
+      normalizedPhone = '+373' + normalizedPhone;
     }
 
-    const processedData = JSON.parse(gptData.choices[0].message.content);
-    console.log('GPT processed data:', processedData);
+    const processedData = {
+      normalized_phone: normalizedPhone,
+      scheduled_datetime: scheduledDatetime.toISOString(),
+      priority: payload.priority || 'medium',
+      description: `Callback requested because: ${payload.reason || 'client requested callback'}.`,
+      client_name: payload.client_name || 'Client'
+    };
+    
+    console.log('Processed callback data:', processedData);
 
     // Determine user_id through multiple fallback methods for security
     let userId = payload.user_id;
@@ -130,7 +122,7 @@ serve(async (req) => {
         .select('user_id, agent_id')
         .eq('name', payload.agent_name)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
       
       userId = agentData?.user_id;
       console.log('Found user by agent_name:', payload.agent_name, '-> userId:', userId);
@@ -148,7 +140,7 @@ serve(async (req) => {
         .select('user_id, agent_id')
         .eq('name', payload.agent_id)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
       
       if (agentByName?.user_id) {
         userId = agentByName.user_id;
@@ -163,7 +155,7 @@ serve(async (req) => {
         .from('kalina_agents')
         .select('user_id')
         .eq('elevenlabs_agent_id', payload.agent_id)
-        .single();
+        .maybeSingle();
       
       userId = agentData?.user_id;
       console.log('Found user by elevenlabs_agent_id:', payload.agent_id, '-> userId:', userId);
@@ -175,7 +167,7 @@ serve(async (req) => {
         .from('kalina_agents')
         .select('user_id')
         .eq('agent_id', payload.agent_id)
-        .single();
+        .maybeSingle();
       
       userId = agentData2?.user_id;
       console.log('Found user by internal agent_id:', payload.agent_id, '-> userId:', userId);
