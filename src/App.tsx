@@ -1,5 +1,5 @@
 
-import React from "react";
+
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 import { KalinaWelcomeAnimation } from "./components/KalinaWelcomeAnimation";
@@ -31,7 +31,7 @@ import ConversationDetail from "./pages/ConversationDetail";
 import VoiceDemo from "./pages/VoiceDemo";
 import CallbackScheduler from "./pages/CallbackScheduler";
 import Pricing from "./pages/Pricing";
-import Admin from "./pages/Admin";
+
 import Contacts from "./pages/Contacts";
 
 const queryClient = new QueryClient();
@@ -50,7 +50,7 @@ function AppWithWelcome() {
         <Route path="/" element={<Navigate to="/account" replace />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/pricing" element={<Pricing />} />
-        <Route path="/admin" element={<Admin />} />
+        
         
         {/* Account routes */}
         <Route path="/account" element={<Account />} />

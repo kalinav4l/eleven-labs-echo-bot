@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useConversation } from '@11labs/react';
 import { cn } from '@/utils/utils.ts';
 
