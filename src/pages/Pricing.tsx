@@ -8,7 +8,7 @@ import { useAuth } from '@/components/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/components/DashboardLayout';
-import { useScrollReveal } from '@/hooks/useScrollReveal';
+
 const PricingPage = () => {
   const [isAnnual, setIsAnnual] = useState(false);
   const [plans, setPlans] = useState<any[]>([]);
@@ -17,9 +17,6 @@ const PricingPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { ref: headerRef, isVisible: headerVisible } = useScrollReveal('up', 0.2);
-  const { ref: toggleRef, isVisible: toggleVisible } = useScrollReveal('up', 0.4);
-  const { ref: cardsRef, isVisible: cardsVisible } = useScrollReveal('up', 0.6);
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -172,14 +169,7 @@ const PricingPage = () => {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           {/* Header */}
-          <div 
-            ref={headerRef}
-            className={`text-center mb-12 transition-all duration-1000 ease-out ${
-              headerVisible 
-                ? 'opacity-100 translate-y-0' 
-                : 'opacity-0 translate-y-8'
-            }`}
-          >
+          <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-gray-900 mb-4 relative">
               <span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text">
                 Planuri și Prețuri
@@ -191,14 +181,7 @@ const PricingPage = () => {
           </div>
 
           {/* Monthly/Yearly Toggle */}
-          <div 
-            ref={toggleRef}
-            className={`flex items-center justify-center mb-12 transition-all duration-1000 ease-out ${
-              toggleVisible 
-                ? 'opacity-100 translate-y-0 scale-100' 
-                : 'opacity-0 translate-y-8 scale-95'
-            }`}
-          >
+          <div className="flex items-center justify-center mb-12">
             <div className="flex items-center bg-gray-100 rounded-full p-1 backdrop-blur-sm bg-opacity-80 border border-white/20 shadow-lg">
               <button 
                 onClick={() => setIsAnnual(false)} 
@@ -227,10 +210,7 @@ const PricingPage = () => {
           </div>
 
           {/* Pricing Cards */}
-          <div 
-            ref={cardsRef}
-            className="grid lg:grid-cols-4 md:grid-cols-2 gap-8 opacity-100 translate-y-0"
-          >
+          <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-8">
             {plans.map((plan, index) => (
               <Card 
                 key={plan.name} 
