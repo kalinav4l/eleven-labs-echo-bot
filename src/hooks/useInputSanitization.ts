@@ -28,8 +28,21 @@ export const useInputSanitization = () => {
     return (prompt: string): string => {
       if (!prompt || typeof prompt !== 'string') return '';
       
-      // Remove potential prompt injection attempts
-      let sanitized = sanitizeText(prompt);
+      // Apply security sanitization without character limit
+      let sanitized = prompt;
+      
+      // Remove potential script tags and other dangerous HTML
+      sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+      
+      // Remove other potentially dangerous HTML tags
+      sanitized = sanitized.replace(/<(iframe|object|embed|form|input|textarea|button|select|option|link|meta|base)[^>]*>/gi, '');
+      
+      // Remove javascript: and data: protocols
+      sanitized = sanitized.replace(/javascript:/gi, '');
+      sanitized = sanitized.replace(/data:/gi, '');
+      
+      // Remove on* event handlers
+      sanitized = sanitized.replace(/\son\w+\s*=\s*[^>]*/gi, '');
       
       // Remove common prompt injection patterns
       const injectionPatterns = [
