@@ -45,7 +45,7 @@ export const useInputSanitization = () => {
         sanitized = sanitized.replace(pattern, '[FILTERED]');
       });
       
-      return sanitized.slice(0, 3000); // Limit system prompts to reasonable length
+      return sanitized.slice(0, 10000); // Increased limit for system prompts
     };
   }, []);
 
