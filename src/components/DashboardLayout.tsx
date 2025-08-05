@@ -68,7 +68,7 @@ const DashboardLayout = ({
         
         <AppSidebar />
         
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col" style={{ paddingTop: userBlocked ? '80px' : '0' }}>
           {/* Mobile Header */}
           {isMobile && (
             <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 h-16 flex items-center px-4">
