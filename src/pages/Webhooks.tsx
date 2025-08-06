@@ -45,6 +45,7 @@ interface WebhookLog {
 }
 
 const Webhooks = () => {
+  console.log('🚀 Webhooks component loading...');
   const { user } = useAuth();
   const [webhooks, setWebhooks] = useState<WebhookConfig[]>([]);
   const [webhookLogs, setWebhookLogs] = useState<WebhookLog[]>([]);
@@ -65,8 +66,11 @@ const Webhooks = () => {
   });
 
   if (!user) {
+    console.log('❌ No user found, redirecting to auth');
     return <Navigate to="/auth" replace />;
   }
+
+  console.log('✅ User found, rendering webhooks page:', user.id);
 
   useEffect(() => {
     fetchWebhooks();

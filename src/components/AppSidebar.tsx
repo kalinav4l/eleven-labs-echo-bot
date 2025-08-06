@@ -160,7 +160,10 @@ export function AppSidebar() {
               {workflowItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)} className={isMobile ? 'touch-target text-base py-3' : ''}>
-                    <Link to={item.url}>
+                    <Link 
+                      to={item.url}
+                      onClick={() => console.log(`🔗 Navigating to: ${item.url} (${item.title})`)}
+                    >
                       <item.icon className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'}`} />
                       <span>{item.title}</span>
                     </Link>
