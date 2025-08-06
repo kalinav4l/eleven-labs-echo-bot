@@ -19,7 +19,7 @@ const validateInput = (data: any) => {
     throw new Error('Invalid request body');
   }
   
-  const { agent_id, phone_number, contact_name, user_id, batch_processing, caller_number } = data;
+  const { agent_id, phone_number, contact_name, user_id, batch_processing, caller_number, is_test_call } = data;
   
   // Validate required fields
   if (!agent_id || typeof agent_id !== 'string' || agent_id.length > 100) {
@@ -49,7 +49,7 @@ const validateInput = (data: any) => {
     throw new Error('Invalid caller number');
   }
   
-  return { agent_id, phone_number: cleanPhone, contact_name, user_id, batch_processing, caller_number };
+  return { agent_id, phone_number: cleanPhone, contact_name, user_id, batch_processing, caller_number, is_test_call };
 };
 
 serve(async (req) => {
@@ -59,9 +59,9 @@ serve(async (req) => {
 
   try {
     const requestData = await req.json();
-    const { agent_id, phone_number, contact_name, user_id, batch_processing, caller_number } = validateInput(requestData);
+    const { agent_id, phone_number, contact_name, user_id, batch_processing, caller_number, is_test_call } = validateInput(requestData);
 
-    console.log('Received request:', { agent_id, phone_number, contact_name, user_id, batch_processing, caller_number })
+    console.log('Received request:', { agent_id, phone_number, contact_name, user_id, batch_processing, caller_number, is_test_call })
 
     // Initialize Supabase client
     const supabase = createClient(
@@ -89,48 +89,58 @@ serve(async (req) => {
       )
     }
 
-    // Get user's phone number from database
-    const { data: userPhoneNumbers, error: phoneError } = await supabase
-      .from('phone_numbers')
-      .select('elevenlabs_phone_id, phone_number')
-      .eq('user_id', user_id)
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(1)
+    // Configure phone number for call - use test number for test calls
+    let agentPhoneId, callerNumber;
 
-    if (phoneError) {
-      console.error('❌ Error fetching user phone numbers:', phoneError)
-      return new Response(
-        JSON.stringify({ 
-          error: 'Nu s-au putut găsi numerele de telefon ale utilizatorului',
-          success: false,
-          details: phoneError.message
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      )
+    if (is_test_call) {
+      // For test calls, use the configured test phone number
+      agentPhoneId = 'phnum_01jzwnpa8cfnhbxh0367z4jtqs';
+      callerNumber = '+37379325040';
+      console.log('🧪 Using test phone number for test call:', { agentPhoneId, callerNumber });
+    } else {
+      // For regular calls, get user's phone number from database
+      const { data: userPhoneNumbers, error: phoneError } = await supabase
+        .from('phone_numbers')
+        .select('elevenlabs_phone_id, phone_number')
+        .eq('user_id', user_id)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      if (phoneError) {
+        console.error('❌ Error fetching user phone numbers:', phoneError)
+        return new Response(
+          JSON.stringify({ 
+            error: 'Nu s-au putut găsi numerele de telefon ale utilizatorului',
+            success: false,
+            details: phoneError.message
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        )
+      }
+
+      if (!userPhoneNumbers || userPhoneNumbers.length === 0) {
+        console.error('❌ No active phone numbers found for user:', user_id)
+        return new Response(
+          JSON.stringify({ 
+            error: 'Nu aveți niciun număr de telefon activ înregistrat. Vă rugăm să adăugați un număr de telefon în secțiunea Numere de Telefon.',
+            success: false,
+            details: 'Utilizatorul nu are numere de telefon active'
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        )
+      }
+
+      const userPhone = userPhoneNumbers[0]
+      agentPhoneId = userPhone.elevenlabs_phone_id
+      callerNumber = userPhone.phone_number
     }
-
-    if (!userPhoneNumbers || userPhoneNumbers.length === 0) {
-      console.error('❌ No active phone numbers found for user:', user_id)
-      return new Response(
-        JSON.stringify({ 
-          error: 'Nu aveți niciun număr de telefon activ înregistrat. Vă rugăm să adăugați un număr de telefon în secțiunea Numere de Telefon.',
-          success: false,
-          details: 'Utilizatorul nu are numere de telefon active'
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      )
-    }
-
-    const userPhone = userPhoneNumbers[0]
-    const agentPhoneId = userPhone.elevenlabs_phone_id
-    const callerNumber = userPhone.phone_number
 
     console.log('User phone details:', { agentPhoneId, callerNumber, user_id })
 
@@ -326,7 +336,8 @@ Acest este un contact nou, fără istoric anterior de interacțiuni.`
         response: elevenLabsData,
         initiated_at: new Date().toISOString(),
         batch_processing: batch_processing || false,
-        caller_phone_details: userPhone
+        is_test_call: is_test_call || false,
+        caller_phone_details: is_test_call ? { elevenlabs_phone_id: agentPhoneId, phone_number: callerNumber } : userPhone
       }),
       call_date: new Date().toISOString(),
       cost_usd: 0, // Will be updated when call completes

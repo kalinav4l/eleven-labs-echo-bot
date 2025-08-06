@@ -109,7 +109,8 @@ const TestCall = () => {
           phone_number: phoneNumber,
           contact_name: `Test Call - ${phoneNumber}`,
           user_id: user.id,
-          batch_processing: false
+          batch_processing: false,
+          is_test_call: true
         }
       });
       if (error) {
