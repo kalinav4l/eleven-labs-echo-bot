@@ -33,6 +33,7 @@ import CallbackScheduler from "./pages/CallbackScheduler";
 import Pricing from "./pages/Pricing";
 import Admin from "./pages/Admin";
 import Contacts from "./pages/Contacts";
+import Webhooks from "./pages/Webhooks";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,7 @@ function AppWithWelcome() {
         <Route path="/account/phone-numbers" element={<PhoneNumbers />} />
         <Route path="/account/test-call" element={<TestCall />} />
         <Route path="/account/construction" element={<Construction />} />
+        <Route path="/account/webhooks" element={<Webhooks />} />
         <Route path="/account/calendar" element={<Calendar />} />
         <Route path="/account/agent-ai" element={<AgentAI />} />
         <Route path="/account/gmail" element={<Gmail />} />

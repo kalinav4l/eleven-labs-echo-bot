@@ -44,6 +44,7 @@ const dataToolsItems = [
 
 const workflowItems = [
   { title: "Construction", url: "/account/construction", icon: Workflow },
+  { title: "Webhooks", url: "/account/webhooks", icon: Globe },
 ];
 
 export function AppSidebar() {
