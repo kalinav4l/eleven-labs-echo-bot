@@ -120,74 +120,131 @@ const Calendar = () => {
 
   return (
     <DashboardLayout>
-      <div className="flex-1 min-h-screen bg-white">
-        {/* Notion-style Header */}
+      <div className="flex-1 min-h-screen bg-gray-50">
+        {/* Header cu titlu și controale */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h1 className="text-lg font-medium text-gray-900 flex items-center gap-3">
-                <CalendarIcon className="h-5 w-5 text-gray-600" />
-                Tasks
+            <div className="flex items-center gap-6">
+              <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-600 text-white">
+                  <CalendarIcon className="h-5 w-5" />
+                </div>
+                Calendar Programări
               </h1>
-              <div className="flex items-center gap-1">
+              
+              {/* Navigator Lună/An */}
+              <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigateMonth('prev')}
-                  className="h-7 w-7 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                  className="h-8 w-8 p-0 rounded-lg hover:bg-gray-100 text-gray-600"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm text-gray-700 min-w-[120px] text-center px-2">
+                <span className="text-sm font-medium text-gray-900 min-w-[140px] text-center px-3">
                   {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
                 </span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigateMonth('next')}
-                  className="h-7 w-7 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                  className="h-8 w-8 p-0 rounded-lg hover:bg-gray-100 text-gray-600"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            
+            {/* Butoane de Acțiune Rapidă */}
+            <div className="flex items-center gap-3">
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={goToToday}
-                className="text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                className="text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
               >
-                Today
+                Astăzi
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => refetch()}
+                className="text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                disabled={isLoading}
+              >
+                <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+                Reîmprospătează
               </Button>
               <Button 
                 size="sm" 
                 onClick={() => setShowEventModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 h-7"
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
               >
-                New
+                <Plus className="h-4 w-4 mr-1" />
+                Programare Nouă
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Calendar Grid */}
-        <div className="p-0">
-          <div className="bg-white">
-            <div className="grid grid-cols-7 border-l border-gray-200">
-              {/* Day headers */}
+        {/* Filtre și Căutare */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Caută după nume client sau telefon..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 border-gray-300 rounded-lg bg-white"
+                />
+              </div>
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[150px] border-gray-300 rounded-lg bg-white">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                <SelectItem value="all">Toate</SelectItem>
+                <SelectItem value="scheduled">Programate</SelectItem>
+                <SelectItem value="completed">Completate</SelectItem>
+                <SelectItem value="failed">Eșuate</SelectItem>
+                <SelectItem value="overdue">Întârziate</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger className="w-[150px] border-gray-300 rounded-lg bg-white">
+                <SelectValue placeholder="Prioritate" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                <SelectItem value="all">Toate</SelectItem>
+                <SelectItem value="high">Înaltă</SelectItem>
+                <SelectItem value="medium">Medie</SelectItem>
+                <SelectItem value="low">Scăzută</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Grila Calendarului */}
+        <div className="p-6">
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="grid grid-cols-7">
+              {/* Zilele săptămânii */}
               {daysOfWeek.map((day) => (
-                <div key={day} className="bg-gray-50 border-r border-b border-gray-200 px-3 py-3 text-center">
-                  <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">{day}</span>
+                <div key={day} className="bg-gray-100 border-r border-b border-gray-200 px-4 py-3 text-center last:border-r-0">
+                  <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">{day}</span>
                 </div>
               ))}
               
-              {/* Empty cells at start */}
+              {/* Celule goale la început */}
               {emptyCellsAtStart.map((_, index) => (
-                <div key={`empty-${index}`} className="bg-white border-r border-b border-gray-200 min-h-[120px]" />
+                <div key={`empty-${index}`} className="bg-gray-50 border-r border-b border-gray-200 min-h-[120px] last:border-r-0" />
               ))}
               
-              {/* Calendar days */}
+              {/* Zilele calendarului */}
               {calendarDays.map((date) => {
                 const dayEvents = getEventsForDate(date);
                 const isCurrentDay = isToday(date);
@@ -196,37 +253,39 @@ const Calendar = () => {
                 return (
                   <div
                     key={date.toISOString()}
-                    className={`border-r border-b border-gray-200 min-h-[120px] p-2 relative cursor-pointer hover:bg-gray-50 transition-colors ${
-                      !isCurrentMonth ? 'bg-gray-50/50' : 'bg-white'
+                    className={`border-r border-b border-gray-200 min-h-[120px] p-2 relative cursor-pointer transition-all duration-200 hover:bg-gray-50 last:border-r-0 ${
+                      !isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'
                     }`}
                     onClick={() => handleCellClick(date)}
                   >
-                    <div className={`text-sm mb-2 ${
+                    {/* Ziua curentă evidențiată */}
+                    <div className={`text-sm mb-2 font-medium ${
                       isCurrentDay 
-                        ? 'text-blue-600 font-medium' 
+                        ? 'text-white bg-blue-600 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold' 
                         : isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
                     }`}>
                       {format(date, 'd')}
                     </div>
                     
+                    {/* Programările ca blocuri colorate */}
                     <div className="space-y-1">
-                      {dayEvents.slice(0, 4).map((event) => (
+                      {dayEvents.slice(0, 3).map((event) => (
                         <div
                           key={event.id}
-                          className={`flex items-center gap-2 text-xs px-2 py-1 rounded-md cursor-pointer transition-colors ${getStatusColor(event.status)}`}
+                          className={`text-xs p-1.5 rounded cursor-pointer transition-all duration-200 hover:opacity-90 ${getStatusColor(event.status)}`}
                           onClick={(e) => handleEventClick(event, e)}
                         >
-                          {event.status === 'completed' && (
-                            <Check className="w-3 h-3 text-green-600 flex-shrink-0" />
-                          )}
-                          <span className="truncate text-xs font-medium">
-                            {event.client_name}
-                          </span>
+                          <div className="font-medium text-xs mb-0.5">
+                            {format(new Date(event.scheduled_time || event.scheduled_datetime), 'HH:mm')}
+                          </div>
+                          <div className="text-xs truncate">
+                            {event.client_name || 'Unknown'}
+                          </div>
                         </div>
                       ))}
-                      {dayEvents.length > 4 && (
-                        <div className="text-xs text-gray-500 px-2">
-                          +{dayEvents.length - 4} more
+                      {dayEvents.length > 3 && (
+                        <div className="text-xs text-gray-500 p-1 text-center">
+                          +{dayEvents.length - 3} mai multe
                         </div>
                       )}
                     </div>
