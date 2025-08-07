@@ -93,15 +93,15 @@ const Calendar = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'scheduled':
-        return 'bg-blue-500 text-white shadow-lg shadow-blue-500/30';
+        return 'bg-blue-500 text-white';
       case 'completed':
-        return 'bg-green-500 text-white shadow-lg shadow-green-500/30';
+        return 'bg-green-500 text-white';
       case 'failed':
-        return 'bg-red-500 text-white shadow-lg shadow-red-500/30';
+        return 'bg-red-500 text-white';
       case 'overdue':
-        return 'bg-orange-500 text-white shadow-lg shadow-orange-500/30';
+        return 'bg-orange-500 text-white';
       default:
-        return 'bg-gray-500 text-white shadow-lg shadow-gray-500/30';
+        return 'bg-gray-500 text-white';
     }
   };
 
@@ -122,11 +122,11 @@ const Calendar = () => {
     <DashboardLayout>
       <div className="flex-1 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         {/* Header cu efect liquid glass */}
-        <div className="bg-white/80 backdrop-blur-lg border-0 px-6 py-4 shadow-sm">
+        <div className="bg-white/80 backdrop-blur-lg border-0 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
               <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white">
                   <CalendarIcon className="h-5 w-5" />
                 </div>
                 Calendar Programări
@@ -179,7 +179,7 @@ const Calendar = () => {
               <Button 
                 size="sm" 
                 onClick={() => setShowEventModal(true)}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl shadow-lg shadow-blue-500/30 transition-all duration-200"
+                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl transition-all duration-200"
               >
                 <Plus className="h-4 w-4 mr-1" />
                 Programare Nouă
@@ -189,7 +189,7 @@ const Calendar = () => {
         </div>
 
         {/* Filtre și Căutare cu liquid glass */}
-        <div className="bg-white/60 backdrop-blur-lg px-6 py-4 shadow-sm">
+        <div className="bg-white/60 backdrop-blur-lg px-6 py-4">
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <div className="relative">
@@ -198,15 +198,15 @@ const Calendar = () => {
                   placeholder="Caută după nume client sau telefon..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 border-0 rounded-xl bg-white/80 backdrop-blur-sm shadow-sm"
+                  className="pl-10 border-0 rounded-xl bg-white/80 backdrop-blur-sm"
                 />
               </div>
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[150px] border-0 rounded-xl bg-white/80 backdrop-blur-sm shadow-sm">
+              <SelectTrigger className="w-[150px] border-0 rounded-xl bg-white/80 backdrop-blur-sm">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
-              <SelectContent className="bg-white/90 backdrop-blur-lg border-0 shadow-xl rounded-xl z-50">
+              <SelectContent className="bg-white/90 backdrop-blur-lg border-0 rounded-xl z-50">
                 <SelectItem value="all">Toate</SelectItem>
                 <SelectItem value="scheduled">Programate</SelectItem>
                 <SelectItem value="completed">Completate</SelectItem>
@@ -215,10 +215,10 @@ const Calendar = () => {
               </SelectContent>
             </Select>
             <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger className="w-[150px] border-0 rounded-xl bg-white/80 backdrop-blur-sm shadow-sm">
+              <SelectTrigger className="w-[150px] border-0 rounded-xl bg-white/80 backdrop-blur-sm">
                 <SelectValue placeholder="Prioritate" />
               </SelectTrigger>
-              <SelectContent className="bg-white/90 backdrop-blur-lg border-0 shadow-xl rounded-xl z-50">
+              <SelectContent className="bg-white/90 backdrop-blur-lg border-0 rounded-xl z-50">
                 <SelectItem value="all">Toate</SelectItem>
                 <SelectItem value="high">Înaltă</SelectItem>
                 <SelectItem value="medium">Medie</SelectItem>
@@ -230,7 +230,7 @@ const Calendar = () => {
 
         {/* Grila Calendarului cu liquid glass */}
         <div className="p-6">
-          <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden">
+          <div className="bg-white/70 backdrop-blur-lg rounded-2xl overflow-hidden">
             <div className="grid grid-cols-7 gap-0">
               {/* Zilele săptămânii */}
               {daysOfWeek.map((day) => (
@@ -261,7 +261,7 @@ const Calendar = () => {
                     {/* Ziua curentă evidențiată */}
                     <div className={`text-sm mb-3 font-medium ${
                       isCurrentDay 
-                        ? 'text-white bg-gradient-to-br from-blue-500 to-blue-600 rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shadow-lg shadow-blue-500/30' 
+                        ? 'text-white bg-gradient-to-br from-blue-500 to-blue-600 rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold' 
                         : isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
                     }`}>
                       {format(date, 'd')}
