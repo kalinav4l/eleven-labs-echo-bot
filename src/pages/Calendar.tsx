@@ -12,6 +12,7 @@ import { ro } from 'date-fns/locale';
 import { useCallbackOperations } from '@/hooks/useCallbacks';
 import { CalendarEventModal } from '@/components/CalendarEventModal';
 import { CalendarEventDetailsModal } from '@/components/CalendarEventDetailsModal';
+import { DayDetailSidebar } from '@/components/DayDetailSidebar';
 
 const Calendar = () => {
   const { user } = useAuth();
@@ -19,6 +20,7 @@ const Calendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showDayDetailSidebar, setShowDayDetailSidebar] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -80,8 +82,15 @@ const Calendar = () => {
   };
 
   const handleCellClick = (date: Date) => {
+    const eventsForDate = getEventsForDate(date);
     setSelectedDate(date);
-    setShowEventModal(true);
+    
+    // If there are events, show sidebar, otherwise show new event modal
+    if (eventsForDate.length > 0) {
+      setShowDayDetailSidebar(true);
+    } else {
+      setShowEventModal(true);
+    }
   };
 
   const handleEventClick = (event: any, e: React.MouseEvent) => {
@@ -93,15 +102,15 @@ const Calendar = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'scheduled':
-        return 'bg-blue-500 text-white';
+        return 'bg-blue-500';
       case 'completed':
-        return 'bg-green-500 text-white';
+        return 'bg-green-500';
       case 'failed':
-        return 'bg-red-500 text-white';
+        return 'bg-red-500';
       case 'overdue':
-        return 'bg-orange-500 text-white';
+        return 'bg-orange-500';
       default:
-        return 'bg-gray-500 text-white';
+        return 'bg-gray-500';
     }
   };
 
@@ -267,25 +276,33 @@ const Calendar = () => {
                       {format(date, 'd')}
                     </div>
                     
-                    {/* Programările ca blocuri colorate aprinse */}
-                    <div className="space-y-1.5">
-                      {dayEvents.slice(0, 3).map((event) => (
+                    {/* Programările ca indicatori compacți */}
+                    <div className="space-y-1">
+                      {dayEvents.slice(0, 4).map((event) => (
                         <div
                           key={event.id}
-                          className={`text-xs p-2 rounded-lg cursor-pointer transition-all duration-300 hover:scale-105 animate-fade-in ${getStatusColor(event.status)}`}
+                          className="flex items-center gap-2 text-xs cursor-pointer transition-all duration-200 hover:bg-gray-50 p-1 rounded group"
                           onClick={(e) => handleEventClick(event, e)}
                         >
-                          <div className="font-semibold text-xs mb-1">
+                          <div className={`w-2 h-2 rounded-full ${getStatusColor(event.status)} flex-shrink-0`} />
+                          <span className="font-medium text-gray-700 text-xs">
                             {format(new Date(event.scheduled_time || event.scheduled_datetime), 'HH:mm')}
-                          </div>
-                          <div className="text-xs truncate font-medium">
+                          </span>
+                          <span className="text-xs text-gray-600 truncate">
                             {event.client_name || 'Unknown'}
-                          </div>
+                          </span>
                         </div>
                       ))}
-                      {dayEvents.length > 3 && (
-                        <div className="text-xs text-gray-600 p-1.5 text-center bg-white/60 backdrop-blur-sm rounded-lg font-medium">
-                          +{dayEvents.length - 3} mai multe
+                      {dayEvents.length > 4 && (
+                        <div 
+                          className="text-xs text-blue-600 p-1 text-center hover:bg-blue-50 rounded cursor-pointer font-medium transition-all duration-200"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedDate(date);
+                            setShowDayDetailSidebar(true);
+                          }}
+                        >
+                          +{dayEvents.length - 4} mai multe
                         </div>
                       )}
                     </div>
@@ -314,6 +331,16 @@ const Calendar = () => {
           setSelectedEvent(null);
         }}
         event={selectedEvent}
+      />
+
+      <DayDetailSidebar
+        isOpen={showDayDetailSidebar}
+        onClose={() => {
+          setShowDayDetailSidebar(false);
+          setSelectedDate(null);
+        }}
+        selectedDate={selectedDate}
+        events={selectedDate ? getEventsForDate(selectedDate) : []}
       />
     </DashboardLayout>
   );
