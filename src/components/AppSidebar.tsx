@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
-  User, Settings, Bot, FileText, PhoneCall, BarChart3, Calendar, 
-  Globe, Mail, Workflow, BookOpen, Phone, TestTube, PhoneForwarded, 
-  CreditCard, Shield, Mic, Plus
+  Home, Settings, Brain, FileText, Phone, TrendingUp, CalendarDays, 
+  Network, MessageSquare, Workflow, BookOpen, Smartphone, Zap, PhoneForwarded, 
+  CreditCard, Shield, Mic, Sparkles, Database, Search, Mail
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -22,29 +22,29 @@ import { useAuth } from './AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const aiAnalyticsItems = [
-  { title: "Agents", url: "/account/kalina-agents", icon: Bot },
-  { title: "Analytics", url: "/account/conversation-analytics", icon: BarChart3 },
-  { title: "Agent AI", url: "/account/agent-ai", icon: Bot },
+  { title: "Agents", url: "/account/kalina-agents", icon: Brain },
+  { title: "Analytics", url: "/account/conversation-analytics", icon: TrendingUp },
+  { title: "Agent AI", url: "/account/agent-ai", icon: Sparkles },
   { title: "Voice Demo", url: "/account/voice-demo", icon: Mic },
 ];
 
 const communicationsItems = [
-  { title: "Calls", url: "/account/outbound", icon: PhoneCall },
-  { title: "Calendar", url: "/account/calendar", icon: Calendar },
-  { title: "Phone Numbers", url: "/account/phone-numbers", icon: Phone },
-  { title: "Test Call", url: "/account/test-call", icon: TestTube },
+  { title: "Calls", url: "/account/outbound", icon: Phone },
+  { title: "Calendar", url: "/account/calendar", icon: CalendarDays },
+  { title: "Phone Numbers", url: "/account/phone-numbers", icon: Smartphone },
+  { title: "Test Call", url: "/account/test-call", icon: Zap },
   { title: "Callbacks", url: "/account/callback-scheduler", icon: PhoneForwarded },
 ];
 
 const dataToolsItems = [
   { title: "Transcripts", url: "/account/transcript", icon: FileText },
-  { title: "Scraping", url: "/account/scraping", icon: Globe },
+  { title: "Scraping", url: "/account/scraping", icon: Search },
   { title: "Gmail", url: "/account/gmail", icon: Mail },
 ];
 
 const workflowItems = [
   { title: "Construction", url: "/account/construction", icon: Workflow },
-  { title: "Webhooks", url: "/account/webhooks", icon: Globe },
+  { title: "Webhooks", url: "/account/webhooks", icon: Network },
 ];
 
 export function AppSidebar() {
@@ -78,7 +78,7 @@ export function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={isActive('/account')}>
                   <Link to="/account">
-                    <User className="w-4 h-4" />
+                    <Home className="w-4 h-4" />
                     <span>Home</span>
                   </Link>
                 </SidebarMenuButton>
