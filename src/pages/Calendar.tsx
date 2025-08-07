@@ -173,10 +173,9 @@ const Calendar = () => {
                 Reîmprospătează
               </Button>
               <Button 
-                variant="outline"
                 size="sm" 
                 onClick={() => setShowEventModal(true)}
-                className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg transition-colors duration-200"
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
               >
                 <Plus className="h-4 w-4 mr-1" />
                 Programare Nouă
@@ -226,19 +225,19 @@ const Calendar = () => {
         </div>
 
         {/* Calendar Grid Container */}
-        <div className="p-8">
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="grid grid-cols-7 gap-px bg-gray-100">
+        <div className="p-6">
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="grid grid-cols-7">
               {/* Day headers */}
               {daysOfWeek.map((day) => (
-                <div key={day} className="bg-white px-6 py-4 text-center">
-                  <span className="text-sm font-medium text-gray-600 uppercase tracking-wide">{day}</span>
+                <div key={day} className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-4 py-3 text-center border-r border-gray-600 last:border-r-0">
+                  <span className="text-xs font-bold uppercase tracking-wider">{day}</span>
                 </div>
               ))}
               
               {/* Empty cells at start */}
               {emptyCellsAtStart.map((_, index) => (
-                <div key={`empty-${index}`} className="bg-gray-50 min-h-[160px]" />
+                <div key={`empty-${index}`} className="bg-gray-50 border-r border-b border-gray-200 min-h-[140px] last:border-r-0" />
               ))}
               
               {/* Calendar days */}
@@ -250,46 +249,40 @@ const Calendar = () => {
                 return (
                   <div
                     key={date.toISOString()}
-                    className={`min-h-[160px] p-4 relative cursor-pointer transition-all duration-200 hover:bg-gray-50/50 ${
+                    className={`border-r border-b border-gray-200 min-h-[140px] p-3 relative cursor-pointer transition-all duration-200 hover:bg-gray-50 last:border-r-0 ${
                       !isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'
                     }`}
                     onClick={() => handleCellClick(date)}
                   >
-                    <div className={`text-base mb-4 font-light ${
+                    <div className={`text-sm mb-3 font-medium ${
                       isCurrentDay 
-                        ? 'text-white bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-medium' 
+                        ? 'text-white bg-blue-600 rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold' 
                         : 'text-gray-900'
                     }`}>
                       {format(date, 'd')}
                     </div>
                     
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       {dayEvents.slice(0, 3).map((event) => (
                         <div
                           key={event.id}
-                          className="bg-white p-3 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-sm relative border-l-4"
-                          style={{
-                            borderLeftColor: event.status === 'scheduled' ? '#3b82f6' : 
-                                           event.status === 'completed' ? '#10b981' : 
-                                           event.status === 'failed' ? '#ef4444' : 
-                                           event.status === 'overdue' ? '#f59e0b' : '#6b7280'
-                          }}
+                          className={`text-xs p-2 rounded-lg cursor-pointer transition-all duration-200 hover:scale-105 ${getStatusColor(event.status)}`}
                           onClick={(e) => handleEventClick(event, e)}
                         >
-                          <div className="flex items-center gap-2 mb-1">
-                            <Clock className="h-3 w-3 text-gray-500" />
-                            <span className="font-medium text-xs text-gray-700">
+                          <div className="flex items-center gap-1 mb-1">
+                            <Clock className="h-3 w-3 flex-shrink-0" />
+                            <span className="font-semibold text-xs">
                               {format(new Date(event.scheduled_time || event.scheduled_datetime), 'HH:mm')}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <User className="h-3 w-3 text-gray-500" />
-                            <span className="truncate font-medium text-xs text-gray-900">{event.client_name}</span>
+                          <div className="flex items-center gap-1">
+                            <User className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate font-medium text-xs">{event.client_name}</span>
                           </div>
                         </div>
                       ))}
                       {dayEvents.length > 3 && (
-                        <div className="text-xs text-gray-500 p-2 text-center bg-gray-50 rounded-lg font-light">
+                        <div className="text-xs text-gray-500 p-1.5 text-center bg-gray-100 rounded-md font-medium">
                           +{dayEvents.length - 3} mai multe
                         </div>
                       )}
