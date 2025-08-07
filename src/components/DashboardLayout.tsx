@@ -46,13 +46,13 @@ const DashboardLayout = ({
           .from('user_balance')
           .select('balance_usd')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         const { data: stats, error: statsError } = await supabase
           .from('user_statistics')
           .select('total_spent_usd')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (!balanceError && balance) {
           setUserBalance(balance.balance_usd || 0);
@@ -62,16 +62,15 @@ const DashboardLayout = ({
           setTotalSpent(stats.total_spent_usd || 0);
         }
 
-        // Determine notification type based on spending and balance
+        // Show notification ONLY when balance is below $100 or at 0
         const currentBalance = balance?.balance_usd || 0;
-        const currentSpent = stats?.total_spent_usd || 0;
 
         if (currentBalance <= 0) {
           setNotificationType('no_balance');
-        } else if (currentSpent >= 100) {
+        } else if (currentBalance < 100) {
           setNotificationType('low_balance');
         } else {
-          setNotificationType(null);
+          setNotificationType(null); // Don't show notification when balance is above $100
         }
       } catch (error) {
         console.error('Error fetching user profile:', error);

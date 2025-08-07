@@ -29,8 +29,8 @@ export const PaymentIssueNotification: React.FC<PaymentIssueNotificationProps> =
           textColor: 'text-amber-800',
           subtextColor: 'text-amber-700',
           buttonColor: 'bg-amber-600 hover:bg-amber-700',
-          title: `Ai cheltuit $${spentAmount.toFixed(2)} din credit`,
-          subtitle: `Balanța rămasă: $${remainingBalance.toFixed(2)}. Recomandăm să adaugi mai multe credite pentru a evita întreruperea serviciilor.`,
+          title: `Balanță scăzută: $${remainingBalance.toFixed(2)} rămase`,
+          subtitle: `Ai mai puțin de $100 în cont. Recomandăm să adaugi credite pentru a evita întreruperea serviciilor.`,
           buttonText: 'Adaugă Credite'
         };
       
