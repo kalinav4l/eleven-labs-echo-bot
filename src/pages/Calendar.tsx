@@ -225,22 +225,19 @@ const Calendar = () => {
         </div>
 
         {/* Calendar Grid Container */}
-        <div className="p-8">
-          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden backdrop-blur-sm">
-            <div className="grid grid-cols-7 divide-x divide-gray-100">
+        <div className="p-6">
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="grid grid-cols-7">
               {/* Day headers */}
               {daysOfWeek.map((day) => (
-                <div key={day} className="bg-gradient-to-br from-slate-50 to-gray-100 px-6 py-5 text-center relative">
-                  <span className="text-sm font-semibold text-slate-600 tracking-wide">{day}</span>
-                  <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
+                <div key={day} className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-4 py-3 text-center border-r border-gray-600 last:border-r-0">
+                  <span className="text-xs font-bold uppercase tracking-wider">{day}</span>
                 </div>
               ))}
               
               {/* Empty cells at start */}
               {emptyCellsAtStart.map((_, index) => (
-                <div key={`empty-${index}`} className="bg-gradient-to-br from-gray-25 to-gray-50 min-h-[160px] relative">
-                  <div className="absolute inset-0 bg-diagonal-lines opacity-5"></div>
-                </div>
+                <div key={`empty-${index}`} className="bg-gray-50 border-r border-b border-gray-200 min-h-[140px] last:border-r-0" />
               ))}
               
               {/* Calendar days */}
@@ -252,52 +249,41 @@ const Calendar = () => {
                 return (
                   <div
                     key={date.toISOString()}
-                    className={`min-h-[160px] p-4 relative cursor-pointer transition-all duration-300 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 hover:shadow-inner group ${
-                      !isCurrentMonth 
-                        ? 'bg-gradient-to-br from-gray-25 to-gray-50 text-gray-400' 
-                        : 'bg-gradient-to-br from-white to-gray-25'
+                    className={`border-r border-b border-gray-200 min-h-[140px] p-3 relative cursor-pointer transition-all duration-200 hover:bg-gray-50 last:border-r-0 ${
+                      !isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'
                     }`}
                     onClick={() => handleCellClick(date)}
                   >
-                    {/* Subtle grid lines */}
-                    <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-gray-100 to-transparent"></div>
-                    <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gray-100 to-transparent"></div>
-                    
-                    <div className={`text-lg mb-4 font-bold transition-all duration-200 ${
+                    <div className={`text-sm mb-3 font-medium ${
                       isCurrentDay 
-                        ? 'text-white bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl w-10 h-10 flex items-center justify-center shadow-lg shadow-blue-500/30 ring-2 ring-blue-100' 
-                        : 'text-slate-700 group-hover:text-blue-600'
+                        ? 'text-white bg-blue-600 rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold' 
+                        : 'text-gray-900'
                     }`}>
                       {format(date, 'd')}
                     </div>
                     
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       {dayEvents.slice(0, 3).map((event) => (
                         <div
                           key={event.id}
-                          className={`text-xs p-3 rounded-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg transform relative overflow-hidden ${getStatusColor(event.status)}`}
+                          className={`text-xs p-2 rounded-lg cursor-pointer transition-all duration-200 hover:scale-105 ${getStatusColor(event.status)}`}
                           onClick={(e) => handleEventClick(event, e)}
                         >
-                          {/* Glassmorphism effect */}
-                          <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-xl"></div>
-                          
-                          <div className="relative z-10">
-                            <div className="flex items-center gap-2 mb-1.5">
-                              <Clock className="h-3.5 w-3.5 flex-shrink-0 opacity-90" />
-                              <span className="font-bold text-xs tracking-wide">
-                                {format(new Date(event.scheduled_time || event.scheduled_datetime), 'HH:mm')}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <User className="h-3.5 w-3.5 flex-shrink-0 opacity-90" />
-                              <span className="truncate font-semibold text-xs">{event.client_name}</span>
-                            </div>
+                          <div className="flex items-center gap-1 mb-1">
+                            <Clock className="h-3 w-3 flex-shrink-0" />
+                            <span className="font-semibold text-xs">
+                              {format(new Date(event.scheduled_time || event.scheduled_datetime), 'HH:mm')}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <User className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate font-medium text-xs">{event.client_name}</span>
                           </div>
                         </div>
                       ))}
                       {dayEvents.length > 3 && (
-                        <div className="text-xs text-slate-500 p-2.5 text-center bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl font-semibold border border-gray-200/50 backdrop-blur-sm">
-                          +{dayEvents.length - 3} evenimente
+                        <div className="text-xs text-gray-500 p-1.5 text-center bg-gray-100 rounded-md font-medium">
+                          +{dayEvents.length - 3} mai multe
                         </div>
                       )}
                     </div>
