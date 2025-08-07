@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Ban, CreditCard, DollarSign, Shield, UserCheck, UserX } from 'lucide-react';
+import { Ban, CreditCard, DollarSign, Shield, UserCheck, UserX, Key, Mail, Send } from 'lucide-react';
 
 interface UserActionsDialogProps {
   user: AdminUser;
@@ -27,6 +27,8 @@ export function UserActionsDialog({ user, open, onOpenChange, onActionComplete }
   const [balanceAmount, setBalanceAmount] = useState('');
   const [balanceOperation, setBalanceOperation] = useState<'add' | 'subtract' | 'set'>('add');
   const [newRole, setNewRole] = useState<'admin' | 'moderator' | 'user'>(user.user_role);
+  const [newPassword, setNewPassword] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
 
   const handleBanUser = async () => {
     if (!adminUser) return;
@@ -113,6 +115,65 @@ export function UserActionsDialog({ user, open, onOpenChange, onActionComplete }
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!adminUser || !newPassword) return;
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.admin.updateUserById(user.user_id, {
+        password: newPassword
+      });
+
+      if (error) throw error;
+      
+      // Log admin action
+      await supabase.rpc('log_admin_action', {
+        p_admin_user_id: adminUser.id,
+        p_action: 'RESET_PASSWORD',
+        p_target_user_id: user.user_id,
+        p_details: { action: 'password_reset' }
+      });
+
+      setNewPassword('');
+      alert('Parola a fost resetată cu succes!');
+      onActionComplete();
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      alert('Eroare la resetarea parolei');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendInvite = async () => {
+    if (!adminUser || !inviteEmail) return;
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.admin.inviteUserByEmail(inviteEmail, {
+        redirectTo: `${window.location.origin}/auth`
+      });
+
+      if (error) throw error;
+      
+      // Log admin action
+      await supabase.rpc('log_admin_action', {
+        p_admin_user_id: adminUser.id,
+        p_action: 'SEND_INVITE',
+        p_details: { email: inviteEmail }
+      });
+
+      setInviteEmail('');
+      alert('Invitația a fost trimisă cu succes!');
+      onActionComplete();
+    } catch (error) {
+      console.error('Error sending invite:', error);
+      alert('Eroare la trimiterea invitației');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -123,11 +184,13 @@ export function UserActionsDialog({ user, open, onOpenChange, onActionComplete }
         </DialogHeader>
 
         <Tabs defaultValue="credits" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="credits">Credite</TabsTrigger>
             <TabsTrigger value="balance">Sold</TabsTrigger>
             <TabsTrigger value="role">Rol</TabsTrigger>
             <TabsTrigger value="account">Cont</TabsTrigger>
+            <TabsTrigger value="password">Parolă</TabsTrigger>
+            <TabsTrigger value="invite">Invitație</TabsTrigger>
           </TabsList>
 
           <TabsContent value="credits">
@@ -316,6 +379,64 @@ export function UserActionsDialog({ user, open, onOpenChange, onActionComplete }
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="password">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Key className="h-5 w-5" />
+                  Resetare Parolă
+                </CardTitle>
+                <CardDescription>
+                  Resetează parola pentru utilizatorul {user.first_name} {user.last_name}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="newPassword">Parola nouă</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Introduceți parola nouă"
+                  />
+                </div>
+                <Button onClick={handleResetPassword} disabled={loading || !newPassword}>
+                  {loading ? 'Se procesează...' : 'Resetează parola'}
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="invite">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Send className="h-5 w-5" />
+                  Trimite Invitație
+                </CardTitle>
+                <CardDescription>
+                  Trimite o invitație prin email pentru a se înregistra în aplicație
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="inviteEmail">Adresa de email</Label>
+                  <Input
+                    id="inviteEmail"
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    placeholder="Introduceți adresa de email"
+                  />
+                </div>
+                <Button onClick={handleSendInvite} disabled={loading || !inviteEmail}>
+                  {loading ? 'Se trimite...' : 'Trimite invitația'}
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>

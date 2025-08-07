@@ -51,6 +51,33 @@ export function UserEditDialog({ user, open, onOpenChange, onUserUpdated }: User
     }
   }, [user]);
 
+  const handleChangeEmail = async () => {
+    if (!user || formData.email === user.email) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.admin.updateUserById(user.user_id, {
+        email: formData.email
+      });
+
+      if (error) throw error;
+
+      // Update profile table as well
+      await supabase
+        .from('profiles')
+        .update({ email: formData.email })
+        .eq('id', user.user_id);
+
+      alert('Email-ul a fost schimbat cu succes!');
+      onUserUpdated();
+    } catch (error) {
+      console.error('Error changing email:', error);
+      alert('Eroare la schimbarea email-ului');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!user) return;
 
@@ -62,7 +89,6 @@ export function UserEditDialog({ user, open, onOpenChange, onUserUpdated }: User
         .update({
           first_name: formData.first_name,
           last_name: formData.last_name,
-          email: formData.email,
           account_type: formData.account_type,
         })
         .eq('id', user.user_id);
@@ -140,13 +166,24 @@ export function UserEditDialog({ user, open, onOpenChange, onUserUpdated }: User
             <Label htmlFor="email" className="text-right">
               Email
             </Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-              className="col-span-3"
-            />
+            <div className="col-span-3 flex gap-2">
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleChangeEmail}
+                disabled={loading || formData.email === user?.email}
+              >
+                Schimbă
+              </Button>
+            </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="account_type" className="text-right">
