@@ -120,13 +120,13 @@ const Calendar = () => {
 
   return (
     <DashboardLayout>
-      <div className="flex-1 min-h-screen bg-zinc-900">
+      <div className="flex-1 min-h-screen bg-white">
         {/* Notion-style Header */}
-        <div className="bg-zinc-900 border-b border-zinc-800 px-6 py-4">
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <h1 className="text-lg font-medium text-white flex items-center gap-3">
-                <CalendarIcon className="h-5 w-5 text-zinc-400" />
+              <h1 className="text-lg font-medium text-gray-900 flex items-center gap-3">
+                <CalendarIcon className="h-5 w-5 text-gray-600" />
                 Tasks
               </h1>
               <div className="flex items-center gap-1">
@@ -134,18 +134,18 @@ const Calendar = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => navigateMonth('prev')}
-                  className="h-7 w-7 p-0 text-zinc-400 hover:text-white hover:bg-zinc-800"
+                  className="h-7 w-7 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm text-zinc-300 min-w-[120px] text-center px-2">
+                <span className="text-sm text-gray-700 min-w-[120px] text-center px-2">
                   {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
                 </span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigateMonth('next')}
-                  className="h-7 w-7 p-0 text-zinc-400 hover:text-white hover:bg-zinc-800"
+                  className="h-7 w-7 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -156,7 +156,7 @@ const Calendar = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={goToToday}
-                className="text-sm text-zinc-400 hover:text-white hover:bg-zinc-800"
+                className="text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100"
               >
                 Today
               </Button>
@@ -173,18 +173,18 @@ const Calendar = () => {
 
         {/* Calendar Grid */}
         <div className="p-0">
-          <div className="bg-zinc-900">
-            <div className="grid grid-cols-7 border-l border-zinc-800">
+          <div className="bg-white">
+            <div className="grid grid-cols-7 border-l border-gray-200">
               {/* Day headers */}
               {daysOfWeek.map((day) => (
-                <div key={day} className="bg-zinc-900 border-r border-b border-zinc-800 px-3 py-3 text-center">
-                  <span className="text-xs font-medium text-zinc-500 uppercase tracking-wide">{day}</span>
+                <div key={day} className="bg-gray-50 border-r border-b border-gray-200 px-3 py-3 text-center">
+                  <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">{day}</span>
                 </div>
               ))}
               
               {/* Empty cells at start */}
               {emptyCellsAtStart.map((_, index) => (
-                <div key={`empty-${index}`} className="bg-zinc-900 border-r border-b border-zinc-800 min-h-[120px]" />
+                <div key={`empty-${index}`} className="bg-white border-r border-b border-gray-200 min-h-[120px]" />
               ))}
               
               {/* Calendar days */}
@@ -196,15 +196,15 @@ const Calendar = () => {
                 return (
                   <div
                     key={date.toISOString()}
-                    className={`border-r border-b border-zinc-800 min-h-[120px] p-2 relative cursor-pointer hover:bg-zinc-800/50 transition-colors ${
-                      !isCurrentMonth ? 'bg-zinc-900/50' : 'bg-zinc-900'
+                    className={`border-r border-b border-gray-200 min-h-[120px] p-2 relative cursor-pointer hover:bg-gray-50 transition-colors ${
+                      !isCurrentMonth ? 'bg-gray-50/50' : 'bg-white'
                     }`}
                     onClick={() => handleCellClick(date)}
                   >
                     <div className={`text-sm mb-2 ${
                       isCurrentDay 
-                        ? 'text-blue-400 font-medium' 
-                        : isCurrentMonth ? 'text-zinc-300' : 'text-zinc-600'
+                        ? 'text-blue-600 font-medium' 
+                        : isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
                     }`}>
                       {format(date, 'd')}
                     </div>
@@ -213,24 +213,19 @@ const Calendar = () => {
                       {dayEvents.slice(0, 4).map((event) => (
                         <div
                           key={event.id}
-                          className="flex items-center gap-2 text-xs px-2 py-1 rounded text-zinc-300 hover:bg-zinc-800 cursor-pointer transition-colors"
+                          className={`flex items-center gap-2 text-xs px-2 py-1 rounded-md cursor-pointer transition-colors ${getStatusColor(event.status)}`}
                           onClick={(e) => handleEventClick(event, e)}
                         >
-                          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                            event.status === 'completed' ? 'bg-green-500' : 
-                            event.status === 'scheduled' ? 'bg-blue-500' :
-                            event.status === 'failed' ? 'bg-red-500' : 'bg-orange-500'
-                          }`} />
-                          <span className="truncate text-xs">
+                          {event.status === 'completed' && (
+                            <Check className="w-3 h-3 text-green-600 flex-shrink-0" />
+                          )}
+                          <span className="truncate text-xs font-medium">
                             {event.client_name}
                           </span>
-                          {event.status === 'completed' && (
-                            <Check className="w-3 h-3 text-green-500 flex-shrink-0 ml-auto" />
-                          )}
                         </div>
                       ))}
                       {dayEvents.length > 4 && (
-                        <div className="text-xs text-zinc-500 px-2">
+                        <div className="text-xs text-gray-500 px-2">
                           +{dayEvents.length - 4} more
                         </div>
                       )}
