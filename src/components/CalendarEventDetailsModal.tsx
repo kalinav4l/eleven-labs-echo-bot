@@ -42,28 +42,28 @@ export const CalendarEventDetailsModal: React.FC<CalendarEventDetailsModalProps>
   const getPriorityConfig = (priority: string) => {
     switch (priority) {
       case 'high':
-        return { color: 'bg-gradient-to-r from-red-500 to-red-600 text-white border-0 shadow-lg shadow-red-500/30', label: 'Înaltă', icon: '🔴' };
+        return { color: 'bg-black text-white border border-gray-200', label: 'Înaltă', icon: <AlertCircle className="h-4 w-4" /> };
       case 'medium':
-        return { color: 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white border-0 shadow-lg shadow-yellow-500/30', label: 'Medie', icon: '🟡' };
+        return { color: 'bg-gray-600 text-white border border-gray-300', label: 'Medie', icon: <Clock className="h-4 w-4" /> };
       case 'low':
-        return { color: 'bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg shadow-green-500/30', label: 'Scăzută', icon: '🟢' };
+        return { color: 'bg-gray-400 text-white border border-gray-200', label: 'Scăzută', icon: <CheckCircle className="h-4 w-4" /> };
       default:
-        return { color: 'bg-gradient-to-r from-gray-500 to-gray-600 text-white border-0 shadow-lg shadow-gray-500/30', label: priority, icon: '⚪' };
+        return { color: 'bg-gray-500 text-white border border-gray-200', label: priority, icon: <Clock className="h-4 w-4" /> };
     }
   };
 
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'scheduled':
-        return { color: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg shadow-blue-500/30', label: 'Programat', icon: <Clock className="h-4 w-4" /> };
+        return { color: 'bg-white text-black border border-gray-300', label: 'Programat', icon: <Clock className="h-4 w-4" /> };
       case 'completed':
-        return { color: 'bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg shadow-green-500/30', label: 'Completat', icon: <CheckCircle className="h-4 w-4" /> };
+        return { color: 'bg-black text-white border border-gray-200', label: 'Completat', icon: <CheckCircle className="h-4 w-4" /> };
       case 'failed':
-        return { color: 'bg-gradient-to-r from-red-500 to-red-600 text-white border-0 shadow-lg shadow-red-500/30', label: 'Eșuat', icon: <XCircle className="h-4 w-4" /> };
+        return { color: 'bg-gray-600 text-white border border-gray-200', label: 'Eșuat', icon: <XCircle className="h-4 w-4" /> };
       case 'overdue':
-        return { color: 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-lg shadow-orange-500/30', label: 'Întârziat', icon: <AlertCircle className="h-4 w-4" /> };
+        return { color: 'bg-gray-800 text-white border border-gray-200', label: 'Întârziat', icon: <AlertCircle className="h-4 w-4" /> };
       default:
-        return { color: 'bg-gradient-to-r from-gray-500 to-gray-600 text-white border-0 shadow-lg shadow-gray-500/30', label: status, icon: <Clock className="h-4 w-4" /> };
+        return { color: 'bg-gray-500 text-white border border-gray-200', label: status, icon: <Clock className="h-4 w-4" /> };
     }
   };
 
@@ -90,11 +90,13 @@ export const CalendarEventDetailsModal: React.FC<CalendarEventDetailsModalProps>
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
+        <DialogContent className="sm:max-w-[600px] bg-white border border-gray-200">
+          <DialogHeader className="border-b border-gray-100 pb-4">
+            <DialogTitle className="flex items-center justify-between text-xl font-semibold text-black">
+              <span className="flex items-center gap-3">
+                <div className="p-2 bg-black rounded-lg">
+                  <Calendar className="h-5 w-5 text-white" />
+                </div>
                 Detalii Programare
               </span>
               <div className="flex gap-2">
@@ -103,109 +105,116 @@ export const CalendarEventDetailsModal: React.FC<CalendarEventDetailsModalProps>
                   <span className="ml-1">{statusConfig.label}</span>
                 </Badge>
                 <Badge className={priorityConfig.color}>
-                  <span className="mr-1">{priorityConfig.icon}</span>
-                  {priorityConfig.label}
+                  {priorityConfig.icon}
+                  <span className="ml-1">{priorityConfig.label}</span>
                 </Badge>
               </div>
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-6 pt-4">
+          <div className="space-y-6 pt-6">
             {/* Client Info */}
-            <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-full border border-gray-200 shadow-lg">
-              <div className="absolute -top-3 -left-3 w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full shadow-lg"></div>
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center justify-center gap-2">
-                <User className="h-5 w-5 text-blue-600" />
+            <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-200">
+              <h3 className="text-lg font-semibold text-black mb-4 flex items-center gap-3 border-b border-gray-100 pb-2">
+                <div className="p-2 bg-black rounded-lg">
+                  <User className="h-4 w-4 text-white" />
+                </div>
                 Informații Client
               </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-center gap-4 p-3 bg-white rounded-full shadow-sm border border-gray-100">
-                  <div className="p-2 bg-blue-100 rounded-full">
-                    <User className="h-5 w-5 text-blue-600" />
+              <div className="grid grid-cols-1 gap-4">
+                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                  <div className="p-2 bg-white border border-gray-200 rounded-lg">
+                    <User className="h-5 w-5 text-black" />
                   </div>
-                  <div className="flex-1 text-center">
-                    <p className="font-bold text-gray-900 text-lg">{event.client_name}</p>
-                    <p className="text-sm text-gray-500 font-medium">Client</p>
+                  <div className="flex-1">
+                    <p className="font-semibold text-black text-lg">{event.client_name}</p>
+                    <p className="text-sm text-gray-600">Nume client</p>
                   </div>
                 </div>
-                <div className="flex items-center justify-center gap-4 p-3 bg-white rounded-full shadow-sm border border-gray-100">
-                  <div className="p-2 bg-green-100 rounded-full">
-                    <Phone className="h-5 w-5 text-green-600" />
+                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                  <div className="p-2 bg-white border border-gray-200 rounded-lg">
+                    <Phone className="h-5 w-5 text-black" />
                   </div>
-                  <div className="flex-1 text-center">
-                    <p className="font-bold text-gray-900 text-lg">{event.phone_number}</p>
-                    <p className="text-sm text-gray-500 font-medium">Telefon</p>
+                  <div className="flex-1">
+                    <p className="font-semibold text-black text-lg">{event.phone_number}</p>
+                    <p className="text-sm text-gray-600">Număr telefon</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Schedule Info */}
-            <div className="relative bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-full border border-blue-200 shadow-lg">
-              <div className="absolute -top-3 -left-3 w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full shadow-lg"></div>
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center justify-center gap-2">
-                <Clock className="h-5 w-5 text-blue-600" />
+            <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-200">
+              <h3 className="text-lg font-semibold text-black mb-4 flex items-center gap-3 border-b border-gray-100 pb-2">
+                <div className="p-2 bg-black rounded-lg">
+                  <Clock className="h-4 w-4 text-white" />
+                </div>
                 Programare
               </h3>
-              <div className="flex items-center justify-center gap-4 p-4 bg-white rounded-full shadow-sm border border-blue-100">
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <Calendar className="h-6 w-6 text-blue-600" />
-                </div>
-                <div className="flex-1 text-center">
-                  <p className="font-bold text-gray-900 text-lg">
-                    {format(scheduledDate, "EEEE, d MMMM yyyy", { locale: ro })}
-                  </p>
-                  <p className="text-blue-600 font-bold text-xl">
-                    {format(scheduledDate, "HH:mm")}
-                    {isOverdue && <span className="ml-2 text-red-600 font-bold text-sm">(Întârziat)</span>}
-                  </p>
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-white border border-gray-200 rounded-lg">
+                    <Calendar className="h-6 w-6 text-black" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-black text-lg">
+                      {format(scheduledDate, "EEEE, d MMMM yyyy", { locale: ro })}
+                    </p>
+                    <p className="text-black font-bold text-xl">
+                      {format(scheduledDate, "HH:mm")}
+                      {isOverdue && <span className="ml-2 text-gray-600 font-medium text-sm">(Întârziat)</span>}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Details */}
             {event.reason && (
-              <div className="relative bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-full border border-yellow-200 shadow-lg">
-                <div className="absolute -top-3 -left-3 w-6 h-6 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full shadow-lg"></div>
-                <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center justify-center gap-2">
-                  <Tag className="h-5 w-5 text-yellow-600" />
+              <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-200">
+                <h3 className="text-lg font-semibold text-black mb-4 flex items-center gap-3 border-b border-gray-100 pb-2">
+                  <div className="p-2 bg-black rounded-lg">
+                    <Tag className="h-4 w-4 text-white" />
+                  </div>
                   Motiv
                 </h3>
-                <div className="p-4 bg-white rounded-full shadow-sm border border-yellow-100">
-                  <p className="text-gray-900 font-medium leading-relaxed text-center">{event.reason}</p>
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                  <p className="text-black font-medium leading-relaxed">{event.reason}</p>
                 </div>
               </div>
             )}
 
             {event.description && (
-              <div className="relative bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-full border border-green-200 shadow-lg">
-                <div className="absolute -top-3 -left-3 w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full shadow-lg"></div>
-                <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center justify-center gap-2">
-                  <FileText className="h-5 w-5 text-green-600" />
+              <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-200">
+                <h3 className="text-lg font-semibold text-black mb-4 flex items-center gap-3 border-b border-gray-100 pb-2">
+                  <div className="p-2 bg-black rounded-lg">
+                    <FileText className="h-4 w-4 text-white" />
+                  </div>
                   Descriere
                 </h3>
-                <div className="p-4 bg-white rounded-full shadow-sm border border-green-100">
-                  <p className="text-gray-900 font-medium leading-relaxed text-center">{event.description}</p>
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                  <p className="text-black font-medium leading-relaxed">{event.description}</p>
                 </div>
               </div>
             )}
 
             {event.notes && (
-              <div className="relative bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-full border border-purple-200 shadow-lg">
-                <div className="absolute -top-3 -left-3 w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full shadow-lg"></div>
-                <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center justify-center gap-2">
-                  <StickyNote className="h-5 w-5 text-purple-600" />
+              <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-200">
+                <h3 className="text-lg font-semibold text-black mb-4 flex items-center gap-3 border-b border-gray-100 pb-2">
+                  <div className="p-2 bg-black rounded-lg">
+                    <StickyNote className="h-4 w-4 text-white" />
+                  </div>
                   Notițe
                 </h3>
-                <div className="p-4 bg-white rounded-full shadow-sm border border-purple-100">
-                  <p className="text-gray-900 font-medium leading-relaxed text-center">{event.notes}</p>
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                  <p className="text-black font-medium leading-relaxed">{event.notes}</p>
                 </div>
               </div>
             )}
 
             {/* Timestamps */}
-            <div className="text-sm text-gray-500 border-t pt-4 bg-gray-50 p-4 rounded-full">
-              <div className="flex justify-between">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div className="flex justify-between text-sm text-gray-600">
                 <span className="font-medium">Creat: {format(new Date(event.created_at), "dd.MM.yyyy HH:mm")}</span>
                 <span className="font-medium">Actualizat: {format(new Date(event.updated_at), "dd.MM.yyyy HH:mm")}</span>
               </div>
@@ -213,16 +222,15 @@ export const CalendarEventDetailsModal: React.FC<CalendarEventDetailsModalProps>
           </div>
 
           {/* Actions */}
-          <div className="flex justify-between pt-4 border-t">
-            <div className="flex gap-2">
+          <div className="flex justify-between pt-6 border-t border-gray-200">
+            <div className="flex gap-3">
               {event.status === 'scheduled' && (
                 <Button
                   size="sm"
-                  variant="default"
                   onClick={handleExecute}
-                  className="bg-green-600 hover:bg-green-700"
+                  className="bg-black text-white hover:bg-gray-800 border border-gray-200"
                 >
-                  <Play className="h-4 w-4 mr-1" />
+                  <Play className="h-4 w-4 mr-2" />
                   Execută
                 </Button>
               )}
@@ -230,17 +238,18 @@ export const CalendarEventDetailsModal: React.FC<CalendarEventDetailsModalProps>
                 size="sm"
                 variant="outline"
                 onClick={() => setShowEditModal(true)}
+                className="border-gray-300 text-black hover:bg-gray-50"
               >
-                <Edit3 className="h-4 w-4 mr-1" />
+                <Edit3 className="h-4 w-4 mr-2" />
                 Editează
               </Button>
             </div>
             <Button
               size="sm"
-              variant="destructive"
               onClick={handleDelete}
+              className="bg-white text-black border border-gray-300 hover:bg-gray-50"
             >
-              <Trash2 className="h-4 w-4 mr-1" />
+              <Trash2 className="h-4 w-4 mr-2" />
               Șterge
             </Button>
           </div>
