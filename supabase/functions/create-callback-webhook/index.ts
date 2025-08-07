@@ -103,74 +103,115 @@ serve(async (req) => {
     
     console.log('Processed callback data:', processedData);
 
-    // Determine user_id through multiple fallback methods for security
-    let userId = payload.user_id;
+    // IMPROVED: Determine user_id through comprehensive agent owner identification
+    let userId: string | null = null;
     
-    // Method 1: Direct user_id provided
+    console.log('🔍 Începerea identificării proprietarului agentului...');
+    console.log('📥 Date primite:', {
+      user_id: payload.user_id,
+      user_email: payload.user_email,
+      agent_name: payload.agent_name,
+      agent_id: payload.agent_id
+    });
+    
+    // Method 1: Direct user_id validation (verify it exists and owns the agent)
+    if (payload.user_id) {
+      console.log('🔍 Method 1: Verificare user_id direct...');
+      
+      // Validate that this user_id actually owns the specified agent
+      if (payload.agent_id || payload.agent_name) {
+        const { data: ownershipCheck } = await supabase
+          .from('kalina_agents')
+          .select('user_id, name, agent_id, elevenlabs_agent_id')
+          .eq('user_id', payload.user_id)
+          .eq('is_active', true)
+          .or(`agent_id.eq.${payload.agent_id || 'null'},elevenlabs_agent_id.eq.${payload.agent_id || 'null'},name.eq.${payload.agent_name || 'null'}`)
+          .maybeSingle();
+        
+        if (ownershipCheck) {
+          userId = payload.user_id;
+          console.log('✅ Method 1 SUCCESS: User verificat ca proprietar al agentului');
+        } else {
+          console.log('❌ Method 1 FAILED: User_id nu deține agentul specificat');
+        }
+      } else {
+        // If no agent specified, just validate the user exists
+        const { data: userCheck } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', payload.user_id)
+          .maybeSingle();
+        
+        if (userCheck) {
+          userId = payload.user_id;
+          console.log('✅ Method 1 SUCCESS: User_id valid');
+        }
+      }
+    }
+    
+    // Method 2: Look up by agent information (most reliable method)
+    if (!userId && (payload.agent_id || payload.agent_name)) {
+      console.log('🔍 Method 2: Căutare prin informațiile agentului...');
+      
+      // Try multiple agent identifier patterns
+      const agentQueries = [];
+      
+      if (payload.agent_id) {
+        agentQueries.push(
+          // Internal agent_id
+          supabase.from('kalina_agents').select('user_id, name, agent_id').eq('agent_id', payload.agent_id).eq('is_active', true).maybeSingle(),
+          // ElevenLabs agent_id
+          supabase.from('kalina_agents').select('user_id, name, agent_id').eq('elevenlabs_agent_id', payload.agent_id).eq('is_active', true).maybeSingle(),
+          // Agent name (in case agent_id is actually a name)
+          supabase.from('kalina_agents').select('user_id, name, agent_id').eq('name', payload.agent_id).eq('is_active', true).maybeSingle()
+        );
+      }
+      
+      if (payload.agent_name) {
+        agentQueries.push(
+          supabase.from('kalina_agents').select('user_id, name, agent_id').eq('name', payload.agent_name).eq('is_active', true).maybeSingle()
+        );
+      }
+      
+      // Execute all queries and find the first match
+      for (let i = 0; i < agentQueries.length; i++) {
+        const { data: agentData, error } = await agentQueries[i];
+        if (agentData && !error) {
+          userId = agentData.user_id;
+          payload.agent_id = agentData.agent_id; // Standardize to internal agent_id
+          console.log(`✅ Method 2 SUCCESS (query ${i+1}): Agent găsit - User: ${userId}, Agent: ${agentData.name}`);
+          break;
+        }
+      }
+      
+      if (!userId) {
+        console.log('❌ Method 2 FAILED: Agentul nu a fost găsit în baza de date');
+      }
+    }
+    
+    // Method 3: Look up by user email (only if previous methods failed)
     if (!userId && payload.user_email) {
-      // Method 2: Look up by email
+      console.log('🔍 Method 3: Căutare prin email...');
       const { data: userData } = await supabase.auth.admin.listUsers();
       const foundUser = userData.users.find(u => u.email === payload.user_email);
-      userId = foundUser?.id;
-      console.log('Found user by email:', payload.user_email, '-> userId:', userId);
-    }
-    
-    if (!userId && payload.agent_name) {
-      // Method 3: Look up by agent name
-      const { data: agentData } = await supabase
-        .from('kalina_agents')
-        .select('user_id, agent_id')
-        .eq('name', payload.agent_name)
-        .eq('is_active', true)
-        .maybeSingle();
       
-      userId = agentData?.user_id;
-      console.log('Found user by agent_name:', payload.agent_name, '-> userId:', userId);
-      
-      // Also set agent_id if found
-      if (agentData?.agent_id) {
-        payload.agent_id = agentData.agent_id;
+      if (foundUser) {
+        // Double-check that this user actually has agents
+        const { data: userAgents } = await supabase
+          .from('kalina_agents')
+          .select('id')
+          .eq('user_id', foundUser.id)
+          .eq('is_active', true);
+        
+        if (userAgents && userAgents.length > 0) {
+          userId = foundUser.id;
+          console.log('✅ Method 3 SUCCESS: User găsit prin email și confirmat că are agenți');
+        } else {
+          console.log('❌ Method 3 FAILED: User găsit prin email dar nu are agenți activi');
+        }
+      } else {
+        console.log('❌ Method 3 FAILED: Nu s-a găsit user cu acest email');
       }
-    }
-    
-    if (!userId && payload.agent_id) {
-      // Method 3.5: Try agent_id as agent name first
-      const { data: agentByName } = await supabase
-        .from('kalina_agents')
-        .select('user_id, agent_id')
-        .eq('name', payload.agent_id)
-        .eq('is_active', true)
-        .maybeSingle();
-      
-      if (agentByName?.user_id) {
-        userId = agentByName.user_id;
-        payload.agent_id = agentByName.agent_id; // Update with real agent_id
-        console.log('Found user by agent_id as name:', payload.agent_id, '-> userId:', userId);
-      }
-    }
-    
-    if (!userId && payload.agent_id) {
-      // Method 4: Look up by agent_id (ElevenLabs agent_id)
-      const { data: agentData } = await supabase
-        .from('kalina_agents')
-        .select('user_id')
-        .eq('elevenlabs_agent_id', payload.agent_id)
-        .maybeSingle();
-      
-      userId = agentData?.user_id;
-      console.log('Found user by elevenlabs_agent_id:', payload.agent_id, '-> userId:', userId);
-    }
-    
-    if (!userId && payload.agent_id) {
-      // Method 5: Look up by internal agent_id
-      const { data: agentData2 } = await supabase
-        .from('kalina_agents')
-        .select('user_id')
-        .eq('agent_id', payload.agent_id)
-        .maybeSingle();
-      
-      userId = agentData2?.user_id;
-      console.log('Found user by internal agent_id:', payload.agent_id, '-> userId:', userId);
     }
 
     // CRITICAL: No hardcoded fallback - require agent owner identification
