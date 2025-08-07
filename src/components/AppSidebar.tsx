@@ -39,7 +39,7 @@ const communicationsItems = [
 const dataToolsItems = [
   { title: "Transcrieri", url: "/account/transcript", icon: FileText },
   { title: "Extragere Date", url: "/account/scraping", icon: Search },
-  { title: "Gmail", url: "/account/gmail", icon: Mail },
+  { title: "Email", url: "/account/gmail", icon: Mail },
 ];
 
 const workflowItems = [
