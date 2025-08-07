@@ -167,44 +167,21 @@ export const useConversationTracking = () => {
 
       console.log('Conversation saved successfully:', data);
 
-      // Update user statistics with new spending data
-      try {
-        console.log('📊 Actualizez statisticile utilizatorului...');
-        const { data: statsResult, error: statsError } = await supabase.rpc('update_user_statistics_with_spending', {
-          p_user_id: user.id,
-          p_duration_seconds: durationSeconds,
-          p_cost_usd: finalCost
-        });
-
-        if (statsError) {
-          console.warn('⚠️ Eroare la actualizarea statisticilor:', statsError);
-        } else {
-          console.log('✅ Statistici actualizate cu succes');
-        }
-
-        // Deduct cost from user balance
-        console.log('💰 Deduc costul din balanta utilizatorului...');
-        const { data: balanceResult, error: balanceError } = await supabase.rpc('deduct_balance', {
-          p_user_id: user.id,
-          p_amount: finalCost,
-          p_description: `Apel ${(durationSeconds / 60).toFixed(1)} minute - ${conversationData.agent_name}`,
-          p_conversation_id: data.id // Aici folosim UUID-ul valid din tabela conversations
-        });
-
-        if (balanceError) {
-          console.warn('⚠️ Eroare la deducerea din balanță:', balanceError);
-        } else {
-          console.log('✅ Balanța actualizată cu succes');
-        }
-      } catch (error) {
-        console.warn('❌ Eroare la actualizarea datelor financiare:', error);
-      }
+      // OPTIMIZED: Skip manual financial operations - webhook handles these atomically
+      // The webhook now handles balance deduction and statistics updates in a single atomic transaction
+      // This prevents the race conditions and duplicate charges that were happening before
+      
+      console.log('💡 Financial operations will be handled by webhook automatically');
+      console.log('🔄 Skipping manual balance/statistics updates to prevent duplicates');
 
       return data;
     },
     onSuccess: () => {
       // Invalidate call history to refresh the list
       queryClient.invalidateQueries({ queryKey: ['call-history', user?.id] });
+      // Also invalidate user stats and balance to show updated values
+      queryClient.invalidateQueries({ queryKey: ['user-statistics', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-balance', user?.id] });
     },
   });
 

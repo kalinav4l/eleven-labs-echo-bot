@@ -1,39 +1,18 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useUserBalance } from '@/hooks/useUserBalance';
 import { CreditCard, Crown, Zap, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
+
 const CreditsPlanDisplay = () => {
-  const {
-    user
-  } = useAuth();
-  const {
-    profile
-  } = useUserProfile();
+  const { user } = useAuth();
+  const { profile } = useUserProfile();
   const navigate = useNavigate();
-  const {
-    data: userBalance,
-    isLoading
-  } = useQuery({
-    queryKey: ['user-balance', user?.id],
-    queryFn: async () => {
-      if (!user) return null;
-      const {
-        data,
-        error
-      } = await supabase.from('user_balance').select('balance_usd').eq('user_id', user.id).single();
-      if (error) {
-        console.error('Error fetching balance:', error);
-        return null;
-      }
-      return data;
-    },
-    enabled: !!user
-  });
+  
+  const { data: userBalance, isLoading } = useUserBalance();
   if (!user || isLoading) {
     return null;
   }

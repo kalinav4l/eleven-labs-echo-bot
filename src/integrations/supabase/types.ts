@@ -146,6 +146,36 @@ export type Database = {
         }
         Relationships: []
       }
+      balance_transactions: {
+        Row: {
+          amount: number
+          conversation_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          conversation_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          conversation_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       call_history: {
         Row: {
           agent_id: string | null
@@ -1703,6 +1733,16 @@ export type Database = {
           p_amount: number
           p_description?: string
           p_conversation_id?: string
+        }
+        Returns: boolean
+      }
+      execute_atomic_call_transaction: {
+        Args: {
+          p_user_id: string
+          p_amount: number
+          p_duration_seconds: number
+          p_description: string
+          p_conversation_id: string
         }
         Returns: boolean
       }

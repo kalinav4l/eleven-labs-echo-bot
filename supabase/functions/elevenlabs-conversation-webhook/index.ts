@@ -157,8 +157,8 @@ async function processConversation(supabase: any, payload: ElevenLabsWebhookPayl
         console.log(`💳 Starting atomic transaction: Deducting $${finalCost} from user ${userId}...`);
         
         try {
-          // Start atomic transaction for financial operations
-          const { data: transactionResult, error: transactionError } = await supabase.rpc('process_call_transaction', {
+          // Use the new atomic transaction function
+          const { data: transactionResult, error: transactionError } = await supabase.rpc('execute_atomic_call_transaction', {
             p_user_id: userId,
             p_amount: finalCost,
             p_duration_seconds: durationSeconds,
