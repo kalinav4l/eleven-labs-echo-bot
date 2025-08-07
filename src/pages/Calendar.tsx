@@ -120,7 +120,7 @@ const Calendar = () => {
 
   return (
     <DashboardLayout>
-      <div className="flex-1 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex-1 min-h-screen bg-white">
         {/* Header cu efect liquid glass */}
         <div className="bg-white/80 backdrop-blur-lg border-0 px-6 py-4">
           <div className="flex items-center justify-between">
@@ -241,7 +241,7 @@ const Calendar = () => {
               
               {/* Celule goale la început */}
               {emptyCellsAtStart.map((_, index) => (
-                <div key={`empty-${index}`} className="bg-white/20 min-h-[120px]" />
+                <div key={`empty-${index}`} className="bg-white min-h-[120px]" />
               ))}
               
               {/* Zilele calendarului */}
@@ -253,8 +253,8 @@ const Calendar = () => {
                 return (
                   <div
                     key={date.toISOString()}
-                    className={`min-h-[120px] p-3 relative cursor-pointer transition-all duration-300 hover:bg-white/40 ${
-                      !isCurrentMonth ? 'bg-white/10 text-gray-400' : 'bg-white/20'
+                    className={`min-h-[120px] p-3 relative cursor-pointer transition-all duration-300 hover:bg-gray-50 ${
+                      !isCurrentMonth ? 'bg-white text-gray-400' : 'bg-white'
                     }`}
                     onClick={() => handleCellClick(date)}
                   >
