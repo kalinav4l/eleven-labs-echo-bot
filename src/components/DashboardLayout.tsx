@@ -5,6 +5,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/components/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { BlockedUserOverlay } from './BlockedUserOverlay';
+import { PaymentIssueNotification } from './PaymentIssueNotification';
 import { Button } from "@/components/ui/button";
 import { LogOut, Menu } from 'lucide-react';
 import { APP_VERSION } from '@/config/version';
@@ -14,6 +15,7 @@ const DashboardLayout = ({
   children: React.ReactNode;
 }) => {
   const [userBlocked, setUserBlocked] = useState(false);
+  const [hasPaymentIssue, setHasPaymentIssue] = useState(true); // Temporarily set to true for demo
   const isMobile = useIsMobile();
   const {
     user,
@@ -64,6 +66,10 @@ const DashboardLayout = ({
   };
   return <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background mobile-safe-area">
+        <PaymentIssueNotification 
+          hasPaymentIssue={hasPaymentIssue} 
+          onDismiss={() => setHasPaymentIssue(false)} 
+        />
         <BlockedUserOverlay isBlocked={userBlocked} />
         
         <AppSidebar />
