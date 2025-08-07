@@ -62,15 +62,13 @@ const DashboardLayout = ({
           setTotalSpent(stats.total_spent_usd || 0);
         }
 
-        // Show notification ONLY when balance is below $100 or at 0
+        // Show notification ONLY when balance is at 0
         const currentBalance = balance?.balance_usd || 0;
 
         if (currentBalance <= 0) {
           setNotificationType('no_balance');
-        } else if (currentBalance < 100) {
-          setNotificationType('low_balance');
         } else {
-          setNotificationType(null); // Don't show notification when balance is above $100
+          setNotificationType(null); // Don't show notification unless balance is 0
         }
       } catch (error) {
         console.error('Error fetching user profile:', error);

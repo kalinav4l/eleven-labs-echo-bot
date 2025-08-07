@@ -36,12 +36,12 @@ export const PaymentIssueNotification: React.FC<PaymentIssueNotificationProps> =
       
       case 'no_balance':
         return {
-          icon: <CreditCard className="h-5 w-5 text-red-600 flex-shrink-0" />,
-          bgColor: 'bg-red-50',
-          borderColor: 'border-red-200',
-          textColor: 'text-red-800',
-          subtextColor: 'text-red-700',
-          buttonColor: 'bg-red-600 hover:bg-red-700',
+          icon: <CreditCard className="h-5 w-5 text-amber-900 flex-shrink-0" />,
+          bgColor: 'bg-amber-400',
+          borderColor: 'border-amber-500',
+          textColor: 'text-amber-900',
+          subtextColor: 'text-amber-800',
+          buttonColor: 'bg-amber-600 hover:bg-amber-700',
           title: 'Ai epuizat toate creditele disponibile',
           subtitle: 'Pentru a continua să utilizezi serviciile, trebuie să adaugi credite în cont.',
           buttonText: 'Adaugă Credite Urgent'
@@ -65,11 +65,7 @@ export const PaymentIssueNotification: React.FC<PaymentIssueNotificationProps> =
   const content = getNotificationContent();
 
   const handleAction = () => {
-    if (notificationType === 'payment_method') {
-      window.location.href = '/account';
-    } else {
-      window.location.href = '/pricing';
-    }
+    window.location.href = '/pricing';
   };
 
   return (
