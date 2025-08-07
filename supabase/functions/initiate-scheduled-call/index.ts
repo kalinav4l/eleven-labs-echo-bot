@@ -346,7 +346,7 @@ Acest este un contact nou, fără istoric anterior de interacțiuni.`
         initiated_at: new Date().toISOString(),
         batch_processing: batch_processing || false,
         is_test_call: is_test_call || false,
-        caller_phone_details: is_test_call ? { elevenlabs_phone_id: agentPhoneId, phone_number: callerNumber } : userPhone
+        caller_phone_details: { elevenlabs_phone_id: agentPhoneId, phone_number: callerNumber }
       }),
       call_date: new Date().toISOString(),
       cost_usd: 0, // Will be updated when call completes
