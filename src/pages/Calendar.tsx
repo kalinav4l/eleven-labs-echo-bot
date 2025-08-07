@@ -4,7 +4,7 @@ import { Navigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Clock, User, Phone, Filter, Search, RefreshCw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Clock, User, Phone, Filter, Search, RefreshCw, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, isSameMonth } from 'date-fns';
@@ -93,15 +93,15 @@ const Calendar = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'scheduled':
-        return 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 border border-blue-400';
+        return 'bg-blue-100 text-blue-800 border border-blue-200';
       case 'completed':
-        return 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/30 border border-green-400';
+        return 'bg-green-100 text-green-800 border border-green-200';
       case 'failed':
-        return 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30 border border-red-400';
+        return 'bg-red-100 text-red-800 border border-red-200';
       case 'overdue':
-        return 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 border border-orange-400';
+        return 'bg-orange-100 text-orange-800 border border-orange-200';
       default:
-        return 'bg-gradient-to-r from-gray-500 to-gray-600 text-white shadow-lg shadow-gray-500/30 border border-gray-400';
+        return 'bg-gray-100 text-gray-800 border border-gray-200';
     }
   };
 
@@ -120,124 +120,71 @@ const Calendar = () => {
 
   return (
     <DashboardLayout>
-      <div className="flex-1 min-h-screen bg-gray-50">
-        {/* Simple Header */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="flex-1 min-h-screen bg-zinc-900">
+        {/* Notion-style Header */}
+        <div className="bg-zinc-900 border-b border-zinc-800 px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-600 text-white">
-                  <CalendarIcon className="h-5 w-5" />
-                </div>
-                Calendar Programări
+            <div className="flex items-center gap-4">
+              <h1 className="text-lg font-medium text-white flex items-center gap-3">
+                <CalendarIcon className="h-5 w-5 text-zinc-400" />
+                Tasks
               </h1>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigateMonth('prev')}
-                  className="h-8 w-8 p-0 rounded-lg hover:bg-gray-100 text-gray-600"
+                  className="h-7 w-7 p-0 text-zinc-400 hover:text-white hover:bg-zinc-800"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm font-medium text-gray-900 min-w-[140px] text-center px-3">
+                <span className="text-sm text-zinc-300 min-w-[120px] text-center px-2">
                   {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
                 </span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigateMonth('next')}
-                  className="h-8 w-8 p-0 rounded-lg hover:bg-gray-100 text-gray-600"
+                  className="h-7 w-7 p-0 text-zinc-400 hover:text-white hover:bg-zinc-800"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={goToToday}
-                className="text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                className="text-sm text-zinc-400 hover:text-white hover:bg-zinc-800"
               >
-                Astăzi
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => refetch()}
-                className="text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
-                disabled={isLoading}
-              >
-                <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
-                Reîmprospătează
+                Today
               </Button>
               <Button 
                 size="sm" 
                 onClick={() => setShowEventModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 h-7"
               >
-                <Plus className="h-4 w-4 mr-1" />
-                Programare Nouă
+                New
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Simple Filters */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Caută după nume client sau telefon..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 border-gray-300 rounded-lg"
-                />
-              </div>
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[150px] border-gray-300 rounded-lg">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toate</SelectItem>
-                <SelectItem value="scheduled">Programate</SelectItem>
-                <SelectItem value="completed">Completate</SelectItem>
-                <SelectItem value="failed">Eșuate</SelectItem>
-                <SelectItem value="overdue">Întârziate</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger className="w-[150px] border-gray-300 rounded-lg">
-                <SelectValue placeholder="Prioritate" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toate</SelectItem>
-                <SelectItem value="high">Înaltă</SelectItem>
-                <SelectItem value="medium">Medie</SelectItem>
-                <SelectItem value="low">Scăzută</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Calendar Grid Container */}
-        <div className="p-6">
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="grid grid-cols-7">
+        {/* Calendar Grid */}
+        <div className="p-0">
+          <div className="bg-zinc-900">
+            <div className="grid grid-cols-7 border-l border-zinc-800">
               {/* Day headers */}
               {daysOfWeek.map((day) => (
-                <div key={day} className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-4 py-3 text-center border-r border-gray-600 last:border-r-0">
-                  <span className="text-xs font-bold uppercase tracking-wider">{day}</span>
+                <div key={day} className="bg-zinc-900 border-r border-b border-zinc-800 px-3 py-3 text-center">
+                  <span className="text-xs font-medium text-zinc-500 uppercase tracking-wide">{day}</span>
                 </div>
               ))}
               
               {/* Empty cells at start */}
               {emptyCellsAtStart.map((_, index) => (
-                <div key={`empty-${index}`} className="bg-gray-50 border-r border-b border-gray-200 min-h-[140px] last:border-r-0" />
+                <div key={`empty-${index}`} className="bg-zinc-900 border-r border-b border-zinc-800 min-h-[120px]" />
               ))}
               
               {/* Calendar days */}
@@ -249,41 +196,42 @@ const Calendar = () => {
                 return (
                   <div
                     key={date.toISOString()}
-                    className={`border-r border-b border-gray-200 min-h-[140px] p-3 relative cursor-pointer transition-all duration-200 hover:bg-gray-50 last:border-r-0 ${
-                      !isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'
+                    className={`border-r border-b border-zinc-800 min-h-[120px] p-2 relative cursor-pointer hover:bg-zinc-800/50 transition-colors ${
+                      !isCurrentMonth ? 'bg-zinc-900/50' : 'bg-zinc-900'
                     }`}
                     onClick={() => handleCellClick(date)}
                   >
-                    <div className={`text-sm mb-3 font-medium ${
+                    <div className={`text-sm mb-2 ${
                       isCurrentDay 
-                        ? 'text-white bg-blue-600 rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold' 
-                        : 'text-gray-900'
+                        ? 'text-blue-400 font-medium' 
+                        : isCurrentMonth ? 'text-zinc-300' : 'text-zinc-600'
                     }`}>
                       {format(date, 'd')}
                     </div>
                     
-                    <div className="space-y-1.5">
-                      {dayEvents.slice(0, 3).map((event) => (
+                    <div className="space-y-1">
+                      {dayEvents.slice(0, 4).map((event) => (
                         <div
                           key={event.id}
-                          className={`text-xs p-2 rounded-lg cursor-pointer transition-all duration-200 hover:scale-105 ${getStatusColor(event.status)}`}
+                          className="flex items-center gap-2 text-xs px-2 py-1 rounded text-zinc-300 hover:bg-zinc-800 cursor-pointer transition-colors"
                           onClick={(e) => handleEventClick(event, e)}
                         >
-                          <div className="flex items-center gap-1 mb-1">
-                            <Clock className="h-3 w-3 flex-shrink-0" />
-                            <span className="font-semibold text-xs">
-                              {format(new Date(event.scheduled_time || event.scheduled_datetime), 'HH:mm')}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <User className="h-3 w-3 flex-shrink-0" />
-                            <span className="truncate font-medium text-xs">{event.client_name}</span>
-                          </div>
+                          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                            event.status === 'completed' ? 'bg-green-500' : 
+                            event.status === 'scheduled' ? 'bg-blue-500' :
+                            event.status === 'failed' ? 'bg-red-500' : 'bg-orange-500'
+                          }`} />
+                          <span className="truncate text-xs">
+                            {event.client_name}
+                          </span>
+                          {event.status === 'completed' && (
+                            <Check className="w-3 h-3 text-green-500 flex-shrink-0 ml-auto" />
+                          )}
                         </div>
                       ))}
-                      {dayEvents.length > 3 && (
-                        <div className="text-xs text-gray-500 p-1.5 text-center bg-gray-100 rounded-md font-medium">
-                          +{dayEvents.length - 3} mai multe
+                      {dayEvents.length > 4 && (
+                        <div className="text-xs text-zinc-500 px-2">
+                          +{dayEvents.length - 4} more
                         </div>
                       )}
                     </div>
