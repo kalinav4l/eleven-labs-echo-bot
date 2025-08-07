@@ -15,7 +15,9 @@ const DashboardLayout = ({
   children: React.ReactNode;
 }) => {
   const [userBlocked, setUserBlocked] = useState(false);
-  const [hasPaymentIssue, setHasPaymentIssue] = useState(true); // Temporarily set to true for demo
+  const [notificationType, setNotificationType] = useState<'payment_method' | 'low_balance' | 'no_balance' | null>(null);
+  const [userBalance, setUserBalance] = useState(0);
+  const [totalSpent, setTotalSpent] = useState(0);
   const isMobile = useIsMobile();
   const {
     user,
@@ -25,15 +27,52 @@ const DashboardLayout = ({
     const checkUserStatus = async () => {
       if (!user) return;
       try {
-        const {
-          data: profile,
-          error
-        } = await supabase.from('profiles').select('account_type').eq('id', user.id).single();
-        if (error) {
-          console.error('Error checking user status:', error);
+        // Check user profile for banned status
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('account_type')
+          .eq('id', user.id)
+          .single();
+        
+        if (profileError) {
+          console.error('Error checking user status:', profileError);
           return;
         }
+        
         setUserBlocked(profile?.account_type === 'banned');
+
+        // Check user balance and spending
+        const { data: balance, error: balanceError } = await supabase
+          .from('user_balance')
+          .select('balance_usd')
+          .eq('user_id', user.id)
+          .single();
+
+        const { data: stats, error: statsError } = await supabase
+          .from('user_statistics')
+          .select('total_spent_usd')
+          .eq('user_id', user.id)
+          .single();
+
+        if (!balanceError && balance) {
+          setUserBalance(balance.balance_usd || 0);
+        }
+
+        if (!statsError && stats) {
+          setTotalSpent(stats.total_spent_usd || 0);
+        }
+
+        // Determine notification type based on spending and balance
+        const currentBalance = balance?.balance_usd || 0;
+        const currentSpent = stats?.total_spent_usd || 0;
+
+        if (currentBalance <= 0) {
+          setNotificationType('no_balance');
+        } else if (currentSpent >= 100) {
+          setNotificationType('low_balance');
+        } else {
+          setNotificationType(null);
+        }
       } catch (error) {
         console.error('Error fetching user profile:', error);
       }
@@ -67,8 +106,10 @@ const DashboardLayout = ({
   return <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background mobile-safe-area">
         <PaymentIssueNotification 
-          hasPaymentIssue={hasPaymentIssue} 
-          onDismiss={() => setHasPaymentIssue(false)} 
+          notificationType={notificationType}
+          spentAmount={totalSpent}
+          remainingBalance={userBalance}
+          onDismiss={() => setNotificationType(null)} 
         />
         <BlockedUserOverlay isBlocked={userBlocked} />
         
