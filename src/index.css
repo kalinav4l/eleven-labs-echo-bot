@@ -154,6 +154,7 @@
 		background: #ffffff !important;
 		min-height: 100vh;
 		color: #000000;
+		font-weight: 500;
 		/* Prevent zoom on mobile inputs */
 		-webkit-text-size-adjust: 100%;
 		/* Better touch scrolling */
