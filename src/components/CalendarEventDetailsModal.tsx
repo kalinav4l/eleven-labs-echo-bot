@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -134,12 +134,12 @@ export const CalendarEventDetailsModal: React.FC<CalendarEventDetailsModalProps>
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[700px] bg-white/20 backdrop-blur-xl border border-white/30 shadow-2xl shadow-blue-500/10">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 rounded-lg"></div>
-          <div className="relative z-10">
-            <DialogHeader className="border-b border-white/20 pb-6">
-              <DialogTitle className="flex items-center justify-between text-2xl font-bold text-gray-900">
+      <Sheet open={isOpen} onOpenChange={onClose}>
+        <SheetContent side="right" className="w-[50vw] max-w-none bg-white/95 backdrop-blur-xl border-l border-white/30 shadow-2xl overflow-y-auto">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5"></div>
+          <div className="relative z-10 h-full">
+            <SheetHeader className="border-b border-white/20 pb-6 sticky top-0 bg-white/80 backdrop-blur-sm z-20">
+              <SheetTitle className="flex items-center justify-between text-2xl font-bold text-gray-900">
                 <span className="flex items-center gap-4">
                   <div className="p-3 bg-gradient-to-br from-blue-500/80 to-purple-600/80 backdrop-blur-sm rounded-2xl border border-white/30 shadow-lg">
                     <Calendar className="h-6 w-6 text-white" />
@@ -158,8 +158,8 @@ export const CalendarEventDetailsModal: React.FC<CalendarEventDetailsModalProps>
                     <span className="ml-2 font-semibold">{priorityConfig.label}</span>
                   </Badge>
                 </div>
-              </DialogTitle>
-            </DialogHeader>
+              </SheetTitle>
+            </SheetHeader>
 
             <div className="space-y-8 pt-8">
               {/* Client Info */}
@@ -325,8 +325,8 @@ export const CalendarEventDetailsModal: React.FC<CalendarEventDetailsModalProps>
               </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {/* Edit Modal */}
       <CalendarEventModal
