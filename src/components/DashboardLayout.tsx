@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { ModernSidebar } from './ModernSidebar';
+import { AppSidebar } from './AppSidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/components/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -110,7 +110,7 @@ const DashboardLayout = ({
         />
         <BlockedUserOverlay isBlocked={userBlocked} />
         
-        <ModernSidebar />
+        <AppSidebar />
         
         <div className="flex-1 flex flex-col" style={{ paddingTop: userBlocked ? '80px' : '0' }}>
           {/* Mobile Header */}
