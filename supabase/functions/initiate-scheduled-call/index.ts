@@ -92,54 +92,63 @@ serve(async (req) => {
     // Configure phone number for call - use test number for test calls
     let agentPhoneId, callerNumber;
 
-    if (is_test_call) {
-      // For test calls, use the configured test phone number
-      agentPhoneId = 'phnum_01jzwnpa8cfnhbxh0367z4jtqs';
-      callerNumber = '+37379325040';
-      console.log('🧪 Using test phone number for test call:', { agentPhoneId, callerNumber });
-    } else {
-      // For regular calls, get user's phone number from database
-      const { data: userPhoneNumbers, error: phoneError } = await supabase
-        .from('phone_numbers')
-        .select('elevenlabs_phone_id, phone_number')
-        .eq('user_id', user_id)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(1)
+    // Get user's phone number from database (for both test and regular calls)
+    const { data: userPhoneNumbers, error: phoneError } = await supabase
+      .from('phone_numbers')
+      .select('elevenlabs_phone_id, phone_number')
+      .eq('user_id', user_id)
+      .eq('status', 'active')
+      .order('is_primary', { ascending: false }) // Prefer primary phone numbers
+      .order('created_at', { ascending: false })
+      .limit(1);
 
-      if (phoneError) {
-        console.error('❌ Error fetching user phone numbers:', phoneError)
-        return new Response(
-          JSON.stringify({ 
-            error: 'Nu s-au putut găsi numerele de telefon ale utilizatorului',
-            success: false,
-            details: phoneError.message
-          }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        )
-      }
+    if (phoneError) {
+      console.error('❌ Error fetching user phone numbers:', phoneError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Nu s-au putut găsi numerele de telefon ale utilizatorului',
+          success: false,
+          details: phoneError.message
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
 
-      if (!userPhoneNumbers || userPhoneNumbers.length === 0) {
-        console.error('❌ No active phone numbers found for user:', user_id)
-        return new Response(
-          JSON.stringify({ 
-            error: 'Nu aveți niciun număr de telefon activ înregistrat. Vă rugăm să adăugați un număr de telefon în secțiunea Numere de Telefon.',
-            success: false,
-            details: 'Utilizatorul nu are numere de telefon active'
-          }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        )
-      }
+    if (!userPhoneNumbers || userPhoneNumbers.length === 0) {
+      console.error('❌ No active phone numbers found for user:', user_id);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Nu aveți niciun număr de telefon activ înregistrat. Vă rugăm să adăugați un număr de telefon în secțiunea Phone Numbers.',
+          success: false,
+          details: 'Utilizatorul nu are numere de telefon active'
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
 
-      const userPhone = userPhoneNumbers[0]
-      agentPhoneId = userPhone.elevenlabs_phone_id
-      callerNumber = userPhone.phone_number
+    const userPhone = userPhoneNumbers[0];
+    agentPhoneId = userPhone.elevenlabs_phone_id;
+    callerNumber = userPhone.phone_number;
+
+    if (!agentPhoneId) {
+      console.error('❌ Phone number missing ElevenLabs configuration');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Numărul de telefon nu este configurat corect cu ElevenLabs. Vă rugăm să reconfigurați numărul în secțiunea Phone Numbers.',
+          success: false,
+          details: 'Phone number missing elevenlabs_phone_id'
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     console.log('User phone details:', { agentPhoneId, callerNumber, user_id })
