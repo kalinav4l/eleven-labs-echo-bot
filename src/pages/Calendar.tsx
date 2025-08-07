@@ -93,112 +93,116 @@ const Calendar = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'scheduled':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 border border-blue-400';
       case 'completed':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/30 border border-green-400';
       case 'failed':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30 border border-red-400';
       case 'overdue':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
+        return 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 border border-orange-400';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gradient-to-r from-gray-500 to-gray-600 text-white shadow-lg shadow-gray-500/30 border border-gray-400';
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityIndicator = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'border-l-red-500';
+        return 'before:absolute before:top-0 before:left-0 before:w-1 before:h-full before:bg-red-400 before:rounded-l-lg';
       case 'medium':
-        return 'border-l-yellow-500';
+        return 'before:absolute before:top-0 before:left-0 before:w-1 before:h-full before:bg-yellow-400 before:rounded-l-lg';
       case 'low':
-        return 'border-l-green-500';
+        return 'before:absolute before:top-0 before:left-0 before:w-1 before:h-full before:bg-green-400 before:rounded-l-lg';
       default:
-        return 'border-l-gray-300';
+        return 'before:absolute before:top-0 before:left-0 before:w-1 before:h-full before:bg-gray-400 before:rounded-l-lg';
     }
   };
 
   return (
     <DashboardLayout>
-      <div className="flex-1 bg-white min-h-screen">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center gap-6">
-            <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-              <CalendarIcon className="h-5 w-5" />
-              Calendar Programări
-            </h1>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigateMonth('prev')}
-                className="h-7 w-7 p-0 hover:bg-gray-100 text-gray-600"
+      <div className="flex-1 min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+        {/* Glass Header */}
+        <div className="backdrop-blur-xl bg-white/70 border-b border-white/20 shadow-lg shadow-black/5 sticky top-0 z-10">
+          <div className="flex items-center justify-between px-6 py-4">
+            <div className="flex items-center gap-6">
+              <h1 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg">
+                  <CalendarIcon className="h-5 w-5" />
+                </div>
+                Calendar Programări
+              </h1>
+              <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-xl p-2 shadow-lg border border-white/30">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigateMonth('prev')}
+                  className="h-8 w-8 p-0 rounded-lg hover:bg-black/5 text-gray-700 transition-all duration-200 hover:scale-105"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm font-semibold text-gray-900 min-w-[140px] text-center px-3">
+                  {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigateMonth('next')}
+                  className="h-8 w-8 p-0 rounded-lg hover:bg-black/5 text-gray-700 transition-all duration-200 hover:scale-105"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={goToToday}
+                className="text-sm text-gray-700 hover:bg-black/5 backdrop-blur-sm border border-white/30 rounded-lg transition-all duration-200 hover:scale-105"
               >
-                <ChevronLeft className="h-4 w-4" />
+                Astăzi
               </Button>
-              <span className="text-sm font-medium text-gray-900 min-w-[120px] text-center px-2">
-                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-              </span>
-              <Button
-                variant="ghost"
+              <Button 
+                variant="ghost" 
                 size="sm"
-                onClick={() => navigateMonth('next')}
-                className="h-7 w-7 p-0 hover:bg-gray-100 text-gray-600"
+                onClick={() => refetch()}
+                className="text-sm text-gray-700 hover:bg-black/5 backdrop-blur-sm border border-white/30 rounded-lg transition-all duration-200 hover:scale-105"
+                disabled={isLoading}
               >
-                <ChevronRight className="h-4 w-4" />
+                <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+                Reîmprospătează
+              </Button>
+              <Button 
+                size="sm" 
+                onClick={() => setShowEventModal(true)}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg border-0 rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-xl"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Programare Nouă
               </Button>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={goToToday}
-              className="text-sm text-gray-600 hover:bg-gray-100"
-            >
-              Astăzi
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => refetch()}
-              className="text-sm text-gray-600 hover:bg-gray-100"
-              disabled={isLoading}
-            >
-              <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
-              Reîmprospătează
-            </Button>
-            <Button 
-              size="sm" 
-              onClick={() => setShowEventModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm"
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Programare Nouă
-            </Button>
-          </div>
         </div>
 
-        {/* Filters */}
-        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+        {/* Glass Filters */}
+        <div className="mx-6 mt-6 mb-4 p-4 rounded-2xl backdrop-blur-xl bg-white/60 border border-white/30 shadow-lg">
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
                   placeholder="Caută după nume client sau telefon..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 bg-white/70 backdrop-blur-sm border-white/40 rounded-xl focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50"
                 />
               </div>
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-[150px] bg-white/70 backdrop-blur-sm border-white/40 rounded-xl">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="backdrop-blur-xl bg-white/90 border-white/40">
                 <SelectItem value="all">Toate</SelectItem>
                 <SelectItem value="scheduled">Programate</SelectItem>
                 <SelectItem value="completed">Completate</SelectItem>
@@ -207,10 +211,10 @@ const Calendar = () => {
               </SelectContent>
             </Select>
             <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-[150px] bg-white/70 backdrop-blur-sm border-white/40 rounded-xl">
                 <SelectValue placeholder="Prioritate" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="backdrop-blur-xl bg-white/90 border-white/40">
                 <SelectItem value="all">Toate</SelectItem>
                 <SelectItem value="high">Înaltă</SelectItem>
                 <SelectItem value="medium">Medie</SelectItem>
@@ -220,19 +224,19 @@ const Calendar = () => {
           </div>
         </div>
 
-        {/* Calendar Grid */}
-        <div className="p-0">
-          <div className="grid grid-cols-7 border-l border-t border-gray-200">
+        {/* Glass Calendar Grid */}
+        <div className="mx-6 mb-6 rounded-2xl overflow-hidden backdrop-blur-xl bg-white/50 border border-white/30 shadow-2xl">
+          <div className="grid grid-cols-7">
             {/* Day headers */}
             {daysOfWeek.map((day) => (
-              <div key={day} className="bg-gray-50 border-r border-b border-gray-200 px-3 py-2">
-                <span className="text-xs font-medium text-gray-600 uppercase">{day}</span>
+              <div key={day} className="bg-gradient-to-r from-gray-900 to-black text-white px-4 py-3 text-center border-r border-white/10 last:border-r-0">
+                <span className="text-xs font-bold uppercase tracking-wider">{day}</span>
               </div>
             ))}
             
             {/* Empty cells at start */}
             {emptyCellsAtStart.map((_, index) => (
-              <div key={`empty-${index}`} className="bg-gray-50 border-r border-b border-gray-200 min-h-[140px]" />
+              <div key={`empty-${index}`} className="bg-gray-100/30 border-r border-b border-white/20 min-h-[140px] last:border-r-0" />
             ))}
             
             {/* Calendar days */}
@@ -244,45 +248,40 @@ const Calendar = () => {
               return (
                 <div
                   key={date.toISOString()}
-                  className={`bg-white border-r border-b border-gray-200 min-h-[140px] p-2 relative cursor-pointer hover:bg-gray-50 ${
-                    !isCurrentMonth ? 'bg-gray-50 text-gray-400' : ''
-                  }`}
+                  className={`backdrop-blur-sm border-r border-b border-white/20 min-h-[140px] p-3 relative cursor-pointer transition-all duration-200 hover:bg-white/40 hover:scale-[1.02] group last:border-r-0 ${
+                    !isCurrentMonth ? 'bg-gray-100/20 text-gray-400' : 'bg-white/20'
+                  } ${isCurrentDay ? 'bg-blue-50/50 ring-2 ring-blue-500/30' : ''}`}
                   onClick={() => handleCellClick(date)}
                 >
-                  <div className={`text-sm mb-2 font-medium ${
-                    isCurrentDay ? 'text-blue-600 bg-blue-100 rounded-full w-6 h-6 flex items-center justify-center' : 'text-gray-900'
+                  <div className={`text-sm mb-3 font-bold transition-all duration-200 ${
+                    isCurrentDay 
+                      ? 'text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-full w-8 h-8 flex items-center justify-center shadow-lg shadow-blue-500/30' 
+                      : 'text-gray-900 group-hover:text-blue-600'
                   }`}>
                     {format(date, 'd')}
                   </div>
                   
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {dayEvents.slice(0, 3).map((event) => (
                       <div
                         key={event.id}
-                        className={`text-xs p-1.5 rounded cursor-pointer hover:shadow-sm border-l-4 ${getPriorityColor(event.priority)} ${getStatusColor(event.status)}`}
+                        className={`relative text-xs p-2.5 rounded-xl cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-xl ${getPriorityIndicator(event.priority)} ${getStatusColor(event.status)}`}
                         onClick={(e) => handleEventClick(event, e)}
-                        style={{
-                          fontSize: '10px',
-                          lineHeight: '12px',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}
                       >
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1.5 mb-1">
                           <Clock className="h-3 w-3 flex-shrink-0" />
-                          <span className="font-medium">
+                          <span className="font-bold text-xs">
                             {format(new Date(event.scheduled_time || event.scheduled_datetime), 'HH:mm')}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1 mt-0.5">
+                        <div className="flex items-center gap-1.5">
                           <User className="h-3 w-3 flex-shrink-0" />
-                          <span className="truncate">{event.client_name}</span>
+                          <span className="truncate font-medium text-xs">{event.client_name}</span>
                         </div>
                       </div>
                     ))}
                     {dayEvents.length > 3 && (
-                      <div className="text-xs text-gray-500 p-1 text-center">
+                      <div className="text-xs text-gray-600 p-2 text-center bg-white/40 rounded-lg backdrop-blur-sm border border-white/30 font-medium">
                         +{dayEvents.length - 3} mai multe
                       </div>
                     )}
