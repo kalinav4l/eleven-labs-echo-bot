@@ -42,6 +42,29 @@ serve(async (req) => {
       throw new Error('Missing required fields: conversation_id, agent_id');
     }
 
+    // DATABASE CHECK: Prevent duplicate processing if conversation already exists
+    const { data: existingRecord, error: checkError } = await supabase
+      .from('call_history')
+      .select('id, cost_usd, created_at')
+      .eq('conversation_id', payload.conversation_id)
+      .maybeSingle();
+    
+    if (existingRecord) {
+      console.log('🚫 DUPLICATE PREVENTION: Conversation already processed in database');
+      console.log('📋 Existing record:', existingRecord);
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Conversation already processed',
+          existing_record_id: existingRecord.id
+        }),
+        { 
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     // DEBOUNCING: Prevent duplicate processing of the same conversation
     const conversationKey = `${payload.conversation_id}-${payload.status}`;
     
