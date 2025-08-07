@@ -17,6 +17,9 @@ interface ElevenLabsWebhookPayload {
   metadata?: any;
 }
 
+// Global debounce map to prevent duplicate processing
+const processingMap = new Map<string, Promise<any>>();
+
 serve(async (req) => {
   console.log('ElevenLabs conversation webhook called:', req.method);
 
@@ -39,8 +42,53 @@ serve(async (req) => {
       throw new Error('Missing required fields: conversation_id, agent_id');
     }
 
-    // Find the agent owner based on elevenlabs_agent_id
-    console.log('🔍 Caut agentul în baza de date cu elevenlabs_agent_id:', payload.agent_id);
+    // DEBOUNCING: Prevent duplicate processing of the same conversation
+    const conversationKey = `${payload.conversation_id}-${payload.status}`;
+    
+    if (processingMap.has(conversationKey)) {
+      console.log('⏳ DEBOUNCING: Conversation already being processed, waiting for completion...');
+      try {
+        const existingResult = await processingMap.get(conversationKey);
+        return new Response(JSON.stringify({
+          success: true,
+          message: 'Conversation already processed (debounced)',
+          result: existingResult
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (error) {
+        console.warn('⚠️ Error in debounced processing, continuing with new attempt');
+        processingMap.delete(conversationKey);
+      }
+    }
+
+    // Create processing promise
+    const processingPromise = processConversation(supabase, payload);
+    processingMap.set(conversationKey, processingPromise);
+    
+    try {
+      const result = await processingPromise;
+      return result;
+    } finally {
+      // Clean up after processing
+      processingMap.delete(conversationKey);
+    }
+
+  } catch (error) {
+    console.error('Error in ElevenLabs conversation webhook:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});
+
+async function processConversation(supabase: any, payload: ElevenLabsWebhookPayload) {
+  // Find the agent owner based on elevenlabs_agent_id
+  console.log('🔍 Caut agentul în baza de date cu elevenlabs_agent_id:', payload.agent_id);
     
     const { data: agentData, error: agentError } = await supabase
       .from('kalina_agents')
@@ -104,37 +152,67 @@ serve(async (req) => {
       console.log(`💰 Cost calculation: ${durationSeconds}s = ${durationMinutes.toFixed(2)}min = $${calculatedCost}`);
       console.log(`💳 Final cost to deduct: $${finalCost}`);
 
-      // Deduct balance from user account if cost > 0
+      // ATOMIC TRANSACTION: Process balance deduction, statistics, and call history together
       if (finalCost > 0) {
-        console.log(`💳 Deducting $${finalCost} from user ${userId} balance...`);
+        console.log(`💳 Starting atomic transaction: Deducting $${finalCost} from user ${userId}...`);
         
-        const { data: deductResult, error: deductError } = await supabase
-          .rpc('deduct_balance', {
+        try {
+          // Start atomic transaction for financial operations
+          const { data: transactionResult, error: transactionError } = await supabase.rpc('process_call_transaction', {
             p_user_id: userId,
             p_amount: finalCost,
+            p_duration_seconds: durationSeconds,
             p_description: `Apel vocal cu ${agentName} - ${durationSeconds}s`,
             p_conversation_id: payload.conversation_id
           });
 
-        if (deductError) {
-          console.error('❌ Error deducting balance:', deductError);
-          console.warn('⚠️ Balance deduction failed, but call will still be recorded');
-        } else if (deductResult) {
-          console.log('✅ Balance deducted successfully');
+          if (transactionError) {
+            console.error('❌ ATOMIC TRANSACTION FAILED:', transactionError);
+            throw new Error(`Transaction failed: ${transactionError.message}`);
+          }
           
-          // Update user statistics with call cost
+          if (!transactionResult) {
+            console.warn('⚠️ Transaction returned false - insufficient funds');
+            throw new Error('Insufficient funds for call');
+          }
+          
+          console.log('✅ ATOMIC TRANSACTION COMPLETED - Balance and statistics updated');
+          
+        } catch (atomicError) {
+          console.error('❌ CRITICAL ERROR in atomic transaction:', atomicError);
+          
+          // RETRY LOGIC: Try individual operations as fallback
+          console.log('🔄 Attempting fallback: individual operations...');
+          
           try {
+            const { data: deductResult, error: deductError } = await supabase
+              .rpc('deduct_balance', {
+                p_user_id: userId,
+                p_amount: finalCost,
+                p_description: `Apel vocal cu ${agentName} - ${durationSeconds}s`,
+                p_conversation_id: payload.conversation_id
+              });
+
+            if (deductError || !deductResult) {
+              throw new Error('Balance deduction failed in fallback');
+            }
+            
+            console.log('✅ Fallback: Balance deducted successfully');
+            
+            // Update statistics separately
             await supabase.rpc('update_user_statistics_with_spending', {
               p_user_id: userId,
               p_duration_seconds: durationSeconds,
               p_cost_usd: finalCost
             });
-            console.log('✅ User statistics updated');
-          } catch (statsError) {
-            console.warn('⚠️ Failed to update user statistics:', statsError);
+            
+            console.log('✅ Fallback: Statistics updated successfully');
+            
+          } catch (fallbackError) {
+            console.error('❌ FALLBACK FAILED:', fallbackError);
+            // Continue with call recording but mark as failed transaction
+            finalCost = 0; // Don't charge if we can't process payment
           }
-        } else {
-          console.warn('⚠️ Balance deduction returned false - insufficient funds or other issue');
         }
       }
 
