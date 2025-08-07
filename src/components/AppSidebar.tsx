@@ -22,28 +22,28 @@ import { useAuth } from './AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const aiAnalyticsItems = [
-  { title: "Agents", url: "/account/kalina-agents", icon: Brain },
-  { title: "Analytics", url: "/account/conversation-analytics", icon: TrendingUp },
-  { title: "Agent AI", url: "/account/agent-ai", icon: Sparkles },
-  { title: "Voice Demo", url: "/account/voice-demo", icon: Mic },
+  { title: "AI Agents", url: "/account/kalina-agents", icon: Brain },
+  { title: "Rapoarte", url: "/account/conversation-analytics", icon: TrendingUp },
+  { title: "Chat AI", url: "/account/agent-ai", icon: Sparkles },
+  { title: "Test Voce", url: "/account/voice-demo", icon: Mic },
 ];
 
 const communicationsItems = [
-  { title: "Calls", url: "/account/outbound", icon: Phone },
-  { title: "Calendar", url: "/account/calendar", icon: CalendarDays },
-  { title: "Phone Numbers", url: "/account/phone-numbers", icon: Smartphone },
-  { title: "Test Call", url: "/account/test-call", icon: Zap },
-  { title: "Callbacks", url: "/account/callback-scheduler", icon: PhoneForwarded },
+  { title: "Apeluri", url: "/account/outbound", icon: Phone },
+  { title: "Programări", url: "/account/calendar", icon: CalendarDays },
+  { title: "Numere", url: "/account/phone-numbers", icon: Smartphone },
+  { title: "Test Apel", url: "/account/test-call", icon: Zap },
+  { title: "Reprogramări", url: "/account/callback-scheduler", icon: PhoneForwarded },
 ];
 
 const dataToolsItems = [
-  { title: "Transcripts", url: "/account/transcript", icon: FileText },
-  { title: "Scraping", url: "/account/scraping", icon: Search },
+  { title: "Transcrieri", url: "/account/transcript", icon: FileText },
+  { title: "Extragere Date", url: "/account/scraping", icon: Search },
   { title: "Gmail", url: "/account/gmail", icon: Mail },
 ];
 
 const workflowItems = [
-  { title: "Construction", url: "/account/construction", icon: Workflow },
+  { title: "Configurare", url: "/account/construction", icon: Workflow },
   { title: "Webhooks", url: "/account/webhooks", icon: Network },
 ];
 
