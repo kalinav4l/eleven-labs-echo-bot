@@ -8,8 +8,6 @@ export const API_CONFIG = {
   // Note: ElevenLabs API key is now managed through Supabase Secrets
   ELEVENLABS_BASE_URL: 'https://api.elevenlabs.io/v1',
   DEFAULT_MODEL_ID: 'eleven_turbo_v2_5',
-  // Default agent phone number ID
-  DEFAULT_AGENT_PHONE_ID: 'phnum_01jzwnpa8cfnhbxh0367z4jtqs',
 } as const;
 
 export const VOICES = [
