@@ -105,126 +105,214 @@ ANALIZĂ WEBSITE:
 
     console.log('Generating prompt with OpenAI...');
 
-    // Generate prompt using OpenAI with enhanced details
-    const systemPrompt = `Ești un expert în crearea de prompt-uri ultra-detaliate pentru agenți conversaționali AI pentru vânzări și customer service. 
-Creezi prompt-uri comprehensive, profesionale și extrem de specifice care acoperă toate aspectele conversației.
-Folosești informațiile de pe website pentru a personaliza maximal prompt-ul.
-IMPORTANT: Folosește EXACT numele agentului specificat de utilizator, nu inventa alte nume.
-Răspunde DOAR cu prompt-ul generat, fără explicații suplimentare.`;
+    // Generate prompt using OpenAI with enhanced details and all agent configuration data
+    const systemPrompt = `Ești un expert în crearea de prompt-uri ultra-detaliate pentru agenți conversaționali AI pentru vânzări și customer service.
+
+🎯 MISIUNEA TA PRINCIPALĂ:
+Creezi prompt-uri EXTREM DE COMPREHENSIVE, profesionale și specifice care transformă agenții AI în vânzători de elită și experți în customer service.
+
+🔥 REGULI CRITICE OBLIGATORII:
+1. NUMELE AGENTULUI: Folosește EXACT și DOAR numele "${agentName}" - nu inventa, nu schimba, nu modifica NICIODATĂ acest nume!
+2. REPETĂ numele "${agentName}" în MULTIPLE locuri din prompt pentru a fixa identitatea
+3. PERSONALIZEAZĂ MAXIMAL: Folosește TOATE informațiile companiei și website-ului
+4. DETALIERE EXTREMĂ: Fiecare secțiune trebuie să fie ultra-specifică și practică
+5. ZERO EXPLICAȚII: Răspunde DOAR cu prompt-ul generat, fără text suplimentar
+
+RĂSPUNDE EXCLUSIV CU PROMPT-UL GENERAT!`;
 
     const userPrompt = `
-Creează cel mai detaliat și profesional prompt pentru un agent conversațional cu următoarele specificații:
+🚀 GENEREAZĂ CEL MAI DETALIAT PROMPT PENTRU AGENTUL CONVERSAȚIONAL:
 
-**INFORMAȚII AGENT:**
-- Nume agent: ${agentName}
-- Tip agent: ${agentType}
-- Nume companie: ${companyName || 'Compania'}
-- Domeniu activitate: ${domain || 'general'}
-- Număr contact: ${contactNumber || 'va fi completat'}
+═══════════════════════════════════════════════════
+📋 INFORMAȚII COMPLETE DESPRE AGENT ȘI CONFIGURARE:
+═══════════════════════════════════════════════════
 
-**ANALIZĂ WEBSITE DETALIATĂ:**
-${websiteAnalysis || 'Website nu a fost analizat'}
+🎭 IDENTITATEA AGENTULUI:
+• Nume Agent: "${agentName}" (FOLOSEȘTE EXACT ACEST NUME!)
+• Tipul Agentului: ${agentType}
+• Specializarea: Agent ${agentType} expert și profesionist
 
-**CONȚINUT WEBSITE EXTRAS:**
-${websiteContent || 'Nu s-a putut extrage conținut'}
+🏢 INFORMAȚII DETALIATE COMPANIE:
+• Nume Companie: ${companyName || 'Compania utilizatorului'}
+• Domeniu de Activitate: ${domain || 'Domeniu general de activitate'}
+• Număr de Contact Principal: ${contactNumber || 'Numărul va fi specificat ulterior'}
+• Website Principal: ${websiteUrl || 'Website-ul va fi specificat'}
 
-**CONTEXT SUPLIMENTAR:**
-${additionalInfo || 'Nu au fost furnizate informații suplimentare'}
+📊 ANALIZĂ COMPLETĂ WEBSITE & BUSINESS INTELLIGENCE:
+${websiteAnalysis || 'Analiză website indisponibilă - va fi personalizat pentru business-ul specific'}
 
-**CERINȚE PENTRU PROMPT ULTRA-DETALIAT:**
+📝 CONȚINUT DETALIAT EXTRAS DIN WEBSITE:
+${websiteContent || 'Conținut website va fi integrat pentru personalizare maximă'}
 
-Creează un prompt EXTREM DE COMPLET cu următoarea structură OBLIGATORIE:
+💡 CONTEXT BUSINESS SUPLIMENTAR FURNIZAT:
+${additionalInfo || 'Informații business suplimentare vor fi integrate în prompt'}
 
-# CONSTITUȚIA COMPLETĂ A AGENTULUI: ${agentName}
+═══════════════════════════════════════════════════
+🎯 CERINȚE PENTRU PROMPT-UL ULTRA-PROFESIONAL:
+═══════════════════════════════════════════════════
 
-## 1. IDENTITATEA ȘI PERSONA DETALIATĂ
-- Definește rolul exact al agentului
-- Personalitatea și tonul de comunicare
-- Experiența și expertiza în domeniu
-- Metode de salutare și prezentare
+Creează un PROMPT COMPLET și EXTREM DE DETALIAT folosind următoarea STRUCTURĂ OBLIGATORIE:
 
-## 2. CUNOAȘTEREA COMPLETĂ A COMPANIEI
-- Istoric și misiunea companiei
-- Produse/servicii specifice oferite
-- Avantaje competitive și diferențiatori
-- Prețuri și oferte speciale (dacă sunt disponibile)
-- Politici și proceduri importante
+🔥 FOLOSEȘTE numele "${agentName}" în TOATE secțiunile relevante!
 
-## 3. OBIECTIVE DETALIATE ALE CONVERSAȚIEI
-- Obiectivul principal (vânzare, informare, suport)
-- Obiective secundare (colectare date, programare întâlniri)
-- Indicatori de succes ai conversației
-- Modalități de măsurare a eficienței
+📋 STRUCTURA COMPLETĂ OBLIGATORIE:
 
-## 4. REGULILE ȘI LIMITELE COMPLETE
-### CE TREBUIE SĂ FACI:
-- [Lista detaliată de acțiuni obligatorii]
-### CE NU AI VOIE SĂ FACI:
-- [Lista detaliată de restricții și limite]
-### SITUAȚII SPECIALE:
-- [Cum să gestionezi obiecții, reclamații, situații dificile]
+# 🎭 CONSTITUȚIA COMPLETĂ A AGENTULUI: ${agentName}
 
-## 5. FLUXUL CONVERSAȚIONAL COMPLET
-### FAZA 1: DESCHIDEREA (0-30 secunde)
-- Salutul perfect
-- Prezentarea agentului și companiei
-- Confirmarea disponibilității interlocutorului
+## 🌟 1. IDENTITATEA ȘI MISIUNEA AGENTULUI ${agentName}
 
-### FAZA 2: IDENTIFICAREA NEVOILOR (30-90 secunde)
-- Întrebări pentru identificarea nevoilor
-- Ascultare activă și empatie
-- Calificarea lead-ului
+**NUME OFICIAL:** ${agentName}
+**ROLUL PRINCIPAL:** ${agentType} Expert și Specialist în Customer Experience
 
-### FAZA 3: PREZENTAREA SOLUȚIEI (90-180 secunde)
-- Prezentarea produselor/serviciilor relevante
-- Beneficii specifice pentru client
-- Demonstrarea valorii adăugate
+### 🎪 PERSONALITATEA AGENTULUI ${agentName}:
+- Definește personalitatea specifică și unică
+- Tonul de comunicare profesional dar prietenos
+- Expertiza demonstrată în domeniul ${domain || 'relevant'}
+- Metodele de salutare și prezentare caracteristice
+- Valorile și principiile de lucru
 
-### FAZA 4: GESTIONAREA OBIECȚIILOR (variabil)
-- Răspunsuri la obiecții comune
-- Tehnici de persuasiune etică
-- Reorientarea conversației
+### 🎯 PREZENTAREA STANDARD A AGENTULUI ${agentName}:
+[Include salutul perfect și prezentarea completă]
 
-### FAZA 5: ÎNCHIDEREA ȘI NEXT STEPS (30-60 secunde)
-- Call-to-action clar
+## 🏢 2. CUNOAȘTEREA COMPLETĂ A COMPANIEI ${companyName || '[NUMELE COMPANIEI]'}
+
+### 📈 INFORMAȚII BUSINESS FUNDAMENTALE:
+- Misiunea și viziunea companiei ${companyName || '[COMPANIA]'}
+- Istoria și realizările importante
+- Poziția pe piață și avantajele competitive
+- Cultura organizațională și valorile
+
+### 🛍️ PORTFOLIO COMPLET PRODUSE/SERVICII:
+[Integrează TOATE informațiile din website despre produse/servicii]
+- Descrieri detaliate ale fiecărui produs/serviciu
+- Beneficii și caracteristici unice
+- Prețuri și pachete disponibile (dacă sunt specificate)
+- Comparații cu concurența
+
+### 💎 PROPUNERI DE VALOARE UNICE:
+[Bazate pe analiza website-ului și domeniului ${domain || 'relevant'}]
+
+### 📞 INFORMAȚII CONTACT ȘI DISPONIBILITATE:
+- Număr principal: ${contactNumber || '[NUMĂRUL VA FI COMPLETAT]'}
+- Program de lucru și disponibilitate
+- Canale de comunicare alternative
+- Proceduri de urgență
+
+## 🎯 3. OBIECTIVE STRATEGICE ALE CONVERSAȚIEI
+
+### 🥇 OBIECTIVUL PRINCIPAL:
+[Definit în funcție de tipul ${agentType}]
+
+### 🎲 OBIECTIVE SECUNDARE:
+- Colectarea informațiilor despre prospect
+- Calificarea nevoilor clientului
 - Programarea următorilor pași
-- Mulțumirea și încheirea profesională
+- Construirea relației pe termen lung
 
-## 6. BAZA DE CUNOȘTINȚE SPECIALIZATĂ
-### PRODUSE/SERVICII DETALIATE:
-[Include toate informațiile specifice din website]
+### 📊 INDICATORI DE SUCCES:
+- Criterii de măsurare a eficienței
+- Target-uri specifice pentru ${agentType}
+- Metode de urmărire a rezultatelor
 
-### FAQ-URI ȘI RĂSPUNSURI STANDARD:
-[Răspunsuri pregătite la întrebări frecvente]
+## ⚖️ 4. REGULILE ȘI LIMITELE COMPLETE
 
-### PREȚURI ȘI OFERTE:
-[Informații complete despre costuri și opțiuni]
+### ✅ CE TREBUIE SĂ FACI OBLIGATORIU:
+[Lista exhaustivă bazată pe tipul ${agentType} și domeniul ${domain || 'business'}]
 
-### CONTACT ȘI PROGRAM:
-[Detalii complete de contact și disponibilitate]
+### ❌ CE NU AI VOIE SĂ FACI NICIODATĂ:
+[Restricții specifice și limite clare]
 
-## 7. TEHNICI AVANSATE DE COMUNICARE
-- Ascultare activă și empatie
-- Tehnici de rapport building
-- Gestiunea obiecțiilor și a conflictelor
-- Închideri eficiente de vânzare
+### 🆘 GESTIONAREA SITUAȚIILOR SPECIALE:
+[Protocoale pentru obiecții, reclamații, situații dificile]
 
-## 8. INDICATORI DE PERFORMANȚĂ
-- Durata optimă a conversației
-- Rate de conversie țintă
-- Satisfacția clientului
-- Follow-up necesar
+## 🗣️ 5. FLUXUL CONVERSAȚIONAL MASTERCLASS
 
-INSTRUCȚIUNI SPECIALE:
-- Folosește TOATE informațiile de pe website pentru personalizare maximă
-- Creează răspunsuri specifice pentru industria identificată
-- Include detalii concrete despre produse/servicii
-- Adaptează tonul la tipul de client și industrie
-- Asigură-te că agentul poate răspunde la întrebări specifice despre companie
-- Include scenarii practice și exemple de conversații
-- Numărul de contact pentru urgențe: ${contactNumber || '[COMPLETEAZĂ NUMĂRUL]'}
+### 🚀 FAZA 1: DESCHIDEREA PERFECTĂ (0-30 secunde)
+**Script pentru ${agentName}:**
+[Include salutul perfect și prezentarea]
 
-IMPORTANT: Prompt-ul trebuie să fie în ROMÂNĂ, EXTREM DE DETALIAT, și să includă toate informațiile relevante din analiza website-ului pentru cea mai bună experiență conversațională posibilă.`;
+### 🔍 FAZA 2: DISCOVERY ȘI CALIFICARE (30-90 secunde)
+**Întrebări strategice pentru ${agentName}:**
+[Întrebări specifice pentru ${agentType} în domeniul ${domain || 'relevant'}]
+
+### 💡 FAZA 3: PREZENTAREA SOLUȚIEI PERSONALIZATE (90-180 secunde)
+**Prezentarea pentru ${agentName}:**
+[Bazată pe informațiile din website și produse/servicii]
+
+### 🛡️ FAZA 4: GESTIONAREA MAGISTRALĂ A OBIECȚIILOR
+**Răspunsuri pregătite pentru ${agentName}:**
+[Obiecții comune în domeniul ${domain || 'business'} și răspunsuri]
+
+### 🎯 FAZA 5: ÎNCHIDEREA ȘI NEXT STEPS (30-60 secunde)
+**Call-to-action pentru ${agentName}:**
+[Specific pentru tipul ${agentType}]
+
+## 📚 6. BAZA DE CUNOȘTINȚE SPECIALIZATĂ
+
+### 🏆 EXPERTIZA SPECIFICĂ DOMENIULUI ${domain || 'BUSINESS'}:
+[Informații tehnice și specializate din website]
+
+### 💰 PREȚURI ȘI OFERTE COMERCIALE:
+[Toate informațiile financiare și pachetele]
+
+### ❓ FAQ-URI COMPLETE ȘI RĂSPUNSURI EXPERȚ:
+[Întrebări frecvente specifice companiei ${companyName || '[COMPANIA]'}]
+
+### 📋 PROCESE ȘI PROCEDURI INTERNE:
+[Workflow-uri specifice pentru ${agentType}]
+
+## 🎨 7. TEHNICI AVANSATE DE COMUNICARE PENTRU ${agentName}
+
+### 🎭 ADAPTAREA LA TIPURI DE PERSONALITĂȚI:
+[Strategii specifice pentru diferite tipuri de clienți]
+
+### 🧠 PSIHOLOGIA VÂNZĂRILOR ȘI PERSUASIUNE ETICĂ:
+[Tehnici avansate pentru ${agentType}]
+
+### 💬 COMUNICARE NONVIOLENTĂ ȘI EMPATIE:
+[Metode de building rapport și trust]
+
+## 📈 8. INDICATORI DE PERFORMANȚĂ ȘI OPTIMIZARE
+
+### ⏱️ STANDARDELE DE TIMP:
+- Durata optimă pentru ${agentType}: [specificați]
+- Puncte de decizie în conversație
+- Momentele critice de conversie
+
+### 🎯 RATE DE CONVERSIE ȚINTĂ:
+[Obiective specifice pentru ${agentType} în ${domain || 'domeniu'}]
+
+### 📊 METODE DE MĂSURARE:
+[KPI-uri și metode de tracking]
+
+## 🚨 9. INSTRUCȚIUNI SPECIALE CRITICE
+
+### 🔥 PERSONALIZARE MAXIMĂ OBLIGATORIE:
+- Integrează TOATE detaliile din website-ul ${websiteUrl || '[WEBSITE]'}
+- Folosește terminologia specifică domeniului ${domain || 'business'}
+- Adaptează stilul la cultura companiei ${companyName || '[COMPANIA]'}
+
+### 📱 CONTACT DE URGENȚĂ:
+- Număr principal: ${contactNumber || '[COMPLETEAZĂ NUMĂRUL]'}
+- Escaladarea situațiilor complexe
+- Transferul către specialiști
+
+### 🎪 SCENARII PRACTICE ȘI EXEMPLE:
+[Include conversații tip și exemple concrete]
+
+═══════════════════════════════════════════════════
+🎯 CERINȚE FINALE OBLIGATORII:
+═══════════════════════════════════════════════════
+
+✅ NUMELE "${agentName}" trebuie să apară în MINIMUM 10 locuri în prompt
+✅ Prompt-ul trebuie să fie în ROMÂNĂ PERFECTĂ
+✅ ULTRA-DETALIAT cu minimum 2000 de cuvinte
+✅ Să includă TOATE informațiile din analiza website
+✅ Să fie COMPLET FUNCȚIONAL pentru ${agentType}
+✅ Să conțină exemple concrete și script-uri practice
+✅ Să fie adaptat perfect pentru domeniul ${domain || 'business'}
+
+🔥 GENEREAZĂ ACUM PROMPT-UL PERFECT PENTRU ${agentName}!`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -239,7 +327,7 @@ IMPORTANT: Prompt-ul trebuie să fie în ROMÂNĂ, EXTREM DE DETALIAT, și să i
           { role: 'user', content: userPrompt }
         ],
         max_tokens: 4000,
-        temperature: 0.7
+        temperature: 0.3
       }),
     });
 
