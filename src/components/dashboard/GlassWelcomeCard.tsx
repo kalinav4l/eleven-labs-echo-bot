@@ -1,15 +1,16 @@
 import React from 'react';
 import { Sparkles, TrendingUp, Zap } from 'lucide-react';
-
 interface GlassWelcomeProps {
   displayName: string;
   totalCalls: number;
   totalCost: number;
 }
-
-const GlassWelcomeCard = ({ displayName, totalCalls, totalCost }: GlassWelcomeProps) => {
-  return (
-    <div className="relative group animate-fade-in">
+const GlassWelcomeCard = ({
+  displayName,
+  totalCalls,
+  totalCost
+}: GlassWelcomeProps) => {
+  return <div className="relative group animate-fade-in">
       {/* Glass background */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-white/10 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl" />
       
@@ -64,10 +65,8 @@ const GlassWelcomeCard = ({ displayName, totalCalls, totalCost }: GlassWelcomePr
       </div>
       
       {/* Floating decorative elements */}
-      <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full backdrop-blur-sm animate-pulse" />
-      <div className="absolute bottom-4 left-4 w-12 h-12 bg-gradient-to-br from-accent/10 to-primary/10 rounded-full backdrop-blur-sm animate-pulse" style={{ animationDelay: '1s' }} />
-    </div>
-  );
+      
+      
+    </div>;
 };
-
 export default GlassWelcomeCard;
