@@ -72,7 +72,7 @@ export function AppSidebar() {
         </Link>
       </SidebarHeader>
 
-      <SidebarContent className="p-0 space-y-0">
+      <SidebarContent className="p-0 space-y-0 pb-24">
         {/* Home */}
         <SidebarGroup>
           <SidebarGroupContent>
@@ -177,12 +177,12 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className={`${isMobile ? 'p-4' : 'p-2'}`}>
+      <SidebarFooter className={`border-t border-border bg-background ${isMobile ? 'p-4' : 'p-2'}`}>
         <SidebarMenu>
           {/* Admin Panel - Only for specific user */}
           {isSpecificAdmin && (
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={isActive('/admin')} className={`bg-destructive/10 text-destructive hover:bg-destructive/20 ${isMobile ? 'touch-target text-base py-3' : ''}`}>
+              <SidebarMenuButton asChild isActive={isActive('/admin')} className={`${isMobile ? 'touch-target text-base py-3' : ''}`}>
                 <Link to="/admin">
                   <Shield className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'}`} />
                   <span className="font-medium">Admin Panel</span>

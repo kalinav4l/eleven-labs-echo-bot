@@ -152,7 +152,7 @@ const Sidebar = ({
           <div className="mt-auto space-y-1">
             {/* Admin Panel - Only for specific user */}
             {isSpecificAdmin && (
-              <Link to="/admin" className={`${location.pathname === '/admin' ? 'bg-red-100 text-red-900 border border-red-200' : 'text-red-600 hover:bg-red-50 hover:text-red-900 border border-red-200'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors shadow-sm`} onClick={isMobile ? onClose : undefined}>
+              <Link to="/admin" className={`${location.pathname === '/admin' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors`} onClick={isMobile ? onClose : undefined}>
                 <Shield className="mr-3 h-4 w-4" />
                 <span className="font-semibold">Admin Panel</span>
               </Link>
