@@ -10,7 +10,7 @@ const VoiceChart: React.FC = () => {
 
   if (loading) {
     return (
-      <Card className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-all duration-300 animate-[slideInUp_0.8s_ease-out_0.4s_both]">
+      <Card className="border border-gray-200/50 rounded-xl bg-white/30 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 animate-[slideInUp_0.8s_ease-out_0.4s_both]">
         <CardHeader className="p-6 border-b border-gray-200">
           <CardTitle className="font-semibold text-gray-900 text-lg flex items-center">
             <div className="w-2 h-2 bg-gray-900 rounded-full mr-3 animate-pulse" />
@@ -27,7 +27,7 @@ const VoiceChart: React.FC = () => {
 
   if (!stats) {
     return (
-      <Card className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-all duration-300 animate-[slideInUp_0.8s_ease-out_0.4s_both]">
+      <Card className="border border-gray-200/50 rounded-xl bg-white/30 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 animate-[slideInUp_0.8s_ease-out_0.4s_both]">
         <CardHeader className="p-6 border-b border-gray-200">
           <CardTitle className="font-semibold text-gray-900 text-lg flex items-center">
             <div className="w-2 h-2 bg-gray-900 rounded-full mr-3 animate-pulse" />
@@ -65,7 +65,7 @@ const VoiceChart: React.FC = () => {
   };
 
   return (
-    <Card className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-all duration-300 animate-[slideInUp_0.8s_ease-out_0.4s_both]">
+    <Card className="border border-gray-200/50 rounded-xl bg-white/30 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 animate-[slideInUp_0.8s_ease-out_0.4s_both]">
       <CardHeader className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <CardTitle className="font-semibold text-gray-900 text-lg flex items-center">
