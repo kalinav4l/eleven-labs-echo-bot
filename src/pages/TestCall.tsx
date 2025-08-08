@@ -286,109 +286,232 @@ const TestCall = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="w-full max-w-sm space-y-8">
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 flex items-center justify-center p-6">
+        <div className="w-full max-w-md space-y-8">
           
-          {/* Header */}
-          <div className="text-center space-y-3">
-            <h1 className="text-2xl font-light">Test Apel</h1>
-            <p className="text-sm text-muted-foreground">
-              {isAdmin ? 'Apeluri nelimitate' : `$${userBalance.toFixed(2)} disponibili`}
-            </p>
-          </div>
-
-          {/* Form */}
-          <div className="space-y-4">
-            <div>
-              <AgentSelector
-                selectedAgentId={agentId}
-                onAgentSelect={setAgentId}
-              />
-            </div>
-
-            <div>
-              <Input
-                placeholder="Numărul de telefon"
-                value={phoneNumber}
-                onChange={e => setPhoneNumber(e.target.value)}
-                disabled={isLoading}
-                className="text-center"
-              />
-            </div>
-
-            {hasInsufficientBalance && (
-              <p className="text-xs text-amber-600 text-center">
-                Sold insuficient
-              </p>
-            )}
-
-            <Button
-              onClick={handleTestCall}
-              disabled={isLoading || !agentId || !phoneNumber || hasInsufficientBalance}
-              className="w-full"
-            >
-              {isLoading ? 'Se pornește...' : 'Test'}
-            </Button>
-          </div>
-
-          {/* Status */}
-          {conversationId && (
-            <div className="text-center space-y-3">
-              <div className="text-xs text-green-600">
-                Apel activ
-              </div>
-              <Button
-                onClick={() => fetchConversation()}
-                disabled={isLoadingConversation}
-                variant="outline"
-                size="sm"
-                className="text-xs"
-              >
-                {isLoadingConversation ? 'Se încarcă...' : 'Vezi conversația'}
-              </Button>
-            </div>
-          )}
-
-          {/* Conversation */}
-          {conversation && (
-            <div className="space-y-3 max-h-60 overflow-y-auto">
-              {conversation.transcript?.length > 0 ? (
-                conversation.transcript.map((message, index) => (
-                  <div
-                    key={index}
-                    className={`text-xs p-2 rounded ${
-                      message.role === 'agent'
-                        ? 'bg-primary/5 text-left'
-                        : 'bg-muted/50 text-right'
-                    }`}
-                  >
-                    {message.content || message.text}
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs text-muted-foreground text-center">
-                  Fără mesaje
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* History */}
-          {history.length > 0 && (
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground text-center">
-                Recente
-              </div>
-              {history.slice(0, 2).map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => handleHistoryDoubleClick(item.conversationId)}
-                  className="text-xs p-2 border rounded cursor-pointer hover:bg-muted/30"
-                >
-                  {item.phoneNumber}
+          {/* Main Card */}
+          <Card className="backdrop-blur-md bg-white/90 border-0 shadow-2xl rounded-3xl overflow-hidden">
+            <CardContent className="p-8 space-y-6">
+              
+              {/* Header */}
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary to-primary/60 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Phone className="w-8 h-8 text-white" />
                 </div>
-              ))}
-            </div>
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                    Test Apel
+                  </h1>
+                  <div className="flex items-center justify-center gap-2 mt-2">
+                    {isAdmin ? (
+                      <Badge variant="secondary" className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0">
+                        <Sparkles className="w-3 h-3 mr-1" />
+                        Apeluri nelimitate
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+                        <Wallet className="w-3 h-3 mr-1" />
+                        ${userBalance.toFixed(2)} disponibili
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Form */}
+              <div className="space-y-5">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Selectează agentul</Label>
+                  <AgentSelector
+                    selectedAgentId={agentId}
+                    onAgentSelect={setAgentId}
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Numărul de telefon</Label>
+                  <Input
+                    placeholder="Ex: +40 123 456 789"
+                    value={phoneNumber}
+                    onChange={e => setPhoneNumber(e.target.value)}
+                    disabled={isLoading}
+                    className="text-center text-lg py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+
+                {hasInsufficientBalance && (
+                  <Alert className="border-amber-200 bg-amber-50">
+                    <AlertTriangle className="h-4 w-4 text-amber-600" />
+                    <AlertDescription className="text-amber-700">
+                      Sold insuficient pentru a efectua apelul. Necesită cel puțin ${estimatedCostPerMinute.toFixed(2)}.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <Button
+                  onClick={handleTestCall}
+                  disabled={isLoading || !agentId || !phoneNumber || hasInsufficientBalance}
+                  className="w-full h-12 text-lg font-semibold rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Se pornește...
+                    </>
+                  ) : (
+                    <>
+                      <PlayCircle className="w-5 h-5 mr-2" />
+                      Inițiază Test
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Status & Balance Info */}
+              {!isAdmin && (
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Minute disponibile:</span>
+                    <span className="font-semibold text-blue-700">{availableMinutes} min</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm mt-1">
+                    <span className="text-gray-600">Cost estimat/min:</span>
+                    <span className="font-semibold text-blue-700">${estimatedCostPerMinute.toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+
+            </CardContent>
+          </Card>
+
+          {/* Call Status */}
+          {conversationId && (
+            <Card className="bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200 rounded-2xl">
+              <CardContent className="p-6 text-center space-y-4">
+                <div className="w-12 h-12 mx-auto bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center">
+                  <Phone className="w-6 h-6 text-white animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-emerald-800">Apel în desfășurare</h3>
+                  <p className="text-sm text-emerald-600 mt-1">ID: {conversationId.slice(0, 8)}...</p>
+                </div>
+                <Button
+                  onClick={() => fetchConversation()}
+                  disabled={isLoadingConversation}
+                  variant="outline"
+                  className="border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+                >
+                  {isLoadingConversation ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Se încarcă...
+                    </>
+                  ) : (
+                    <>
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Vezi conversația
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Conversation Display */}
+          {conversation && (
+            <Card className="bg-white/95 backdrop-blur-sm rounded-2xl border-0 shadow-lg">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center text-gray-800">
+                  <MessageSquare className="w-5 h-5 mr-2 text-primary" />
+                  Conversația
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-3 max-h-80 overflow-y-auto">
+                  {conversation.transcript?.length > 0 ? (
+                    conversation.transcript.map((message, index) => (
+                      <div
+                        key={index}
+                        className={`p-3 rounded-2xl ${
+                          message.role === 'agent'
+                            ? 'bg-gradient-to-r from-primary/10 to-primary/5 text-left border-l-4 border-primary'
+                            : 'bg-gradient-to-l from-gray-100 to-gray-50 text-right border-r-4 border-gray-300'
+                        }`}
+                      >
+                        <div className="text-xs font-medium text-gray-500 mb-1">
+                          {message.role === 'agent' ? 'Agent' : 'Client'}
+                        </div>
+                        <div className="text-sm text-gray-800">
+                          {message.content || message.text}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                      <p>Fără mesaje disponibile</p>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Call Details */}
+                {conversation.status && (
+                  <div className="mt-4 p-4 bg-gray-50 rounded-xl border">
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="text-gray-500">Status:</span>
+                        <span className="ml-2 font-medium">{conversation.status}</span>
+                      </div>
+                      {conversation.duration_seconds && (
+                        <div>
+                          <span className="text-gray-500">Durată:</span>
+                          <span className="ml-2 font-medium">{conversation.duration_seconds}s</span>
+                        </div>
+                      )}
+                      {conversation.cost && (
+                        <div className="col-span-2">
+                          <span className="text-gray-500">Cost:</span>
+                          <span className="ml-2 font-semibold text-green-600">${conversation.cost}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Recent Calls History */}
+          {history.length > 0 && (
+            <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border-0 shadow-lg">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg text-gray-800">Apeluri recente</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-2">
+                  {history.slice(0, 3).map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => handleHistoryDoubleClick(item.conversationId)}
+                      className="p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gradient-to-r hover:from-primary/5 hover:to-primary/10 hover:border-primary/30 transition-all duration-200"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-gray-800">{item.phoneNumber}</span>
+                        <div className="flex items-center text-xs text-gray-500">
+                          <RefreshCw className="w-3 h-3 mr-1" />
+                          Click pentru a vedea
+                        </div>
+                      </div>
+                      {item.cost && (
+                        <div className="text-xs text-green-600 mt-1">
+                          Cost: ${item.cost.toFixed(2)}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>
