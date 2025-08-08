@@ -56,6 +56,8 @@ export default function WorkflowDatabase() {
   const [newTitle, setNewTitle] = useState('');
   const [newPrompt, setNewPrompt] = useState('');
   const [saving, setSaving] = useState(false);
+  const [matchedByColumn, setMatchedByColumn] = useState<Record<string, Set<string>>>({});
+  const [aiLoading, setAiLoading] = useState<Record<string, boolean>>({});
 
   // SEO: title, description, canonical
   useEffect(() => {
@@ -137,6 +139,28 @@ export default function WorkflowDatabase() {
     load();
   }, [user?.id]);
 
+  // Run AI classification for custom columns
+  useEffect(() => {
+    if (!user || phones.length === 0 || columns.length === 0) return;
+    const subset = phones.slice(0, 150); // limit for token use
+
+    columns.forEach(async (c) => {
+      setAiLoading((prev) => ({ ...prev, [c.id]: true }));
+      try {
+        const { data, error } = await supabase.functions.invoke('classify-workflow-phones', {
+          body: { prompt: c.prompt, phones: subset },
+        });
+        if (error) throw error;
+        const matched: string[] = data?.matched || [];
+        setMatchedByColumn((prev) => ({ ...prev, [c.id]: new Set(matched) }));
+      } catch (e) {
+        console.error('AI classify error', e);
+      } finally {
+        setAiLoading((prev) => ({ ...prev, [c.id]: false }));
+      }
+    });
+  }, [user?.id, phones.length, columns.map((c) => c.id + c.prompt).join('|')]);
+
   const classifyDefault = useCallback(
     (p: PhoneAggregate): DefaultColumnKey => {
       if (callbackPhones.has(p.phone_number)) return 'callback';
@@ -164,10 +188,10 @@ export default function WorkflowDatabase() {
       key: `custom_${c.id}`,
       title: c.title,
       prompt: c.prompt,
-      items: [], // TODO: AI-based classification to be added
+      items: phones.filter(p => matchedByColumn[c.id]?.has(p.phone_number)),
     }));
     return [...defaults, ...customs];
-  }, [phones, classifyDefault, columns]);
+  }, [phones, classifyDefault, columns, matchedByColumn]);
 
   const onCreateColumn = async () => {
     if (!user) {
@@ -278,7 +302,9 @@ export default function WorkflowDatabase() {
                     <div className="text-xs text-muted-foreground">{col.prompt}</div>
                   )}
                   {col.items.length === 0 && (
-                    <div className="text-sm text-muted-foreground">{col.prompt ? 'Necesită clasificare AI' : 'Nicio înregistrare'}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {col.prompt ? (aiLoading[String(col.key).replace('custom_','')] ? 'Se clasifică cu AI…' : 'Necesită clasificare AI') : 'Nicio înregistrare'}
+                    </div>
                   )}
                   {col.items.map((item) => (
                     <div key={item.phone_number} className="border rounded-lg p-3 bg-background/60">
