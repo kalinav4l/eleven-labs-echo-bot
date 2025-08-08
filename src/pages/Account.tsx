@@ -27,7 +27,7 @@ import GlassActivityCard from '@/components/dashboard/GlassActivityCard';
 import GlassQuickActions from '@/components/dashboard/GlassQuickActions';
 import GlassMetricCard from '@/components/dashboard/GlassMetricCard';
 import SuccessRateChart from '@/components/dashboard/SuccessRateChart';
-import ExpenseStatsChart from '@/components/dashboard/ExpenseStatsChart';
+import TotalSpentChart from '@/components/dashboard/TotalSpentChart';
 
 const Account = () => {
   const navigate = useNavigate();
@@ -374,10 +374,10 @@ const Account = () => {
             {/* Activity Timeline */}
             <GlassActivityCard activities={recentActivity} />
             
-            {/* Expense Statistics */}
-            <ExpenseStatsChart 
-              callHistory={callHistory} 
+            {/* Total Spent Chart */}
+            <TotalSpentChart 
               totalCost={totalCost} 
+              callHistory={callHistory} 
             />
           </div>
           
