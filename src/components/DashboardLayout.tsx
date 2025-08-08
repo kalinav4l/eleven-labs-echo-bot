@@ -101,7 +101,7 @@ const DashboardLayout = ({
     }
   };
   return <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background mobile-safe-area">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 mobile-safe-area">
         <PaymentIssueNotification 
           notificationType={notificationType}
           spentAmount={totalSpent}
@@ -115,15 +115,15 @@ const DashboardLayout = ({
         <div className="flex-1 flex flex-col" style={{ paddingTop: userBlocked ? '80px' : '0' }}>
           {/* Mobile Header */}
           {isMobile && (
-            <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 h-16 flex items-center px-4">
+            <header className="border-b bg-white/10 backdrop-blur-md supports-[backdrop-filter]:bg-white/20 sticky top-0 z-50 h-16 flex items-center px-4">
               <div className="flex items-center justify-between w-full">
                 <SidebarTrigger className="touch-target">
                   <Menu className="h-6 w-6" />
                 </SidebarTrigger>
                 <div className="flex items-center gap-2">
-                  <span className="text-lg font-semibold">Kalina AI</span>
+                  <span className="text-lg font-semibold text-white">Kalina AI</span>
                 </div>
-                <Button variant="ghost" size="icon" onClick={handleSignOut} className="touch-target">
+                <Button variant="ghost" size="icon" onClick={handleSignOut} className="touch-target text-white hover:bg-white/20">
                   <LogOut className="h-5 w-5" />
                 </Button>
               </div>
@@ -137,7 +137,7 @@ const DashboardLayout = ({
             </div>
             
             {/* Version Footer */}
-            <div className="text-center py-4 text-xs text-muted-foreground border-t">
+            <div className="text-center py-4 text-xs text-white/70 border-t border-white/20">
               {APP_VERSION}
             </div>
           </main>

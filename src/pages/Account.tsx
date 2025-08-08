@@ -316,24 +316,24 @@ const Account = () => {
   }
 
   return <DashboardLayout>
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen">{/* removed bg-white to show gradient */}
         {/* Animated Header */}
-        <div className="bg-white border-b border-gray-200">
+        <div className="bg-white/10 backdrop-blur-md border-b border-white/20">{/* made header semi-transparent */}
           <div className="px-6 py-6">
             <div className="flex items-center justify-between animate-fade-in">
               <div>
-                <h1 className="text-2xl font-semibold text-gray-900 animate-[slideInLeft_0.6s_ease-out]">
+                <h1 className="text-2xl font-semibold text-white animate-[slideInLeft_0.6s_ease-out]">{/* white text */}
                   Bun venit, {displayName}!
                 </h1>
-                <p className="text-gray-600 mt-1 text-sm animate-[slideInLeft_0.6s_ease-out_0.2s_both]">
+                <p className="text-white/80 mt-1 text-sm animate-[slideInLeft_0.6s_ease-out_0.2s_both]">{/* white text */}
                   Gestionează agenții tăi AI și urmărește performanțele
                 </p>
               </div>
               <div className="flex items-center space-x-3">
                 <CreditsPlanDisplay />
-                <div className="relative overflow-hidden bg-white/20 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105 liquid-glass cursor-pointer animate-[slideInRight_0.6s_ease-out]" onClick={handleSignOut}>
+                <div className="relative overflow-hidden bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105 liquid-glass cursor-pointer animate-[slideInRight_0.6s_ease-out]" onClick={handleSignOut}>
                   <div className="px-4 py-2.5 flex items-center justify-center min-w-[80px]">
-                    <span className="text-sm font-medium text-gray-900">Ieșire</span>
+                    <span className="text-sm font-medium text-white">Ieșire</span>{/* white text */}
                   </div>
                 </div>
               </div>
@@ -344,40 +344,40 @@ const Account = () => {
         <div className="px-6 py-8">
           {/* Cost and Time Summary Cards - Mobile Optimized */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-8">
-            <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <Card className="bg-white/10 backdrop-blur-md border border-white/20 shadow-sm hover:shadow-md transition-all duration-300">{/* semi-transparent cards */}
               <CardContent className="p-3 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2 truncate">
+                    <p className="text-xs sm:text-sm font-medium text-white/70 uppercase tracking-wide mb-1 sm:mb-2 truncate">{/* white text */}
                       COST TOTAL
                     </p>
-                    <p className="text-xl sm:text-3xl font-bold text-gray-900 truncate">
+                    <p className="text-xl sm:text-3xl font-bold text-white truncate">{/* white text */}
                       ${totalCost.toFixed(2)}
                     </p>
                   </div>
-                  <div className="p-2 sm:p-3 bg-gray-100 rounded-lg flex-shrink-0 ml-2">
-                    <FileText className="w-4 h-4 sm:w-6 sm:h-6 text-gray-600" />
+                  <div className="p-2 sm:p-3 bg-white/20 rounded-lg flex-shrink-0 ml-2">{/* white background */}
+                    <FileText className="w-4 h-4 sm:w-6 sm:h-6 text-white" />{/* white icon */}
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <Card className="bg-white/10 backdrop-blur-md border border-white/20 shadow-sm hover:shadow-md transition-all duration-300">
               <CardContent className="p-3 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2 truncate">
+                    <p className="text-xs sm:text-sm font-medium text-white/70 uppercase tracking-wide mb-1 sm:mb-2 truncate">
                       TIMP VORBIRE
                     </p>
-                    <p className="text-xl sm:text-3xl font-bold text-gray-900 truncate">
+                    <p className="text-xl sm:text-3xl font-bold text-white truncate">
                       {totalTimeFormatted}
                     </p>
-                    <p className="text-xs sm:text-sm text-gray-500 mt-1 truncate">
+                    <p className="text-xs sm:text-sm text-white/60 mt-1 truncate">
                       {Math.floor(totalSecondsFromCalls / 60)}m {totalSecondsFromCalls % 60}s
                     </p>
                   </div>
-                  <div className="p-2 sm:p-3 bg-gray-100 rounded-lg flex-shrink-0 ml-2">
-                    <Clock className="w-4 h-4 sm:w-6 sm:h-6 text-gray-600" />
+                  <div className="p-2 sm:p-3 bg-white/20 rounded-lg flex-shrink-0 ml-2">
+                    <Clock className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                   </div>
                 </div>
               </CardContent>

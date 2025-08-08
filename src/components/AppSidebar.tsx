@@ -60,24 +60,24 @@ export function AppSidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <Sidebar className={`${isMobile ? 'w-72' : ''}`}>
-      <SidebarHeader className={`${isMobile ? 'p-6' : 'p-4'}`}>
-        <Link to="/account" className={`flex items-center gap-3 text-lg font-semibold text-foreground hover:text-foreground/80 transition-colors ${isMobile ? 'touch-target' : ''}`}>
+    <Sidebar className={`${isMobile ? 'w-72' : ''} border-r border-white/20 bg-white/10 backdrop-blur-md`}>
+      <SidebarHeader className={`${isMobile ? 'p-6' : 'p-4'} border-b border-white/20 bg-white/5`}>
+        <Link to="/account" className={`flex items-center gap-3 text-lg font-semibold text-white hover:text-white/80 transition-colors ${isMobile ? 'touch-target' : ''}`}>
           <Avatar className={`${isMobile ? 'w-10 h-10' : 'w-8 h-8'}`}>
             <AvatarImage alt="Kalina AI" src="/lovable-uploads/f617a44e-5bc3-46cb-8232-3110c0cee83d.png" />
-            <AvatarFallback className="bg-muted text-muted-foreground">KA</AvatarFallback>
+            <AvatarFallback className="bg-white/20 text-white">KA</AvatarFallback>
           </Avatar>
           <span className={isMobile ? 'text-xl' : ''}>Kalina AI</span>
         </Link>
       </SidebarHeader>
 
-      <SidebarContent className="p-0 space-y-0">
+      <SidebarContent className="p-0 space-y-0 bg-transparent">
         {/* Home */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/account')}>
+                <SidebarMenuButton asChild isActive={isActive('/account')} className="text-white/80 hover:bg-white/10 hover:text-white data-[active=true]:bg-white/20 data-[active=true]:text-white">
                   <Link to="/account">
                     <Home className="w-4 h-4" />
                     <span>Home</span>
@@ -90,14 +90,14 @@ export function AppSidebar() {
 
         {/* AI & Analytics */}
         <SidebarGroup>
-          <SidebarGroupLabel className={`text-xs uppercase tracking-wider text-muted-foreground ${isMobile ? 'px-6 py-2' : ''}`}>
+          <SidebarGroupLabel className={`text-xs uppercase tracking-wider text-white/70 ${isMobile ? 'px-6 py-2' : ''}`}>
             AI & Analytics
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {aiAnalyticsItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} className={isMobile ? 'touch-target text-base py-3' : ''}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)} className={`${isMobile ? 'touch-target text-base py-3' : ''} text-white/80 hover:bg-white/10 hover:text-white data-[active=true]:bg-white/20 data-[active=true]:text-white`}>
                     <Link to={item.url}>
                       <item.icon className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'}`} />
                       <span>{item.title}</span>
@@ -111,14 +111,14 @@ export function AppSidebar() {
 
         {/* Communications */}
         <SidebarGroup>
-          <SidebarGroupLabel className={`text-xs uppercase tracking-wider text-muted-foreground ${isMobile ? 'px-6 py-2' : ''}`}>
+          <SidebarGroupLabel className={`text-xs uppercase tracking-wider text-white/70 ${isMobile ? 'px-6 py-2' : ''}`}>
             Communications
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {communicationsItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} className={isMobile ? 'touch-target text-base py-3' : ''}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)} className={`${isMobile ? 'touch-target text-base py-3' : ''} text-white/80 hover:bg-white/10 hover:text-white data-[active=true]:bg-white/20 data-[active=true]:text-white`}>
                     <Link to={item.url}>
                       <item.icon className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'}`} />
                       <span>{item.title}</span>
@@ -132,14 +132,14 @@ export function AppSidebar() {
 
         {/* Data & Tools */}
         <SidebarGroup>
-          <SidebarGroupLabel className={`text-xs uppercase tracking-wider text-muted-foreground ${isMobile ? 'px-6 py-2' : ''}`}>
+          <SidebarGroupLabel className={`text-xs uppercase tracking-wider text-white/70 ${isMobile ? 'px-6 py-2' : ''}`}>
             Data & Tools
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {dataToolsItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} className={isMobile ? 'touch-target text-base py-3' : ''}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)} className={`${isMobile ? 'touch-target text-base py-3' : ''} text-white/80 hover:bg-white/10 hover:text-white data-[active=true]:bg-white/20 data-[active=true]:text-white`}>
                     <Link to={item.url}>
                       <item.icon className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'}`} />
                       <span>{item.title}</span>
@@ -153,14 +153,14 @@ export function AppSidebar() {
 
         {/* Workflow */}
         <SidebarGroup>
-          <SidebarGroupLabel className={`text-xs uppercase tracking-wider text-muted-foreground ${isMobile ? 'px-6 py-2' : ''}`}>
+          <SidebarGroupLabel className={`text-xs uppercase tracking-wider text-white/70 ${isMobile ? 'px-6 py-2' : ''}`}>
             Workflow
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {workflowItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} className={isMobile ? 'touch-target text-base py-3' : ''}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)} className={`${isMobile ? 'touch-target text-base py-3' : ''} text-white/80 hover:bg-white/10 hover:text-white data-[active=true]:bg-white/20 data-[active=true]:text-white`}>
                     <Link 
                       to={item.url}
                       onClick={() => console.log(`🔗 Navigating to: ${item.url} (${item.title})`)}
@@ -176,12 +176,12 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className={`${isMobile ? 'p-4' : 'p-2'}`}>
+      <SidebarFooter className={`${isMobile ? 'p-4' : 'p-2'} border-t border-white/20 bg-white/5`}>
         <SidebarMenu>
           {/* Admin Panel - Only for specific user */}
           {isSpecificAdmin && (
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={isActive('/admin')} className={`bg-destructive/10 text-destructive hover:bg-destructive/20 ${isMobile ? 'touch-target text-base py-3' : ''}`}>
+              <SidebarMenuButton asChild isActive={isActive('/admin')} className={`bg-red-500/20 text-red-200 hover:bg-red-500/30 ${isMobile ? 'touch-target text-base py-3' : ''}`}>
                 <Link to="/admin">
                   <Shield className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'}`} />
                   <span className="font-medium">Admin Panel</span>
@@ -191,7 +191,7 @@ export function AppSidebar() {
           )}
           
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive('/pricing')} className={isMobile ? 'touch-target text-base py-3' : ''}>
+            <SidebarMenuButton asChild isActive={isActive('/pricing')} className={`${isMobile ? 'touch-target text-base py-3' : ''} text-white/80 hover:bg-white/10 hover:text-white data-[active=true]:bg-white/20 data-[active=true]:text-white`}>
               <Link to="/pricing">
                 <CreditCard className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'}`} />
                 <span>Pricing</span>
@@ -200,7 +200,7 @@ export function AppSidebar() {
           </SidebarMenuItem>
           
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive('/account/documentation')} className={isMobile ? 'touch-target text-base py-3' : ''}>
+            <SidebarMenuButton asChild isActive={isActive('/account/documentation')} className={`${isMobile ? 'touch-target text-base py-3' : ''} text-white/80 hover:bg-white/10 hover:text-white data-[active=true]:bg-white/20 data-[active=true]:text-white`}>
               <Link to="/account/documentation">
                 <BookOpen className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'}`} />
                 <span>Documentation</span>
@@ -209,7 +209,7 @@ export function AppSidebar() {
           </SidebarMenuItem>
           
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive('/account/settings')} className={isMobile ? 'touch-target text-base py-3' : ''}>
+            <SidebarMenuButton asChild isActive={isActive('/account/settings')} className={`${isMobile ? 'touch-target text-base py-3' : ''} text-white/80 hover:bg-white/10 hover:text-white data-[active=true]:bg-white/20 data-[active=true]:text-white`}>
               <Link to="/account/settings">
                 <Settings className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'}`} />
                 <span>Settings</span>
