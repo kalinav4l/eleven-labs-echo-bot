@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { LineChart, Line, ResponsiveContainer, YAxis, ReferenceDot } from 'recharts';
+import { LineChart, Line, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { TrendingUp, BarChart3 } from 'lucide-react';
 
 interface TotalSpentChartProps {
@@ -8,39 +8,38 @@ interface TotalSpentChartProps {
 }
 
 const TotalSpentChart = ({ totalCost, callHistory = [] }: TotalSpentChartProps) => {
-  // Generate smooth spending progression data
+  // Generate monthly data with realistic progression
   const chartData = useMemo(() => {
-    const dataPoints = 12;
-    const data = [];
+    const months = ['2025-08', '2025-09', '2025-10', '2025-11', '2025-12', '2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06'];
     
-    for (let i = 0; i < dataPoints; i++) {
-      const progress = i / (dataPoints - 1);
-      // Create a smooth progressive curve that ends at totalCost
-      const baseValue = totalCost * 0.6; // Starting point at 60% of total
-      const growth = (totalCost - baseValue) * progress;
-      const noise = Math.sin(i * 0.5) * (totalCost * 0.05); // Small fluctuations
-      const value = Math.max(0, baseValue + growth + noise);
+    const data = months.map((month, index) => {
+      let value = 0;
       
-      data.push({
-        index: i,
-        value: Number(value.toFixed(2))
-      });
-    }
+      if (index === 0) {
+        value = 0; // Start at 0
+      } else if (index <= 3) {
+        // Gradual increase to peak
+        value = totalCost * (index / 3) * 0.8;
+      } else if (index === 4) {
+        // Peak around middle
+        value = totalCost * 0.85;
+      } else {
+        // Gradual decrease towards end
+        const decrease = (index - 4) / (months.length - 5);
+        value = totalCost * (0.85 - decrease * 0.3);
+      }
+      
+      return {
+        month,
+        value: Math.max(0, Number(value.toFixed(2))),
+        displayMonth: month
+      };
+    });
     
     return data;
   }, [totalCost]);
 
-  const currentValue = chartData[chartData.length - 1]?.value || totalCost;
-  const previousValue = chartData[chartData.length - 2]?.value || totalCost * 0.9;
-  const changePercent = previousValue > 0 ? ((currentValue - previousValue) / previousValue) * 100 : 0;
-  const isPositive = changePercent >= 0;
-
-  // Calculate Y-axis range
-  const maxValue = Math.max(...chartData.map(d => d.value));
-  const minValue = Math.min(...chartData.map(d => d.value));
-  const range = maxValue - minValue;
-  const yAxisMin = Math.max(0, minValue - range * 0.1);
-  const yAxisMax = maxValue + range * 0.1;
+  const changePercent = 2.45; // Fixed positive trend
 
   return (
     <div className="relative group animate-fade-in">
@@ -52,79 +51,74 @@ const TotalSpentChart = ({ totalCost, callHistory = [] }: TotalSpentChartProps) 
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl shadow-lg">
-              <BarChart3 className="w-5 h-5 text-white" />
+            <div className="w-2 h-2 bg-foreground rounded-full"></div>
+            <h3 className="text-lg font-semibold text-foreground">Statistici Cheltuieli</h3>
+            <div className="flex items-center gap-1 text-sm text-foreground/60">
+              <span>↗</span>
             </div>
-            <h3 className="text-lg font-semibold text-foreground">Total Cheltuit</h3>
           </div>
           
-          <div className="flex items-center gap-2">
-            <TrendingUp className={`w-4 h-4 ${isPositive ? 'text-emerald-500' : 'text-red-500'}`} />
-            <span className={`text-sm font-medium ${isPositive ? 'text-emerald-600' : 'text-red-600'}`}>
-              {isPositive ? '+' : ''}{changePercent.toFixed(2)}%
-            </span>
-          </div>
-        </div>
-        
-        {/* Total amount */}
-        <div className="space-y-1">
-          <div className="text-4xl font-bold text-foreground">
-            ${totalCost.toFixed(1)}
-          </div>
-          <div className="text-sm text-foreground/60">
-            Total Spent
+          <div className="text-right">
+            <div className="text-2xl font-bold text-foreground">
+              ${totalCost.toFixed(2)}
+            </div>
+            <div className="text-sm text-foreground/60">
+              Total cheltuit
+            </div>
           </div>
         </div>
         
         {/* Chart */}
-        <div className="h-32 -mx-2">
+        <div className="h-48 -mx-2">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
-              <defs>
-                <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0.05} />
-                </linearGradient>
-              </defs>
+            <LineChart data={chartData} margin={{ top: 20, right: 20, left: 60, bottom: 40 }}>
+              <XAxis 
+                dataKey="displayMonth"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: 'hsl(var(--foreground))', opacity: 0.6 }}
+                interval={2}
+              />
+              <YAxis 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: 'hsl(var(--foreground))', opacity: 0.6 }}
+                tickFormatter={(value) => `$${value}`}
+                domain={[0, 'dataMax + 100']}
+              />
               
-              <YAxis hide domain={[yAxisMin, yAxisMax]} />
-              
-              {/* Main line */}
+              {/* Main curved line */}
               <Line
                 type="monotone"
                 dataKey="value"
-                stroke="#8B5CF6"
-                strokeWidth={3}
-                dot={false}
-                fill="url(#areaGradient)"
-                fillOpacity={1}
-              />
-              
-              {/* End point dot */}
-              <ReferenceDot
-                x={chartData.length - 1}
-                y={currentValue}
-                r={6}
-                fill="#8B5CF6"
-                stroke="#ffffff"
+                stroke="#374151"
                 strokeWidth={2}
+                dot={(props) => {
+                  const { cx, cy, index } = props;
+                  if (index === 0 || index === chartData.length - 1 || index === 4) {
+                    return (
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={4}
+                        fill="#374151"
+                        stroke="#ffffff"
+                        strokeWidth={2}
+                      />
+                    );
+                  }
+                  return null;
+                }}
+                activeDot={{ r: 6, fill: '#374151', stroke: '#ffffff', strokeWidth: 2 }}
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
         
-        {/* Current value badge */}
-        <div className="flex justify-end">
-          <div className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm font-medium rounded-full shadow-lg">
-            ${currentValue.toFixed(2)}
-          </div>
-        </div>
-        
-        {/* Y-axis labels overlay */}
-        <div className="absolute right-2 top-20 bottom-16 flex flex-col justify-between text-xs text-foreground/40 pointer-events-none">
-          <span>${yAxisMax.toFixed(0)}</span>
-          <span>${((yAxisMax + yAxisMin) / 2).toFixed(0)}</span>
-          <span>${yAxisMin.toFixed(0)}</span>
+        {/* Legend */}
+        <div className="flex items-center justify-center gap-2 pt-4">
+          <div className="w-3 h-0.5 bg-gray-600"></div>
+          <span className="text-sm text-foreground/60">Cheltuieli Lunare ($)</span>
         </div>
       </div>
     </div>
