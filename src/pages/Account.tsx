@@ -27,6 +27,7 @@ import GlassActivityCard from '@/components/dashboard/GlassActivityCard';
 import GlassQuickActions from '@/components/dashboard/GlassQuickActions';
 import GlassMetricCard from '@/components/dashboard/GlassMetricCard';
 import SuccessRateChart from '@/components/dashboard/SuccessRateChart';
+import ExpenseStatsChart from '@/components/dashboard/ExpenseStatsChart';
 
 const Account = () => {
   const navigate = useNavigate();
@@ -368,17 +369,23 @@ const Account = () => {
             <GlassQuickActions />
           </div>
           
-          {/* Activity and Chart Section */}
+          {/* Activity and Charts Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Activity Timeline */}
             <GlassActivityCard activities={recentActivity} />
             
-            {/* Voice Chart in Glass Container */}
-            <div className="relative group animate-fade-in">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg" />
-              <div className="relative p-2">
-                <VoiceChart />
-              </div>
+            {/* Expense Statistics */}
+            <ExpenseStatsChart 
+              callHistory={callHistory} 
+              totalCost={totalCost} 
+            />
+          </div>
+          
+          {/* Voice Chart Section */}
+          <div className="relative group animate-fade-in">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg" />
+            <div className="relative p-2">
+              <VoiceChart />
             </div>
           </div>
 
