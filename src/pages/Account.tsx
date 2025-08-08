@@ -21,6 +21,11 @@ import SkeletonCard from '@/components/SkeletonCard';
 import VoiceChart from '@/components/VoiceChart';
 import CreditsPlanDisplay from '@/components/CreditsPlanDisplay';
 import { calculateCostFromSeconds } from '@/utils/costCalculations';
+import WelcomeCard from '@/components/dashboard/WelcomeCard';
+import ModernStatsGrid from '@/components/dashboard/ModernStatsGrid';
+import CircularProgressChart from '@/components/dashboard/CircularProgressChart';
+import QuickActionsCard from '@/components/dashboard/QuickActionsCard';
+import ActivityTimeline from '@/components/dashboard/ActivityTimeline';
 
 const Account = () => {
   const navigate = useNavigate();
@@ -316,91 +321,60 @@ const Account = () => {
   }
 
   return <DashboardLayout>
-      <div className="min-h-screen">
-        {/* Animated Header */}
-        <div className="bg-white/30 backdrop-blur-sm border-b border-gray-200/50">
-          <div className="px-6 py-6">
-            <div className="flex items-center justify-between animate-fade-in">
-              <div>
-                <h1 className="text-2xl font-semibold text-gray-900 animate-[slideInLeft_0.6s_ease-out]">
-                  Bun venit, {displayName}!
-                </h1>
-                <p className="text-gray-600 mt-1 text-sm animate-[slideInLeft_0.6s_ease-out_0.2s_both]">
-                  Gestionează agenții tăi AI și urmărește performanțele
-                </p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <CreditsPlanDisplay />
-                <div className="relative overflow-hidden bg-white/20 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105 liquid-glass cursor-pointer animate-[slideInRight_0.6s_ease-out]" onClick={handleSignOut}>
-                  <div className="px-4 py-2.5 flex items-center justify-center min-w-[80px]">
-                    <span className="text-sm font-medium text-gray-900">Ieșire</span>
-                  </div>
-                </div>
-              </div>
+      <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+        <div className="px-6 py-8 space-y-8">
+          {/* Welcome Section */}
+          <WelcomeCard 
+            displayName={displayName} 
+            totalCalls={totalCalls} 
+            totalCost={totalCost} 
+          />
+          
+          {/* Modern Stats Grid */}
+          <ModernStatsGrid 
+            totalAgents={totalAgents}
+            totalCalls={totalCalls}
+            currentBalance={currentBalance}
+            totalConversations={totalConversations}
+            totalCost={totalCost}
+            totalTimeFormatted={totalTimeFormatted}
+          />
+          
+          {/* Charts and Activity Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Performance Circular Chart */}
+            <CircularProgressChart 
+              title="Performanță Agenți"
+              percentage={totalAgents > 0 ? Math.min((totalCalls / totalAgents) * 10, 100) : 0}
+              value={totalAgents.toString()}
+              subtitle="agenți activi"
+              color="hsl(var(--primary))"
+              icon={Bot}
+            />
+            
+            {/* Success Rate Chart */}
+            <CircularProgressChart 
+              title="Rata de Succes"
+              percentage={totalCalls > 0 ? 85 : 0}
+              value="85%"
+              subtitle="apeluri reușite"
+              color="#10b981"
+              icon={TrendingUp}
+            />
+            
+            {/* Quick Actions */}
+            <QuickActionsCard />
+          </div>
+          
+          {/* Activity and Chart Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Activity Timeline */}
+            <ActivityTimeline activities={recentActivity} />
+            
+            {/* Voice Chart */}
+            <div className="relative">
+              <VoiceChart />
             </div>
-          </div>
-        </div>
-
-        <div className="px-6 py-8">
-          {/* Cost and Time Summary Cards - Mobile Optimized */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-8">
-            <Card className="bg-white/30 backdrop-blur-sm border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300">
-              <CardContent className="p-3 sm:p-6">
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2 truncate">
-                      COST TOTAL
-                    </p>
-                    <p className="text-xl sm:text-3xl font-bold text-gray-900 truncate">
-                      ${totalCost.toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="p-2 sm:p-3 bg-gray-100 rounded-lg flex-shrink-0 ml-2">
-                    <FileText className="w-4 h-4 sm:w-6 sm:h-6 text-gray-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white/30 backdrop-blur-sm border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300">
-              <CardContent className="p-3 sm:p-6">
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2 truncate">
-                      TIMP VORBIRE
-                    </p>
-                    <p className="text-xl sm:text-3xl font-bold text-gray-900 truncate">
-                      {totalTimeFormatted}
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-500 mt-1 truncate">
-                      {Math.floor(totalSecondsFromCalls / 60)}m {totalSecondsFromCalls % 60}s
-                    </p>
-                  </div>
-                  <div className="p-2 sm:p-3 bg-gray-100 rounded-lg flex-shrink-0 ml-2">
-                    <Clock className="w-4 h-4 sm:w-6 sm:h-6 text-gray-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Animated Quick Stats with Staggered Animation - Mobile Optimized */}
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 lg:gap-6 mb-4 sm:mb-8">
-            {quickStats.map((stat, index) => (
-              <div 
-                key={index} 
-                className="animate-fade-in hover-scale group"
-                style={{ animationDelay: `${index * 150}ms` }}
-              >
-                <StatCard 
-                  label={stat.label} 
-                  value={stat.value} 
-                  icon={stat.icon} 
-                  delay={index * 1}
-                  className="transition-all duration-500 hover:shadow-lg hover:shadow-primary/10 group-hover:border-primary/20"
-                />
-              </div>
-            ))}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
