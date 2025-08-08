@@ -17,7 +17,7 @@ const Gmail = () => {
     return <Navigate to="/auth" replace />;
   }
   return <DashboardLayout>
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen">
         <div className="max-w-6xl mx-auto px-6 py-8">
           {/* Header */}
           <div className="mb-8">

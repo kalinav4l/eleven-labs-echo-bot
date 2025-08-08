@@ -251,7 +251,7 @@ const Admin = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-white dark:bg-gray-900">
+      <div className="min-h-screen">
         <div className="container mx-auto p-6 max-w-6xl">
           {/* Header Section */}
           <div className="flex items-center justify-between mb-8">

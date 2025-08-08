@@ -3,7 +3,7 @@ import React from 'react';
 
 const SkeletonCard: React.FC = () => {
   return (
-    <div className="p-6 border border-gray-200 rounded-xl bg-white transition-all duration-300 hover:shadow-md animate-fade-in">
+    <div className="p-6 border border-gray-200/50 rounded-xl bg-white/30 backdrop-blur-sm transition-all duration-300 hover:shadow-md animate-fade-in">
       <div className="flex items-center justify-between">
         <div className="space-y-3 flex-1">
           {/* Animated shimmer effect for label */}

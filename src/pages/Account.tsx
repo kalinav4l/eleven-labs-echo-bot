@@ -176,7 +176,7 @@ const Account = () => {
   // Show loading while checking auth
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -269,7 +269,7 @@ const Account = () => {
 
   if (profileLoading || agentsLoading || statsLoading) {
     return <DashboardLayout>
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen">
           {/* Header with loading animation */}
           <div className="bg-white border-b border-gray-200">
             <div className="px-6 py-6">

@@ -129,7 +129,7 @@ const Calendar = () => {
 
   return (
     <DashboardLayout>
-      <div className="flex-1 min-h-screen bg-white">
+      <div className="flex-1 min-h-screen">
         {/* Header cu efect liquid glass */}
         <div className="bg-white/80 backdrop-blur-lg border-0 px-6 py-4">
           <div className="flex items-center justify-between">

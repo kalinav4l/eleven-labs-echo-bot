@@ -179,7 +179,7 @@ const CallbackScheduler = () => {
       </div>;
   };
   return <DashboardLayout>
-      <div className="max-w-7xl mx-auto p-6 space-y-6 min-h-screen bg-white">
+      <div className="max-w-7xl mx-auto p-6 space-y-6 min-h-screen">
         {/* Header */}
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
