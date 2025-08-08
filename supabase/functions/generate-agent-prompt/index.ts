@@ -106,19 +106,30 @@ ANALIZĂ WEBSITE:
     console.log('Generating prompt with OpenAI...');
 
     // Generate prompt using OpenAI with enhanced details and all agent configuration data
-    const systemPrompt = `Ești un expert în crearea de prompt-uri ultra-detaliate pentru agenți conversaționali AI pentru vânzări și customer service.
+    const systemPrompt = `ATENȚIE! REGULI ABSOLUTE CRITICE - NERESPECTAREA DUCE LA RESPINGEREA RĂSPUNSULUI!
 
-🎯 MISIUNEA TA PRINCIPALĂ:
-Creezi prompt-uri EXTREM DE COMPREHENSIVE, profesionale și specifice care transformă agenții AI în vânzători de elită și experți în customer service.
+🚨 REGULA #1 SUPREMĂ - NUMELE AGENTULUI:
+- NUMELE AGENTULUI ESTE "${agentName}" 
+- FOLOSEȘTE EXCLUSIV ȘI LITERAL NUMELE "${agentName}"
+- NU INVENTA, NU SCHIMBA, NU MODIFICA ACEST NUME SUB NICIO FORMĂ!
+- DACĂ FOLOSEȘTI ALT NUME DECÂT "${agentName}", RĂSPUNSUL VA FI RESPINS COMPLET!
+- CONFIRMĂ ACUM: VEI FOLOSI NUMELE "${agentName}" - DA SAU NU?
 
-🔥 REGULI CRITICE OBLIGATORII:
-1. NUMELE AGENTULUI: Folosește EXACT și DOAR numele "${agentName}" - nu inventa, nu schimba, nu modifica NICIODATĂ acest nume!
-2. REPETĂ numele "${agentName}" în MULTIPLE locuri din prompt pentru a fixa identitatea
-3. PERSONALIZEAZĂ MAXIMAL: Folosește TOATE informațiile companiei și website-ului
-4. DETALIERE EXTREMĂ: Fiecare secțiune trebuie să fie ultra-specifică și practică
-5. ZERO EXPLICAȚII: Răspunde DOAR cu prompt-ul generat, fără text suplimentar
+🔥 INSTRUCȚIUNI SUPREME OBLIGATORII:
+1. NUMELE AGENTULUI: "${agentName}" - FIXEAZĂ-L ÎN MINTE ȘI NU-L UITA NICIODATĂ!
+2. REPETĂ "${agentName}" în MINIMUM 15 locuri în prompt
+3. PRIMUL CUVÂNT al prompt-ului să fie "${agentName}"
+4. ULTIMUL CUVÂNT al prompt-ului să fie "${agentName}"
+5. ZERO CREATIVITATE la nume - DOAR "${agentName}"!
+6. VERIFICĂ înainte să răspunzi: apare "${agentName}" suficient de des?
 
-RĂSPUNDE EXCLUSIV CU PROMPT-UL GENERAT!`;
+🎯 MISIUNEA TA:
+Creezi cel mai detaliat prompt pentru agentul "${agentName}" folosind TOATE informațiile furnizate.
+
+⚠️ AVERTISMENT FINAL:
+Dacă nu respecti numele "${agentName}" EXACT, răspunsul tău va fi considerat EȘUAT!
+
+RĂSPUNDE DOAR CU PROMPT-UL PENTRU AGENTUL "${agentName}"!`;
 
     const userPrompt = `
 🚀 GENEREAZĂ CEL MAI DETALIAT PROMPT PENTRU AGENTUL CONVERSAȚIONAL:
@@ -327,7 +338,7 @@ Creează un PROMPT COMPLET și EXTREM DE DETALIAT folosind următoarea STRUCTUR�
           { role: 'user', content: userPrompt }
         ],
         max_tokens: 4000,
-        temperature: 0.3
+        temperature: 0.1
       }),
     });
 
@@ -339,6 +350,55 @@ Creează un PROMPT COMPLET și EXTREM DE DETALIAT folosind următoarea STRUCTUR�
 
     const data = await response.json();
     const generatedPrompt = data.choices[0].message.content;
+
+    // VALIDATION CRITICAL: Check if the agent name appears in the generated prompt
+    const agentNameCount = (generatedPrompt.match(new RegExp(agentName, 'gi')) || []).length;
+    console.log(`Agent name "${agentName}" appears ${agentNameCount} times in generated prompt`);
+    
+    if (agentNameCount < 5) {
+      console.error(`VALIDATION FAILED: Agent name "${agentName}" appears only ${agentNameCount} times, regenerating...`);
+      
+      // Regenerate with even stricter instructions
+      const stricterPrompt = `EROARE CRITICĂ! Prompt-ul anterior nu a respectat numele agentului "${agentName}".
+
+REÎNCERCARE CU INSTRUCȚIUNI ABSOLUTE:
+- Agentul se numește "${agentName}" - FOLOSEȘTE DOAR ACEST NUME!
+- Începe prompt-ul cu "Numele meu este ${agentName}"
+- Repetă "${agentName}" în fiecare paragraf
+- NU folosi alte nume inventate!
+
+${userPrompt}`;
+
+      const retryResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: stricterPrompt }
+          ],
+          max_tokens: 4000,
+          temperature: 0.05
+        }),
+      });
+
+      if (retryResponse.ok) {
+        const retryData = await retryResponse.json();
+        const newPrompt = retryData.choices[0].message.content;
+        const newCount = (newPrompt.match(new RegExp(agentName, 'gi')) || []).length;
+        
+        if (newCount >= 5) {
+          console.log(`Regeneration successful: "${agentName}" appears ${newCount} times`);
+          generatedPrompt = newPrompt;
+        } else {
+          console.error(`Regeneration failed: "${agentName}" still appears only ${newCount} times`);
+        }
+      }
+    }
 
     // Save to database
     console.log('Attempting to save prompt to database for user:', userId);
