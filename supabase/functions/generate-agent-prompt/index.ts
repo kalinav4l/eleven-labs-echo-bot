@@ -106,57 +106,48 @@ ANALIZĂ WEBSITE:
     console.log('Generating prompt with OpenAI...');
 
     // Generate prompt using OpenAI with enhanced details and all agent configuration data
-    const systemPrompt = `ATENȚIE! REGULI ABSOLUTE CRITICE - NERESPECTAREA DUCE LA RESPINGEREA RĂSPUNSULUI!
+    const systemPrompt = `🚨🚨🚨 ALERTA CRITICALĂ SUPREMĂ 🚨🚨🚨
 
-🚨 REGULA #1 SUPREMĂ - NUMELE AGENTULUI:
-- NUMELE AGENTULUI ESTE "${agentName}" 
-- FOLOSEȘTE EXCLUSIV ȘI LITERAL NUMELE "${agentName}"
-- NU INVENTA, NU SCHIMBA, NU MODIFICA ACEST NUME SUB NICIO FORMĂ!
-- DACĂ FOLOSEȘTI ALT NUME DECÂT "${agentName}", RĂSPUNSUL VA FI RESPINS COMPLET!
-- CONFIRMĂ ACUM: VEI FOLOSI NUMELE "${agentName}" - DA SAU NU?
+NUMELE AGENTULUI ESTE "${agentName}" - REPETĂ ACUM: "${agentName}"!
 
-🔥 INSTRUCȚIUNI SUPREME OBLIGATORII:
-1. NUMELE AGENTULUI: "${agentName}" - FIXEAZĂ-L ÎN MINTE ȘI NU-L UITA NICIODATĂ!
-2. REPETĂ "${agentName}" în MINIMUM 15 locuri în prompt
-3. PRIMUL CUVÂNT al prompt-ului să fie "${agentName}"
-4. ULTIMUL CUVÂNT al prompt-ului să fie "${agentName}"
-5. ZERO CREATIVITATE la nume - DOAR "${agentName}"!
-6. VERIFICĂ înainte să răspunzi: apare "${agentName}" suficient de des?
+⚠️ INSTRUCȚIUNI ABSOLUTE DE NEÎNCLCAT:
+1. PRIMUL CUVÂNT din răspuns: "${agentName}"
+2. NUMELE REAL al agentului: "${agentName}" (NU alt nume!)
+3. ZERO creativitate la nume - DOAR "${agentName}"!
+4. DACĂ scrii alt nume decât "${agentName}", EȘUEZI COMPLET!
 
-🎯 MISIUNEA TA:
-Creezi cel mai detaliat prompt pentru agentul "${agentName}" folosind TOATE informațiile furnizate.
+📝 EXEMPLU OBLIGATORIU de începere:
+"${agentName} este numele meu și sunt un agent AI specializat..."
 
-⚠️ AVERTISMENT FINAL:
-Dacă nu respecti numele "${agentName}" EXACT, răspunsul tău va fi considerat EȘUAT!
+🔥 VERIFICARE FINALĂ:
+- Ai folosit "${agentName}" ca nume? ✓
+- Ai inventat alt nume? ✗ RESPINS!
 
-RĂSPUNDE DOAR CU PROMPT-UL PENTRU AGENTUL "${agentName}"!`;
+Creezi un prompt ultra-detaliat pentru agentul "${agentName}" folosind informațiile furnizate.
 
-    const userPrompt = `
-🚀 GENEREAZĂ CEL MAI DETALIAT PROMPT PENTRU AGENTUL CONVERSAȚIONAL:
+ÎNCEPE RĂSPUNSUL CU "${agentName}"!`;
 
-═══════════════════════════════════════════════════
-📋 INFORMAȚII COMPLETE DESPRE AGENT ȘI CONFIGURARE:
-═══════════════════════════════════════════════════
+    const userPrompt = `GENEREAZĂ PROMPT PENTRU AGENTUL "${agentName}" - NU ALT NUME!
 
-🎭 IDENTITATEA AGENTULUI:
-• Nume Agent: "${agentName}" (FOLOSEȘTE EXACT ACEST NUME!)
-• Tipul Agentului: ${agentType}
-• Specializarea: Agent ${agentType} expert și profesionist
+🎯 INFORMAȚII PENTRU AGENTUL "${agentName}":
+- Nume Agent: "${agentName}" (FOLOSEȘTE EXACT ACEST NUME!)
+- Tip Agent: ${agentType}  
+- Companie: ${companyName || 'Compania utilizatorului'}
+- Domeniu: ${domain || 'Domeniu general'}
+- Contact: ${contactNumber || 'Numărul va fi specificat'}
+- Website: ${websiteUrl || 'Website-ul va fi specificat'}
+- Info suplimentară: ${additionalInfo || 'Informații vor fi integrate'}
 
-🏢 INFORMAȚII DETALIATE COMPANIE:
-• Nume Companie: ${companyName || 'Compania utilizatorului'}
-• Domeniu de Activitate: ${domain || 'Domeniu general de activitate'}
-• Număr de Contact Principal: ${contactNumber || 'Numărul va fi specificat ulterior'}
-• Website Principal: ${websiteUrl || 'Website-ul va fi specificat'}
+🔥 INSTRUCȚIUNI FINALE PENTRU "${agentName}":
+- ÎNCEPE prompt-ul cu: "${agentName} este..."
+- REPETĂ "${agentName}" în tot prompt-ul
+- NU folosi "ElectricianBot", "AsistentAI" sau alte nume inventate!
+- NUMELE REAL: "${agentName}" - FIXEAZĂ-L!
 
-📊 ANALIZĂ COMPLETĂ WEBSITE & BUSINESS INTELLIGENCE:
-${websiteAnalysis || 'Analiză website indisponibilă - va fi personalizat pentru business-ul specific'}
+ANALIZĂ WEBSITE: ${websiteAnalysis || 'Va fi integrată'}
+CONȚINUT WEBSITE: ${websiteContent || 'Va fi integrat'}
 
-📝 CONȚINUT DETALIAT EXTRAS DIN WEBSITE:
-${websiteContent || 'Conținut website va fi integrat pentru personalizare maximă'}
-
-💡 CONTEXT BUSINESS SUPLIMENTAR FURNIZAT:
-${additionalInfo || 'Informații business suplimentare vor fi integrate în prompt'}
+GENEREAZĂ ACUM PROMPT-UL PENTRU "${agentName}"!`;
 
 ═══════════════════════════════════════════════════
 🎯 CERINȚE PENTRU PROMPT-UL ULTRA-PROFESIONAL:
@@ -338,7 +329,7 @@ Creează un PROMPT COMPLET și EXTREM DE DETALIAT folosind următoarea STRUCTUR�
           { role: 'user', content: userPrompt }
         ],
         max_tokens: 4000,
-        temperature: 0.1
+        temperature: 0.05
       }),
     });
 
@@ -349,27 +340,42 @@ Creează un PROMPT COMPLET și EXTREM DE DETALIAT folosind următoarea STRUCTUR�
     }
 
     const data = await response.json();
-    const generatedPrompt = data.choices[0].message.content;
+    let generatedPrompt = data.choices[0].message.content;
 
-    // VALIDATION CRITICAL: Check if the agent name appears in the generated prompt
-    const agentNameCount = (generatedPrompt.match(new RegExp(agentName, 'gi')) || []).length;
-    console.log(`Agent name "${agentName}" appears ${agentNameCount} times in generated prompt`);
+    // VALIDATION ULTRA-STRICT: Check if prompt starts with agent name
+    const startsWithName = generatedPrompt.toLowerCase().trim().startsWith(agentName.toLowerCase());
+    const nameCount = (generatedPrompt.match(new RegExp(agentName, 'gi')) || []).length;
     
-    if (agentNameCount < 5) {
-      console.error(`VALIDATION FAILED: Agent name "${agentName}" appears only ${agentNameCount} times, regenerating...`);
+    console.log(`Validation check for "${agentName}":`, {
+      startsWithName,
+      nameCount,
+      promptStart: generatedPrompt.substring(0, 100)
+    });
+    
+    if (!startsWithName || nameCount < 3) {
+      console.error(`VALIDATION FAILED: Prompt does not start with "${agentName}" or contains it only ${nameCount} times`);
       
-      // Regenerate with even stricter instructions
-      const stricterPrompt = `EROARE CRITICĂ! Prompt-ul anterior nu a respectat numele agentului "${agentName}".
+      // ULTRA-AGGRESSIVE RETRY with mandatory template
+      const emergencyPrompt = `🚨 EROARE CRITICĂ! Nu ai folosit numele "${agentName}"!
 
-REÎNCERCARE CU INSTRUCȚIUNI ABSOLUTE:
-- Agentul se numește "${agentName}" - FOLOSEȘTE DOAR ACEST NUME!
-- Începe prompt-ul cu "Numele meu este ${agentName}"
-- Repetă "${agentName}" în fiecare paragraf
-- NU folosi alte nume inventate!
+TEMPLATE OBLIGATORIU - COMPLETEAZĂ EXACT AȘAЗ
+"${agentName} este numele meu și sunt un agent AI specializat în ${agentType}..."
 
-${userPrompt}`;
+INSTRUCȚIUNI ABSOLUTE:
+1. ÎNCEPE cu "${agentName} este numele meu"
+2. REPETĂ "${agentName}" în fiecare paragraf  
+3. NU folosi alte nume inventate!
+4. ZERO creativitate la nume!
 
-      const retryResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+Informații pentru ${agentName}:
+- Tip: ${agentType}
+- Companie: ${companyName || 'compania'}
+- Domeniu: ${domain || 'domeniu'}
+- Contact: ${contactNumber || 'contact'}
+
+COMPLETEAZĂ TEMPLATE-UL PENTRU ${agentName} ACUM!`;
+
+      const emergencyResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${openAIApiKey}`,
@@ -378,26 +384,40 @@ ${userPrompt}`;
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: stricterPrompt }
+            { 
+              role: 'system', 
+              content: `TU EȘTI OBLIGAT să folosești numele "${agentName}" - PRIMUL CUVÂNT trebuie să fie "${agentName}"! NU inventa alte nume!` 
+            },
+            { role: 'user', content: emergencyPrompt }
           ],
           max_tokens: 4000,
-          temperature: 0.05
+          temperature: 0.01
         }),
       });
 
-      if (retryResponse.ok) {
-        const retryData = await retryResponse.json();
-        const newPrompt = retryData.choices[0].message.content;
-        const newCount = (newPrompt.match(new RegExp(agentName, 'gi')) || []).length;
+      if (emergencyResponse.ok) {
+        const emergencyData = await emergencyResponse.json();
+        const emergencyResult = emergencyData.choices[0].message.content;
+        const emergencyNameCount = (emergencyResult.match(new RegExp(agentName, 'gi')) || []).length;
+        const emergencyStartsCorrect = emergencyResult.toLowerCase().trim().startsWith(agentName.toLowerCase());
         
-        if (newCount >= 5) {
-          console.log(`Regeneration successful: "${agentName}" appears ${newCount} times`);
-          generatedPrompt = newPrompt;
+        console.log(`Emergency retry result for "${agentName}":`, {
+          emergencyNameCount,
+          emergencyStartsCorrect,
+          emergencyStart: emergencyResult.substring(0, 100)
+        });
+        
+        if (emergencyStartsCorrect && emergencyNameCount >= 3) {
+          console.log(`Emergency retry SUCCESS: "${agentName}" appears ${emergencyNameCount} times and starts correctly`);
+          generatedPrompt = emergencyResult;
         } else {
-          console.error(`Regeneration failed: "${agentName}" still appears only ${newCount} times`);
+          console.error(`Emergency retry FAILED: "${agentName}" still not used correctly`);
+          // Force insert the name at the beginning if all else fails
+          generatedPrompt = `${agentName} este numele meu și sunt un agent AI specializat. ${emergencyResult}`;
         }
       }
+    } else {
+      console.log(`Validation SUCCESS: "${agentName}" appears ${nameCount} times and starts correctly`);
     }
 
     // Save to database
