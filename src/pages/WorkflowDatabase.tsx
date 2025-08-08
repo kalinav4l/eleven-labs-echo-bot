@@ -12,12 +12,12 @@ import { Plus, RefreshCw, Phone, Clock, Database, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const COLUMN_COLORS = {
-  'no_answer': 'bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-950/40 dark:to-rose-950/60 border-t-4 border-t-red-500 shadow-red-100/50 dark:shadow-red-900/20',
-  'long_calls': 'bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-950/40 dark:to-green-950/60 border-t-4 border-t-emerald-500 shadow-emerald-100/50 dark:shadow-emerald-900/20',
-  'multiple_calls': 'bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/40 dark:to-indigo-950/60 border-t-4 border-t-blue-500 shadow-blue-100/50 dark:shadow-blue-900/20',
-  'callback': 'bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-950/40 dark:to-violet-950/60 border-t-4 border-t-purple-500 shadow-purple-100/50 dark:shadow-purple-900/20',
-  'short_calls': 'bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-950/40 dark:to-amber-950/60 border-t-4 border-t-orange-500 shadow-orange-100/50 dark:shadow-orange-900/20',
-  'recent': 'bg-gradient-to-br from-cyan-50 to-sky-100 dark:from-cyan-950/40 dark:to-sky-950/60 border-t-4 border-t-cyan-500 shadow-cyan-100/50 dark:shadow-cyan-900/20',
+  'no_answer': 'bg-gradient-to-br from-red-400 to-red-600 border-t-8 border-t-red-300 shadow-xl shadow-red-500/50',
+  'long_calls': 'bg-gradient-to-br from-green-400 to-green-600 border-t-8 border-t-green-300 shadow-xl shadow-green-500/50',
+  'multiple_calls': 'bg-gradient-to-br from-blue-400 to-blue-600 border-t-8 border-t-blue-300 shadow-xl shadow-blue-500/50',
+  'callback': 'bg-gradient-to-br from-purple-400 to-purple-600 border-t-8 border-t-purple-300 shadow-xl shadow-purple-500/50',
+  'short_calls': 'bg-gradient-to-br from-orange-400 to-orange-600 border-t-8 border-t-orange-300 shadow-xl shadow-orange-500/50',
+  'recent': 'bg-gradient-to-br from-cyan-400 to-cyan-600 border-t-8 border-t-cyan-300 shadow-xl shadow-cyan-500/50',
 } as const;
 
 interface PhoneAggregate {
@@ -223,18 +223,18 @@ export default function WorkflowDatabase() {
                   <Plus className="w-4 h-4 mr-2" /> Selectează coloane
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg bg-card/95 backdrop-blur-sm border-2">
+              <DialogContent className="max-w-lg bg-black/20 backdrop-blur-md border border-white/20 text-white">`
                 <DialogHeader>
-                  <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+                  <DialogTitle className="text-xl font-semibold text-white">
                     Alege coloanele (maxim 4)
                   </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
-                  <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                    Selectate: <span className="font-bold text-primary">{selectedColumns.length}/4</span>
+                  <div className="text-sm text-white/80 bg-white/10 p-3 rounded-lg border border-white/20">
+                    Selectate: <span className="font-bold text-white">{selectedColumns.length}/4</span>
                   </div>
                   {PREDEFINED_COLUMNS.map((col) => (
-                    <div key={col.key} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-muted/30 transition-colors">
+                    <div key={col.key} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-white/10 transition-colors border border-white/10">
                       <Checkbox
                         id={col.key}
                         checked={selectedColumns.includes(col.key)}
@@ -242,15 +242,15 @@ export default function WorkflowDatabase() {
                         className="mt-1"
                       />
                       <div className="flex-1">
-                        <label htmlFor={col.key} className="text-sm font-semibold cursor-pointer text-foreground">
+                        <label htmlFor={col.key} className="text-sm font-semibold cursor-pointer text-white">
                           {col.title}
                         </label>
-                        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{col.description}</p>
+                        <p className="text-xs text-white/70 mt-1 leading-relaxed">{col.description}</p>
                       </div>
                     </div>
                   ))}
                   <div className="flex justify-end pt-4 border-t">
-                    <Button onClick={() => setOpenColumnSelector(false)} className="bg-gradient-to-r from-primary to-blue-600">
+                    <Button onClick={() => setOpenColumnSelector(false)} className="bg-white/20 hover:bg-white/30 text-white border border-white/30">
                       Închide
                     </Button>
                   </div>
@@ -299,51 +299,51 @@ export default function WorkflowDatabase() {
           <section>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {board.map((col) => (
-                <Card key={col.key} className={`${COLUMN_COLORS[col.key]} min-h-[500px] shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0`}>
+                <Card key={col.key} className={`${COLUMN_COLORS[col.key]} min-h-[500px] hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-0`}>
                   <CardHeader className="pb-4">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg font-bold text-foreground">{col.title}</CardTitle>
+                      <CardTitle className="text-lg font-bold text-white drop-shadow-lg">{col.title}</CardTitle>
                       <Badge 
                         variant="secondary" 
-                        className="text-sm font-bold bg-white/80 text-foreground shadow-sm px-3 py-1"
+                        className="text-sm font-bold bg-white text-black shadow-lg px-3 py-1"
                       >
                         {col.items.length}
                       </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground/80 leading-relaxed font-medium">{col.description}</p>
+                    <p className="text-sm text-white/90 leading-relaxed font-medium drop-shadow">{col.description}</p>
                   </CardHeader>
                   <CardContent className="space-y-3 pt-0">
                     {col.items.length === 0 ? (
                       <div className="text-center py-12">
-                        <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-white/50 flex items-center justify-center">
-                          <Phone className="w-6 h-6 text-muted-foreground/50" />
+                        <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-white/30 flex items-center justify-center backdrop-blur-sm">
+                          <Phone className="w-6 h-6 text-white" />
                         </div>
-                        <p className="text-sm text-muted-foreground/60 font-medium">Nicio înregistrare</p>
+                        <p className="text-sm text-white/80 font-medium">Nicio înregistrare</p>
                       </div>
                     ) : (
                       col.items.map((item) => (
-                        <div key={item.phone_number} className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 hover:bg-white/90 border border-white/40">
+                        <div key={item.phone_number} className="bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-200 hover:bg-white border-2 border-white/60">`
                           <div className="flex items-center justify-between mb-3">
-                            <div className="font-semibold text-sm text-foreground truncate flex-1 mr-3">
+                            <div className="font-semibold text-sm text-black truncate flex-1 mr-3">
                               {item.contact_name || 'Necunoscut'}
                             </div>
-                            <Badge variant="outline" className="text-xs px-2 py-1 h-6 shrink-0 bg-white/60 border-muted">
+                            <Badge variant="outline" className="text-xs px-2 py-1 h-6 shrink-0 bg-gray-100 border-gray-300 text-black font-bold">
                               {item.phone_number}
                             </Badge>
                           </div>
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground mb-2">
+                          <div className="flex items-center gap-4 text-xs text-gray-700 mb-2">
                             <div className="flex items-center gap-1.5">
-                              <div className="w-2 h-2 rounded-full bg-primary/60"></div>
+                              <div className="w-3 h-3 rounded-full bg-blue-600"></div>
                               <Phone className="w-3 h-3" /> 
                               <span className="font-medium">{item.total_calls}</span>
                             </div>
                             <div className="flex items-center gap-1.5">
-                              <div className="w-2 h-2 rounded-full bg-green-500/60"></div>
+                              <div className="w-3 h-3 rounded-full bg-green-600"></div>
                               <Clock className="w-3 h-3" /> 
                               <span className="font-medium">{(Math.round((item.total_duration||0)/60*10)/10).toFixed(1)}m</span>
                             </div>
                           </div>
-                          <div className="text-xs text-muted-foreground/70 font-medium">
+                          <div className="text-xs text-gray-600 font-semibold">
                             {item.last_call_date ? new Date(item.last_call_date).toLocaleDateString('ro-RO') : '-'}
                           </div>
                         </div>
