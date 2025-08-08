@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, RefreshCw, Phone, Clock, Filter, Database, Sparkles } from 'lucide-react';
+import { Plus, RefreshCw, Phone, Clock, Filter, Database, Sparkles, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface WorkflowColumn {
@@ -58,6 +58,7 @@ export default function WorkflowDatabase() {
   const [saving, setSaving] = useState(false);
   const [matchedByColumn, setMatchedByColumn] = useState<Record<string, Set<string>>>({});
   const [aiLoading, setAiLoading] = useState<Record<string, boolean>>({});
+  const [deleting, setDeleting] = useState<Record<string, boolean>>({});
 
   // SEO: title, description, canonical
   useEffect(() => {
@@ -234,6 +235,31 @@ export default function WorkflowDatabase() {
     }
   };
 
+  const onDeleteColumn = async (columnId: string) => {
+    if (!user) return;
+    const ok = window.confirm('Ștergi această coloană?');
+    if (!ok) return;
+    try {
+      setDeleting((prev) => ({ ...prev, [columnId]: true }));
+      const { error } = await supabase
+        .from('workflow_columns')
+        .delete()
+        .eq('id', columnId)
+        .eq('user_id', user.id);
+      if (error) throw error;
+      toast({ title: 'Coloană ștearsă', description: 'Coloana a fost eliminată.' });
+      setColumns((prev) => prev.filter((c) => c.id !== columnId));
+      setMatchedByColumn((prev) => {
+        const { [columnId]: _, ...rest } = prev;
+        return rest;
+      });
+    } catch (e: any) {
+      console.error('Delete column error', e);
+      toast({ title: 'Eroare la ștergere', description: String(e?.message || e), variant: 'destructive' });
+    } finally {
+      setDeleting((prev) => ({ ...prev, [columnId]: false }));
+    }
+  };
   if (!user) return <Navigate to="/auth" replace />;
 
   return (
@@ -292,10 +318,26 @@ export default function WorkflowDatabase() {
             {board.map((col) => (
               <Card key={col.key} className="w-80 shrink-0">
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>{col.title}</span>
-                    <Badge variant="secondary">{col.items.length}</Badge>
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>{col.title}</CardTitle>
+                    <div className="flex items-center gap-2">
+                      {String(col.key).startsWith('custom_') && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Șterge coloană"
+                          onClick={() => {
+                            const id = String(col.key).replace('custom_','');
+                            if (!deleting[id]) onDeleteColumn(id);
+                          }}
+                          disabled={deleting[String(col.key).replace('custom_','')]}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                      <Badge variant="secondary">{col.items.length}</Badge>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {col.prompt && (
