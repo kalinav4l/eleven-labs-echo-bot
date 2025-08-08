@@ -318,7 +318,7 @@ const Account = () => {
   return <DashboardLayout>
       <div className="min-h-screen bg-white">
         {/* Animated Header */}
-        <div className="bg-white border-b border-gray-200">
+        <div className="bg-white/30 backdrop-blur-sm border-b border-gray-200/50">
           <div className="px-6 py-6">
             <div className="flex items-center justify-between animate-fade-in">
               <div>
@@ -344,7 +344,7 @@ const Account = () => {
         <div className="px-6 py-8">
           {/* Cost and Time Summary Cards - Mobile Optimized */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-8">
-            <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <Card className="bg-white/30 backdrop-blur-sm border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300">
               <CardContent className="p-3 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
@@ -362,7 +362,7 @@ const Account = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <Card className="bg-white/30 backdrop-blur-sm border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300">
               <CardContent className="p-3 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
@@ -532,7 +532,7 @@ const Account = () => {
           <VoiceChart />
 
           {/* Agent Overview */}
-          <div className="border border-gray-200 rounded-lg bg-white mt-8">
+          <div className="border border-gray-200/50 rounded-lg bg-white/30 backdrop-blur-sm mt-8">
             <div className="p-4 border-b border-gray-200">
               <h2 className="font-medium text-gray-900">Agenții Tăi</h2>
             </div>
