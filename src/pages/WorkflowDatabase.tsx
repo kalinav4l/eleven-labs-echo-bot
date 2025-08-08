@@ -11,6 +11,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, RefreshCw, Phone, Clock, Database, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
+const COLUMN_COLORS = {
+  'no_answer': 'border-l-4 border-l-red-500 bg-red-50/50 dark:bg-red-950/20',
+  'long_calls': 'border-l-4 border-l-green-500 bg-green-50/50 dark:bg-green-950/20',
+  'multiple_calls': 'border-l-4 border-l-blue-500 bg-blue-50/50 dark:bg-blue-950/20',
+  'callback': 'border-l-4 border-l-purple-500 bg-purple-50/50 dark:bg-purple-950/20',
+  'short_calls': 'border-l-4 border-l-orange-500 bg-orange-50/50 dark:bg-orange-950/20',
+  'recent': 'border-l-4 border-l-cyan-500 bg-cyan-50/50 dark:bg-cyan-950/20',
+} as const;
+
 interface PhoneAggregate {
   phone_number: string;
   contact_name?: string | null;
@@ -271,33 +280,49 @@ export default function WorkflowDatabase() {
         </div>
       ) : (
         <section className="overflow-x-auto">
-          <div className="flex gap-4 min-w-max">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {board.map((col) => (
-              <Card key={col.key} className="w-80 shrink-0">
-                <CardHeader>
+              <Card key={col.key} className={`${COLUMN_COLORS[col.key]} min-h-[400px]`}>
+                <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle>{col.title}</CardTitle>
-                    <Badge variant="secondary">{col.items.length}</Badge>
+                    <CardTitle className="text-sm font-semibold">{col.title}</CardTitle>
+                    <Badge 
+                      variant="secondary" 
+                      className="text-xs font-bold"
+                    >
+                      {col.items.length}
+                    </Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">{col.description}</p>
+                  <p className="text-xs text-muted-foreground leading-tight">{col.description}</p>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-2 pt-0">
                   {col.items.length === 0 ? (
-                    <div className="text-sm text-muted-foreground">Nicio înregistrare</div>
+                    <div className="text-xs text-muted-foreground text-center py-8 opacity-60">
+                      Nicio înregistrare
+                    </div>
                   ) : (
                     col.items.map((item) => (
-                      <div key={item.phone_number} className="border rounded-lg p-3 bg-background/60">
-                        <div className="flex items-center justify-between">
-                          <div className="font-medium">{item.contact_name || 'Necunoscut'}</div>
-                          <Badge variant="outline">{item.phone_number}</Badge>
+                      <div key={item.phone_number} className="border rounded-md p-2 bg-background/80 hover:bg-background transition-colors">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="font-medium text-xs truncate flex-1 mr-2">
+                            {item.contact_name || 'Necunoscut'}
+                          </div>
+                          <Badge variant="outline" className="text-xs px-1 py-0 h-5 shrink-0">
+                            {item.phone_number}
+                          </Badge>
                         </div>
-                        <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                          <Phone className="w-3 h-3" /> {item.total_calls} apeluri
-                          <span className="mx-1">•</span>
-                          <Clock className="w-3 h-3" /> {(Math.round((item.total_duration||0)/60*10)/10).toFixed(1)} min
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Phone className="w-3 h-3" /> 
+                            <span>{item.total_calls}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" /> 
+                            <span>{(Math.round((item.total_duration||0)/60*10)/10).toFixed(1)}m</span>
+                          </div>
                         </div>
-                        <div className="mt-1 text-xs text-muted-foreground">
-                          Ultimul: {item.last_call_date ? new Date(item.last_call_date).toLocaleString('ro-RO') : '-'}
+                        <div className="text-xs text-muted-foreground mt-1 opacity-75">
+                          {item.last_call_date ? new Date(item.last_call_date).toLocaleDateString('ro-RO') : '-'}
                         </div>
                       </div>
                     ))
