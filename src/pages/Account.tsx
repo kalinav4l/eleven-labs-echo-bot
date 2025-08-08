@@ -114,37 +114,9 @@ const Account = () => {
         
         console.log(`Calculated cost: $${costUsd} for ${duration} seconds`);
         
-        // Deduct cost from user balance and update statistics
-        if (costUsd > 0 && user?.id) {
-          console.log(`Attempting to deduct $${costUsd} from user ${user.id}`);
-          
-          try {
-            const { data: deductResult, error: deductError } = await supabase.rpc('deduct_balance', {
-              p_user_id: user.id,
-              p_amount: costUsd,
-              p_description: `Apel conversație ${conversationId}`,
-              p_conversation_id: null // Nu folosim conversation_id pentru ElevenLabs IDs
-            });
+        // Note: Cost deduction is handled by the ElevenLabs webhook (atomic transaction)
+        // We only compute and display estimated costs here.
 
-            console.log('Deduct balance result:', { deductResult, deductError });
-
-            if (!deductError && deductResult) {
-              // Update user statistics with spending
-              const { error: statsError } = await supabase.rpc('update_user_statistics_with_spending', {
-                p_user_id: user.id,
-                p_duration_seconds: duration,
-                p_cost_usd: costUsd
-              });
-              
-              console.log('Statistics update error:', statsError);
-              console.log(`Successfully deducted $${costUsd} for conversation ${conversationId}`);
-            } else {
-              console.error('Failed to deduct balance:', deductError);
-            }
-          } catch (error) {
-            console.error('Error deducting balance:', error);
-          }
-        }
         
         setConversationDurations(prev => ({ ...prev, [conversationId]: duration }));
         setConversationCosts(prev => ({ ...prev, [conversationId]: costUsd }));
