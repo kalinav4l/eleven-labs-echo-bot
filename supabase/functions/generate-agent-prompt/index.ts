@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.9';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,13 +13,22 @@ serve(async (req) => {
   }
 
   try {
-    const { websiteUrl } = await req.json();
+    const { 
+      agentName, 
+      agentType, 
+      websiteUrl, 
+      companyName, 
+      contactNumber, 
+      domain, 
+      additionalInfo,
+      userId 
+    } = await req.json();
     
-    if (!websiteUrl) {
-      throw new Error('Website URL is required');
+    if (!agentName || !agentType || !userId) {
+      throw new Error('Agent name, type, and user ID are required');
     }
 
-    console.log('Analyzing website:', websiteUrl);
+    console.log('Generating prompt for agent:', agentName);
 
     // Get OpenAI API key
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -26,75 +36,93 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    // Fetch website content
-    console.log('Fetching website content...');
-    const websiteResponse = await fetch(websiteUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
-    });
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
-    if (!websiteResponse.ok) {
-      throw new Error(`Failed to fetch website: ${websiteResponse.status}`);
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Supabase configuration missing');
     }
 
-    const websiteContent = await websiteResponse.text();
-    console.log('Website content fetched, length:', websiteContent.length);
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Extract key information from HTML
-    const extractedInfo = extractWebsiteInfo(websiteContent);
-    
+    // Fetch website content if URL provided
+    let websiteContent = '';
+    if (websiteUrl) {
+      try {
+        const websiteResponse = await fetch(websiteUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          }
+        });
+        
+        if (websiteResponse.ok) {
+          const html = await websiteResponse.text();
+          // Extract text content from HTML
+          websiteContent = html
+            .replace(/<script[^>]*>.*?<\/script>/gsi, '')
+            .replace(/<style[^>]*>.*?<\/style>/gsi, '')
+            .replace(/<[^>]*>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .substring(0, 3000);
+        }
+      } catch (error) {
+        console.log('Could not fetch website content:', error.message);
+      }
+    }
+
     // Generate prompt using OpenAI
-    console.log('Generating prompt with OpenAI...');
-    const prompt = `
-Analizează următorul site web și generează un prompt pentru un agent conversațional de vânzări/customer service pentru această companie.
+    const systemPrompt = `Ești un expert în crearea de prompt-uri pentru agenți conversaționali AI pentru vânzări și customer service. 
+Generezi prompt-uri detaliate și eficiente care urmează exact structura specificată de utilizator.
+Răspunde DOAR cu prompt-ul generat, fără explicații suplimentare.`;
 
-INFORMAȚII DESPRE SITE:
-- URL: ${websiteUrl}
-- Titlu: ${extractedInfo.title}
-- Descriere: ${extractedInfo.description}
-- Servicii/Produse identificate: ${extractedInfo.services.join(', ')}
-- Informații de contact: ${extractedInfo.contact}
+    const userPrompt = `
+Generează un prompt detaliat pentru un agent conversațional cu următoarele specificații:
 
-CONȚINUT RELEVANT DIN SITE:
-${extractedInfo.relevantText.substring(0, 3000)}
+**Informații despre agent:**
+- Nume agent: ${agentName}
+- Tip agent: ${agentType}
+- Nume companie: ${companyName || 'Compania'}
+- Domeniu: ${domain || 'general'}
+- Număr de contact: ${contactNumber || 'vor fi furnizate separat'}
 
-GENEREAZĂ UN PROMPT STRUCTURAT DUPĂ ACEST MODEL:
+**Website și context:**
+- URL website: ${websiteUrl || 'nu a fost furnizat'}
+- Conținut website: ${websiteContent || 'nu a fost extras'}
 
-INSTRUCȚIUNI DE SISTEM PENTRU ASISTENTUL [NUME COMPANIE]
-🎯 IDENTITATE ȘI MISIUNE
+**Informații suplimentare:**
+${additionalInfo || 'Nu au fost furnizate informații suplimentare'}
 
-Nume: [Nume Agent]
-Rol: [Rol specific pentru companie]
-Misiune: [Misiunea agentului bazată pe serviciile companiei]
+**STRUCTURA EXACTĂ a prompt-ului (OBLIGATORIE):**
 
-👤 PERSONALITATEA AGENTULUI
-[Descrierea personalității potrivite pentru companie]
+# CONSTITUȚIA AGENTULUI: ${agentName}
 
-🗣️ STIL DE COMUNICARE
-[Stilul de comunicare recomandat]
+## 1. Persona și Rolul Principal
+Tu ești ${agentName}, un asistent virtual profesionist și prietenos pentru compania ${companyName || '[Numele Companiei]'}. Scopul tău principal este să [defineștePe baza informațiilor furnizate]. Vorbești clar, calm și la obiect. Nu folosi un limbaj prea informal sau argou. Numele tău NU este ElevenLabs, ci ${agentName}.
 
-📋 REGULI DE BAZĂ
-[Reguli specifice pentru acest agent]
+## 2. Contextul Conversației
+[Generează context specific bazat pe informațiile furnizate]
 
-🏢 DOMENII DE ASISTENȚĂ
-[Domeniile în care poate ajuta agentul]
+## 3. Obiectivul Final al Apelului
+[Definește obiectivul specific bazat pe tipul de agent și domeniu]
 
-💬 EXEMPLE DE RĂSPUNSURI
-[3-4 exemple concrete de răspunsuri]
+## 4. Reguli de Bază și Limite (Ce să faci și ce SĂ NU faci)
+[Generează reguli specifice și detaliate]
 
-🛠️ GESTIONAREA TIPURILOR DE CLIENȚI
-[Cum să gestioneze diferite tipuri de clienți]
+## 5. Flux Conversațional (Script Pas cu Pas)
+[Creează un flux detaliat cu pași concreți]
 
-🏁 ÎNCHIDERE
-[Cum să încheie conversațiile]
+## 6. Baza de Cunoștințe (Informații Specifice)
+[Include informații specifice despre companie și servicii]
 
 IMPORTANT: 
 - Prompt-ul trebuie să fie în română
 - Să fie specific pentru industria și serviciile companiei
 - Să includă informații concrete despre companie
 - Să fie profesional dar prietenos
-- Să motiveze la cumpărare/acțiune
+- Să motiveze la acțiune/vânzare
+- Să includă numărul de contact: ${contactNumber || '[Numărul va fi completat]'}
 `;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -106,13 +134,10 @@ IMPORTANT:
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
-          { 
-            role: 'system', 
-            content: 'Ești un expert în marketing conversațional și crearea de agenți virtuali pentru business. Generezi prompt-uri detaliate și eficiente pentru agenți de vânzări.' 
-          },
-          { role: 'user', content: prompt }
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
         ],
-        max_tokens: 3000,
+        max_tokens: 4000,
         temperature: 0.7
       }),
     });
@@ -126,13 +151,35 @@ IMPORTANT:
     const data = await response.json();
     const generatedPrompt = data.choices[0].message.content;
 
-    console.log('Prompt generated successfully');
+    // Save to database
+    const { data: savedPrompt, error: dbError } = await supabase
+      .from('prompt_history')
+      .insert({
+        user_id: userId,
+        agent_name: agentName,
+        agent_type: agentType,
+        website_url: websiteUrl,
+        company_name: companyName,
+        contact_number: contactNumber,
+        domain: domain,
+        additional_info: additionalInfo,
+        generated_prompt: generatedPrompt
+      })
+      .select()
+      .single();
+
+    if (dbError) {
+      console.error('Database error:', dbError);
+      throw new Error('Failed to save prompt to database');
+    }
+
+    console.log('Prompt generated and saved successfully');
 
     return new Response(
       JSON.stringify({ 
         success: true,
         prompt: generatedPrompt,
-        websiteInfo: extractedInfo
+        promptId: savedPrompt.id
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -153,58 +200,3 @@ IMPORTANT:
     );
   }
 });
-
-function extractWebsiteInfo(html: string) {
-  // Extract title
-  const titleMatch = html.match(/<title[^>]*>([^<]+)</i);
-  const title = titleMatch ? titleMatch[1].trim() : '';
-
-  // Extract meta description
-  const descMatch = html.match(/<meta[^>]*name="description"[^>]*content="([^"]*)"[^>]*>/i);
-  const description = descMatch ? descMatch[1] : '';
-
-  // Extract contact info
-  const emailMatch = html.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g);
-  const phoneMatch = html.match(/(\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9})/g);
-  
-  let contact = '';
-  if (emailMatch) contact += `Email: ${emailMatch[0]} `;
-  if (phoneMatch) contact += `Telefon: ${phoneMatch[0]}`;
-
-  // Remove HTML tags and extract text
-  const textContent = html
-    .replace(/<script[^>]*>.*?<\/script>/gsi, '')
-    .replace(/<style[^>]*>.*?<\/style>/gsi, '')
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  // Identify services/products keywords
-  const serviceKeywords = [
-    'servicii', 'produse', 'soluții', 'echipamente', 'consultanță', 
-    'vânzări', 'instalare', 'mentenanță', 'suport', 'transport',
-    'fitness', 'sală', 'antrenament', 'spa', 'masaj', 'bazin',
-    'restaurant', 'hotel', 'cazare', 'turism', 'excursii',
-    'construcții', 'renovări', 'design', 'arhitectură',
-    'software', 'web', 'aplicații', 'dezvoltare', 'IT',
-    'medicina', 'stomatologie', 'analize', 'tratament',
-    'educație', 'cursuri', 'training', 'școală', 'universitate'
-  ];
-
-  const services: string[] = [];
-  const lowerText = textContent.toLowerCase();
-  
-  serviceKeywords.forEach(keyword => {
-    if (lowerText.includes(keyword) && !services.includes(keyword)) {
-      services.push(keyword);
-    }
-  });
-
-  return {
-    title,
-    description,
-    contact,
-    services,
-    relevantText: textContent.substring(0, 2000)
-  };
-}

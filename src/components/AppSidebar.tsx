@@ -23,8 +23,9 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 const aiAnalyticsItems = [
   { title: "AI Agents", url: "/account/kalina-agents", icon: Brain },
+  { title: "Prompt-uri AI", url: "/account/agent-prompts", icon: Sparkles },
   { title: "Rapoarte", url: "/account/conversation-analytics", icon: TrendingUp },
-  { title: "Chat AI", url: "/account/agent-ai", icon: Sparkles },
+  { title: "Chat AI", url: "/account/agent-ai", icon: MessageSquare },
   { title: "Test Voce", url: "/account/voice-demo", icon: Mic },
 ];
 

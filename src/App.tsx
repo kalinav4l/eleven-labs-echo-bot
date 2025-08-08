@@ -34,6 +34,7 @@ import Pricing from "./pages/Pricing";
 import Admin from "./pages/Admin";
 import Contacts from "./pages/Contacts";
 import Webhooks from "./pages/Webhooks";
+import AgentPrompts from "./pages/AgentPrompts";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +77,7 @@ function AppWithWelcome() {
         <Route path="/account/callback-scheduler" element={<CallbackScheduler />} />
         <Route path="/account/documentation" element={<Documentation />} />
         <Route path="/account/voice-demo" element={<VoiceDemo />} />
+        <Route path="/account/agent-prompts" element={<AgentPrompts />} />
         <Route path="/account/settings" element={<AccountSettings />} />
 
         {/* Catch-all for 404 */}

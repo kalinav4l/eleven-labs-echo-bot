@@ -1206,34 +1206,88 @@ export type Database = {
           account_type: string | null
           avatar_url: string | null
           created_at: string
+          default_language: string | null
           email: string | null
           first_name: string | null
           id: string
           last_name: string | null
           plan: string | null
+          telegram_bot_token: string | null
+          telegram_chat_id: string | null
           updated_at: string
         }
         Insert: {
           account_type?: string | null
           avatar_url?: string | null
           created_at?: string
+          default_language?: string | null
           email?: string | null
           first_name?: string | null
           id: string
           last_name?: string | null
           plan?: string | null
+          telegram_bot_token?: string | null
+          telegram_chat_id?: string | null
           updated_at?: string
         }
         Update: {
           account_type?: string | null
           avatar_url?: string | null
           created_at?: string
+          default_language?: string | null
           email?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
           plan?: string | null
+          telegram_bot_token?: string | null
+          telegram_chat_id?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      prompt_history: {
+        Row: {
+          additional_info: string | null
+          agent_name: string
+          agent_type: string
+          company_name: string | null
+          contact_number: string | null
+          created_at: string
+          domain: string | null
+          generated_prompt: string
+          id: string
+          updated_at: string
+          user_id: string
+          website_url: string | null
+        }
+        Insert: {
+          additional_info?: string | null
+          agent_name: string
+          agent_type: string
+          company_name?: string | null
+          contact_number?: string | null
+          created_at?: string
+          domain?: string | null
+          generated_prompt: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          website_url?: string | null
+        }
+        Update: {
+          additional_info?: string | null
+          agent_name?: string
+          agent_type?: string
+          company_name?: string | null
+          contact_number?: string | null
+          created_at?: string
+          domain?: string | null
+          generated_prompt?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          website_url?: string | null
         }
         Relationships: []
       }

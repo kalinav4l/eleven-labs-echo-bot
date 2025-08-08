@@ -54,11 +54,11 @@ const AccountSettings = () => {
 
         if (data) {
           setSettings({
-            defaultLanguage: data.default_language || 'ro'
+            defaultLanguage: (data as any).default_language || 'ro'
           });
           setTelegramSettings({
-            botToken: data.telegram_bot_token || '',
-            chatId: data.telegram_chat_id || ''
+            botToken: (data as any).telegram_bot_token || '',
+            chatId: (data as any).telegram_chat_id || ''
           });
         }
       } catch (error) {
@@ -253,7 +253,7 @@ const AccountSettings = () => {
         .update({
           telegram_bot_token: telegramSettings.botToken,
           telegram_chat_id: telegramSettings.chatId
-        })
+        } as any)
         .eq('id', user.id);
 
       if (error) throw error;
@@ -276,7 +276,7 @@ const AccountSettings = () => {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ default_language: settings.defaultLanguage })
+        .update({ default_language: settings.defaultLanguage } as any)
         .eq('id', user.id);
 
       if (error) throw error;
