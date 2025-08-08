@@ -316,7 +316,7 @@ const Account = () => {
   }
 
   return <DashboardLayout>
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen">
         {/* Animated Header */}
         <div className="bg-white/30 backdrop-blur-sm border-b border-gray-200/50">
           <div className="px-6 py-6">
