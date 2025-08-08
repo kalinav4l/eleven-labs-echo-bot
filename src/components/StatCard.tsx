@@ -49,21 +49,21 @@ const StatCard: React.FC<StatCardProps> = ({
         </div>
         
         <div className="relative">
-          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-all duration-300 group-hover:rotate-6 group-hover:scale-110">
+          <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center group-hover:bg-gray-100 transition-all duration-300 group-hover:rotate-6 group-hover:scale-110">
             {isLoading ? (
-              <div className="w-6 h-6 bg-white/30 rounded animate-pulse" />
+              <div className="w-6 h-6 bg-gray-300 rounded animate-pulse" />
             ) : (
-              <Icon className="w-6 h-6 text-white group-hover:text-white transition-colors duration-300" />
+              <Icon className="w-6 h-6 text-gray-600 group-hover:text-gray-900 transition-colors duration-300" />
             )}
           </div>
           
           {/* Animated ring */}
-          <div className="absolute inset-0 rounded-xl border-2 border-white/30 opacity-0 group-hover:opacity-100 animate-[ping_1s_ease-out_infinite] group-hover:animate-[pulse_2s_ease-in-out_infinite]" />
+          <div className="absolute inset-0 rounded-xl border-2 border-gray-200 opacity-0 group-hover:opacity-100 animate-[ping_1s_ease-out_infinite] group-hover:animate-[pulse_2s_ease-in-out_infinite]" />
         </div>
       </div>
       
       {/* Bottom accent line */}
-      <div className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-white to-white/60 w-0 group-hover:w-full transition-all duration-500" />
+      <div className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-gray-900 to-gray-600 w-0 group-hover:w-full transition-all duration-500" />
     </div>
   );
 };
