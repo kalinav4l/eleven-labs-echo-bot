@@ -7,7 +7,7 @@ import { Play, ArrowRight, Mic } from 'lucide-react';
 
 export const ModernHero = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center bg-white overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 bg-grid-small-black/[0.02] bg-grid-small" />
       <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-background/80" />

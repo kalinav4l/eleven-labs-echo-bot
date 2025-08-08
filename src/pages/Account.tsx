@@ -282,7 +282,7 @@ const Account = () => {
       </DashboardLayout>;
   }
   return <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 relative overflow-hidden">
+      <div className="min-h-screen bg-white relative overflow-hidden">
         {/* Background decorative elements */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.1),rgba(255,255,255,0))]" />
         <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-full -mr-36 -mt-36 animate-pulse" />

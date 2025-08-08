@@ -180,7 +180,7 @@ export default function WorkflowDatabase() {
   };
   if (!user) return <Navigate to="/auth" replace />;
   return <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">`
+      <div className="min-h-screen bg-white">`
         
 
         <div className="flex items-center justify-between mb-6 bg-card/50 backdrop-blur-sm p-4 rounded-xl border shadow-sm">

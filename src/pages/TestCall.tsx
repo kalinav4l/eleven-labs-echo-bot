@@ -124,8 +124,9 @@ const TestCall = () => {
       }
       if (data?.success) {
         toast({
-          title: "Apel de test inițiat cu succes!",
-          description: `Apelul a fost inițiat către ${phoneNumber}. Conversation ID: ${data.conversationId}`
+          title: "✅ Apel inițiat cu succes!",
+          description: `Apelul a fost pornit către ${phoneNumber}. Se va conecta în câteva secunde.`,
+          duration: 5000
         });
 
         // Store conversation ID for later retrieval
@@ -141,19 +142,24 @@ const TestCall = () => {
         // Clear form after successful call
         setAgentId('');
         setPhoneNumber('');
+        
+        // Refresh balance after call
+        fetchBalance();
       } else {
         toast({
-          title: "Eroare la inițierea apelului",
-          description: data?.error || "A apărut o eroare necunoscută",
-          variant: "destructive"
+          title: "❌ Apelul nu a putut fi inițiat",
+          description: data?.error || "A apărut o eroare necunoscută. Încearcă din nou.",
+          variant: "destructive",
+          duration: 5000
         });
       }
     } catch (error) {
       console.error('Test call error:', error);
       toast({
-        title: "Eroare la inițierea apelului",
-        description: "A apărut o eroare la inițierea apelului de test",
-        variant: "destructive"
+        title: "❌ Eroare la conectare",
+        description: "Nu s-a putut conecta la serviciul de apeluri. Verifică conexiunea internet.",
+        variant: "destructive",
+        duration: 5000
       });
     } finally {
       setIsLoading(false);
@@ -286,30 +292,30 @@ const TestCall = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 flex items-center justify-center p-6">
-        <div className="w-full max-w-md space-y-8">
+      <div className="min-h-screen bg-white flex items-center justify-center p-6">
+        <div className="w-full max-w-md">
           
           {/* Main Card */}
-          <Card className="backdrop-blur-md bg-white/90 border-0 shadow-2xl rounded-3xl overflow-hidden">
+          <Card className="bg-white border shadow-2xl rounded-3xl overflow-hidden">
             <CardContent className="p-8 space-y-6">
               
               {/* Header */}
               <div className="text-center space-y-4">
-                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary to-primary/60 rounded-2xl flex items-center justify-center shadow-lg">
+                <div className="w-16 h-16 mx-auto bg-gray-800 rounded-2xl flex items-center justify-center shadow-lg">
                   <Phone className="w-8 h-8 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                  <h1 className="text-3xl font-bold text-gray-800">
                     Test Apel
                   </h1>
                   <div className="flex items-center justify-center gap-2 mt-2">
                     {isAdmin ? (
-                      <Badge variant="secondary" className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0">
+                      <Badge className="bg-green-500 text-white border-0">
                         <Sparkles className="w-3 h-3 mr-1" />
                         Apeluri nelimitate
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+                      <Badge variant="outline" className="bg-blue-50 border-blue-200">
                         <Wallet className="w-3 h-3 mr-1" />
                         ${userBalance.toFixed(2)} disponibili
                       </Badge>
@@ -335,7 +341,7 @@ const TestCall = () => {
                     value={phoneNumber}
                     onChange={e => setPhoneNumber(e.target.value)}
                     disabled={isLoading}
-                    className="text-center text-lg py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary/20"
+                    className="text-center text-lg py-3 border-2 rounded-xl focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
 
@@ -351,7 +357,7 @@ const TestCall = () => {
                 <Button
                   onClick={handleTestCall}
                   disabled={isLoading || !agentId || !phoneNumber || hasInsufficientBalance}
-                  className="w-full h-12 text-lg font-semibold rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="w-full h-12 text-lg font-semibold rounded-xl bg-gray-800 hover:bg-gray-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   {isLoading ? (
                     <>
@@ -367,9 +373,9 @@ const TestCall = () => {
                 </Button>
               </div>
 
-              {/* Status & Balance Info */}
+              {/* Balance Info */}
               {!isAdmin && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Minute disponibile:</span>
                     <span className="font-semibold text-blue-700">{availableMinutes} min</span>
@@ -383,136 +389,6 @@ const TestCall = () => {
 
             </CardContent>
           </Card>
-
-          {/* Call Status */}
-          {conversationId && (
-            <Card className="bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200 rounded-2xl">
-              <CardContent className="p-6 text-center space-y-4">
-                <div className="w-12 h-12 mx-auto bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center">
-                  <Phone className="w-6 h-6 text-white animate-pulse" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-emerald-800">Apel în desfășurare</h3>
-                  <p className="text-sm text-emerald-600 mt-1">ID: {conversationId.slice(0, 8)}...</p>
-                </div>
-                <Button
-                  onClick={() => fetchConversation()}
-                  disabled={isLoadingConversation}
-                  variant="outline"
-                  className="border-emerald-300 text-emerald-700 hover:bg-emerald-100"
-                >
-                  {isLoadingConversation ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Se încarcă...
-                    </>
-                  ) : (
-                    <>
-                      <MessageSquare className="w-4 h-4 mr-2" />
-                      Vezi conversația
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Conversation Display */}
-          {conversation && (
-            <Card className="bg-white/95 backdrop-blur-sm rounded-2xl border-0 shadow-lg">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center text-gray-800">
-                  <MessageSquare className="w-5 h-5 mr-2 text-primary" />
-                  Conversația
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-3 max-h-80 overflow-y-auto">
-                  {conversation.transcript?.length > 0 ? (
-                    conversation.transcript.map((message, index) => (
-                      <div
-                        key={index}
-                        className={`p-3 rounded-2xl ${
-                          message.role === 'agent'
-                            ? 'bg-gradient-to-r from-primary/10 to-primary/5 text-left border-l-4 border-primary'
-                            : 'bg-gradient-to-l from-gray-100 to-gray-50 text-right border-r-4 border-gray-300'
-                        }`}
-                      >
-                        <div className="text-xs font-medium text-gray-500 mb-1">
-                          {message.role === 'agent' ? 'Agent' : 'Client'}
-                        </div>
-                        <div className="text-sm text-gray-800">
-                          {message.content || message.text}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                      <p>Fără mesaje disponibile</p>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Call Details */}
-                {conversation.status && (
-                  <div className="mt-4 p-4 bg-gray-50 rounded-xl border">
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <span className="text-gray-500">Status:</span>
-                        <span className="ml-2 font-medium">{conversation.status}</span>
-                      </div>
-                      {conversation.duration_seconds && (
-                        <div>
-                          <span className="text-gray-500">Durată:</span>
-                          <span className="ml-2 font-medium">{conversation.duration_seconds}s</span>
-                        </div>
-                      )}
-                      {conversation.cost && (
-                        <div className="col-span-2">
-                          <span className="text-gray-500">Cost:</span>
-                          <span className="ml-2 font-semibold text-green-600">${conversation.cost}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Recent Calls History */}
-          {history.length > 0 && (
-            <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border-0 shadow-lg">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg text-gray-800">Apeluri recente</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-2">
-                  {history.slice(0, 3).map((item) => (
-                    <div
-                      key={item.id}
-                      onClick={() => handleHistoryDoubleClick(item.conversationId)}
-                      className="p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gradient-to-r hover:from-primary/5 hover:to-primary/10 hover:border-primary/30 transition-all duration-200"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-gray-800">{item.phoneNumber}</span>
-                        <div className="flex items-center text-xs text-gray-500">
-                          <RefreshCw className="w-3 h-3 mr-1" />
-                          Click pentru a vedea
-                        </div>
-                      </div>
-                      {item.cost && (
-                        <div className="text-xs text-green-600 mt-1">
-                          Cost: ${item.cost.toFixed(2)}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
     </DashboardLayout>
