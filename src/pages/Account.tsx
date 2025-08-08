@@ -173,7 +173,10 @@ const Account = () => {
 
   // Calculate real stats from user data
   const totalAgents = userAgents?.length || 0;
+  const activeAgentsCount = (userAgents || []).filter((a: any) => a.is_active).length;
+  const activeAgentsPercentage = totalAgents > 0 ? Math.round((activeAgentsCount / totalAgents) * 100) : 0;
   const totalCalls = callHistory?.length || 0;
+  const successfulCalls = (callHistory || []).filter((c: any) => c.call_status === 'success' || c.call_status === 'done').length;
 
   // Calculate total cost from conversation data (in USD)
   const totalCost = Object.values(conversationCosts).reduce((total, cost) => total + cost, 0);
@@ -181,8 +184,7 @@ const Account = () => {
   const totalTranscripts = savedTranscripts?.length || 0;
   const currentBalance = userBalance?.balance_usd || 0;
 
-
-
+  
   // Calculate total seconds from both sources - prioritize ElevenLabs data when available
   const totalSecondsFromCalls = callHistory?.reduce((total, call) => {
     // Use ElevenLabs conversation duration if available, otherwise fallback to duration_seconds
@@ -326,14 +328,14 @@ const Account = () => {
               title="Performanță Agenți"
               value={totalAgents.toString()}
               subtitle="agenți activi"
-              percentage={totalAgents > 0 ? Math.min((totalCalls / totalAgents) * 10, 100) : 0}
+              percentage={activeAgentsPercentage}
               icon={Bot}
               gradient="from-blue-500 to-cyan-500"
             />
             
             {/* Success Rate Chart */}
             <SuccessRateChart 
-              successfulCalls={Math.round(totalCalls * 0.75)} 
+              successfulCalls={successfulCalls} 
               totalCalls={totalCalls} 
             />
             
@@ -485,9 +487,6 @@ const Account = () => {
               </div>
             </div>
           </div>
-
-          {/* Voice Chart */}
-          <VoiceChart />
 
           {/* Agent Overview */}
           <div className="border border-gray-200/50 rounded-lg bg-white/30 backdrop-blur-sm mt-8">
