@@ -131,7 +131,7 @@ const DashboardLayout = ({
           )}
           
           {/* Main Content */}
-          <main className="flex-1 overflow-y-auto min-h-0 bg-gradient-to-br from-blue-200 via-purple-200 to-pink-200">
+          <main className="flex-1 overflow-y-auto min-h-0 bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50">
             <div className={`max-w-7xl mx-auto ${isMobile ? 'px-2 py-2 min-h-[calc(100vh-4rem)]' : 'px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-6'}`}>
               {children}
             </div>
