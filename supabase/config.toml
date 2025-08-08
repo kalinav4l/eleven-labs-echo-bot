@@ -111,3 +111,6 @@ verify_jwt = false
 
 [functions.check-scheduled-tasks]
 verify_jwt = false
+
+[functions.create-scheduled-callback]
+verify_jwt = true

@@ -72,19 +72,21 @@ export const useCreateCallback = () => {
     mutationFn: async (callbackData: Omit<CallbackRequest, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       if (!user) throw new Error('User not authenticated');
 
-      const { data, error } = await supabase
-        .from('scheduled_calls')
-        .insert({
-          ...callbackData,
-          user_id: user.id,
-          task_type: 'callback',
+      // Use edge function to ensure the callback is created under the agent owner's account
+      const { data, error } = await supabase.functions.invoke('create-scheduled-callback', {
+        body: {
+          client_name: callbackData.client_name,
+          phone_number: callbackData.phone_number,
           scheduled_datetime: callbackData.scheduled_time,
-        })
-        .select()
-        .single();
+          priority: callbackData.priority,
+          description: callbackData.description,
+          notes: callbackData.notes,
+          agent_id: callbackData.agent_id,
+        },
+      });
 
       if (error) throw error;
-      return data;
+      return data?.callback;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['callbacks'] });
