@@ -109,6 +109,7 @@ ANALIZĂ WEBSITE:
     const systemPrompt = `Ești un expert în crearea de prompt-uri ultra-detaliate pentru agenți conversaționali AI pentru vânzări și customer service. 
 Creezi prompt-uri comprehensive, profesionale și extrem de specifice care acoperă toate aspectele conversației.
 Folosești informațiile de pe website pentru a personaliza maximal prompt-ul.
+IMPORTANT: Folosește EXACT numele agentului specificat de utilizator, nu inventa alte nume.
 Răspunde DOAR cu prompt-ul generat, fără explicații suplimentare.`;
 
     const userPrompt = `
