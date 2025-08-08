@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Plus, RefreshCw, Phone, Clock, Filter, Database, Sparkles } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 interface WorkflowColumn {
   id: string;
@@ -54,6 +55,7 @@ export default function WorkflowDatabase() {
   const [openNewCol, setOpenNewCol] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newPrompt, setNewPrompt] = useState('');
+  const [saving, setSaving] = useState(false);
 
   // SEO: title, description, canonical
   useEffect(() => {
@@ -168,16 +170,28 @@ export default function WorkflowDatabase() {
   }, [phones, classifyDefault, columns]);
 
   const onCreateColumn = async () => {
-    if (!user || !newTitle.trim() || !newPrompt.trim()) return;
-    const { error } = await supabase
-      .from('workflow_columns')
-      .insert({
-        user_id: user.id,
-        title: newTitle.trim(),
-        prompt: newPrompt.trim(),
-        sort_order: (columns?.length || 0) + 1,
-      });
-    if (!error) {
+    if (!user) {
+      toast({ title: 'Eroare', description: 'Trebuie să fii autentificat.', variant: 'destructive' });
+      return;
+    }
+    if (!newTitle.trim() || !newPrompt.trim()) {
+      toast({ title: 'Completează câmpurile', description: 'Titlul și promptul sunt obligatorii.', variant: 'destructive' });
+      return;
+    }
+    try {
+      setSaving(true);
+      const { error } = await supabase
+        .from('workflow_columns')
+        .insert({
+          user_id: user.id,
+          title: newTitle.trim(),
+          prompt: newPrompt.trim(),
+          sort_order: (columns?.length || 0) + 1,
+        });
+      if (error) throw error;
+
+      toast({ title: 'Coloană creată', description: 'Coloana a fost adăugată cu succes.' });
+
       setNewTitle('');
       setNewPrompt('');
       setOpenNewCol(false);
@@ -188,8 +202,11 @@ export default function WorkflowDatabase() {
         .eq('user_id', user.id)
         .order('sort_order', { ascending: true });
       setColumns(data || []);
-    } else {
+    } catch (error: any) {
       console.error('Create column error', error);
+      toast({ title: 'Eroare la salvare', description: String(error?.message || error), variant: 'destructive' });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -233,7 +250,7 @@ export default function WorkflowDatabase() {
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setOpenNewCol(false)}>Anulează</Button>
-                  <Button onClick={onCreateColumn}>
+                  <Button onClick={onCreateColumn} disabled={saving || !newTitle.trim() || !newPrompt.trim()}>
                     <Sparkles className="w-4 h-4 mr-2" /> Salvează
                   </Button>
                 </div>
