@@ -152,17 +152,18 @@ IMPORTANT:
     const generatedPrompt = data.choices[0].message.content;
 
     // Save to database
+    console.log('Attempting to save prompt to database for user:', userId);
     const { data: savedPrompt, error: dbError } = await supabase
       .from('prompt_history')
       .insert({
         user_id: userId,
         agent_name: agentName,
         agent_type: agentType,
-        website_url: websiteUrl,
-        company_name: companyName,
-        contact_number: contactNumber,
-        domain: domain,
-        additional_info: additionalInfo,
+        website_url: websiteUrl || null,
+        company_name: companyName || null,
+        contact_number: contactNumber || null,
+        domain: domain || null,
+        additional_info: additionalInfo || null,
         generated_prompt: generatedPrompt
       })
       .select()
@@ -170,8 +171,10 @@ IMPORTANT:
 
     if (dbError) {
       console.error('Database error:', dbError);
-      throw new Error('Failed to save prompt to database');
+      throw new Error(`Failed to save prompt to database: ${dbError.message}`);
     }
+
+    console.log('Prompt saved successfully with ID:', savedPrompt?.id);
 
     console.log('Prompt generated and saved successfully');
 

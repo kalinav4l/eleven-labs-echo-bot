@@ -132,11 +132,13 @@ const AgentPrompts = () => {
 
       if (data.success) {
         setGeneratedPrompt(data.prompt);
+        
+        // Refresh the history to show the new prompt
         queryClient.invalidateQueries({ queryKey: ['prompt-history', user.id] });
         
         toast({
           title: "Succes!",
-          description: "Prompt-ul a fost generat cu succes și salvat în istoric.",
+          description: `Prompt-ul a fost generat cu succes și salvat în istoric${data.promptId ? ` (ID: ${data.promptId.substring(0, 8)}...)` : ''}.`,
         });
       } else {
         throw new Error(data.error || 'Eroare necunoscută');
