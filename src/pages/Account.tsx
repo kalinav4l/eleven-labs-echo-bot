@@ -21,11 +21,11 @@ import SkeletonCard from '@/components/SkeletonCard';
 import VoiceChart from '@/components/VoiceChart';
 import CreditsPlanDisplay from '@/components/CreditsPlanDisplay';
 import { calculateCostFromSeconds } from '@/utils/costCalculations';
-import WelcomeCard from '@/components/dashboard/WelcomeCard';
-import ModernStatsGrid from '@/components/dashboard/ModernStatsGrid';
-import CircularProgressChart from '@/components/dashboard/CircularProgressChart';
-import QuickActionsCard from '@/components/dashboard/QuickActionsCard';
-import ActivityTimeline from '@/components/dashboard/ActivityTimeline';
+import GlassWelcomeCard from '@/components/dashboard/GlassWelcomeCard';
+import ModernGlassStatsGrid from '@/components/dashboard/ModernGlassStatsGrid';
+import GlassActivityCard from '@/components/dashboard/GlassActivityCard';
+import GlassQuickActions from '@/components/dashboard/GlassQuickActions';
+import GlassMetricCard from '@/components/dashboard/GlassMetricCard';
 
 const Account = () => {
   const navigate = useNavigate();
@@ -321,17 +321,22 @@ const Account = () => {
   }
 
   return <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
-        <div className="px-6 py-8 space-y-8">
-          {/* Welcome Section */}
-          <WelcomeCard 
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 relative overflow-hidden">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.1),rgba(255,255,255,0))]" />
+        <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-full -mr-36 -mt-36 animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-accent/5 to-primary/5 rounded-full -ml-48 -mb-48 animate-pulse" style={{ animationDelay: '2s' }} />
+        
+        <div className="relative px-6 py-8 space-y-8">
+          {/* Glass Welcome Section */}
+          <GlassWelcomeCard 
             displayName={displayName} 
             totalCalls={totalCalls} 
             totalCost={totalCost} 
           />
           
-          {/* Modern Stats Grid */}
-          <ModernStatsGrid 
+          {/* Modern Glass Stats Grid */}
+          <ModernGlassStatsGrid 
             totalAgents={totalAgents}
             totalCalls={totalCalls}
             currentBalance={currentBalance}
@@ -340,40 +345,43 @@ const Account = () => {
             totalTimeFormatted={totalTimeFormatted}
           />
           
-          {/* Charts and Activity Section */}
+          {/* Metrics and Actions Section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Performance Circular Chart */}
-            <CircularProgressChart 
+            {/* Performance Metric */}
+            <GlassMetricCard 
               title="Performanță Agenți"
-              percentage={totalAgents > 0 ? Math.min((totalCalls / totalAgents) * 10, 100) : 0}
               value={totalAgents.toString()}
               subtitle="agenți activi"
-              color="hsl(var(--primary))"
+              percentage={totalAgents > 0 ? Math.min((totalCalls / totalAgents) * 10, 100) : 0}
               icon={Bot}
+              gradient="from-blue-500 to-cyan-500"
             />
             
-            {/* Success Rate Chart */}
-            <CircularProgressChart 
+            {/* Success Rate Metric */}
+            <GlassMetricCard 
               title="Rata de Succes"
-              percentage={totalCalls > 0 ? 85 : 0}
               value="85%"
               subtitle="apeluri reușite"
-              color="#10b981"
+              percentage={85}
               icon={TrendingUp}
+              gradient="from-emerald-500 to-teal-500"
             />
             
             {/* Quick Actions */}
-            <QuickActionsCard />
+            <GlassQuickActions />
           </div>
           
           {/* Activity and Chart Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Activity Timeline */}
-            <ActivityTimeline activities={recentActivity} />
+            <GlassActivityCard activities={recentActivity} />
             
-            {/* Voice Chart */}
-            <div className="relative">
-              <VoiceChart />
+            {/* Voice Chart in Glass Container */}
+            <div className="relative group animate-fade-in">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg" />
+              <div className="relative p-2">
+                <VoiceChart />
+              </div>
             </div>
           </div>
 
