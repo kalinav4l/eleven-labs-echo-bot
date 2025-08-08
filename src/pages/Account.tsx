@@ -12,6 +12,7 @@ import { useUserBalance } from '@/hooks/useUserBalance';
 import { supabase } from '@/integrations/supabase/client';
 
 // New dashboard components
+import BalancePanel from '@/components/dashboard/BalancePanel';
 import StatsCards from '@/components/dashboard/StatsCards';
 import WelcomeSection from '@/components/dashboard/WelcomeSection';
 import SatisfactionChart from '@/components/dashboard/SatisfactionChart';
@@ -117,8 +118,15 @@ const Account = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gray-900 p-6">
+      <div className="min-h-screen bg-background p-6">
         <div className="max-w-7xl mx-auto space-y-6">
+          {/* Balance Panel */}
+          <BalancePanel
+            balance={balance?.balance_usd || 0}
+            monthlySpending={totalCost}
+            totalTransactions={callHistory?.length || 0}
+          />
+
           {/* Stats Cards */}
           <StatsCards
             todaysCalls={todaysCalls}
