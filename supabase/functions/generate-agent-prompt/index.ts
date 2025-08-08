@@ -48,82 +48,182 @@ serve(async (req) => {
 
     // Fetch website content if URL provided
     let websiteContent = '';
+    let websiteAnalysis = '';
     if (websiteUrl) {
       try {
+        console.log('Fetching website content...');
+        console.log('Analyzing website:', websiteUrl);
+        
         const websiteResponse = await fetch(websiteUrl, {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
           }
         });
         
         if (websiteResponse.ok) {
           const html = await websiteResponse.text();
-          // Extract text content from HTML
-          websiteContent = html
+          console.log('Website content fetched, length:', html.length);
+          
+          // Extract comprehensive content from HTML
+          const fullContent = html
             .replace(/<script[^>]*>.*?<\/script>/gsi, '')
             .replace(/<style[^>]*>.*?<\/style>/gsi, '')
             .replace(/<[^>]*>/g, ' ')
             .replace(/\s+/g, ' ')
-            .trim()
-            .substring(0, 3000);
+            .trim();
+
+          // Extract specific sections
+          const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
+          const title = titleMatch ? titleMatch[1].trim() : '';
+          
+          const metaDescMatch = html.match(/<meta[^>]*name=["\']description["\'][^>]*content=["\']([^"']*)["\'][^>]*>/i);
+          const metaDescription = metaDescMatch ? metaDescMatch[1] : '';
+          
+          const h1Matches = html.match(/<h1[^>]*>(.*?)<\/h1>/gi);
+          const headings = h1Matches ? h1Matches.map(h => h.replace(/<[^>]*>/g, '').trim()) : [];
+          
+          // Extract product/service mentions
+          const productKeywords = ['produs', 'produse', 'serviciu', 'servicii', 'solutii', 'oferta', 'catalog'];
+          const contactKeywords = ['contact', 'telefon', 'email', 'adresa', 'locatie'];
+          
+          websiteContent = fullContent.substring(0, 4000);
+          
+          websiteAnalysis = `
+ANALIZĂ WEBSITE:
+- Titlu: ${title}
+- Meta descriere: ${metaDescription}
+- Titluri principale: ${headings.slice(0, 3).join(', ')}
+- Conținut principal: ${fullContent.substring(0, 1500)}
+- Cuvinte cheie identificate: ${productKeywords.filter(kw => fullContent.toLowerCase().includes(kw)).join(', ')}
+- Informații contact: ${contactKeywords.filter(kw => fullContent.toLowerCase().includes(kw)).length > 0 ? 'Prezente' : 'Nu sunt evidente'}
+          `;
         }
       } catch (error) {
         console.log('Could not fetch website content:', error.message);
       }
     }
 
-    // Generate prompt using OpenAI
-    const systemPrompt = `Ești un expert în crearea de prompt-uri pentru agenți conversaționali AI pentru vânzări și customer service. 
-Generezi prompt-uri detaliate și eficiente care urmează exact structura specificată de utilizator.
+    console.log('Generating prompt with OpenAI...');
+
+    // Generate prompt using OpenAI with enhanced details
+    const systemPrompt = `Ești un expert în crearea de prompt-uri ultra-detaliate pentru agenți conversaționali AI pentru vânzări și customer service. 
+Creezi prompt-uri comprehensive, profesionale și extrem de specifice care acoperă toate aspectele conversației.
+Folosești informațiile de pe website pentru a personaliza maximal prompt-ul.
 Răspunde DOAR cu prompt-ul generat, fără explicații suplimentare.`;
 
     const userPrompt = `
-Generează un prompt detaliat pentru un agent conversațional cu următoarele specificații:
+Creează cel mai detaliat și profesional prompt pentru un agent conversațional cu următoarele specificații:
 
-**Informații despre agent:**
+**INFORMAȚII AGENT:**
 - Nume agent: ${agentName}
 - Tip agent: ${agentType}
 - Nume companie: ${companyName || 'Compania'}
-- Domeniu: ${domain || 'general'}
-- Număr de contact: ${contactNumber || 'vor fi furnizate separat'}
+- Domeniu activitate: ${domain || 'general'}
+- Număr contact: ${contactNumber || 'va fi completat'}
 
-**Website și context:**
-- URL website: ${websiteUrl || 'nu a fost furnizat'}
-- Conținut website: ${websiteContent || 'nu a fost extras'}
+**ANALIZĂ WEBSITE DETALIATĂ:**
+${websiteAnalysis || 'Website nu a fost analizat'}
 
-**Informații suplimentare:**
+**CONȚINUT WEBSITE EXTRAS:**
+${websiteContent || 'Nu s-a putut extrage conținut'}
+
+**CONTEXT SUPLIMENTAR:**
 ${additionalInfo || 'Nu au fost furnizate informații suplimentare'}
 
-**STRUCTURA EXACTĂ a prompt-ului (OBLIGATORIE):**
+**CERINȚE PENTRU PROMPT ULTRA-DETALIAT:**
 
-# CONSTITUȚIA AGENTULUI: ${agentName}
+Creează un prompt EXTREM DE COMPLET cu următoarea structură OBLIGATORIE:
 
-## 1. Persona și Rolul Principal
-Tu ești ${agentName}, un asistent virtual profesionist și prietenos pentru compania ${companyName || '[Numele Companiei]'}. Scopul tău principal este să [defineștePe baza informațiilor furnizate]. Vorbești clar, calm și la obiect. Nu folosi un limbaj prea informal sau argou. Numele tău NU este ElevenLabs, ci ${agentName}.
+# CONSTITUȚIA COMPLETĂ A AGENTULUI: ${agentName}
 
-## 2. Contextul Conversației
-[Generează context specific bazat pe informațiile furnizate]
+## 1. IDENTITATEA ȘI PERSONA DETALIATĂ
+- Definește rolul exact al agentului
+- Personalitatea și tonul de comunicare
+- Experiența și expertiza în domeniu
+- Metode de salutare și prezentare
 
-## 3. Obiectivul Final al Apelului
-[Definește obiectivul specific bazat pe tipul de agent și domeniu]
+## 2. CUNOAȘTEREA COMPLETĂ A COMPANIEI
+- Istoric și misiunea companiei
+- Produse/servicii specifice oferite
+- Avantaje competitive și diferențiatori
+- Prețuri și oferte speciale (dacă sunt disponibile)
+- Politici și proceduri importante
 
-## 4. Reguli de Bază și Limite (Ce să faci și ce SĂ NU faci)
-[Generează reguli specifice și detaliate]
+## 3. OBIECTIVE DETALIATE ALE CONVERSAȚIEI
+- Obiectivul principal (vânzare, informare, suport)
+- Obiective secundare (colectare date, programare întâlniri)
+- Indicatori de succes ai conversației
+- Modalități de măsurare a eficienței
 
-## 5. Flux Conversațional (Script Pas cu Pas)
-[Creează un flux detaliat cu pași concreți]
+## 4. REGULILE ȘI LIMITELE COMPLETE
+### CE TREBUIE SĂ FACI:
+- [Lista detaliată de acțiuni obligatorii]
+### CE NU AI VOIE SĂ FACI:
+- [Lista detaliată de restricții și limite]
+### SITUAȚII SPECIALE:
+- [Cum să gestionezi obiecții, reclamații, situații dificile]
 
-## 6. Baza de Cunoștințe (Informații Specifice)
-[Include informații specifice despre companie și servicii]
+## 5. FLUXUL CONVERSAȚIONAL COMPLET
+### FAZA 1: DESCHIDEREA (0-30 secunde)
+- Salutul perfect
+- Prezentarea agentului și companiei
+- Confirmarea disponibilității interlocutorului
 
-IMPORTANT: 
-- Prompt-ul trebuie să fie în română
-- Să fie specific pentru industria și serviciile companiei
-- Să includă informații concrete despre companie
-- Să fie profesional dar prietenos
-- Să motiveze la acțiune/vânzare
-- Să includă numărul de contact: ${contactNumber || '[Numărul va fi completat]'}
-`;
+### FAZA 2: IDENTIFICAREA NEVOILOR (30-90 secunde)
+- Întrebări pentru identificarea nevoilor
+- Ascultare activă și empatie
+- Calificarea lead-ului
+
+### FAZA 3: PREZENTAREA SOLUȚIEI (90-180 secunde)
+- Prezentarea produselor/serviciilor relevante
+- Beneficii specifice pentru client
+- Demonstrarea valorii adăugate
+
+### FAZA 4: GESTIONAREA OBIECȚIILOR (variabil)
+- Răspunsuri la obiecții comune
+- Tehnici de persuasiune etică
+- Reorientarea conversației
+
+### FAZA 5: ÎNCHIDEREA ȘI NEXT STEPS (30-60 secunde)
+- Call-to-action clar
+- Programarea următorilor pași
+- Mulțumirea și încheirea profesională
+
+## 6. BAZA DE CUNOȘTINȚE SPECIALIZATĂ
+### PRODUSE/SERVICII DETALIATE:
+[Include toate informațiile specifice din website]
+
+### FAQ-URI ȘI RĂSPUNSURI STANDARD:
+[Răspunsuri pregătite la întrebări frecvente]
+
+### PREȚURI ȘI OFERTE:
+[Informații complete despre costuri și opțiuni]
+
+### CONTACT ȘI PROGRAM:
+[Detalii complete de contact și disponibilitate]
+
+## 7. TEHNICI AVANSATE DE COMUNICARE
+- Ascultare activă și empatie
+- Tehnici de rapport building
+- Gestiunea obiecțiilor și a conflictelor
+- Închideri eficiente de vânzare
+
+## 8. INDICATORI DE PERFORMANȚĂ
+- Durata optimă a conversației
+- Rate de conversie țintă
+- Satisfacția clientului
+- Follow-up necesar
+
+INSTRUCȚIUNI SPECIALE:
+- Folosește TOATE informațiile de pe website pentru personalizare maximă
+- Creează răspunsuri specifice pentru industria identificată
+- Include detalii concrete despre produse/servicii
+- Adaptează tonul la tipul de client și industrie
+- Asigură-te că agentul poate răspunde la întrebări specifice despre companie
+- Include scenarii practice și exemple de conversații
+- Numărul de contact pentru urgențe: ${contactNumber || '[COMPLETEAZĂ NUMĂRUL]'}
+
+IMPORTANT: Prompt-ul trebuie să fie în ROMÂNĂ, EXTREM DE DETALIAT, și să includă toate informațiile relevante din analiza website-ului pentru cea mai bună experiență conversațională posibilă.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
