@@ -318,7 +318,7 @@ const Account = () => {
   return <DashboardLayout>
       <div className="min-h-screen">{/* removed bg-white to show gradient */}
         {/* Animated Header */}
-        <div className="bg-white/10 backdrop-blur-md border-b border-white/20">{/* made header semi-transparent */}
+        <div className="bg-white border-b border-gray-200">{/* made header semi-transparent */}
           <div className="px-6 py-6">
             <div className="flex items-center justify-between animate-fade-in">
               <div>
