@@ -10,7 +10,7 @@ interface WelcomeCardProps {
 
 const WelcomeCard = ({ displayName, totalCalls, totalCost }: WelcomeCardProps) => {
   return (
-    <Card className="border-0 shadow-lg bg-gradient-to-br from-primary to-secondary text-primary-foreground overflow-hidden relative">
+    <Card className="border-0 shadow-lg bg-gradient-to-br from-primary to-secondary text-primary-foreground relative">
       <CardContent className="p-8">
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-2">

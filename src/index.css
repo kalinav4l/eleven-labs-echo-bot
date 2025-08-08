@@ -2,6 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Fix shadow overflow globally */
+* {
+  box-sizing: border-box;
+}
+
+.shadow-lg, .shadow-xl, .shadow-2xl {
+  overflow: visible !important;
+}
+
+/* Ensure parent containers don't clip shadows */
+.relative, .absolute, .fixed {
+  overflow: visible;
+}
+
+/* Specific container classes that should contain content but allow shadows */
+.container, .max-w-7xl, .max-w-4xl, .max-w-2xl, .max-w-xl, .max-w-lg {
+  overflow: visible;
+}
+
+/* Grid and flex containers */
+.grid, .flex {
+  overflow: visible;
+}
+
+/* Only clip content when explicitly needed */
+.overflow-hidden {
+  overflow: hidden !important;
+}
+
+.overflow-x-hidden {
+  overflow-x: hidden !important;
+}
+
+.overflow-y-auto {
+  overflow-y: auto !important;
+}
+
 @layer base {
 	:root {
 		--background: 0 0% 100%;

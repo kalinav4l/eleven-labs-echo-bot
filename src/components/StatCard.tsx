@@ -21,7 +21,7 @@ const StatCard: React.FC<StatCardProps> = ({
 }) => {
   return (
     <div 
-      className={`group relative overflow-hidden p-6 border border-gray-200/50 rounded-xl bg-white/30 backdrop-blur-sm hover:border-gray-300/50 transition-all duration-500 hover:shadow-lg transform hover:scale-105 ${className}`}
+      className={`group relative p-6 border border-gray-200/50 rounded-xl bg-white/30 backdrop-blur-sm hover:border-gray-300/50 transition-all duration-500 hover:shadow-lg transform hover:scale-105 ${className}`}
       style={{ animationDelay: `${delay}ms` }}
     >
       {/* Animated background gradient */}

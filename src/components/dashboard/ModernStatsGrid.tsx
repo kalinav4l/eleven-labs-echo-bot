@@ -70,7 +70,7 @@ const ModernStatsGrid = ({
       {stats.map((stat, index) => (
         <Card 
           key={index}
-          className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-1"
+          className="group relative border-0 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-1"
           style={{ 
             animationDelay: `${index * 100}ms`,
             background: `linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%)`

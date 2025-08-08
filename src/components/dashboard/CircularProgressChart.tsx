@@ -23,7 +23,7 @@ const CircularProgressChart = ({
   const offset = circumference - (percentage / 100) * circumference;
 
   return (
-    <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-500">
+    <Card className="group relative border-0 shadow-lg hover:shadow-xl transition-all duration-500">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
           <Icon className="w-5 h-5" />
