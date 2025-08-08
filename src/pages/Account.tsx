@@ -26,6 +26,7 @@ import ModernGlassStatsGrid from '@/components/dashboard/ModernGlassStatsGrid';
 import GlassActivityCard from '@/components/dashboard/GlassActivityCard';
 import GlassQuickActions from '@/components/dashboard/GlassQuickActions';
 import GlassMetricCard from '@/components/dashboard/GlassMetricCard';
+import SuccessRateChart from '@/components/dashboard/SuccessRateChart';
 
 const Account = () => {
   const navigate = useNavigate();
@@ -357,14 +358,10 @@ const Account = () => {
               gradient="from-blue-500 to-cyan-500"
             />
             
-            {/* Success Rate Metric */}
-            <GlassMetricCard 
-              title="Rata de Succes"
-              value="85%"
-              subtitle="apeluri reușite"
-              percentage={85}
-              icon={TrendingUp}
-              gradient="from-emerald-500 to-teal-500"
+            {/* Success Rate Chart */}
+            <SuccessRateChart 
+              successfulCalls={Math.round(totalCalls * 0.75)} 
+              totalCalls={totalCalls} 
             />
             
             {/* Quick Actions */}
