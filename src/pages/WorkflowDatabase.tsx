@@ -12,12 +12,12 @@ import { Plus, RefreshCw, Phone, Clock, Database, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const COLUMN_COLORS = {
-  'no_answer': 'border-l-4 border-l-red-500 bg-red-50/50 dark:bg-red-950/20',
-  'long_calls': 'border-l-4 border-l-green-500 bg-green-50/50 dark:bg-green-950/20',
-  'multiple_calls': 'border-l-4 border-l-blue-500 bg-blue-50/50 dark:bg-blue-950/20',
-  'callback': 'border-l-4 border-l-purple-500 bg-purple-50/50 dark:bg-purple-950/20',
-  'short_calls': 'border-l-4 border-l-orange-500 bg-orange-50/50 dark:bg-orange-950/20',
-  'recent': 'border-l-4 border-l-cyan-500 bg-cyan-50/50 dark:bg-cyan-950/20',
+  'no_answer': 'bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-950/40 dark:to-rose-950/60 border-t-4 border-t-red-500 shadow-red-100/50 dark:shadow-red-900/20',
+  'long_calls': 'bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-950/40 dark:to-green-950/60 border-t-4 border-t-emerald-500 shadow-emerald-100/50 dark:shadow-emerald-900/20',
+  'multiple_calls': 'bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/40 dark:to-indigo-950/60 border-t-4 border-t-blue-500 shadow-blue-100/50 dark:shadow-blue-900/20',
+  'callback': 'bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-950/40 dark:to-violet-950/60 border-t-4 border-t-purple-500 shadow-purple-100/50 dark:shadow-purple-900/20',
+  'short_calls': 'bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-950/40 dark:to-amber-950/60 border-t-4 border-t-orange-500 shadow-orange-100/50 dark:shadow-orange-900/20',
+  'recent': 'bg-gradient-to-br from-cyan-50 to-sky-100 dark:from-cyan-950/40 dark:to-sky-950/60 border-t-4 border-t-cyan-500 shadow-cyan-100/50 dark:shadow-cyan-900/20',
 } as const;
 
 interface PhoneAggregate {
@@ -195,144 +195,167 @@ export default function WorkflowDatabase() {
 
   return (
     <DashboardLayout>
-      <header className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground">Workflow Database</h1>
-        <p className="text-muted-foreground">Agregare numere de telefon cu coloane predefinite personalizabile</p>
-        <link rel="prerender" href="/account/workflow-database" />
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">`
+        <header className="mb-8 text-center">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-purple-600 to-blue-600 bg-clip-text text-transparent mb-3">
+            Workflow Database
+          </h1>
+          <p className="text-muted-foreground text-lg">Agregare inteligentă cu coloane predefinite personalizabile</p>
+          <link rel="prerender" href="/account/workflow-database" />
       </header>
 
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3 text-muted-foreground">
-          <Database className="w-4 h-4" />
-          <span>{phones.length} numere unice</span>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => window.location.reload()}>
-            <RefreshCw className="w-4 h-4 mr-2" /> Reîncarcă
-          </Button>
-          <Dialog open={openColumnSelector} onOpenChange={setOpenColumnSelector}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" /> Selectează coloane
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Alege coloanele (maxim 4)</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="text-sm text-muted-foreground">
-                  Selectate: {selectedColumns.length}/4
-                </div>
-                {PREDEFINED_COLUMNS.map((col) => (
-                  <div key={col.key} className="flex items-start space-x-3">
-                    <Checkbox
-                      id={col.key}
-                      checked={selectedColumns.includes(col.key)}
-                      onCheckedChange={(checked) => handleColumnToggle(col.key, !!checked)}
-                    />
-                    <div className="flex-1">
-                      <label htmlFor={col.key} className="text-sm font-medium cursor-pointer">
-                        {col.title}
-                      </label>
-                      <p className="text-xs text-muted-foreground">{col.description}</p>
-                    </div>
-                  </div>
-                ))}
-                <div className="flex justify-end">
-                  <Button onClick={() => setOpenColumnSelector(false)}>Închide</Button>
-                </div>
+        <div className="flex items-center justify-between mb-6 bg-card/50 backdrop-blur-sm p-4 rounded-xl border shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Database className="w-4 h-4 text-primary" />
               </div>
-            </DialogContent>
+              <span className="font-medium">{phones.length} numere unice</span>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => window.location.reload()} className="shadow-sm hover:shadow-md transition-all duration-200">
+              <RefreshCw className="w-4 h-4 mr-2" /> Reîncarcă
+            </Button>
+            <Dialog open={openColumnSelector} onOpenChange={setOpenColumnSelector}>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-lg hover:shadow-xl transition-all duration-200">
+                  <Plus className="w-4 h-4 mr-2" /> Selectează coloane
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg bg-card/95 backdrop-blur-sm border-2">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+                    Alege coloanele (maxim 4)
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                    Selectate: <span className="font-bold text-primary">{selectedColumns.length}/4</span>
+                  </div>
+                  {PREDEFINED_COLUMNS.map((col) => (
+                    <div key={col.key} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-muted/30 transition-colors">
+                      <Checkbox
+                        id={col.key}
+                        checked={selectedColumns.includes(col.key)}
+                        onCheckedChange={(checked) => handleColumnToggle(col.key, !!checked)}
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <label htmlFor={col.key} className="text-sm font-semibold cursor-pointer text-foreground">
+                          {col.title}
+                        </label>
+                        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{col.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex justify-end pt-4 border-t">
+                    <Button onClick={() => setOpenColumnSelector(false)} className="bg-gradient-to-r from-primary to-blue-600">
+                      Închide
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
           </Dialog>
         </div>
       </div>
 
-      {selectedColumns.length > 0 && (
-        <div className="mb-4">
-          <div className="flex flex-wrap gap-2">
-            {selectedColumns.map((key) => {
-              const col = PREDEFINED_COLUMNS.find(c => c.key === key)!;
-              return (
-                <Badge key={key} variant="secondary" className="flex items-center gap-1">
-                  {col.title}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                    onClick={() => removeColumn(key)}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </Badge>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {loading ? (
-        <div className="py-20 text-center text-muted-foreground">Se încarcă datele...</div>
-      ) : selectedColumns.length === 0 ? (
-        <div className="py-20 text-center text-muted-foreground">
-          <Database className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p>Selectează coloane pentru a vedea datele organizate</p>
-        </div>
-      ) : (
-        <section className="overflow-x-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {board.map((col) => (
-              <Card key={col.key} className={`${COLUMN_COLORS[col.key]} min-h-[400px]`}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-semibold">{col.title}</CardTitle>
-                    <Badge 
-                      variant="secondary" 
-                      className="text-xs font-bold"
+        {selectedColumns.length > 0 && (
+          <div className="mb-6">
+            <div className="flex flex-wrap gap-3">
+              {selectedColumns.map((key) => {
+                const col = PREDEFINED_COLUMNS.find(c => c.key === key)!;
+                return (
+                  <Badge key={key} variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-card/60 hover:bg-card border-2 shadow-sm hover:shadow-md transition-all duration-200">
+                    {col.title}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5 p-0 hover:bg-destructive/20 hover:text-destructive rounded-full"
+                      onClick={() => removeColumn(key)}
                     >
-                      {col.items.length}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-tight">{col.description}</p>
-                </CardHeader>
-                <CardContent className="space-y-2 pt-0">
-                  {col.items.length === 0 ? (
-                    <div className="text-xs text-muted-foreground text-center py-8 opacity-60">
-                      Nicio înregistrare
-                    </div>
-                  ) : (
-                    col.items.map((item) => (
-                      <div key={item.phone_number} className="border rounded-md p-2 bg-background/80 hover:bg-background transition-colors">
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="font-medium text-xs truncate flex-1 mr-2">
-                            {item.contact_name || 'Necunoscut'}
-                          </div>
-                          <Badge variant="outline" className="text-xs px-1 py-0 h-5 shrink-0">
-                            {item.phone_number}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Phone className="w-3 h-3" /> 
-                            <span>{item.total_calls}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" /> 
-                            <span>{(Math.round((item.total_duration||0)/60*10)/10).toFixed(1)}m</span>
-                          </div>
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-1 opacity-75">
-                          {item.last_call_date ? new Date(item.last_call_date).toLocaleDateString('ro-RO') : '-'}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </Badge>
+                );
+              })}
+            </div>
           </div>
-        </section>
-      )}
+        )}
+
+        {loading ? (
+          <div className="py-32 text-center">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-r from-primary to-blue-600 animate-pulse"></div>
+            <p className="text-muted-foreground text-lg">Se încarcă datele...</p>
+          </div>
+        ) : selectedColumns.length === 0 ? (
+          <div className="py-32 text-center">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
+              <Database className="w-10 h-10 text-muted-foreground/50" />
+            </div>
+            <p className="text-muted-foreground text-lg font-medium">Selectează coloane pentru a vedea datele organizate</p>
+          </div>
+        ) : (
+          <section>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {board.map((col) => (
+                <Card key={col.key} className={`${COLUMN_COLORS[col.key]} min-h-[500px] shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0`}>
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg font-bold text-foreground">{col.title}</CardTitle>
+                      <Badge 
+                        variant="secondary" 
+                        className="text-sm font-bold bg-white/80 text-foreground shadow-sm px-3 py-1"
+                      >
+                        {col.items.length}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground/80 leading-relaxed font-medium">{col.description}</p>
+                  </CardHeader>
+                  <CardContent className="space-y-3 pt-0">
+                    {col.items.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-white/50 flex items-center justify-center">
+                          <Phone className="w-6 h-6 text-muted-foreground/50" />
+                        </div>
+                        <p className="text-sm text-muted-foreground/60 font-medium">Nicio înregistrare</p>
+                      </div>
+                    ) : (
+                      col.items.map((item) => (
+                        <div key={item.phone_number} className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 hover:bg-white/90 border border-white/40">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="font-semibold text-sm text-foreground truncate flex-1 mr-3">
+                              {item.contact_name || 'Necunoscut'}
+                            </div>
+                            <Badge variant="outline" className="text-xs px-2 py-1 h-6 shrink-0 bg-white/60 border-muted">
+                              {item.phone_number}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground mb-2">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-2 h-2 rounded-full bg-primary/60"></div>
+                              <Phone className="w-3 h-3" /> 
+                              <span className="font-medium">{item.total_calls}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-2 h-2 rounded-full bg-green-500/60"></div>
+                              <Clock className="w-3 h-3" /> 
+                              <span className="font-medium">{(Math.round((item.total_duration||0)/60*10)/10).toFixed(1)}m</span>
+                            </div>
+                          </div>
+                          <div className="text-xs text-muted-foreground/70 font-medium">
+                            {item.last_call_date ? new Date(item.last_call_date).toLocaleDateString('ro-RO') : '-'}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
     </DashboardLayout>
   );
 }
