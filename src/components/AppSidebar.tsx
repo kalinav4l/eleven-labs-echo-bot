@@ -44,6 +44,7 @@ const dataToolsItems = [
 
 const workflowItems = [
   { title: "Prompt-uri AI", url: "/account/agent-prompts", icon: Sparkles },
+  { title: "Baza de Date", url: "/account/workflow-database", icon: Database },
   { title: "Configurare", url: "/account/construction", icon: Workflow },
   { title: "Webhooks", url: "/account/webhooks", icon: Network },
 ];

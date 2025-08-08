@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
