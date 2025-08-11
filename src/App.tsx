@@ -3,6 +3,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 import { KalinaWelcomeAnimation } from "./components/KalinaWelcomeAnimation";
+import UserActivityTracker from "./components/analytics/UserActivityTracker";
 
 import Auth from "./pages/Auth";
 import Account from "./pages/Account";
@@ -44,6 +45,7 @@ function AppWithWelcome() {
 
   return (
     <>
+      <UserActivityTracker />
       {showWelcome && (
         <KalinaWelcomeAnimation 
           onComplete={() => setShowWelcome(false)} 

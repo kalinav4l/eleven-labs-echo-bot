@@ -13,6 +13,9 @@ import { Search, Users, Phone, CreditCard, Activity, Edit, DollarSign, Ban, User
 import { UserEditModal } from '@/components/UserEditModal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ApiKeyManager from '@/components/admin/ApiKeyManager';
+import UserActivityFeed from '@/components/admin/UserActivityFeed';
+import TopActiveUsers from '@/components/admin/TopActiveUsers';
+import UserActivityModal from '@/components/admin/UserActivityModal';
 
 interface AdminUser {
   user_id: string;
@@ -47,6 +50,8 @@ const Admin = () => {
   const [loadingData, setLoadingData] = useState(true);
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [activityUserId, setActivityUserId] = useState<string | null>(null);
+  const [activityOpen, setActivityOpen] = useState(false);
 
   // Check if user has admin role through database
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -325,6 +330,16 @@ const Admin = () => {
               </div>
             </div>
           )}
+
+          {/* Activity Monitor */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+            <div className="lg:col-span-1">
+              <TopActiveUsers onUserClick={(id) => { setActivityUserId(id); setActivityOpen(true); }} />
+            </div>
+            <div className="lg:col-span-2">
+              <UserActivityFeed />
+            </div>
+          </div>
 
           {/* Users List */}
           <div className="space-y-2">

@@ -1453,6 +1453,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activity_events: {
+        Row: {
+          action: string | null
+          created_at: string
+          description: string | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          page_path: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action?: string | null
+          created_at?: string
+          description?: string | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          page_path?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string | null
+          created_at?: string
+          description?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          page_path?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_balance: {
         Row: {
           balance_usd: number
@@ -1796,6 +1838,30 @@ export type Database = {
           plan: string
           created_at: string
           last_sign_in: string
+        }[]
+      }
+      admin_get_top_active_users: {
+        Args: { period_hours?: number; limit_count?: number }
+        Returns: {
+          user_id: string
+          event_count: number
+          last_event_at: string
+        }[]
+      }
+      admin_get_user_activity: {
+        Args: { _user_id: string; since_hours?: number; limit_count?: number }
+        Returns: {
+          action: string | null
+          created_at: string
+          description: string | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          page_path: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string
         }[]
       }
       admin_modify_balance: {
