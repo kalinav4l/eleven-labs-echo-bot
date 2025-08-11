@@ -17,9 +17,7 @@ export const VOICES = [
   { id: 'YKAmPotHIjfmLzh5daE4', name: 'Andreea' },
   { id: 'kdmDKE6EkgrWrrykO9Qt', name: 'Alexandra' },
   { id: 'GRHbHyXbUO8nF4YexVTa', name: 'Anca' },
-  { id: 'sGcPNcpR5PikknzyXcy7', name: 'Cristi' },
-  { id: 'LQd9MAmzrUHnAF1Nmi1o', name: 'Oleg' },
-  { id: 'khu4amlCJPHOSeWZ9pyq', name: 'Marius' },
+
 ] as const;
 
 // Complete language map with language IDs as keys
