@@ -11,9 +11,7 @@ export const API_CONFIG = {
 } as const;
 
 export const VOICES = [
-  { id: 'vrlYThSLKW8zkmzKp6HB', name: 'Lili' },
   { id: 'cjVigY5qzO86Huf0OWal', name: 'Eric' },
-  { id: 'hnrrfdVZhpEHlvvBppOW', name: 'Kalina' },
   { id: 'YKAmPotHIjfmLzh5daE4', name: 'Andreea' },
   { id: 'kdmDKE6EkgrWrrykO9Qt', name: 'Alexandra' },
   { id: 'GRHbHyXbUO8nF4YexVTa', name: 'Anca' },
