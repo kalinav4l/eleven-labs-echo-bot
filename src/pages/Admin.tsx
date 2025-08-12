@@ -238,13 +238,6 @@ const Admin = () => {
   }
 
   if (!user || !isAdmin) {
-    React.useEffect(() => {
-      toast({
-        title: "Acces restricționat",
-        description: "Nu aveți permisiuni de administrator.",
-        variant: "destructive"
-      });
-    }, []);
     return <Navigate to="/pricing" replace />;
   }
 
