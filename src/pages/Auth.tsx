@@ -147,8 +147,13 @@ const Auth = () => {
       {/* Left Side - 3D Vocal Visualization */}
       <div className="auth-visual-section">
         <div className="auth-3d-container">
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full h-full relative flex items-center justify-center">
             <spline-viewer url="https://prod.spline.design/n-YvIXxfmd6DNmtp/scene.splinecode" style={{ width: "100%", height: "100%" }}></spline-viewer>
+            {/* Overlay to mask Spline badge */}
+            <div
+              className="pointer-events-none absolute bottom-3 right-3 w-36 h-10 rounded-md bg-background/80 backdrop-blur-sm shadow-md z-10"
+              aria-hidden="true"
+            />
           </div>
         </div>
       </div>
