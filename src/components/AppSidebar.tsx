@@ -62,7 +62,9 @@ export function AppSidebar() {
 
   return (
     <Sidebar className={`${isMobile ? 'w-72' : ''}`}>
+
       <SidebarHeader className={`${isMobile ? 'p-6' : 'p-4'}`}>
+
         <Link to="/account" className={`flex items-center gap-3 text-lg font-semibold text-foreground hover:text-foreground/80 transition-colors ${isMobile ? 'touch-target' : ''}`}>
           <Avatar className={`${isMobile ? 'w-10 h-10' : 'w-8 h-8'}`}>
             <AvatarImage alt="Kalina AI" src="/lovable-uploads/f617a44e-5bc3-46cb-8232-3110c0cee83d.png" />
@@ -72,7 +74,7 @@ export function AppSidebar() {
         </Link>
       </SidebarHeader>
 
-      <SidebarContent className="p-0 space-y-0 pb-56 md:pb-40">
+      <SidebarContent className="p-0 space-y-0 pb-56 md:pb-40 overflow-y-auto">
         {/* Home */}
         <SidebarGroup>
           <SidebarGroupContent>
@@ -177,7 +179,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className={`border-t border-border bg-background ${isMobile ? 'p-4' : 'p-2'}`}>
+      <SidebarFooter className={`sticky bottom-0 z-10 border-t border-border bg-background ${isMobile ? 'p-4' : 'p-2'}`}>
         <SidebarMenu>
           {/* Admin Panel - Only for specific user */}
           {isSpecificAdmin && (
