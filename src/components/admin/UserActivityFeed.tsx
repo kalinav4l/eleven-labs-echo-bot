@@ -120,13 +120,39 @@ export default function UserActivityFeed() {
           <ScrollArea className="h-[520px] pr-2">
             <ul className="space-y-3">
               {events.map((ev) => {
-                const Icon = iconFor(ev.event_type);
+                const Icon = iconForEvent(ev);
                 const prof = profiles[ev.user_id];
+
+                const details: Array<{ label: string; value: string }> = [];
+                const m = (ev.metadata || {}) as Record<string, any>;
+                const add = (label: string, value?: any) => {
+                  if (value === undefined || value === null) return;
+                  const str = String(value).trim();
+                  if (str) details.push({ label, value: str });
+                };
+
+                add('Agent', m.agent_name || m.agentId || m.agent_id || m.elevenlabs_agent_id);
+                add('Telefon', m.phone || m.phone_number || m.to_number);
+                add('Contact', m.contact_name);
+                add('Programare', m.scheduled_time || m.scheduled_datetime || m.scheduled_at);
+                add('Conversație', m.conversation_id || m.conv_id || m.cid);
+                add('Status', m.call_status || m.status);
+                add('Pagină', ev.page_path);
+                if (ev.action) add('Acțiune', ev.action);
+
+                const formatDetailValue = (label: string, value: string) => {
+                  if (label === 'Programare') {
+                    const d = new Date(value);
+                    if (!isNaN(d.getTime())) return d.toLocaleString('ro-RO');
+                  }
+                  return value;
+                };
+
                 return (
                   <li key={ev.id} className="rounded-xl border border-border/60 bg-background/50 p-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-md bg-primary/10 text-primary flex items-center justify-center">
+                        <div className={`w-8 h-8 rounded-md flex items-center justify-center border ${colorClassesFor(ev.event_type)}`}>
                           <Icon className="w-4 h-4" />
                         </div>
                         <div>
@@ -139,6 +165,14 @@ export default function UserActivityFeed() {
                         </div>
                       </div>
                       <div className="text-xs text-muted-foreground">{formatTime(ev.created_at)}</div>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <Badge variant="outline" className={`${colorClassesFor(ev.event_type)} text-[10px] px-2 py-0.5`}>{ev.event_type}</Badge>
+                      {details.map((d) => (
+                        <Badge key={`${ev.id}-${d.label}-${d.value}`} variant="outline" className="bg-muted/40 text-foreground border-border/50 text-[10px] px-2 py-0.5">
+                          {d.label}: {formatDetailValue(d.label, d.value)}
+                        </Badge>
+                      ))}
                     </div>
                     {ev.description && (
                       <div className="mt-2 text-xs text-muted-foreground">{ev.description}</div>
