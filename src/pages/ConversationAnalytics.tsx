@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Search, Phone, Copy, ExternalLink, RefreshCw, Clock, Database } from 'lucide-react';
+import { Search, Phone, Copy, ExternalLink, RefreshCw, Clock, Database, BarChart3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ConversationDetailSidebar } from '@/components/outbound/ConversationDetailSidebar';
 
@@ -32,6 +32,16 @@ const ConversationAnalytics = () => {
     cachedConversations
   } = useConversationAnalyticsCache();
   const { toast } = useToast();
+
+  // Aggregated stats from cache
+  const aggregated = React.useMemo(() => {
+    const items = cachedConversations || [];
+    const total = items.length;
+    const withAnalysis = items.filter(i => i.analysis).length;
+    const totalDuration = items.reduce((s, i) => s + (i.duration_seconds || 0), 0);
+    const totalCost = items.reduce((s, i) => s + (i.cost_credits || 0), 0);
+    return { total, withAnalysis, totalDuration, totalCost };
+  }, [cachedConversations]);
 
   // Auto-refresh recent conversations when call history changes
   useEffect(() => {
@@ -204,7 +214,36 @@ const ConversationAnalytics = () => {
           </div>
         </div>
 
-
+        {/* Aggregated Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Card>
+            <CardContent className="p-4 flex items-center gap-3">
+              <BarChart3 className="w-4 h-4 text-gray-600" />
+              <div>
+                <div className="text-xs text-gray-500">Conversații în cache</div>
+                <div className="text-sm font-semibold">{aggregated.total}</div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-xs text-gray-500">Cu analiză</div>
+              <div className="text-sm font-semibold">{aggregated.withAnalysis}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-xs text-gray-500">Durată totală</div>
+              <div className="text-sm font-semibold">{Math.floor(aggregated.totalDuration/60)}m</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-xs text-gray-500">Cost total (credite)</div>
+              <div className="text-sm font-semibold">{aggregated.totalCost}</div>
+            </CardContent>
+          </Card>
+        </div>
         {/* Mobile-Responsive Filters */}
         <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 py-3 hover:bg-gray-50 transition-colors duration-200 rounded-lg px-3">
           {/* Search Bar */}
