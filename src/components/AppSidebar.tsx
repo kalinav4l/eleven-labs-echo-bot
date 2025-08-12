@@ -61,7 +61,7 @@ export function AppSidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <Sidebar className={`${isMobile ? 'w-72' : ''}`}>
+    <Sidebar>
       <SidebarHeader className={`${isMobile ? 'p-6' : 'p-4'}`}>
         <Link to="/account" className={`flex items-center gap-3 text-lg font-semibold text-foreground hover:text-foreground/80 transition-colors ${isMobile ? 'touch-target' : ''}`}>
           <Avatar className={`${isMobile ? 'w-10 h-10' : 'w-8 h-8'}`}>
