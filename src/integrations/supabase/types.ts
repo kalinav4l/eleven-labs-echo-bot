@@ -1822,6 +1822,38 @@ export type Database = {
         }
         Returns: boolean
       }
+      admin_create_agent: {
+        Args: {
+          p_admin_user_id: string
+          p_target_user_id: string
+          p_name: string
+          p_voice_id: string
+          p_system_prompt?: string
+          p_description?: string
+          p_is_active?: boolean
+          p_provider?: string
+          p_elevenlabs_agent_id?: string
+          p_agent_id?: string
+        }
+        Returns: {
+          agent_id: string
+          created_at: string
+          description: string | null
+          elevenlabs_agent_id: string | null
+          id: string
+          is_active: boolean
+          name: string
+          provider: string | null
+          system_prompt: string | null
+          updated_at: string
+          user_id: string
+          voice_id: string | null
+        }
+      }
+      admin_delete_agent: {
+        Args: { p_admin_user_id: string; p_agent_row_id: string }
+        Returns: boolean
+      }
       admin_get_all_users: {
         Args: { p_admin_user_id: string }
         Returns: {
@@ -1864,12 +1896,62 @@ export type Database = {
           user_id: string
         }[]
       }
+      admin_get_user_agents: {
+        Args: { p_admin_user_id: string; p_target_user_id: string }
+        Returns: {
+          id: string
+          user_id: string
+          name: string
+          description: string
+          system_prompt: string
+          voice_id: string
+          is_active: boolean
+          provider: string
+          elevenlabs_agent_id: string
+          created_at: string
+          updated_at: string
+          agent_id: string
+        }[]
+      }
+      admin_get_user_by_id: {
+        Args: { p_admin_user_id: string; p_target_user_id: string }
+        Returns: {
+          user_id: string
+          email: string
+          first_name: string
+          last_name: string
+          account_type: string
+          user_role: Database["public"]["Enums"]["app_role"]
+          balance_usd: number
+          total_calls: number
+          total_minutes: number
+          total_spent_usd: number
+          plan: string
+          created_at: string
+          last_sign_in: string
+        }[]
+      }
       admin_modify_balance: {
         Args: {
           p_target_user_id: string
           p_balance_amount: number
           p_operation: string
           p_admin_user_id: string
+        }
+        Returns: boolean
+      }
+      admin_update_agent: {
+        Args: {
+          p_admin_user_id: string
+          p_agent_row_id: string
+          p_name?: string
+          p_voice_id?: string
+          p_system_prompt?: string
+          p_description?: string
+          p_is_active?: boolean
+          p_provider?: string
+          p_elevenlabs_agent_id?: string
+          p_agent_id?: string
         }
         Returns: boolean
       }

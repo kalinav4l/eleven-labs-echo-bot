@@ -68,20 +68,32 @@ serve(async (req) => {
           .update({ status: 'executing' })
           .eq('id', task.id)
 
-        // Găsește agentul asociat din kalina_agents
-        const { data: agentData } = await supabase
+        // Găsește agentul asociat din kalina_agents (după agent_id sau elevenlabs_agent_id)
+        let elevenLabsAgentId: string | null = null;
+        const { data: byInternal } = await supabase
           .from('kalina_agents')
           .select('elevenlabs_agent_id')
           .eq('agent_id', task.agent_id)
           .eq('user_id', task.user_id)
-          .single()
+          .maybeSingle();
 
-        const elevenLabsAgentId = agentData?.elevenlabs_agent_id
+        if (byInternal?.elevenlabs_agent_id) {
+          elevenLabsAgentId = byInternal.elevenlabs_agent_id as string;
+        } else {
+          const { data: byEleven } = await supabase
+            .from('kalina_agents')
+            .select('elevenlabs_agent_id')
+            .eq('elevenlabs_agent_id', task.agent_id)
+            .eq('user_id', task.user_id)
+            .maybeSingle();
+          elevenLabsAgentId = byEleven?.elevenlabs_agent_id ?? null;
+        }
 
         if (!elevenLabsAgentId) {
           console.error(`❌ Nu s-a găsit ElevenLabs agent ID pentru ${task.agent_id}`)
           throw new Error('Agent ElevenLabs nu a fost găsit')
         }
+
 
         // Apelează funcția de inițiere apel
         const callResponse = await supabase.functions.invoke('initiate-scheduled-call', {
