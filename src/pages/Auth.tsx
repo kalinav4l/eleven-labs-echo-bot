@@ -147,27 +147,8 @@ const Auth = () => {
       {/* Left Side - 3D Vocal Visualization */}
       <div className="auth-visual-section">
         <div className="auth-3d-container">
-          {/* Audio Wave Visualization */}
-          <div className="audio-wave-3d px-[33px] py-[240px] my-0">
-            {Array.from({
-            length: 50
-          }, (_, i) => <div key={i} className="wave-bar-3d" style={{
-            animationDelay: `${i * 0.1}s`,
-            height: `${20 + Math.random() * 80}px`,
-            left: `${i * 100 / 50}%`
-          }} />)}
-          </div>
-          
-          {/* Simple Pulse Rings */}
-          <div className="pulse-rings">
-            <div className="pulse-ring ring-1"></div>
-            <div className="pulse-ring ring-2"></div>
-          </div>
-          
-          {/* Logo/Title */}
-          <div className="auth-visual-title">
-            <h1 className="my-0 py-[222px]">KALLINA</h1>
-            <p>AI Voice Platform</p>
+          <div className="w-full h-full flex items-center justify-center">
+            <spline-viewer url="https://prod.spline.design/n-YvIXxfmd6DNmtp/scene.splinecode" style={{ width: "100%", height: "100%" }}></spline-viewer>
           </div>
         </div>
       </div>
