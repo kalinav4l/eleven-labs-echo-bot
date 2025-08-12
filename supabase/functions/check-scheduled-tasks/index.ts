@@ -40,10 +40,12 @@ serve(async (req) => {
     console.log(`📋 Găsite ${scheduledTasks?.length || 0} taskuri de executat`)
 
     if (!scheduledTasks || scheduledTasks.length === 0) {
+      // Even dacă nu sunt taskuri, rulează procesarea de analytics pentru conversațiile mai vechi de 10 minute
+      await supabase.functions.invoke('process-conversation-analytics', { body: {} })
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'Nu sunt taskuri de executat',
+          message: 'Nu sunt taskuri de executat. Analytics backfill declanșat.',
           executedTasks: 0
         }),
         {
@@ -123,7 +125,7 @@ serve(async (req) => {
           throw new Error(callData.error || 'Apel eșuat')
         }
 
-      } catch (taskError) {
+      } catch (taskError: any) {
         console.error(`❌ Eroare la executarea task ${task.id}:`, taskError)
         
         // Marchează taskul ca eșuat
@@ -145,12 +147,15 @@ serve(async (req) => {
       }
     }
 
+    // După execuția taskurilor, rulează backfill de analytics
+    await supabase.functions.invoke('process-conversation-analytics', { body: {} })
+
     console.log(`🎯 Rezultat: ${executedTasks.length} succese, ${failedTasks.length} eșecuri`)
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Executate ${executedTasks.length} taskuri cu succes, ${failedTasks.length} eșecuri`,
+        message: `Executate ${executedTasks.length} taskuri cu succes, ${failedTasks.length} eșecuri` ,
         executedTasks: executedTasks.length,
         failedTasks: failedTasks.length,
         details: {
@@ -163,7 +168,7 @@ serve(async (req) => {
       }
     )
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('💥 Eroare critică în verificarea taskurilor:', error)
     
     return new Response(

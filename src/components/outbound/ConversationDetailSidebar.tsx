@@ -7,6 +7,8 @@ import { Loader2, Phone, MessageSquare, Volume2, Download, CheckCircle, Play, La
 import { useConversationById } from '@/hooks/useConversationById';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import AnalyticsSidebar from '@/components/analytics/AnalyticsSidebar';
+import { useConversationAnalyticsCache } from '@/hooks/useConversationAnalyticsCache';
 interface ConversationDetailSidebarProps {
   conversationId: string;
 }
@@ -251,6 +253,18 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
     };
     autoTranslate();
   }, [conversationData?.summary]);
+
+  const { cachedConversations, refreshConversation } = useConversationAnalyticsCache();
+  React.useEffect(() => {
+    if (conversationId) {
+      // Load and cache analytics for this conversation
+      refreshConversation.mutateAsync(conversationId).catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId]);
+  const cached = cachedConversations.find(c => c.conversation_id === conversationId);
+  const analyticsData = cached?.analysis || null;
+
   console.log('ConversationDetailSidebar - isLoading:', isLoading, 'error:', error, 'conversation:', conversation);
   if (isLoading) {
     return <div className="flex items-center justify-center py-12">
@@ -287,9 +301,14 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
             <TabsTrigger value="transcription" className="bg-transparent border-b-2 border-transparent data-[state=active]:border-black data-[state=active]:bg-transparent rounded-none px-0 py-3 text-sm font-medium data-[state=active]:shadow-none">
               Transcription
             </TabsTrigger>
+            {/* New Analytics tab */}
+            <TabsTrigger value="analytics" className="bg-transparent border-b-2 border-transparent data-[state=active]:border-black data-[state=active]:bg-transparent rounded-none px-0 py-3 text-sm font-medium data-[state=active]:shadow-none">
+              Analytics
+            </TabsTrigger>
           </TabsList>
         </div>
 
+        {/* Existing contents */}
         <TabsContent value="overview" className="space-y-4 mt-4 p-6">
           {/* Rezumat Conversație */}
           <Card className="shadow-sm">
@@ -509,6 +528,17 @@ export const ConversationDetailSidebar: React.FC<ConversationDetailSidebarProps>
                 </div>}
             </div>
           </div>
+        </TabsContent>
+        {/* Analytics content */}
+        <TabsContent value="analytics" className="space-y-4 mt-4 p-6">
+          {analyticsData ? (
+            <AnalyticsSidebar conversation={analyticsData} />
+          ) : (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              <span className="text-sm text-gray-600">Se încarcă analytics din ElevenLabs...</span>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>;

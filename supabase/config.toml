@@ -114,3 +114,6 @@ verify_jwt = false
 
 [functions.create-scheduled-callback]
 verify_jwt = true
+
+[functions.process-conversation-analytics]
+verify_jwt = false
