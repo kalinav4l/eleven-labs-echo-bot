@@ -7,6 +7,19 @@
   box-sizing: border-box;
 }
 
+/* New: safer global text wrapping to prevent overlaps on small screens */
+html, body, p, h1, h2, h3, h4, h5, h6, span, li, a, small, strong, em, label, input, textarea, button, div {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* New: ensure media scales within containers */
+img, svg, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
+
 .shadow-lg, .shadow-xl, .shadow-2xl {
   overflow: visible !important;
 }
@@ -86,6 +99,9 @@
 		/* Touch-friendly shadows */
 		--shadow-mobile: 0 4px 12px rgba(0, 0, 0, 0.1);
 		--shadow-mobile-hover: 0 6px 20px rgba(0, 0, 0, 0.15);
+
+		/* New: Responsive base font size */
+		--font-size-base: clamp(14px, 1.2vw + 0.25rem, 16px);
 	}
 
 	.dark {
@@ -118,73 +134,7 @@
 		--destructive-foreground: 210 40% 98%;
 	}
 
-	.glassmorph {
-		background: rgba(255, 255, 255, 0.1);
-		border-radius: 16px;
-		box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-		backdrop-filter: blur(7.7px);
-		-webkit-backdrop-filter: blur(7.7px);
-		border: 1px solid rgba(255, 255, 255, 0.3);
-	}
-
-	.liquid-glass {
-		background: rgba(0, 0, 0, 0.02) !important;
-		backdrop-filter: blur(20px);
-		-webkit-backdrop-filter: blur(20px);
-		border: 1px solid rgba(0, 0, 0, 0.1) !important;
-		border-radius: 20px;
-		box-shadow: 
-			0 8px 32px rgba(0, 0, 0, 0.05),
-			inset 0 1px 0 rgba(0, 0, 0, 0.02);
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-	}
-
-	.liquid-glass:hover {
-		background: rgba(0, 0, 0, 0.05) !important;
-		transform: translateY(-2px);
-		box-shadow: 
-			0 12px 40px rgba(0, 0, 0, 0.08),
-			inset 0 1px 0 rgba(0, 0, 0, 0.05);
-	}
-
-	.glass-input {
-		background: rgba(0, 0, 0, 0.02) !important;
-		backdrop-filter: blur(10px);
-		border: 1px solid rgba(0, 0, 0, 0.15) !important;
-		border-radius: 12px;
-		transition: all 0.2s ease;
-		color: #000000 !important;
-	}
-
-	.glass-input:focus {
-		background: rgba(0, 0, 0, 0.05) !important;
-		border-color: rgba(0, 0, 0, 0.3) !important;
-		box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
-	}
-
-	.glass-input::placeholder {
-		color: rgba(0, 0, 0, 0.4) !important;
-	}
-
-	.glass-button {
-		background: rgba(0, 0, 0, 0.05) !important;
-		backdrop-filter: blur(10px);
-		border: 1px solid rgba(0, 0, 0, 0.15) !important;
-		transition: all 0.2s ease;
-		color: #000000 !important;
-	}
-
-	.glass-button:hover {
-		background: rgba(0, 0, 0, 0.1) !important;
-		transform: translateY(-1px);
-		color: #000000 !important;
-	}
-
-	.glass-button:disabled {
-		background: rgba(0, 0, 0, 0.02) !important;
-		color: rgba(0, 0, 0, 0.3) !important;
-	}
-
+	/* New: Global typography defaults */
 	body {
 		margin: 0;
 		padding: 0;
@@ -192,6 +142,9 @@
 		min-height: 100vh;
 		color: #000000;
 		font-weight: 600;
+		font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+		font-size: var(--font-size-base);
+		line-height: 1.6;
 		/* Prevent zoom on mobile inputs */
 		-webkit-text-size-adjust: 100%;
 		/* Better touch scrolling */
@@ -201,6 +154,15 @@
 		-webkit-tap-highlight-color: transparent;
 		/* Prevent horizontal scroll on mobile */
 		overflow-x: hidden;
+	}
+
+	/* New: Headings safer defaults on small screens */
+	h1, h2, h3 {
+		line-height: 1.25;
+		text-wrap: balance;
+	}
+	h4, h5, h6, p, li {
+		line-height: 1.5;
 	}
 }
 
