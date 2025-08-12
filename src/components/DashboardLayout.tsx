@@ -101,7 +101,7 @@ const DashboardLayout = ({
     }
   };
   return <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background mobile-safe-area">
+      <div className="min-h-screen flex w-full bg-background mobile-safe-area min-w-0">
         <PaymentIssueNotification 
           notificationType={notificationType}
           spentAmount={totalSpent}
@@ -112,7 +112,7 @@ const DashboardLayout = ({
         
         <AppSidebar />
         
-        <div className="flex-1 flex flex-col" style={{ paddingTop: userBlocked ? '80px' : '0' }}>
+        <div className="flex-1 flex flex-col min-w-0" style={{ paddingTop: userBlocked ? '80px' : '0' }}>
           {/* Mobile Header */}
           {isMobile && (
             <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 h-16 flex items-center px-4">
@@ -131,7 +131,7 @@ const DashboardLayout = ({
           )}
           
           {/* Main Content */}
-          <main className="flex-1 overflow-y-auto min-h-0 bg-white">
+          <main className="flex-1 overflow-y-auto min-h-0 min-w-0 bg-white">
             <div className={`max-w-7xl mx-auto ${isMobile ? 'px-2 py-2 min-h-[calc(100vh-4rem)]' : 'px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-6'}`}>
               {children}
             </div>
