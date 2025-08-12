@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -149,10 +149,10 @@ const Auth = () => {
         <div className="auth-3d-container">
           <div className="w-full h-full relative flex items-center justify-center">
             <spline-viewer url="https://prod.spline.design/n-YvIXxfmd6DNmtp/scene.splinecode" style={{ width: "100%", height: "100%" }}></spline-viewer>
-            {/* Overlay to mask Spline badge - solid dark */}
+            {/* Fixed overlay to mask Spline badge across left half */}
             <div
-              className="pointer-events-none absolute bottom-2 right-2 w-48 h-14 rounded-lg z-[2147483647]"
-              style={{ backgroundColor: 'hsl(0 0% 0%)' }}
+              className="pointer-events-none fixed rounded-lg z-[2147483647]"
+              style={{ width: 220, height: 56, left: 'calc(50% - 240px)', bottom: 16, backgroundColor: 'hsl(0 0% 0%)' }}
               aria-hidden="true"
             />
           </div>
