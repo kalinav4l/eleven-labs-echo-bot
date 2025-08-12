@@ -16,6 +16,7 @@ import ApiKeyManager from '@/components/admin/ApiKeyManager';
 import UserActivityFeed from '@/components/admin/UserActivityFeed';
 import TopActiveUsers from '@/components/admin/TopActiveUsers';
 import UserActivityModal from '@/components/admin/UserActivityModal';
+import UserDetailsModal from '@/components/admin/UserDetailsModal';
 
 interface AdminUser {
   user_id: string;
@@ -51,7 +52,9 @@ const Admin = () => {
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [activityUserId, setActivityUserId] = useState<string | null>(null);
-  const [activityOpen, setActivityOpen] = useState(false);
+const [activityOpen, setActivityOpen] = useState(false);
+  const [detailsUserId, setDetailsUserId] = useState<string | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   // Check if user has admin role through database
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -401,6 +404,14 @@ const Admin = () => {
                         Credite
                       </Button>
                       <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { setDetailsUserId(user.user_id); setDetailsOpen(true); }}
+                        className="border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      >
+                        Detalii
+                      </Button>
+                      <Button
                         variant={user.account_type === 'banned' ? 'outline' : 'destructive'}
                         size="sm"
                         onClick={() => handleBlockUser(user)}
@@ -439,6 +450,11 @@ const Admin = () => {
             open={editModalOpen}
             onOpenChange={setEditModalOpen}
             onUserUpdated={fetchUsers}
+          />
+          <UserDetailsModal
+            userId={detailsUserId}
+            open={detailsOpen}
+            onOpenChange={setDetailsOpen}
           />
             </TabsContent>
 
