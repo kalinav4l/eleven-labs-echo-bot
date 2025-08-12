@@ -151,7 +151,8 @@ const Auth = () => {
             <spline-viewer url="https://prod.spline.design/n-YvIXxfmd6DNmtp/scene.splinecode" style={{ width: "100%", height: "100%" }}></spline-viewer>
             {/* Overlay to mask Spline badge - solid dark */}
             <div
-              className="pointer-events-none absolute bottom-2 right-2 w-40 h-12 rounded-md bg-foreground dark:bg-background z-50"
+              className="pointer-events-none absolute bottom-2 right-2 w-48 h-14 rounded-lg z-[2147483647]"
+              style={{ backgroundColor: 'hsl(0 0% 0%)' }}
               aria-hidden="true"
             />
           </div>
