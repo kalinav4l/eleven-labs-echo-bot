@@ -34,6 +34,7 @@ const Contacts = React.lazy(() => import("./pages/Contacts"));
 const Webhooks = React.lazy(() => import("./pages/Webhooks"));
 const AgentPrompts = React.lazy(() => import("./pages/AgentPrompts"));
 const WorkflowDatabase = React.lazy(() => import("./pages/WorkflowDatabase"));
+const Actiuni = React.lazy(() => import("./pages/Actiuni"));
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -64,6 +65,7 @@ function AppWithWelcome() {
           <Route path="/account/kalina-agents" element={<KalinaAgents />} />
           <Route path="/account/agent-edit/:agentId" element={<AgentEdit />} />
           <Route path="/account/conversation-analytics" element={<ConversationAnalytics />} />
+          <Route path="/account/actiuni" element={<Actiuni />} />
           <Route path="/account/conversation/:conversationId" element={<ConversationDetail />} />
           <Route path="/account/transcript" element={<Transcript />} />
           <Route path="/account/outbound" element={<Outbound />} />

@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   Home, Settings, Brain, FileText, Phone, TrendingUp, CalendarDays, 
   Network, MessageSquare, Workflow, BookOpen, Smartphone, Zap, PhoneForwarded, 
-  CreditCard, Shield, Mic, Sparkles, Database, Search, Mail
+  CreditCard, Shield, Mic, Sparkles, Database, Search, Mail, Activity
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -24,6 +24,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 const aiAnalyticsItems = [
   { title: "AI Agents", url: "/account/kalina-agents", icon: Brain },
   { title: "Rapoarte", url: "/account/conversation-analytics", icon: TrendingUp },
+  { title: "Acțiuni", url: "/account/actiuni", icon: Activity },
   { title: "Chat AI", url: "/account/agent-ai", icon: MessageSquare },
   { title: "Test Voce", url: "/account/voice-demo", icon: Mic },
 ];
