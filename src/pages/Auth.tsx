@@ -149,9 +149,9 @@ const Auth = () => {
         <div className="auth-3d-container">
           <div className="w-full h-full relative flex items-center justify-center">
             <spline-viewer url="https://prod.spline.design/n-YvIXxfmd6DNmtp/scene.splinecode" style={{ width: "100%", height: "100%" }}></spline-viewer>
-            {/* Overlay to mask Spline badge */}
+            {/* Overlay to mask Spline badge - solid dark */}
             <div
-              className="pointer-events-none absolute bottom-3 right-3 w-36 h-10 rounded-md bg-background/80 backdrop-blur-sm shadow-md z-10"
+              className="pointer-events-none absolute bottom-2 right-2 w-40 h-12 rounded-md bg-background z-50"
               aria-hidden="true"
             />
           </div>
