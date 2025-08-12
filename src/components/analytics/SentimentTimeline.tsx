@@ -3,11 +3,12 @@ import React from 'react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface SentimentTimelineProps {
-  data: number[];
+  data?: number[];
 }
 
 const SentimentTimeline = ({ data }: SentimentTimelineProps) => {
-  const chartData = data.map((value, index) => ({
+  const safeData = Array.isArray(data) ? data : [];
+  const chartData = safeData.map((value, index) => ({
     time: index,
     sentiment: value,
     label: `${Math.floor(index * 30)}s`
