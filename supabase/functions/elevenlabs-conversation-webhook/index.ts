@@ -110,6 +110,7 @@ serve(async (req) => {
 });
 
 async function processConversation(supabase: any, payload: ElevenLabsWebhookPayload) {
+  try {
   // Find the agent owner based on elevenlabs_agent_id
   console.log('🔍 Caut agentul în baza de date cu elevenlabs_agent_id:', payload.agent_id);
     
@@ -170,7 +171,7 @@ async function processConversation(supabase: any, payload: ElevenLabsWebhookPayl
       const durationSeconds = payload.duration_seconds || 0;
       const durationMinutes = durationSeconds / 60;
       const calculatedCost = Math.round(durationMinutes * COST_PER_MINUTE * 100) / 100; // Round to 2 decimals
-      const finalCost = payload.cost_usd || calculatedCost; // Use payload cost if available, otherwise calculated cost
+      let finalCost = payload.cost_usd || calculatedCost; // Use payload cost if available, otherwise calculated cost
       
       console.log(`💰 Cost calculation: ${durationSeconds}s = ${durationMinutes.toFixed(2)}min = $${calculatedCost}`);
       console.log(`💳 Final cost to deduct: $${finalCost}`);
