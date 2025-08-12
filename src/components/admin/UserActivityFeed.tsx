@@ -5,7 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Activity, MousePointerClick, Eye, LogIn, RefreshCw } from 'lucide-react';
+import { Activity, MousePointerClick, Eye, LogIn, RefreshCw, Phone, CalendarDays, Brain, FileText, CreditCard, ShieldAlert } from 'lucide-react';
 
 interface ActivityEvent {
   id: string;
@@ -24,17 +24,30 @@ function formatTime(ts: string) {
   return new Date(ts).toLocaleString('ro-RO');
 }
 
-const iconFor = (type: string) => {
+const iconForEvent = (ev: ActivityEvent) => {
+  const type = (ev.event_type || '').toLowerCase();
   if (type === 'page_view') return Eye;
   if (type === 'ui_click') return MousePointerClick;
-  if (type.toLowerCase().includes('login')) return LogIn;
+  if (type.includes('login')) return LogIn;
+  if (type.includes('call')) return Phone;
+  if (type.includes('schedule') || type.includes('callback')) return CalendarDays;
+  if (type.includes('agent')) return Brain;
+  if (type.includes('document') || type.includes('upload')) return FileText;
+  if (type.includes('payment') || type.includes('balance')) return CreditCard;
+  if (type.includes('error') || type.includes('fail')) return ShieldAlert;
   return Activity;
 };
 
-const variantFor = (type: string) => {
-  if (type === 'ui_click') return 'secondary' as const;
-  if (type === 'page_view') return 'default' as const;
-  return 'outline' as const;
+const colorClassesFor = (type: string) => {
+  const t = (type || '').toLowerCase();
+  if (t.includes('call')) return 'bg-primary/10 text-primary border-primary/20';
+  if (t.includes('schedule') || t.includes('callback')) return 'bg-accent/10 text-accent-foreground border-accent/20';
+  if (t.includes('agent')) return 'bg-secondary/10 text-secondary-foreground border-secondary/20';
+  if (t.includes('payment') || t.includes('balance')) return 'bg-foreground/10 text-foreground border-foreground/20';
+  if (t.includes('error') || t.includes('fail')) return 'bg-destructive/10 text-destructive border-destructive/20';
+  if (t === 'ui_click') return 'bg-accent/10 text-accent-foreground border-accent/20';
+  if (t === 'page_view') return 'bg-muted text-muted-foreground border-border';
+  return 'bg-muted text-foreground border-border';
 };
 
 export default function UserActivityFeed() {
