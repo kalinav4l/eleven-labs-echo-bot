@@ -1104,6 +1104,7 @@ export type Database = {
           inbound_media_encryption: string | null
           inbound_password: string | null
           inbound_username: string | null
+          is_primary: boolean | null
           label: string
           outbound_address: string | null
           outbound_headers: Json | null
@@ -1126,6 +1127,7 @@ export type Database = {
           inbound_media_encryption?: string | null
           inbound_password?: string | null
           inbound_username?: string | null
+          is_primary?: boolean | null
           label: string
           outbound_address?: string | null
           outbound_headers?: Json | null
@@ -1148,6 +1150,7 @@ export type Database = {
           inbound_media_encryption?: string | null
           inbound_password?: string | null
           inbound_username?: string | null
+          is_primary?: boolean | null
           label?: string
           outbound_address?: string | null
           outbound_headers?: Json | null
