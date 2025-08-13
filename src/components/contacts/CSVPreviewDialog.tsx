@@ -29,7 +29,7 @@ const CONTACT_FIELDS = [
   { value: 'notes', label: 'Notițe', required: false },
   { value: 'status', label: 'Status', required: false },
   { value: 'tags', label: 'Etichete', required: false },
-  { value: '', label: 'Nu importa', required: false }
+  { value: 'skip', label: 'Nu importa', required: false }
 ];
 
 // Smart mapping function to suggest mappings
@@ -69,9 +69,9 @@ const getSmartMapping = (csvHeaders: string[]): { [csvColumn: string]: string } 
       }
     }
     
-    // If no mapping found, leave empty
+    // If no mapping found, set to skip
     if (!mapping[header]) {
-      mapping[header] = '';
+      mapping[header] = 'skip';
     }
   });
 
@@ -96,9 +96,9 @@ export const CSVPreviewDialog: React.FC<CSVPreviewDialogProps> = ({
   };
 
   const handleConfirm = () => {
-    // Filter out unmapped columns
+    // Filter out unmapped and skipped columns
     const finalMapping = Object.entries(columnMapping)
-      .filter(([_, targetField]) => targetField !== '')
+      .filter(([_, targetField]) => targetField !== '' && targetField !== 'skip')
       .reduce((acc, [csvColumn, targetField]) => {
         acc[csvColumn] = targetField;
         return acc;
@@ -110,7 +110,7 @@ export const CSVPreviewDialog: React.FC<CSVPreviewDialogProps> = ({
 
   // Check if required fields are mapped
   const requiredFields = CONTACT_FIELDS.filter(f => f.required).map(f => f.value);
-  const mappedFields = Object.values(columnMapping).filter(v => v !== '');
+  const mappedFields = Object.values(columnMapping).filter(v => v !== '' && v !== 'skip');
   const missingRequired = requiredFields.filter(field => !mappedFields.includes(field));
 
   return (
