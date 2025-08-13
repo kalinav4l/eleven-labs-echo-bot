@@ -480,9 +480,15 @@ export const useCallInitiation = ({
               : status
           ));
 
-          // STEP 4: Start monitoring
-          logStep(`BATCH CONTACT ${i + 1}: Starting conversation monitoring`, { contactName: contact.name });
-          setCurrentCallStatus(`Monitorizează conversații noi pentru ${contact.name}...`);
+            // STEP 4: Start monitoring
+            logStep(`BATCH CONTACT ${i + 1}: Starting conversation monitoring`, { contactName: contact.name });
+            setCurrentCallStatus(`Monitorizează conversații noi pentru ${contact.name}...`);
+            
+            // Add 5-minute delay between calls (as requested)
+            if (i < contacts.length - 1) { // Don't delay after the last contact
+              setCurrentCallStatus(`⏰ Pauză de 5 minute între apeluri...`);
+              await new Promise(resolve => setTimeout(resolve, 5 * 60 * 1000)); // 5 minutes
+            }
           
           const newConversations = await monitorCall(targetAgentId, contact, callStartTime);
           

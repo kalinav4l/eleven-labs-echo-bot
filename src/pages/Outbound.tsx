@@ -202,23 +202,21 @@ const Outbound = () => {
   };
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 md:p-6">
+      <div className="min-h-screen bg-white p-4 md:p-6">
         {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+        <div className="mb-6">
+          <div className="flex items-center justify-between border-b border-gray-200 pb-4">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Apeluri Automate
+              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <BarChart3 className="w-6 h-6" />
+                Status campanie
               </h1>
-              <p className="text-slate-600 mt-2">
-                Automatizează conversațiile cu clienții tăi folosind AI inteligent
-              </p>
             </div>
             <div className="flex gap-3">
               <Button 
                 variant="outline" 
                 onClick={downloadTemplate}
-                className="flex items-center gap-2 hover:bg-blue-50 border-blue-200"
+                className="flex items-center gap-2"
               >
                 <Download className="w-4 h-4" />
                 Template CSV
@@ -227,60 +225,83 @@ const Outbound = () => {
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-100 text-sm">Contacte încărcate</p>
-                  <p className="text-2xl font-bold">{contacts.length}</p>
+        {/* Batch Status Panel */}
+        {isProcessingBatch && (
+          <Card className="mb-6 border border-gray-200">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  <span className="font-semibold">Status Batch</span>
+                  <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                    În Progres
+                  </Badge>
                 </div>
-                <Users className="w-8 h-8 text-blue-200" />
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={isPaused ? resumeBatch : pauseBatch}
+                    className="flex items-center gap-1"
+                  >
+                    {isPaused ? <Play className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+                    {isPaused ? 'Continuă' : 'Pauză'}
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={stopBatch}
+                    className="bg-red-500 hover:bg-red-600"
+                  >
+                    Oprește
+                  </Button>
+                </div>
               </div>
+              
+              <div className="grid grid-cols-4 gap-4 mb-4 text-center">
+                <div>
+                  <div className="text-2xl font-bold text-gray-900">{totalCalls}</div>
+                  <div className="text-sm text-gray-600">Total</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-blue-600">{currentProgress}</div>
+                  <div className="text-sm text-gray-600">Procesate</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {callStatuses.filter(s => s.status === 'completed').length}
+                  </div>
+                  <div className="text-sm text-gray-600">Reușite</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-red-600">
+                    {callStatuses.filter(s => s.status === 'failed').length}
+                  </div>
+                  <div className="text-sm text-gray-600">Eșuate</div>
+                </div>
+              </div>
+              
+              <div className="mb-3">
+                <div className="flex justify-between text-sm text-gray-600 mb-1">
+                  <span>Progres</span>
+                  <span>{Math.round((currentProgress / totalCalls) * 100)}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${(currentProgress / totalCalls) * 100}%` }}
+                  />
+                </div>
+              </div>
+              
+              {currentCallStatus && (
+                <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                  {currentCallStatus}
+                </div>
+              )}
             </CardContent>
           </Card>
-
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-emerald-100 text-sm">Contacte selectate</p>
-                  <p className="text-2xl font-bold">{selectedContacts.size}</p>
-                </div>
-                <Target className="w-8 h-8 text-emerald-200" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-orange-100 text-sm">Agent configurat</p>
-                  <p className="text-sm font-semibold">
-                    {selectedAgentId ? "✓ Configurat" : "✗ Neconfigurat"}
-                  </p>
-                </div>
-                <CheckCircle className={`w-8 h-8 ${selectedAgentId ? 'text-orange-200' : 'text-orange-300'}`} />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100 text-sm">Status campanie</p>
-                  <p className="text-sm font-semibold">
-                    {isProcessingBatch ? "În progres" : "Inactivă"}
-                  </p>
-                </div>
-                <BarChart3 className="w-8 h-8 text-purple-200" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        )}
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -421,38 +442,83 @@ const Outbound = () => {
                         </div>
                       </div>
 
-                      {/* Contacts List */}
-                      <div className="border border-slate-200 rounded-xl max-h-80 overflow-y-auto">
-                        {contacts.map((contact, index) => (
-                          <div 
-                            key={contact.id} 
-                            className={`p-4 flex items-center gap-4 transition-all duration-200 ${
-                              index !== contacts.length - 1 ? 'border-b border-slate-100' : ''
-                            } ${
-                              selectedContacts.has(contact.id) 
-                                ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-l-blue-500' 
-                                : 'hover:bg-slate-50'
-                            }`}
-                          >
-                            <input 
-                              type="checkbox" 
-                              checked={selectedContacts.has(contact.id)} 
-                              onChange={(e) => handleContactSelect(contact.id, e.target.checked)} 
-                              className="w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500" 
-                            />
-                            <div className="flex-1">
-                              <div className="font-semibold text-slate-800">{contact.name}</div>
-                              <div className="text-sm text-slate-600 flex items-center gap-2">
-                                <Phone className="w-3 h-3" />
-                                {contact.phone}
-                              </div>
-                            </div>
-                            <Badge variant="secondary" className="text-xs">
-                              {contact.country}
-                            </Badge>
-                          </div>
-                        ))}
-                      </div>
+                       {/* Simple Contacts Table */}
+                       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                         <div className="p-4 border-b border-gray-200">
+                           <div className="flex items-center justify-between">
+                             <h3 className="font-semibold text-gray-900">Destinatari Apeluri</h3>
+                             <Button 
+                               variant="outline" 
+                               size="sm" 
+                               onClick={handleSelectAll}
+                               className="text-sm"
+                             >
+                               {selectedContacts.size === contacts.length ? 'Deselectează tot' : 'Selectează tot'}
+                             </Button>
+                           </div>
+                         </div>
+                         
+                         <div className="overflow-x-auto">
+                           <table className="w-full">
+                             <thead className="bg-gray-50">
+                               <tr>
+                                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Number</th>
+                                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Info</th>
+                                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durată</th>
+                               </tr>
+                             </thead>
+                             <tbody className="bg-white divide-y divide-gray-200">
+                               {contacts.map((contact, index) => {
+                                 const contactStatus = callStatuses.find(s => s.contactId === contact.id);
+                                 const isSelected = selectedContacts.has(contact.id);
+                                 
+                                 return (
+                                   <tr 
+                                     key={contact.id} 
+                                     className={`hover:bg-gray-50 cursor-pointer ${isSelected ? 'bg-blue-50' : ''}`}
+                                     onClick={() => handleContactSelect(contact.id, !isSelected)}
+                                   >
+                                     <td className="px-4 py-3">
+                                       <div className="flex items-center">
+                                         <div className={`w-3 h-3 rounded-full mr-3 ${
+                                           contactStatus?.status === 'completed' ? 'bg-green-500' :
+                                           contactStatus?.status === 'failed' ? 'bg-red-500' :
+                                           contactStatus?.status === 'in-progress' ? 'bg-yellow-500' :
+                                           isSelected ? 'bg-blue-500' : 'bg-gray-300'
+                                         }`} />
+                                         <span className="text-sm font-medium text-gray-900">{contact.name}</span>
+                                       </div>
+                                     </td>
+                                     <td className="px-4 py-3 text-sm text-gray-600">{contact.phone}</td>
+                                     <td className="px-4 py-3 text-sm text-gray-600">{contact.country}</td>
+                                     <td className="px-4 py-3 text-sm text-gray-600">{contact.location}</td>
+                                     <td className="px-4 py-3">
+                                       {contactStatus?.status === 'completed' && (
+                                         <Badge className="bg-green-100 text-green-800 border-green-200">Sunat</Badge>
+                                       )}
+                                       {contactStatus?.status === 'failed' && (
+                                         <Badge className="bg-red-100 text-red-800 border-red-200">Eșuat</Badge>
+                                       )}
+                                       {contactStatus?.status === 'in-progress' && (
+                                         <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">În progres</Badge>
+                                       )}
+                                       {!contactStatus?.status && (
+                                         <span className="text-gray-400 text-sm">-</span>
+                                       )}
+                                     </td>
+                                     <td className="px-4 py-3 text-sm text-gray-600">
+                                       {contactStatus?.duration ? `${Math.round(contactStatus.duration / 60)}m` : '-'}
+                                     </td>
+                                   </tr>
+                                 );
+                               })}
+                             </tbody>
+                           </table>
+                         </div>
+                       </div>
                       
                       {/* Campaign Launch */}
                       {selectedContacts.size > 0 && selectedAgentId && selectedPhoneId && (
