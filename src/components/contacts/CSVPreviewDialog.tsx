@@ -6,6 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Trash2, Edit3, Check, X } from 'lucide-react';
 
 interface CSVPreviewDialogProps {
   isOpen: boolean;
@@ -14,7 +16,7 @@ interface CSVPreviewDialogProps {
     headers: string[];
     rows: string[][];
   };
-  onConfirmImport: (mapping: { [csvColumn: string]: string }) => void;
+  onConfirmImport: (mapping: { [csvColumn: string]: string }, editedData?: string[][]) => void;
 }
 
 // Predefined fields that contacts can have
@@ -39,8 +41,8 @@ const getSmartMapping = (csvHeaders: string[]): { [csvColumn: string]: string } 
   const mappingRules = [
     // Nume variations
     { patterns: ['nume', 'name', 'first_name', 'prenume', 'full_name', 'client'], field: 'nume' },
-    // Telefon variations
-    { patterns: ['telefon', 'phone', 'tel', 'mobile', 'celular', 'numar'], field: 'telefon' },
+    // Telefon variations (prioritized)
+    { patterns: ['number', 'telefon', 'phone', 'tel', 'mobile', 'celular', 'numar', 'contact'], field: 'telefon' },
     // Email variations
     { patterns: ['email', 'e-mail', 'mail', 'adresa_email'], field: 'email' },
     // Tara variations
@@ -87,12 +89,36 @@ export const CSVPreviewDialog: React.FC<CSVPreviewDialogProps> = ({
   const [columnMapping, setColumnMapping] = useState<{ [csvColumn: string]: string }>(() => 
     getSmartMapping(csvData.headers)
   );
+  const [editedData, setEditedData] = useState<string[][]>(csvData.rows);
+  const [editingCell, setEditingCell] = useState<{row: number, col: number} | null>(null);
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(csvData.headers);
 
   const handleMappingChange = (csvColumn: string, targetField: string) => {
     setColumnMapping(prev => ({
       ...prev,
       [csvColumn]: targetField
     }));
+  };
+
+  const handleDeleteColumn = (columnToDelete: string) => {
+    const newVisibleColumns = visibleColumns.filter(col => col !== columnToDelete);
+    setVisibleColumns(newVisibleColumns);
+    
+    // Also remove from mapping
+    const newMapping = { ...columnMapping };
+    delete newMapping[columnToDelete];
+    setColumnMapping(newMapping);
+  };
+
+  const handleCellEdit = (rowIndex: number, colIndex: number, newValue: string) => {
+    const newData = [...editedData];
+    newData[rowIndex][colIndex] = newValue;
+    setEditedData(newData);
+    setEditingCell(null);
+  };
+
+  const startEditing = (rowIndex: number, colIndex: number) => {
+    setEditingCell({ row: rowIndex, col: colIndex });
   };
 
   const handleConfirm = () => {
@@ -104,7 +130,7 @@ export const CSVPreviewDialog: React.FC<CSVPreviewDialogProps> = ({
         return acc;
       }, {} as { [csvColumn: string]: string });
 
-    onConfirmImport(finalMapping);
+    onConfirmImport(finalMapping, editedData);
     onClose();
   };
 
@@ -128,17 +154,27 @@ export const CSVPreviewDialog: React.FC<CSVPreviewDialogProps> = ({
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {csvData.headers.map((header, index) => (
+                {visibleColumns.map((header, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <div className="min-w-0 flex-1">
-                      <Badge variant="outline" className="text-xs">
-                        {header}
-                      </Badge>
+                      <div className="flex items-center gap-1">
+                        <Badge variant="outline" className="text-xs">
+                          {header}
+                        </Badge>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-4 w-4 p-0 hover:bg-destructive/20"
+                          onClick={() => handleDeleteColumn(header)}
+                        >
+                          <Trash2 className="h-3 w-3 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
                     <span className="text-xs text-muted-foreground">→</span>
                     <div className="min-w-0 flex-1">
                       <Select
-                        value={columnMapping[header] || ''}
+                        value={columnMapping[header] || 'skip'}
                         onValueChange={(value) => handleMappingChange(header, value)}
                       >
                         <SelectTrigger className="h-8">
@@ -177,41 +213,84 @@ export const CSVPreviewDialog: React.FC<CSVPreviewDialogProps> = ({
           {/* Preview section */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Preview Date ({csvData.rows.length} rânduri)</CardTitle>
+              <CardTitle className="text-sm">Preview Date ({editedData.length} rânduri)</CardTitle>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-48 w-full">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      {csvData.headers.map((header, index) => (
-                        <TableHead key={index} className="text-xs">
-                          <div className="space-y-1">
-                            <div>{header}</div>
-                            {columnMapping[header] && columnMapping[header] !== '' && (
-                              <Badge variant="secondary" className="text-xs">
-                                {CONTACT_FIELDS.find(f => f.value === columnMapping[header])?.label}
-                              </Badge>
-                            )}
-                          </div>
-                        </TableHead>
-                      ))}
+                      {visibleColumns.map((header, index) => {
+                        const originalIndex = csvData.headers.indexOf(header);
+                        return (
+                          <TableHead key={index} className="text-xs">
+                            <div className="space-y-1">
+                              <div>{header}</div>
+                              {columnMapping[header] && columnMapping[header] !== 'skip' && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {CONTACT_FIELDS.find(f => f.value === columnMapping[header])?.label}
+                                </Badge>
+                              )}
+                            </div>
+                          </TableHead>
+                        );
+                      })}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {csvData.rows.slice(0, 5).map((row, rowIndex) => (
+                    {editedData.slice(0, 5).map((row, rowIndex) => (
                       <TableRow key={rowIndex}>
-                        {row.map((cell, cellIndex) => (
-                          <TableCell key={cellIndex} className="text-xs max-w-32 truncate">
-                            {cell}
-                          </TableCell>
-                        ))}
+                        {visibleColumns.map((header, colIndex) => {
+                          const originalColIndex = csvData.headers.indexOf(header);
+                          const cellValue = row[originalColIndex];
+                          const isEditing = editingCell?.row === rowIndex && editingCell?.col === originalColIndex;
+                          
+                          return (
+                            <TableCell key={colIndex} className="text-xs max-w-32">
+                              {isEditing ? (
+                                <div className="flex items-center gap-1">
+                                  <Input
+                                    defaultValue={cellValue}
+                                    className="h-6 text-xs"
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        handleCellEdit(rowIndex, originalColIndex, e.currentTarget.value);
+                                      } else if (e.key === 'Escape') {
+                                        setEditingCell(null);
+                                      }
+                                    }}
+                                    onBlur={(e) => {
+                                      handleCellEdit(rowIndex, originalColIndex, e.target.value);
+                                    }}
+                                    autoFocus
+                                  />
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-4 w-4 p-0"
+                                    onClick={() => setEditingCell(null)}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <div 
+                                  className="truncate cursor-pointer hover:bg-muted/50 rounded px-1 flex items-center gap-1"
+                                  onClick={() => startEditing(rowIndex, originalColIndex)}
+                                >
+                                  <span>{cellValue}</span>
+                                  <Edit3 className="h-2 w-2 opacity-0 group-hover:opacity-100" />
+                                </div>
+                              )}
+                            </TableCell>
+                          );
+                        })}
                       </TableRow>
                     ))}
-                    {csvData.rows.length > 5 && (
+                    {editedData.length > 5 && (
                       <TableRow>
-                        <TableCell colSpan={csvData.headers.length} className="text-center text-xs text-muted-foreground">
-                          ... și încă {csvData.rows.length - 5} rânduri
+                        <TableCell colSpan={visibleColumns.length} className="text-center text-xs text-muted-foreground">
+                          ... și încă {editedData.length - 5} rânduri
                         </TableCell>
                       </TableRow>
                     )}
@@ -230,7 +309,7 @@ export const CSVPreviewDialog: React.FC<CSVPreviewDialogProps> = ({
             onClick={handleConfirm}
             disabled={missingRequired.length > 0}
           >
-            Importă {csvData.rows.length} contacte
+            Importă {editedData.length} contacte
           </Button>
         </DialogFooter>
       </DialogContent>

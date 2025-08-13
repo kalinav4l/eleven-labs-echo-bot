@@ -140,16 +140,22 @@ export const CSVImportExport: React.FC<CSVImportExportProps> = ({
     }
   };
 
-  const handleConfirmImport = (mapping: { [csvColumn: string]: string }) => {
+  const handleConfirmImport = (mapping: { [csvColumn: string]: string }, editedData?: string[][]) => {
     try {
-      const mappedData = csvData.rows.map(row => {
+      const finalData = editedData || csvData.rows;
+      const mappedData = finalData.map(row => {
         const mappedRow: any = {};
         
         // Map CSV columns to contact fields
         Object.entries(mapping).forEach(([csvColumn, contactField]) => {
           const columnIndex = csvData.headers.indexOf(csvColumn);
           if (columnIndex !== -1 && row[columnIndex] !== undefined) {
-            mappedRow[contactField] = row[columnIndex];
+            if (contactField === 'tags' && typeof row[columnIndex] === 'string') {
+              // Handle tags as array
+              mappedRow[contactField] = row[columnIndex].split(',').map((tag: string) => tag.trim()).filter(Boolean);
+            } else {
+              mappedRow[contactField] = row[columnIndex];
+            }
           }
         });
 
@@ -159,7 +165,7 @@ export const CSVImportExport: React.FC<CSVImportExportProps> = ({
         if (!mappedRow.status) mappedRow.status = 'active';
 
         return mappedRow;
-      }).filter(row => row.nume || row.telefon); // Filter out completely empty rows
+      }).filter(row => row.nume && row.telefon); // Only keep rows with required fields
 
       onImportSuccess(mappedData);
       
@@ -167,6 +173,8 @@ export const CSVImportExport: React.FC<CSVImportExportProps> = ({
         title: "Succes",
         description: `Au fost importate ${mappedData.length} contacte.`
       });
+      
+      setShowPreview(false);
       
     } catch (error) {
       console.error('Import error:', error);
