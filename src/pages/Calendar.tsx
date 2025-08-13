@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, isSameMonth } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { useCallbackOperations } from '@/hooks/useCallbacks';
+import { useCallbacks } from '@/hooks/useCallbacks';
 import { CalendarEventModal } from '@/components/CalendarEventModal';
 import { CalendarEventDetailsModal } from '@/components/CalendarEventDetailsModal';
 import { DayDetailSidebar } from '@/components/DayDetailSidebar';
@@ -26,7 +26,7 @@ const Calendar = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
 
-  const { callbacks, refetch, isLoading } = useCallbackOperations();
+  const { data: callbacks, refetch, isLoading } = useCallbacks();
 
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -50,6 +50,8 @@ const Calendar = () => {
   const emptyCellsAtStart = Array(firstDayOfWeek).fill(null);
   
   const getEventsForDate = (date: Date) => {
+    if (!callbacks) return [];
+    
     return callbacks.filter(callback => {
       const callbackDate = new Date(callback.scheduled_time || callback.scheduled_datetime);
       return isSameDay(callbackDate, date);
