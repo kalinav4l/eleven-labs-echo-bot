@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      active_agents: {
+        Row: {
+          agent_id: string
+          agent_name: string
+          call_started_at: string | null
+          conversation_id: string | null
+          created_at: string
+          current_contact_name: string | null
+          current_phone_number: string | null
+          id: string
+          last_activity_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_id: string
+          agent_name: string
+          call_started_at?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          current_contact_name?: string | null
+          current_phone_number?: string | null
+          id?: string
+          last_activity_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string
+          agent_name?: string
+          call_started_at?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          current_contact_name?: string | null
+          current_phone_number?: string | null
+          id?: string
+          last_activity_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_audit_log: {
         Row: {
           action: string
@@ -381,6 +426,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      campaign_sessions: {
+        Row: {
+          agent_id: string
+          call_statuses: Json
+          completed_at: string | null
+          current_contact_name: string | null
+          current_progress: number
+          id: string
+          phone_id: string | null
+          session_id: string
+          started_at: string
+          status: string
+          total_contacts: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_id: string
+          call_statuses?: Json
+          completed_at?: string | null
+          current_contact_name?: string | null
+          current_progress?: number
+          id?: string
+          phone_id?: string | null
+          session_id: string
+          started_at?: string
+          status?: string
+          total_contacts?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string
+          call_statuses?: Json
+          completed_at?: string | null
+          current_contact_name?: string | null
+          current_progress?: number
+          id?: string
+          phone_id?: string | null
+          session_id?: string
+          started_at?: string
+          status?: string
+          total_contacts?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       campaigns: {
         Row: {

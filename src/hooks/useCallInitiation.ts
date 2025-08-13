@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { useCallSessionTracking } from '@/hooks/useCallSessionTracking';
+import { useCampaignPersistence } from '@/hooks/useCampaignPersistence';
+import { useActiveAgents } from '@/hooks/useActiveAgents';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
 import { useSMSService } from './useSMSService';
@@ -56,6 +58,17 @@ export const useCallInitiation = ({
   const [currentContact, setCurrentContact] = useState<string>('');
   const [callStatuses, setCallStatuses] = useState<CallStatus[]>([]);
   const [currentCallStatus, setCurrentCallStatus] = useState<string>('');
+  const [sessionId, setSessionId] = useState<string>('');
+  const [startTime, setStartTime] = useState<Date | null>(null);
+
+  // Hook-uri pentru persistență și monitorizare
+  const { 
+    saveCampaignSession, 
+    generateSessionId,
+    campaignSession 
+  } = useCampaignPersistence(sessionId);
+  
+  const { updateAgentStatus, removeActiveAgent } = useActiveAgents();
 
   // Enhanced logging function
   const logStep = (step: string, details: any = {}) => {
@@ -760,5 +773,8 @@ export const useCallInitiation = ({
     pauseBatch,
     resumeBatch,
     stopBatch,
+    sessionId,
+    startTime,
+    campaignSession,
   };
 };
