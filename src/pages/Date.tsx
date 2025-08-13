@@ -35,6 +35,7 @@ const DataPage = () => {
   const [isAddDatabaseOpen, setIsAddDatabaseOpen] = useState(false);
   const [isAddColumnOpen, setIsAddColumnOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [hiddenFields, setHiddenFields] = useState<Set<string>>(new Set());
   
   const [formData, setFormData] = useState({
     name: '',
@@ -96,6 +97,28 @@ const DataPage = () => {
       custom_fields: item.custom_fields || {}
     });
     setIsEditDialogOpen(true);
+  };
+
+  const toggleFieldVisibility = (fieldName: string) => {
+    setHiddenFields(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(fieldName)) {
+        newSet.delete(fieldName);
+      } else {
+        newSet.add(fieldName);
+      }
+      return newSet;
+    });
+  };
+
+  const updateCustomField = (fieldName: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      custom_fields: {
+        ...prev.custom_fields,
+        [fieldName]: value
+      }
+    }));
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -555,64 +578,215 @@ const DataPage = () => {
           </CardContent>
         </Card>
 
-        {/* Edit Dialog */}
+        {/* Edit Dialog - Enhanced with all fields */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Editează Date</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <Edit className="h-5 w-5" />
+                Editează Date - Toate Câmpurile
+              </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleUpdate} className="space-y-4">
-              <div>
-                <Label htmlFor="edit_name">Nume *</Label>
-                <Input
-                  id="edit_name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Introduceți numele"
-                  required
-                />
-              </div>
               
-              <div>
-                <Label htmlFor="edit_number">Număr</Label>
-                <Input
-                  id="edit_number"
-                  value={formData.number}
-                  onChange={(e) => setFormData({ ...formData, number: e.target.value })}
-                  placeholder="Introduceți numărul"
-                />
-              </div>
+              {/* Standard Fields with visibility toggle */}
+              {!hiddenFields.has('name') && (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <Label htmlFor="edit_name">Nume *</Label>
+                    <Input
+                      id="edit_name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Introduceți numele"
+                      required
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleFieldVisibility('name')}
+                    className="mt-6 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
               
-              <div>
-                <Label htmlFor="edit_location">Locație</Label>
-                <Input
-                  id="edit_location"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  placeholder="Introduceți locația"
-                />
-              </div>
+              {!hiddenFields.has('number') && (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <Label htmlFor="edit_number">Număr</Label>
+                    <Input
+                      id="edit_number"
+                      value={formData.number}
+                      onChange={(e) => setFormData({ ...formData, number: e.target.value })}
+                      placeholder="Introduceți numărul"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleFieldVisibility('number')}
+                    className="mt-6 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
               
-              <div>
-                <Label htmlFor="edit_date_user">Data</Label>
-                <Input
-                  id="edit_date_user"
-                  type="date"
-                  value={formData.date_user}
-                  onChange={(e) => setFormData({ ...formData, date_user: e.target.value })}
-                />
-              </div>
+              {!hiddenFields.has('location') && (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <Label htmlFor="edit_location">Locație</Label>
+                    <Input
+                      id="edit_location"
+                      value={formData.location}
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                      placeholder="Introduceți locația"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleFieldVisibility('location')}
+                    className="mt-6 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
               
-              <div>
-                <Label htmlFor="edit_info">Informații</Label>
-                <Textarea
-                  id="edit_info"
-                  value={formData.info}
-                  onChange={(e) => setFormData({ ...formData, info: e.target.value })}
-                  placeholder="Introduceți informații suplimentare"
-                  rows={3}
-                />
-              </div>
+              {!hiddenFields.has('date_user') && (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <Label htmlFor="edit_date_user">Data</Label>
+                    <Input
+                      id="edit_date_user"
+                      type="date"
+                      value={formData.date_user}
+                      onChange={(e) => setFormData({ ...formData, date_user: e.target.value })}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleFieldVisibility('date_user')}
+                    className="mt-6 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+              
+              {!hiddenFields.has('info') && (
+                <div className="flex items-start gap-2">
+                  <div className="flex-1">
+                    <Label htmlFor="edit_info">Informații</Label>
+                    <Textarea
+                      id="edit_info"
+                      value={formData.info}
+                      onChange={(e) => setFormData({ ...formData, info: e.target.value })}
+                      placeholder="Introduceți informații suplimentare"
+                      rows={3}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleFieldVisibility('info')}
+                    className="mt-6 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+
+              {/* Custom Fields - Display ALL available custom fields */}
+              {columns.map((col) => {
+                if (hiddenFields.has(`custom_${col.column_name}`)) return null;
+                
+                return (
+                  <div key={col.id} className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <Label htmlFor={`edit_custom_${col.column_name}`}>
+                        {col.column_name}
+                        {col.is_required && ' *'}
+                      </Label>
+                      {col.column_type === 'boolean' ? (
+                        <Select
+                          value={formData.custom_fields[col.column_name]?.toString() || 'false'}
+                          onValueChange={(value) => updateCustomField(col.column_name, value === 'true')}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="true">Da</SelectItem>
+                            <SelectItem value="false">Nu</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : col.column_type === 'date' ? (
+                        <Input
+                          id={`edit_custom_${col.column_name}`}
+                          type="date"
+                          value={formData.custom_fields[col.column_name] || ''}
+                          onChange={(e) => updateCustomField(col.column_name, e.target.value)}
+                        />
+                      ) : col.column_type === 'number' ? (
+                        <Input
+                          id={`edit_custom_${col.column_name}`}
+                          type="number"
+                          value={formData.custom_fields[col.column_name] || ''}
+                          onChange={(e) => updateCustomField(col.column_name, e.target.value)}
+                          placeholder={`Introduceți ${col.column_name.toLowerCase()}`}
+                        />
+                      ) : (
+                        <Input
+                          id={`edit_custom_${col.column_name}`}
+                          value={formData.custom_fields[col.column_name] || ''}
+                          onChange={(e) => updateCustomField(col.column_name, e.target.value)}
+                          placeholder={`Introduceți ${col.column_name.toLowerCase()}`}
+                        />
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleFieldVisibility(`custom_${col.column_name}`)}
+                      className="mt-6 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                );
+              })}
+
+              {/* Show hidden fields summary */}
+              {hiddenFields.size > 0 && (
+                <div className="p-3 bg-muted/50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      {hiddenFields.size} câmp(uri) ascuns(e)
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setHiddenFields(new Set())}
+                      className="text-xs"
+                    >
+                      Afișează toate
+                    </Button>
+                  </div>
+                </div>
+              )}
               
               <div className="flex gap-2 pt-4">
                 <Button type="submit" className="flex-1">Actualizează</Button>
