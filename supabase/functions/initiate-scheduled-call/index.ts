@@ -92,6 +92,31 @@ serve(async (req) => {
     // Configure phone number for call - use test number for test calls
     let agentPhoneId, callerNumber;
 
+    // Validate agent exists first
+    const { data: agentData, error: agentError } = await supabase
+      .from('kalina_agents')
+      .select('elevenlabs_agent_id, name')
+      .eq('elevenlabs_agent_id', agent_id)
+      .eq('user_id', user_id)
+      .single()
+
+    if (agentError || !agentData) {
+      console.error('❌ Agent not found or access denied:', agentError)
+      return new Response(
+        JSON.stringify({ 
+          error: `Agent cu ID-ul ${agent_id} nu a fost găsit sau nu aveți acces la el`,
+          success: false,
+          details: agentError?.message || 'Agent inexistent'
+        }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    console.log('✅ Agent found:', { id: agentData.elevenlabs_agent_id, name: agentData.name })
+
     // Get user's phone number from database (for both test and regular calls)
     const { data: userPhoneNumbers, error: phoneError } = await supabase
       .from('phone_numbers')
