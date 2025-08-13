@@ -40,7 +40,7 @@ const Auth = () => {
     return emailRegex.test(email);
   };
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/account" replace />;
   }
   const handleGoogleLogin = async () => {
     try {
@@ -50,7 +50,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`
+          redirectTo: `${window.location.origin}/account`
         }
       });
       
@@ -94,8 +94,8 @@ const Auth = () => {
           }
           setError(errorMessage);
         } else {
-          // Redirect to home page after successful login
-          navigate('/');
+          // Redirect to account page after successful login
+          navigate('/account');
         }
       } else {
         // Enhanced validation for sign up
@@ -111,7 +111,7 @@ const Auth = () => {
           return;
         }
         console.log('Attempting signup for:', email, 'with name:', firstName, lastName);
-        const redirectUrl = `${window.location.origin}/`;
+        const redirectUrl = `${window.location.origin}/account`;
         result = await signUp(email, password, firstName, lastName);
         if (result.error) {
           console.error('Signup error:', result.error);
