@@ -146,32 +146,40 @@ export const CSVImportExport: React.FC<CSVImportExportProps> = ({
       const mappedData = finalData.map(row => {
         const mappedRow: any = {};
         
-        // Map CSV columns to contact fields
+        // Map ALL CSV columns to contact fields (including custom ones)
         Object.entries(mapping).forEach(([csvColumn, contactField]) => {
           const columnIndex = csvData.headers.indexOf(csvColumn);
-          if (columnIndex !== -1 && row[columnIndex] !== undefined) {
-            if (contactField === 'tags' && typeof row[columnIndex] === 'string') {
+          if (columnIndex !== -1 && row[columnIndex] !== undefined && row[columnIndex].trim() !== '') {
+            const cellValue = row[columnIndex].trim();
+            
+            if (contactField === 'tags') {
               // Handle tags as array
-              mappedRow[contactField] = row[columnIndex].split(',').map((tag: string) => tag.trim()).filter(Boolean);
+              mappedRow[contactField] = cellValue.split(',').map((tag: string) => tag.trim()).filter(Boolean);
+            } else if (contactField.startsWith('custom_')) {
+              // Handle custom fields by storing them in info field
+              if (!mappedRow.info) mappedRow.info = '';
+              const fieldLabel = contactField.replace('custom_', '').replace(/_/g, ' ');
+              mappedRow.info += `${fieldLabel}: ${cellValue}\n`;
             } else {
-              mappedRow[contactField] = row[columnIndex];
+              // Standard fields
+              mappedRow[contactField] = cellValue;
             }
           }
         });
 
-        // Set default values for missing required fields
-        if (!mappedRow.nume) mappedRow.nume = '';
-        if (!mappedRow.telefon) mappedRow.telefon = '';
+        // Set defaults for required fields
+        if (!mappedRow.telefon) return null; // Skip rows without phone
+        if (!mappedRow.nume) mappedRow.nume = 'Contact Nou';
         if (!mappedRow.status) mappedRow.status = 'active';
 
         return mappedRow;
-      }).filter(row => row.nume && row.telefon); // Only keep rows with required fields
+      }).filter(Boolean); // Remove null entries
 
       onImportSuccess(mappedData);
       
       toast({
-        title: "Succes",
-        description: `Au fost importate ${mappedData.length} contacte.`
+        title: "🚀 Import Automat Finalizat!",
+        description: `${mappedData.length} contacte au fost importate cu toate coloanele detectate automat.`
       });
       
       setShowPreview(false);
@@ -180,7 +188,7 @@ export const CSVImportExport: React.FC<CSVImportExportProps> = ({
       console.error('Import error:', error);
       toast({
         title: "Eroare",
-        description: "A apărut o eroare în timpul importului.",
+        description: "A apărut o eroare în timpul importului automat.",
         variant: "destructive"
       });
     }
@@ -259,12 +267,13 @@ export const CSVImportExport: React.FC<CSVImportExportProps> = ({
           <div className="flex items-start gap-2">
             <Settings className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
             <div className="text-sm text-muted-foreground">
-              <p className="font-medium">Import inteligent:</p>
+              <p className="font-medium">🚀 Import 100% Automat:</p>
               <ul className="mt-1 space-y-1 text-xs">
-                <li>• Detectează automat structura CSV-ului</li>
-                <li>• Mapează coloanele în mod inteligent</li>
-                <li>• Suportă diferite separatori (virgulă, punct-și-virgulă, tab)</li>
-                <li>• Preview și confirmare înainte de import</li>
+                <li>• Detectează și importă TOATE coloanele din CSV</li>
+                <li>• Mapare inteligentă automată (fără intervenție manuală)</li>
+                <li>• Prioritizează numărul de telefon</li>
+                <li>• Coloanele necunoscute devin câmpuri custom</li>
+                <li>• Editare în timp real și ștergere coloane</li>
               </ul>
             </div>
           </div>

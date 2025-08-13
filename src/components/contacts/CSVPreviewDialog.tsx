@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Trash2, Edit3, Check, X } from 'lucide-react';
+import { Trash2, Edit3, X } from 'lucide-react';
 
 interface CSVPreviewDialogProps {
   isOpen: boolean;
@@ -19,7 +18,7 @@ interface CSVPreviewDialogProps {
   onConfirmImport: (mapping: { [csvColumn: string]: string }, editedData?: string[][]) => void;
 }
 
-// Predefined fields that contacts can have
+// Predefined contact fields for reference
 const CONTACT_FIELDS = [
   { value: 'nume', label: 'Nume', required: true },
   { value: 'telefon', label: 'Telefon', required: true },
@@ -30,19 +29,18 @@ const CONTACT_FIELDS = [
   { value: 'info', label: 'Informații', required: false },
   { value: 'notes', label: 'Notițe', required: false },
   { value: 'status', label: 'Status', required: false },
-  { value: 'tags', label: 'Etichete', required: false },
-  { value: 'skip', label: 'Nu importa', required: false }
+  { value: 'tags', label: 'Etichete', required: false }
 ];
 
-// Smart mapping function to suggest mappings
-const getSmartMapping = (csvHeaders: string[]): { [csvColumn: string]: string } => {
+// Automatic smart mapping function - maps ALL columns automatically
+const getAutomaticMapping = (csvHeaders: string[]): { [csvColumn: string]: string } => {
   const mapping: { [csvColumn: string]: string } = {};
   
   const mappingRules = [
+    // Telefon variations (HIGHEST priority)
+    { patterns: ['telefon', 'phone', 'tel', 'mobile', 'celular', 'numar', 'contact', 'number'], field: 'telefon' },
     // Nume variations
     { patterns: ['nume', 'name', 'first_name', 'prenume', 'full_name', 'client'], field: 'nume' },
-    // Telefon variations (prioritized)
-    { patterns: ['number', 'telefon', 'phone', 'tel', 'mobile', 'celular', 'numar', 'contact'], field: 'telefon' },
     // Email variations
     { patterns: ['email', 'e-mail', 'mail', 'adresa_email'], field: 'email' },
     // Tara variations
@@ -61,19 +59,36 @@ const getSmartMapping = (csvHeaders: string[]): { [csvColumn: string]: string } 
     { patterns: ['tags', 'etichete', 'labels', 'categories'], field: 'tags' }
   ];
 
+  // First pass: Find phone number (priority)
+  const phoneHeader = csvHeaders.find(header => {
+    const normalized = header.toLowerCase().trim();
+    return mappingRules[0].patterns.some(pattern => normalized.includes(pattern));
+  });
+  
+  if (phoneHeader) {
+    mapping[phoneHeader] = 'telefon';
+  }
+
+  // Map all other columns
   csvHeaders.forEach(header => {
-    const normalizedHeader = header.toLowerCase().trim();
+    if (mapping[header]) return; // Skip already mapped (phone)
     
+    const normalizedHeader = header.toLowerCase().trim();
+    let mapped = false;
+    
+    // Try to match known fields
     for (const rule of mappingRules) {
       if (rule.patterns.some(pattern => normalizedHeader.includes(pattern))) {
         mapping[header] = rule.field;
+        mapped = true;
         break;
       }
     }
     
-    // If no mapping found, set to skip
-    if (!mapping[header]) {
-      mapping[header] = 'skip';
+    // If no match found, create custom field
+    if (!mapped) {
+      const cleanFieldName = normalizedHeader.replace(/[^a-z0-9]/g, '_');
+      mapping[header] = `custom_${cleanFieldName}`;
     }
   });
 
@@ -86,28 +101,29 @@ export const CSVPreviewDialog: React.FC<CSVPreviewDialogProps> = ({
   csvData,
   onConfirmImport
 }) => {
-  const [columnMapping, setColumnMapping] = useState<{ [csvColumn: string]: string }>(() => 
-    getSmartMapping(csvData.headers)
-  );
-  const [editedData, setEditedData] = useState<string[][]>(csvData.rows);
+  const [automaticMapping, setAutomaticMapping] = useState<{ [csvColumn: string]: string }>({});
+  const [editedData, setEditedData] = useState<string[][]>([]);
   const [editingCell, setEditingCell] = useState<{row: number, col: number} | null>(null);
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(csvData.headers);
+  const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
 
-  const handleMappingChange = (csvColumn: string, targetField: string) => {
-    setColumnMapping(prev => ({
-      ...prev,
-      [csvColumn]: targetField
-    }));
-  };
+  // Apply automatic mapping when CSV data changes
+  useEffect(() => {
+    if (csvData.headers.length > 0) {
+      const smartMapping = getAutomaticMapping(csvData.headers);
+      setAutomaticMapping(smartMapping);
+      setEditedData(csvData.rows);
+      setVisibleColumns(csvData.headers);
+    }
+  }, [csvData]);
 
   const handleDeleteColumn = (columnToDelete: string) => {
     const newVisibleColumns = visibleColumns.filter(col => col !== columnToDelete);
     setVisibleColumns(newVisibleColumns);
     
-    // Also remove from mapping
-    const newMapping = { ...columnMapping };
+    // Remove from automatic mapping
+    const newMapping = { ...automaticMapping };
     delete newMapping[columnToDelete];
-    setColumnMapping(newMapping);
+    setAutomaticMapping(newMapping);
   };
 
   const handleCellEdit = (rowIndex: number, colIndex: number, newValue: string) => {
@@ -122,9 +138,9 @@ export const CSVPreviewDialog: React.FC<CSVPreviewDialogProps> = ({
   };
 
   const handleConfirm = () => {
-    // Filter out unmapped and skipped columns
-    const finalMapping = Object.entries(columnMapping)
-      .filter(([_, targetField]) => targetField !== '' && targetField !== 'skip')
+    // Use all visible columns with their automatic mappings
+    const finalMapping = Object.entries(automaticMapping)
+      .filter(([csvColumn]) => visibleColumns.includes(csvColumn))
       .reduce((acc, [csvColumn, targetField]) => {
         acc[csvColumn] = targetField;
         return acc;
@@ -134,115 +150,118 @@ export const CSVPreviewDialog: React.FC<CSVPreviewDialogProps> = ({
     onClose();
   };
 
-  // Check if required fields are mapped
-  const requiredFields = CONTACT_FIELDS.filter(f => f.required).map(f => f.value);
-  const mappedFields = Object.values(columnMapping).filter(v => v !== '' && v !== 'skip');
-  const missingRequired = requiredFields.filter(field => !mappedFields.includes(field));
+  // Check if phone number is detected
+  const hasPhoneNumber = Object.values(automaticMapping).includes('telefon');
+
+  const getFieldDisplayName = (fieldValue: string) => {
+    if (fieldValue.startsWith('custom_')) {
+      return `Câmp Custom: ${fieldValue.replace('custom_', '').replace(/_/g, ' ')}`;
+    }
+    return CONTACT_FIELDS.find(f => f.value === fieldValue)?.label || fieldValue;
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh]">
+      <DialogContent className="max-w-5xl max-h-[85vh]">
         <DialogHeader>
-          <DialogTitle>Preview și mapare coloane CSV</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            🚀 Import Automat CSV - Toate coloanele detectate
+          </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
-          {/* Mapping section */}
+          {/* Automatic mapping info */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Mapare Coloane</CardTitle>
+              <CardTitle className="text-sm flex items-center gap-2">
+                ⚡ Mapare Automată Aplicată
+                <Badge variant="outline" className="text-xs">
+                  {visibleColumns.length} coloane detectate
+                </Badge>
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {visibleColumns.map((header, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1">
-                        <Badge variant="outline" className="text-xs">
-                          {header}
-                        </Badge>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-4 w-4 p-0 hover:bg-destructive/20"
-                          onClick={() => handleDeleteColumn(header)}
-                        >
-                          <Trash2 className="h-3 w-3 text-destructive" />
-                        </Button>
-                      </div>
+                  <div key={index} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs font-mono">
+                        {header}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">→</span>
+                      <span className="text-xs font-medium">
+                        {getFieldDisplayName(automaticMapping[header])}
+                      </span>
                     </div>
-                    <span className="text-xs text-muted-foreground">→</span>
-                    <div className="min-w-0 flex-1">
-                      <Select
-                        value={columnMapping[header] || 'skip'}
-                        onValueChange={(value) => handleMappingChange(header, value)}
-                      >
-                        <SelectTrigger className="h-8">
-                          <SelectValue placeholder="Selectează câmpul" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {CONTACT_FIELDS.map((field) => (
-                            <SelectItem key={field.value} value={field.value}>
-                              <div className="flex items-center gap-2">
-                                <span>{field.label}</span>
-                                {field.required && (
-                                  <Badge variant="destructive" className="text-xs">
-                                    obligatoriu
-                                  </Badge>
-                                )}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 hover:bg-destructive/20"
+                      onClick={() => handleDeleteColumn(header)}
+                    >
+                      <Trash2 className="h-3 w-3 text-destructive" />
+                    </Button>
                   </div>
                 ))}
               </div>
               
-              {missingRequired.length > 0 && (
-                <div className="mt-3 p-2 bg-destructive/10 border border-destructive/20 rounded-md">
-                  <p className="text-sm text-destructive">
-                    Câmpuri obligatorii care nu sunt mapate: {missingRequired.join(', ')}
+              {!hasPhoneNumber && (
+                <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <p className="text-sm text-destructive font-medium">
+                    ⚠️ Nu s-a detectat coloana cu numărul de telefon!
+                  </p>
+                  <p className="text-xs text-destructive/80 mt-1">
+                    Verifică că CSV-ul conține o coloană cu numere de telefon (telefon, phone, contact, etc.)
+                  </p>
+                </div>
+              )}
+              
+              {hasPhoneNumber && (
+                <div className="mt-4 p-3 bg-success/10 border border-success/20 rounded-lg">
+                  <p className="text-sm text-success font-medium">
+                    ✅ Perfect! Toate coloanele au fost detectate automat.
+                  </p>
+                  <p className="text-xs text-success/80 mt-1">
+                    Poți edita datele în tabelul de mai jos sau șterge coloane nedorite.
                   </p>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Preview section */}
+          {/* Preview section with editing */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Preview Date ({editedData.length} rânduri)</CardTitle>
+              <CardTitle className="text-sm flex items-center gap-2">
+                👁️ Preview Date
+                <Badge variant="secondary" className="text-xs">
+                  {editedData.length} rânduri
+                </Badge>
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-48 w-full">
+              <ScrollArea className="h-64 w-full">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      {visibleColumns.map((header, index) => {
-                        const originalIndex = csvData.headers.indexOf(header);
-                        return (
-                          <TableHead key={index} className="text-xs">
-                            <div className="space-y-1">
-                              <div>{header}</div>
-                              {columnMapping[header] && columnMapping[header] !== 'skip' && (
-                                <Badge variant="secondary" className="text-xs">
-                                  {CONTACT_FIELDS.find(f => f.value === columnMapping[header])?.label}
-                                </Badge>
-                              )}
-                            </div>
-                          </TableHead>
-                        );
-                      })}
+                      {visibleColumns.map((header, index) => (
+                        <TableHead key={index} className="text-xs min-w-32">
+                          <div className="space-y-1">
+                            <div className="font-mono">{header}</div>
+                            <Badge variant="secondary" className="text-xs">
+                              {getFieldDisplayName(automaticMapping[header])}
+                            </Badge>
+                          </div>
+                        </TableHead>
+                      ))}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {editedData.slice(0, 5).map((row, rowIndex) => (
+                    {editedData.slice(0, 8).map((row, rowIndex) => (
                       <TableRow key={rowIndex}>
                         {visibleColumns.map((header, colIndex) => {
                           const originalColIndex = csvData.headers.indexOf(header);
-                          const cellValue = row[originalColIndex];
+                          const cellValue = row[originalColIndex] || '';
                           const isEditing = editingCell?.row === rowIndex && editingCell?.col === originalColIndex;
                           
                           return (
@@ -275,11 +294,11 @@ export const CSVPreviewDialog: React.FC<CSVPreviewDialogProps> = ({
                                 </div>
                               ) : (
                                 <div 
-                                  className="truncate cursor-pointer hover:bg-muted/50 rounded px-1 flex items-center gap-1"
+                                  className="truncate cursor-pointer hover:bg-muted/50 rounded px-1 flex items-center gap-1 group"
                                   onClick={() => startEditing(rowIndex, originalColIndex)}
                                 >
-                                  <span>{cellValue}</span>
-                                  <Edit3 className="h-2 w-2 opacity-0 group-hover:opacity-100" />
+                                  <span>{cellValue || '-'}</span>
+                                  <Edit3 className="h-2 w-2 opacity-0 group-hover:opacity-100 text-muted-foreground" />
                                 </div>
                               )}
                             </TableCell>
@@ -287,10 +306,10 @@ export const CSVPreviewDialog: React.FC<CSVPreviewDialogProps> = ({
                         })}
                       </TableRow>
                     ))}
-                    {editedData.length > 5 && (
+                    {editedData.length > 8 && (
                       <TableRow>
-                        <TableCell colSpan={visibleColumns.length} className="text-center text-xs text-muted-foreground">
-                          ... și încă {editedData.length - 5} rânduri
+                        <TableCell colSpan={visibleColumns.length} className="text-center text-xs text-muted-foreground py-4">
+                          ... și încă {editedData.length - 8} rânduri vor fi importate
                         </TableCell>
                       </TableRow>
                     )}
@@ -307,9 +326,10 @@ export const CSVPreviewDialog: React.FC<CSVPreviewDialogProps> = ({
           </Button>
           <Button 
             onClick={handleConfirm}
-            disabled={missingRequired.length > 0}
+            disabled={!hasPhoneNumber}
+            className="bg-primary hover:bg-primary/90"
           >
-            Importă {editedData.length} contacte
+            🚀 Importă Automat {editedData.length} contacte
           </Button>
         </DialogFooter>
       </DialogContent>
