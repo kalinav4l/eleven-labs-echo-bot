@@ -149,10 +149,8 @@ CONȚINUT WEBSITE: ${websiteContent || 'Va fi integrat'}
 
 GENEREAZĂ ACUM PROMPT-UL PENTRU "${agentName}"!`;
 
-═══════════════════════════════════════════════════
-🎯 CERINȚE PENTRU PROMPT-UL ULTRA-PROFESIONAL:
-═══════════════════════════════════════════════════
-
+    // Create the final comprehensive user prompt
+    const finalUserPrompt = `🎯 CERINȚE PENTRU PROMPT-UL ULTRA-PROFESIONAL:
 Creează un PROMPT COMPLET și EXTREM DE DETALIAT folosind următoarea STRUCTURĂ OBLIGATORIE:
 
 🔥 FOLOSEȘTE numele "${agentName}" în TOATE secțiunile relevante!
@@ -302,9 +300,7 @@ Creează un PROMPT COMPLET și EXTREM DE DETALIAT folosind următoarea STRUCTUR�
 ### 🎪 SCENARII PRACTICE ȘI EXEMPLE:
 [Include conversații tip și exemple concrete]
 
-═══════════════════════════════════════════════════
 🎯 CERINȚE FINALE OBLIGATORII:
-═══════════════════════════════════════════════════
 
 ✅ NUMELE "${agentName}" trebuie să apară în MINIMUM 10 locuri în prompt
 ✅ Prompt-ul trebuie să fie în ROMÂNĂ PERFECTĂ
