@@ -1546,6 +1546,8 @@ export type Database = {
       user_data: {
         Row: {
           created_at: string
+          custom_fields: Json | null
+          database_id: string | null
           date_user: string
           id: string
           info: string | null
@@ -1557,6 +1559,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          custom_fields?: Json | null
+          database_id?: string | null
           date_user?: string
           id?: string
           info?: string | null
@@ -1568,6 +1572,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          custom_fields?: Json | null
+          database_id?: string | null
           date_user?: string
           id?: string
           info?: string | null
@@ -1576,6 +1582,83 @@ export type Database = {
           number?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_data_columns: {
+        Row: {
+          column_name: string
+          column_type: string
+          created_at: string
+          database_id: string
+          display_order: number
+          id: string
+          is_required: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          column_name: string
+          column_type?: string
+          created_at?: string
+          database_id: string
+          display_order?: number
+          id?: string
+          is_required?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          column_name?: string
+          column_type?: string
+          created_at?: string
+          database_id?: string
+          display_order?: number
+          id?: string
+          is_required?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_user_data_columns_database"
+            columns: ["database_id"]
+            isOneToOne: false
+            referencedRelation: "user_databases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_databases: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_default: boolean
+          name: string
+          updated_at: string
+          user_id: string
+          webhook_token: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+          webhook_token?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+          webhook_token?: string
         }
         Relationships: []
       }
