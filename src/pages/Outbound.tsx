@@ -32,6 +32,8 @@ import { BatchConfigPanel } from '@/components/outbound/BatchConfigPanel';
 import { BatchStatusPanel } from '@/components/outbound/BatchStatusPanel';
 import { ContactsList } from '@/components/outbound/ContactsList';
 import { CSVUploadSection } from '@/components/outbound/CSVUploadSection';
+import { AgentSelector } from '@/components/outbound/AgentSelector';
+import { PhoneSelector } from '@/components/outbound/PhoneSelector';
 interface Contact {
   id: string;
   name: string;
@@ -420,6 +422,28 @@ const Outbound = () => {
                     </div>
                   ) : (
                     <div className="space-y-6">
+                      {/* Agent and Phone Configuration */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Agent
+                          </label>
+                          <AgentSelector
+                            selectedAgentId={selectedAgentId}
+                            onAgentSelect={setSelectedAgentId}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Numărul de telefon
+                          </label>
+                          <PhoneSelector
+                            selectedPhoneId={selectedPhoneId}
+                            onPhoneSelect={setSelectedPhoneId}
+                          />
+                        </div>
+                      </div>
+
                       {/* Contacts Overview */}
                       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
                         <div className="flex items-center justify-between">
