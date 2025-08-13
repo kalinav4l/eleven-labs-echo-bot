@@ -149,27 +149,40 @@ export const CSVImportExport: React.FC<CSVImportExportProps> = ({
         // Map ALL CSV columns to contact fields (including custom ones)
         Object.entries(mapping).forEach(([csvColumn, contactField]) => {
           const columnIndex = csvData.headers.indexOf(csvColumn);
-          if (columnIndex !== -1 && row[columnIndex] !== undefined && row[columnIndex].trim() !== '') {
-            const cellValue = row[columnIndex].trim();
+          if (columnIndex !== -1 && row[columnIndex] !== undefined) {
+            const cellValue = row[columnIndex]?.toString().trim() || '';
             
-            if (contactField === 'tags') {
-              // Handle tags as array
-              mappedRow[contactField] = cellValue.split(',').map((tag: string) => tag.trim()).filter(Boolean);
-            } else if (contactField.startsWith('custom_')) {
-              // Handle custom fields by storing them in info field
-              if (!mappedRow.info) mappedRow.info = '';
-              const fieldLabel = contactField.replace('custom_', '').replace(/_/g, ' ');
-              mappedRow.info += `${fieldLabel}: ${cellValue}\n`;
-            } else {
-              // Standard fields
-              mappedRow[contactField] = cellValue;
+            if (cellValue) { // Only process non-empty values
+              if (contactField === 'tags') {
+                // Handle tags as array
+                mappedRow[contactField] = cellValue.split(',').map((tag: string) => tag.trim()).filter(Boolean);
+              } else if (contactField.startsWith('custom_')) {
+                // Handle custom fields by storing them in info field
+                if (!mappedRow.info) mappedRow.info = '';
+                const fieldLabel = contactField.replace('custom_', '').replace(/_/g, ' ');
+                mappedRow.info += `${fieldLabel}: ${cellValue}\n`;
+              } else {
+                // Standard fields - use exact mapping
+                mappedRow[contactField] = cellValue;
+              }
             }
           }
         });
 
-        // Set defaults for required fields
-        if (!mappedRow.telefon) return null; // Skip rows without phone
-        if (!mappedRow.nume) mappedRow.nume = 'Contact Nou';
+        // Ensure required fields are present - prioritize phone number detection
+        if (!mappedRow.telefon && !mappedRow.number) {
+          // Skip rows without phone numbers
+          return null;
+        }
+        
+        // Standardize field names for different systems
+        if (mappedRow.telefon) mappedRow.number = mappedRow.telefon;
+        if (mappedRow.nume) mappedRow.name = mappedRow.nume;
+        if (!mappedRow.nume && mappedRow.name) mappedRow.nume = mappedRow.name;
+        if (!mappedRow.name && mappedRow.nume) mappedRow.name = mappedRow.nume;
+        
+        // Set defaults
+        if (!mappedRow.name && !mappedRow.nume) mappedRow.name = 'Contact Nou';
         if (!mappedRow.status) mappedRow.status = 'active';
 
         return mappedRow;

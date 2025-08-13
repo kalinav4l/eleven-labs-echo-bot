@@ -158,7 +158,7 @@ const DataPage = () => {
   };
 
   const handleCSVImport = async (csvData: any[]) => {
-    // Import CSV data into current database
+    // Import CSV data into current database with enhanced mapping
     for (const row of csvData) {
       const customFields: Record<string, any> = {};
       
@@ -169,14 +169,24 @@ const DataPage = () => {
         }
       });
 
-      await createUserData({
-        name: row.Nume || row.nume || '',
-        number: row.Număr || row.numar || '',
-        location: row.Locație || row.locatie || '',
-        info: row.Informații || row.informatii || '',
-        date_user: row.Data || row.data || new Date().toISOString(),
+      // Enhanced mapping to handle automatic CSV detection
+      const mappedData = {
+        name: row.nume || row.Nume || row.name || row.Name || row.client || row.Client || '',
+        number: row.telefon || row.Telefon || row.phone || row.Phone || row.tel || row.Tel || 
+                row.mobile || row.Mobile || row.contact || row.Contact || row.numar || row.Număr || 
+                row.number || row.Number || '',
+        location: row.locatie || row.Locație || row.location || row.Location || row.city || row.City || 
+                 row.oras || row.Oras || row.adresa || row.Adresa || row.address || row.Address || '',
+        info: row.info || row.Info || row.informatii || row.Informații || row.details || row.Details || 
+              row.description || row.Description || row.detalii || row.Detalii || '',
+        date_user: row.data || row.Data || row.date || row.Date || row.datum || new Date().toISOString(),
         custom_fields: customFields
-      });
+      };
+
+      // Only create if we have at least a name
+      if (mappedData.name.trim()) {
+        await createUserData(mappedData);
+      }
     }
   };
 
