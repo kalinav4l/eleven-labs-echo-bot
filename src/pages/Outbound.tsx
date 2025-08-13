@@ -113,13 +113,14 @@ const Outbound = () => {
       const lines = text.split('\n').filter(line => line.trim());
       const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
       const nameIndex = headers.findIndex(h => h.includes('name') || h.includes('nume'));
-      const phoneIndex = headers.findIndex(h => h.includes('phone') || h.includes('telefon'));
-      const countryIndex = headers.findIndex(h => h.includes('country') || h.includes('tara'));
+      const phoneIndex = headers.findIndex(h => h.includes('number') || h.includes('telefon') || h.includes('phone'));
       const locationIndex = headers.findIndex(h => h.includes('location') || h.includes('locatie'));
+      const infoIndex = headers.findIndex(h => h.includes('info'));
+      const dateUserIndex = headers.findIndex(h => h.includes('date_user') || h.includes('date'));
       if (phoneIndex === -1) {
         toast({
           title: "Eroare",
-          description: "CSV-ul trebuie să conțină o coloană pentru telefon (phone/telefon).",
+          description: "CSV-ul trebuie să conțină o coloană pentru numărul de telefon (number/telefon/phone).",
           variant: "destructive"
         });
         return;
@@ -130,7 +131,7 @@ const Outbound = () => {
           id: `contact-${index}`,
           name: nameIndex >= 0 ? values[nameIndex] || `Contact ${index + 1}` : `Contact ${index + 1}`,
           phone: values[phoneIndex] || '',
-          country: countryIndex >= 0 ? values[countryIndex] || 'Necunoscut' : 'Necunoscut',
+          country: infoIndex >= 0 ? values[infoIndex] || 'Necunoscut' : 'Necunoscut',
           location: locationIndex >= 0 ? values[locationIndex] || 'Necunoscut' : 'Necunoscut'
         };
       }).filter(contact => contact.phone);
@@ -187,7 +188,7 @@ const Outbound = () => {
     }, 2000);
   };
   const downloadTemplate = () => {
-    const csvContent = "nume,telefon,tara,locatie\nJohn Doe,+40712345678,Romania,Bucuresti\nJane Smith,+40798765432,Romania,Cluj";
+    const csvContent = "name,number,location,info,date_user\nJohn Doe,+40712345678,Romania,Bucuresti,2024-01-15\nJane Smith,+40798765432,Romania,Cluj,2024-01-16";
     const blob = new Blob([csvContent], {
       type: 'text/csv;charset=utf-8;'
     });
