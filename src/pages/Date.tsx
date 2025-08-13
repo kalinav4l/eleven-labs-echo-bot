@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, Trash2, Database, Webhook, Copy, Settings, FileText } from 'lucide-react';
+import { Plus, Edit, Trash2, Database, Webhook, Copy, Settings, FileText, Eye, EyeOff } from 'lucide-react';
 import { useEnhancedUserData, UserDataColumn } from '@/hooks/useEnhancedUserData';
 import { CSVImportExport } from '@/components/contacts/CSVImportExport';
 import { format } from 'date-fns';
@@ -36,6 +36,8 @@ const DataPage = () => {
   const [isAddColumnOpen, setIsAddColumnOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [hiddenFields, setHiddenFields] = useState<Set<string>>(new Set());
+  const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set());
+  const [showColumnManager, setShowColumnManager] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -119,6 +121,39 @@ const DataPage = () => {
         [fieldName]: value
       }
     }));
+  };
+
+  const toggleColumnVisibility = (columnName: string) => {
+    setHiddenColumns(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(columnName)) {
+        newSet.delete(columnName);
+      } else {
+        newSet.add(columnName);
+      }
+      return newSet;
+    });
+  };
+
+  const resetColumnVisibility = () => {
+    setHiddenColumns(new Set());
+  };
+
+  const getColumnDisplayName = (columnName: string) => {
+    const displayNames: Record<string, string> = {
+      name: 'Nume',
+      number: 'Număr', 
+      location: 'Locație',
+      date_user: 'Data',
+      info: 'Informații'
+    };
+    
+    if (columnName.startsWith('custom_')) {
+      const customName = columnName.replace('custom_', '');
+      return columns.find(col => col.column_name === customName)?.column_name || customName;
+    }
+    
+    return displayNames[columnName] || columnName;
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -245,8 +280,75 @@ const DataPage = () => {
               <p className="text-muted-foreground">Gestionează datele tale personale și configurează webhook-urile</p>
             </div>
           </div>
-          
           <div className="flex items-center gap-2">
+            <Dialog open={showColumnManager} onOpenChange={setShowColumnManager}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Eye className="h-4 w-4" />
+                  Gestionează Coloane
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Gestionează Vizibilitatea Coloanelor</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    {['name', 'number', 'location', 'date_user', 'info'].map((column) => (
+                      <div key={column} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                        <span className="text-sm font-medium">{getColumnDisplayName(column)}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleColumnVisibility(column)}
+                          className={hiddenColumns.has(column) ? "text-muted-foreground" : "text-foreground"}
+                        >
+                          {hiddenColumns.has(column) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    ))}
+                    
+                    {columns.map((col) => {
+                      const columnKey = `custom_${col.column_name}`;
+                      return (
+                        <div key={columnKey} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                          <span className="text-sm font-medium">{col.column_name}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleColumnVisibility(columnKey)}
+                            className={hiddenColumns.has(columnKey) ? "text-muted-foreground" : "text-foreground"}
+                          >
+                            {hiddenColumns.has(columnKey) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {hiddenColumns.size > 0 && (
+                    <div className="pt-2 border-t">
+                      <Button
+                        variant="outline" 
+                        onClick={resetColumnVisibility}
+                        className="w-full"
+                      >
+                        Afișează Toate Coloanele ({hiddenColumns.size} ascunse)
+                      </Button>
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-2 pt-4">
+                    <Button 
+                      onClick={() => setShowColumnManager(false)}
+                      className="flex-1"
+                    >
+                      Închide
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
             <Dialog open={isAddDatabaseOpen} onOpenChange={setIsAddDatabaseOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-2">
@@ -527,30 +629,36 @@ const DataPage = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Nume</TableHead>
-                      <TableHead>Număr</TableHead>
-                      <TableHead>Locație</TableHead>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Informații</TableHead>
-                      {columns.map((col) => (
-                        <TableHead key={col.id}>{col.column_name}</TableHead>
-                      ))}
+                      {!hiddenColumns.has('name') && <TableHead>Nume</TableHead>}
+                      {!hiddenColumns.has('number') && <TableHead>Număr</TableHead>}
+                      {!hiddenColumns.has('location') && <TableHead>Locație</TableHead>}
+                      {!hiddenColumns.has('date_user') && <TableHead>Data</TableHead>}
+                      {!hiddenColumns.has('info') && <TableHead>Informații</TableHead>}
+                      {columns.map((col) => {
+                        const columnKey = `custom_${col.column_name}`;
+                        return !hiddenColumns.has(columnKey) ? (
+                          <TableHead key={col.id}>{col.column_name}</TableHead>
+                        ) : null;
+                      })}
                       <TableHead>Acțiuni</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {userData.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item.name}</TableCell>
-                        <TableCell>{item.number || '-'}</TableCell>
-                        <TableCell>{item.location || '-'}</TableCell>
-                        <TableCell>{formatDate(item.date_user)}</TableCell>
-                        <TableCell className="max-w-xs truncate">{item.info || '-'}</TableCell>
-                        {columns.map((col) => (
-                          <TableCell key={col.id} className="max-w-xs truncate">
-                            {item.custom_fields[col.column_name] || '-'}
-                          </TableCell>
-                        ))}
+                        {!hiddenColumns.has('name') && <TableCell className="font-medium">{item.name}</TableCell>}
+                        {!hiddenColumns.has('number') && <TableCell>{item.number || '-'}</TableCell>}
+                        {!hiddenColumns.has('location') && <TableCell>{item.location || '-'}</TableCell>}
+                        {!hiddenColumns.has('date_user') && <TableCell>{formatDate(item.date_user)}</TableCell>}
+                        {!hiddenColumns.has('info') && <TableCell className="max-w-xs truncate">{item.info || '-'}</TableCell>}
+                        {columns.map((col) => {
+                          const columnKey = `custom_${col.column_name}`;
+                          return !hiddenColumns.has(columnKey) ? (
+                            <TableCell key={col.id} className="max-w-xs truncate">
+                              {item.custom_fields[col.column_name] || '-'}
+                            </TableCell>
+                          ) : null;
+                        })}
                         <TableCell>
                           <div className="flex gap-2">
                             <Button
