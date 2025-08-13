@@ -19,17 +19,17 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Găsește toate taskurile care trebuie executate acum
+    // Găsește toate taskurile care trebuie executate acum (inclusiv cele întârziate)
     const now = new Date()
-    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000) // 5 minute toleranță
+    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000) // 24 ore toleranță pentru taskuri întârziate
 
-    console.log(`⏰ Căutare taskuri între ${fiveMinutesAgo.toISOString()} și ${now.toISOString()}`)
+    console.log(`⏰ Căutare taskuri între ${twentyFourHoursAgo.toISOString()} și ${now.toISOString()}`)
 
     const { data: scheduledTasks, error } = await supabase
       .from('scheduled_calls')
       .select('*')
       .eq('status', 'scheduled')
-      .gte('scheduled_datetime', fiveMinutesAgo.toISOString())
+      .gte('scheduled_datetime', twentyFourHoursAgo.toISOString())
       .lte('scheduled_datetime', now.toISOString())
 
     if (error) {
