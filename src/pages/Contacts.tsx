@@ -85,9 +85,20 @@ export default function Contacts() {
   };
 
   const downloadContactTemplate = () => {
-    const template = 'nume,telefon,email,tara,locatie,company,info,notes,status\n"Ion Popescu","+40712345678","ion@example.com","Romania","Bucuresti","ABC Company","Client important","Contact preferat dimineata","active"';
+    // Dynamic template with all possible fields and multiple examples
+    const headers = ['nume', 'telefon', 'email', 'tara', 'locatie', 'company', 'info', 'notes', 'status', 'tags'];
+    const examples = [
+      ['Ion Popescu', '+40712345678', 'ion@example.com', 'România', 'București', 'ABC Company', 'Client VIP', 'Preferat dimineața', 'active', 'vip,important'],
+      ['Maria Ionescu', '+40723456789', 'maria@test.ro', 'România', 'Cluj-Napoca', 'XYZ SRL', 'Prospect cald', 'Contact după-amiaza', 'potential', 'prospect,cald'],
+      ['Ana Georgescu', '+40734567890', '', 'România', 'Timișoara', '', 'Lead nou', 'Verificat telefonic', 'new', 'lead,nou']
+    ];
     
-    const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
+    const csvContent = [
+      headers.join(','),
+      ...examples.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
