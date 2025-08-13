@@ -87,7 +87,7 @@ const Outbound = () => {
     stopBatch
   } = useCallInitiation({
     agentId: selectedAgentId,
-    phoneNumber: '',
+    phoneNumber: selectedPhoneId,
     smsConfig: smsConfig
   });
   const {
