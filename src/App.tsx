@@ -35,6 +35,7 @@ const Webhooks = React.lazy(() => import("./pages/Webhooks"));
 const AgentPrompts = React.lazy(() => import("./pages/AgentPrompts"));
 const WorkflowDatabase = React.lazy(() => import("./pages/WorkflowDatabase"));
 const Actiuni = React.lazy(() => import("./pages/Actiuni"));
+const DataPage = React.lazy(() => import("./pages/Date"));
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -85,6 +86,7 @@ function AppWithWelcome() {
           <Route path="/account/voice-demo" element={<VoiceDemo />} />
           <Route path="/account/agent-prompts" element={<AgentPrompts />} />
           <Route path="/account/workflow-database" element={<WorkflowDatabase />} />
+          <Route path="/account/date" element={<DataPage />} />
           <Route path="/account/settings" element={<AccountSettings />} />
 
           {/* Catch-all for 404 */}

@@ -38,6 +38,7 @@ const communicationsItems = [
 ];
 
 const dataToolsItems = [
+  { title: "Date", url: "/account/date", icon: Database },
   { title: "Transcrieri", url: "/account/transcript", icon: FileText },
   { title: "Extragere Date", url: "/account/scraping", icon: Search },
   { title: "Poșta", url: "/account/gmail", icon: Mail },
