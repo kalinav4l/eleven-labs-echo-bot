@@ -656,7 +656,8 @@ export const useCallInitiation = ({
           agent_id: targetAgentId,
           phone_number: targetPhone,
           contact_name: contactName || targetPhone,
-          user_id: user?.id
+          user_id: user?.id,
+          caller_number: 'phnum_01jz5v97bgfmdsvyy3hb095k3c' // Always use this number for test calls
         }
       });
 

@@ -110,7 +110,8 @@ const TestCall = () => {
           contact_name: `Test Call - ${phoneNumber}`,
           user_id: user.id,
           batch_processing: false,
-          is_test_call: true
+          is_test_call: true,
+          caller_number: 'phnum_01jz5v97bgfmdsvyy3hb095k3c' // Always use moldcel number
         }
       });
       if (error) {
