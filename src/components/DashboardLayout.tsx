@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from './AppSidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/components/AuthContext';
@@ -100,49 +100,49 @@ const DashboardLayout = ({
       console.error('Error signing out:', error);
     }
   };
-  return <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background mobile-safe-area">
-        <PaymentIssueNotification 
-          notificationType={notificationType}
-          spentAmount={totalSpent}
-          remainingBalance={userBalance}
-          onDismiss={() => setNotificationType(null)} 
-        />
-        <BlockedUserOverlay isBlocked={userBlocked} />
-        
-        <AppSidebar />
-        
-        <div className="flex-1 flex flex-col" style={{ paddingTop: userBlocked ? '80px' : '0' }}>
-          {/* Mobile Header */}
-          {isMobile && (
-            <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 h-16 flex items-center px-4">
-              <div className="flex items-center justify-between w-full">
-                <SidebarTrigger className="touch-target">
-                  <Menu className="h-6 w-6" />
-                </SidebarTrigger>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-semibold">Kalina AI</span>
-                </div>
-                <Button variant="ghost" size="icon" onClick={handleSignOut} className="touch-target">
-                  <LogOut className="h-5 w-5" />
-                </Button>
+  return (
+    <div className="min-h-screen flex w-full bg-background mobile-safe-area">
+      <PaymentIssueNotification 
+        notificationType={notificationType}
+        spentAmount={totalSpent}
+        remainingBalance={userBalance}
+        onDismiss={() => setNotificationType(null)} 
+      />
+      <BlockedUserOverlay isBlocked={userBlocked} />
+      
+      <AppSidebar />
+      
+      <div className="flex-1 flex flex-col" style={{ paddingTop: userBlocked ? '80px' : '0' }}>
+        {/* Mobile Header */}
+        {isMobile && (
+          <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 h-16 flex items-center px-4">
+            <div className="flex items-center justify-between w-full">
+              <SidebarTrigger className="touch-target">
+                <Menu className="h-6 w-6" />
+              </SidebarTrigger>
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-semibold">Kalina AI</span>
               </div>
-            </header>
-          )}
+              <Button variant="ghost" size="icon" onClick={handleSignOut} className="touch-target">
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </div>
+          </header>
+        )}
+        
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto min-h-0 bg-white">
+          <div className={`max-w-7xl mx-auto ${isMobile ? 'px-2 py-2 min-h-[calc(100vh-4rem)]' : 'px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-6'}`}>
+            {children}
+          </div>
           
-          {/* Main Content */}
-          <main className="flex-1 overflow-y-auto min-h-0 bg-white">
-            <div className={`max-w-7xl mx-auto ${isMobile ? 'px-2 py-2 min-h-[calc(100vh-4rem)]' : 'px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-6'}`}>
-              {children}
-            </div>
-            
-            {/* Version Footer */}
-            <div className="text-center py-4 text-xs text-muted-foreground border-t">
-              {APP_VERSION}
-            </div>
-          </main>
-        </div>
+          {/* Version Footer */}
+          <div className="text-center py-4 text-xs text-muted-foreground border-t">
+            {APP_VERSION}
+          </div>
+        </main>
       </div>
-    </SidebarProvider>;
+    </div>
+  );
 };
 export default DashboardLayout;

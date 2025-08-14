@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import DashboardLayout from '@/components/DashboardLayout';
+
 import { useCallHistory } from '@/hooks/useCallHistory';
 import { useConversationAnalyticsCache } from '@/hooks/useConversationAnalyticsCache';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Search, Phone, Copy, ExternalLink, RefreshCw, Clock, Database, BarChart3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ConversationDetailSidebar } from '@/components/outbound/ConversationDetailSidebar';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const ConversationAnalytics = () => {
   const navigate = useNavigate();
@@ -183,21 +184,15 @@ const ConversationAnalytics = () => {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">Se încarcă istoricul conversațiilor...</p>
-          </div>
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="lg" message="Se încarcă istoricul conversațiilor..." variant="primary" />
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="container mx-auto p-2 sm:p-6 space-y-3 sm:space-y-6 max-w-full overflow-hidden">
-        {/* Header */}
+    <div className="container mx-auto p-2 sm:p-6 space-y-3 sm:space-y-6 max-w-full overflow-hidden">
+      {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Analytics Conversații</h1>
           <div className="flex items-center gap-2">
@@ -482,7 +477,6 @@ const ConversationAnalytics = () => {
             )}
           </div>
         </div>
-      </div>
       
       {/* Conversation Detail Sidebar */}
       <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
@@ -497,7 +491,7 @@ const ConversationAnalytics = () => {
           </div>
         </SheetContent>
       </Sheet>
-    </DashboardLayout>
+    </div>
   );
 };
 
