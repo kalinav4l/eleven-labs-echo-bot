@@ -10,8 +10,9 @@ import { Phone, PlayCircle, Loader2, MessageSquare, RefreshCw, Wallet, AlertTria
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
-import TestCallHistory from '@/components/TestCallHistory';
-import { useTestCallHistory } from '@/hooks/useTestCallHistory';
+// Temporarily removing TestCallHistory to fix module loading issue
+// import TestCallHistory from '@/components/TestCallHistory';
+// import { useTestCallHistory } from '@/hooks/useTestCallHistory';
 import { AgentSelector } from '@/components/outbound/AgentSelector';
 import { COST_PER_MINUTE, calculateCostFromMinutes } from '@/utils/costCalculations';
 const TestCall = () => {
@@ -25,7 +26,8 @@ const TestCall = () => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const { toast } = useToast();
   const { user } = useAuth();
-  const { history, addToHistory, updateHistoryItem, clearHistory } = useTestCallHistory();
+  // Temporarily removing test call history to fix module loading issue
+  // const { history, addToHistory, updateHistoryItem, clearHistory } = useTestCallHistory();
 
   // Fetch user balance
   const fetchBalance = async () => {
@@ -133,12 +135,12 @@ const TestCall = () => {
         // Store conversation ID for later retrieval
         setConversationId(data.conversationId);
         
-        // Add to history
-        addToHistory({
-          conversationId: data.conversationId,
-          agentId,
-          phoneNumber,
-        });
+        // Temporarily disabled history feature
+        // addToHistory({
+        //   conversationId: data.conversationId,
+        //   agentId,
+        //   phoneNumber,
+        // });
         
         // Clear form after successful call
         setAgentId('');
@@ -207,10 +209,10 @@ const TestCall = () => {
       setConversation(data);
       setConversationId(idToFetch);
       
-      // Update history with cost if available
-      if (data.cost) {
-        updateHistoryItem(idToFetch, { cost: parseFloat(data.cost) });
-      }
+      // Temporarily disabled history feature
+      // if (data.cost) {
+      //   updateHistoryItem(idToFetch, { cost: parseFloat(data.cost) });
+      // }
       
       toast({
         title: "Conversația a fost încărcată cu succes!",
