@@ -34,6 +34,7 @@ import { ContactsList } from '@/components/outbound/ContactsList';
 import { CSVUploadSection } from '@/components/outbound/CSVUploadSection';
 import { AgentSelector } from '@/components/outbound/AgentSelector';
 import { PhoneSelector } from '@/components/outbound/PhoneSelector';
+import { EnhancedValidationStatus } from '@/components/outbound/EnhancedValidationStatus';
 interface Contact {
   id: string;
   name: string;
@@ -166,26 +167,86 @@ const Outbound = () => {
     }
   };
   const handleBatchProcess = async () => {
-    if (!selectedAgentId || selectedContacts.size === 0) {
+    console.log('🚀 handleBatchProcess - START with Enhanced Validation:', {
+      selectedAgentId,
+      selectedAgentIdLength: selectedAgentId?.length || 0,
+      selectedPhoneId,
+      selectedPhoneIdLength: selectedPhoneId?.length || 0,
+      selectedContactsSize: selectedContacts.size,
+      selectedContactsArray: Array.from(selectedContacts),
+      contactsLength: contacts.length,
+      userExists: !!user,
+      userId: user?.id,
+      timestamp: new Date().toISOString()
+    });
+
+    // Enhanced validation with detailed error messages
+    if (!selectedAgentId || selectedAgentId.trim() === '') {
+      console.log('❌ VALIDATION FAILED: Agent ID missing or empty');
       toast({
-        title: "Eroare",
-        description: "Trebuie să selectați un agent și cel puțin un contact",
+        title: "Agent lipsește",
+        description: "Trebuie să selectați un agent AI pentru a putea iniția apelurile. Verificați dacă aveți agenți creați în secțiunea 'Agenții Kalina'.",
         variant: "destructive"
       });
       return;
     }
-    if (!selectedPhoneId) {
+
+    if (selectedContacts.size === 0) {
+      console.log('❌ VALIDATION FAILED: No contacts selected');
       toast({
-        title: "Eroare",
-        description: "Trebuie să selectați un număr de telefon pentru apeluri",
+        title: "Contacte lipsesc",
+        description: "Trebuie să selectați cel puțin un contact din lista încărcată pentru a putea iniția apelurile.",
         variant: "destructive"
       });
       return;
     }
+
+    if (!selectedPhoneId || selectedPhoneId.trim() === '') {
+      console.log('❌ VALIDATION FAILED: Phone ID missing or empty');
+      toast({
+        title: "Număr de telefon lipsește",
+        description: "Trebuie să selectați un număr de telefon pentru apeluri. Verificați secțiunea 'Numere de Telefon' pentru a configura unul.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Success validation message
+    console.log('✅ VALIDATION PASSED: All requirements met');
+    toast({
+      title: "Validare completă",
+      description: `Inițiere campanie cu ${selectedContacts.size} contacte folosind agentul selectat`,
+    });
+
     setBatchStartTime(new Date());
     const contactsToProcess = contacts.filter(c => selectedContacts.has(c.id));
-    await processBatchCalls(contactsToProcess, selectedAgentId);
+    
+    console.log('📞 STARTING BATCH PROCESSING:', {
+      contactsToProcess: contactsToProcess.map(c => ({ name: c.name, phone: c.phone })),
+      selectedAgentId,
+      batchStartTime: new Date().toISOString()
+    });
+
+    try {
+      await processBatchCalls(contactsToProcess, selectedAgentId);
+      
+      // Success message
+      console.log('✅ BATCH PROCESSING COMPLETED');
+      toast({
+        title: "Procesare finalizată",
+        description: `Campania cu ${contactsToProcess.length} contacte a fost finalizată`,
+      });
+    } catch (error) {
+      console.error('❌ BATCH PROCESSING ERROR:', error);
+      toast({
+        title: "Eroare în procesare",
+        description: `A apărut o eroare: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+
     setTimeout(() => {
+      console.log('🔄 Refreshing call history...');
       refetchHistory();
     }, 2000);
   };
@@ -422,6 +483,16 @@ const Outbound = () => {
                     </div>
                   ) : (
                     <div className="space-y-6">
+                      {/* Enhanced Validation Status */}
+                      <EnhancedValidationStatus
+                        agentValid={!!selectedAgentId && selectedAgentId.trim() !== ''}
+                        phoneValid={!!selectedPhoneId && selectedPhoneId.trim() !== ''}
+                        contactsValid={selectedContacts.size > 0}
+                        selectedAgentId={selectedAgentId}
+                        selectedPhoneId={selectedPhoneId}
+                        selectedContactsCount={selectedContacts.size}
+                      />
+
                       {/* Agent and Phone Configuration */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
