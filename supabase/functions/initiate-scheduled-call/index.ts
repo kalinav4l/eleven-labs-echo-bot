@@ -92,7 +92,103 @@ serve(async (req) => {
     // Configure phone number for call - use test number for test calls
     let agentPhoneId, callerNumber;
 
-    // Validate agent exists first
+    // If caller_number is provided (for test calls), use it directly
+    if (caller_number) {
+      console.log('Using provided caller_number for test call:', caller_number)
+      
+      // Look up the phone configuration for the provided caller_number
+      const { data: phoneConfig, error: phoneConfigError } = await supabase
+        .from('phone_numbers')
+        .select('elevenlabs_phone_id, phone_number')
+        .eq('elevenlabs_phone_id', caller_number)
+        .eq('status', 'active')
+        .single()
+
+      if (phoneConfigError || !phoneConfig) {
+        console.error('❌ Error finding phone configuration for caller_number:', phoneConfigError)
+        return new Response(
+          JSON.stringify({ 
+            error: `Nu s-a putut găsi configurația pentru numărul de test ${caller_number}`,
+            success: false,
+            details: phoneConfigError?.message || 'Phone configuration not found'
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        )
+      }
+
+      agentPhoneId = phoneConfig.elevenlabs_phone_id
+      callerNumber = phoneConfig.phone_number
+      console.log('✅ Using test phone configuration:', { agentPhoneId, callerNumber })
+    } else {
+      // Original logic for non-test calls - get user's phone number from database
+      console.log('Looking up user phone numbers for regular call...')
+
+      // Get user's phone number from database (for regular calls)
+      const { data: userPhoneNumbers, error: phoneError } = await supabase
+        .from('phone_numbers')
+        .select('elevenlabs_phone_id, phone_number')
+        .eq('user_id', user_id)
+        .eq('status', 'active')
+        .order('is_primary', { ascending: false }) // Prefer primary phone numbers
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (phoneError) {
+        console.error('❌ Error fetching user phone numbers:', phoneError);
+        return new Response(
+          JSON.stringify({ 
+            error: 'Nu s-au putut găsi numerele de telefon ale utilizatorului',
+            success: false,
+            details: phoneError.message
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      if (!userPhoneNumbers || userPhoneNumbers.length === 0) {
+        console.error('❌ No active phone numbers found for user:', user_id);
+        return new Response(
+          JSON.stringify({ 
+            error: 'Nu aveți niciun număr de telefon activ înregistrat. Vă rugăm să adăugați un număr de telefon în secțiunea Phone Numbers.',
+            success: false,
+            details: 'Utilizatorul nu are numere de telefon active'
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      const userPhone = userPhoneNumbers[0];
+      agentPhoneId = userPhone.elevenlabs_phone_id;
+      callerNumber = userPhone.phone_number;
+
+      if (!agentPhoneId) {
+        console.error('❌ Phone number missing ElevenLabs configuration');
+        return new Response(
+          JSON.stringify({ 
+            error: 'Numărul de telefon nu este configurat corect cu ElevenLabs. Vă rugăm să reconfigurați numărul în secțiunea Phone Numbers.',
+            success: false,
+            details: 'Phone number missing elevenlabs_phone_id'
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      console.log('User phone details:', { agentPhoneId, callerNumber, user_id })
+    }
+
+    // Validate agent exists (for both test and regular calls)
     const { data: agentData, error: agentError } = await supabase
       .from('kalina_agents')
       .select('elevenlabs_agent_id, name')
@@ -115,68 +211,7 @@ serve(async (req) => {
       )
     }
 
-    console.log('✅ Agent found:', { id: agentData.elevenlabs_agent_id, name: agentData.name })
-
-    // Get user's phone number from database (for both test and regular calls)
-    const { data: userPhoneNumbers, error: phoneError } = await supabase
-      .from('phone_numbers')
-      .select('elevenlabs_phone_id, phone_number')
-      .eq('user_id', user_id)
-      .eq('status', 'active')
-      .order('is_primary', { ascending: false }) // Prefer primary phone numbers
-      .order('created_at', { ascending: false })
-      .limit(1);
-
-    if (phoneError) {
-      console.error('❌ Error fetching user phone numbers:', phoneError);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Nu s-au putut găsi numerele de telefon ale utilizatorului',
-          success: false,
-          details: phoneError.message
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    if (!userPhoneNumbers || userPhoneNumbers.length === 0) {
-      console.error('❌ No active phone numbers found for user:', user_id);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Nu aveți niciun număr de telefon activ înregistrat. Vă rugăm să adăugați un număr de telefon în secțiunea Phone Numbers.',
-          success: false,
-          details: 'Utilizatorul nu are numere de telefon active'
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    const userPhone = userPhoneNumbers[0];
-    agentPhoneId = userPhone.elevenlabs_phone_id;
-    callerNumber = userPhone.phone_number;
-
-    if (!agentPhoneId) {
-      console.error('❌ Phone number missing ElevenLabs configuration');
-      return new Response(
-        JSON.stringify({ 
-          error: 'Numărul de telefon nu este configurat corect cu ElevenLabs. Vă rugăm să reconfigurați numărul în secțiunea Phone Numbers.',
-          success: false,
-          details: 'Phone number missing elevenlabs_phone_id'
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    console.log('User phone details:', { agentPhoneId, callerNumber, user_id })
+    console.log('✅ Agent validated:', { id: agentData.elevenlabs_agent_id, name: agentData.name })
 
     // Fetch contact information from the contacts database
     let contactInfo = null
