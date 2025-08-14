@@ -161,9 +161,9 @@ export const useCallInitiation = ({
       targetAgentId
     });
     
-    // Wait 30 seconds for call to process
+    // REDUCED DELAY: Wait only 10 seconds for faster feedback
     setCurrentCallStatus(`⏳ Procesează apel ${contact.name}...`);
-    await new Promise(resolve => setTimeout(resolve, 30000));
+    await new Promise(resolve => setTimeout(resolve, 10000));
     
     // Get existing conversation IDs to compare
     const existingConversationIds = await getExistingConversationIds();
@@ -311,8 +311,14 @@ export const useCallInitiation = ({
     }
   };
 
-  // Enhanced batch processing with detailed logging
+  // Enhanced batch processing with instant feedback
   const processBatchCalls = useCallback(async (contacts: Contact[], targetAgentId: string) => {
+    // INSTANT FEEDBACK: Toast imediat când se apasă butonul
+    toast({
+      title: "⏳ Inițiez apelurile...",
+      description: `Pornesc procesarea pentru ${contacts.length} contacte`,
+    });
+
     logStep('START: Batch processing initiated', { 
       contactCount: contacts.length,
       targetAgentId 
@@ -331,6 +337,14 @@ export const useCallInitiation = ({
       return;
     }
 
+    // INSTANT STATE UPDATES: Set states immediately
+    setIsProcessingBatch(true);
+    setIsPaused(false);
+    setIsStopped(false);
+    setTotalCalls(contacts.length);
+    setCurrentProgress(0);
+    setCurrentCallStatus('🚀 Pornind campania...');
+
     // Validate user has phone number before starting batch
     if (user?.id) {
       const phoneValidation = await validateUserHasPhoneNumber(user.id);
@@ -340,21 +354,15 @@ export const useCallInitiation = ({
           description: phoneValidation.error || "Nu aveți un număr de telefon înregistrat",
           variant: "destructive",
         });
+        setIsProcessingBatch(false);
         return;
       }
       
       toast({
-        title: "Număr de telefon găsit",
+        title: "✅ Număr de telefon găsit",
         description: `Apelurile vor fi făcute de pe: ${phoneValidation.phoneNumber?.phone_number}`,
       });
     }
-
-    setIsProcessingBatch(true);
-    setIsPaused(false);
-    setIsStopped(false);
-    setTotalCalls(contacts.length);
-    setCurrentProgress(0);
-    setCurrentCallStatus('Inițiere procesare optimizată...');
     
     // Initialize all contacts with 'waiting' status
     const initialStatuses: CallStatus[] = contacts.map(contact => ({
@@ -460,6 +468,13 @@ export const useCallInitiation = ({
             ));
             
             setCurrentCallStatus(`❌ Eroare Supabase pentru ${contact.name}: ${callInitError.message}`);
+            
+            // INSTANT ERROR FEEDBACK
+            toast({
+              title: "❌ Eroare tehnică",
+              description: `Problemă la inițierea apelului către ${contact.name}`,
+              variant: "destructive",
+            });
             continue;
           }
           
@@ -478,12 +493,28 @@ export const useCallInitiation = ({
             ));
             
             setCurrentCallStatus(`❌ Apel eșuat pentru ${contact.name}: ${callInitData?.error}`);
+            
+            // DIFFERENTIATED ERROR FEEDBACK for busy vs failed
+            const isBusyError = callInitData?.error?.includes('BUSY') || callInitData?.error?.includes('UNAVAILABLE');
+            toast({
+              title: isBusyError ? "📞 Număr ocupat" : "❌ Apel eșuat",
+              description: isBusyError 
+                ? `${contact.name} este ocupat/indisponibil momentan`
+                : `Eroare la apelul către ${contact.name}: ${callInitData?.error}`,
+              variant: isBusyError ? "default" : "destructive",
+            });
             continue;
           }
 
           logStep(`BATCH CONTACT ${i + 1}: Call initiated successfully`, { 
             conversationId: callInitData.conversationId,
             contactName: contact.name 
+          });
+
+          // INSTANT SUCCESS FEEDBACK
+          toast({
+            title: "📞 Apel inițiat",
+            description: `Apelul către ${contact.name} a fost trimis către ElevenLabs`,
           });
 
           // STEP 3: Update status and start monitoring

@@ -221,10 +221,14 @@ const Outbound = () => {
     setBatchStartTime(new Date());
     const contactsToProcess = contacts.filter(c => selectedContacts.has(c.id));
     
+    // Set start time for instant feedback
+    const startTime = new Date();
+    setBatchStartTime(startTime);
+    
     console.log('📞 STARTING BATCH PROCESSING:', {
       contactsToProcess: contactsToProcess.map(c => ({ name: c.name, phone: c.phone })),
       selectedAgentId,
-      batchStartTime: new Date().toISOString()
+      batchStartTime: startTime.toISOString()
     });
 
     try {

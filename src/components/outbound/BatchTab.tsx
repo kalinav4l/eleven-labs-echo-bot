@@ -5,6 +5,7 @@ import { Phone, Loader2 } from 'lucide-react';
 import { CSVUploadSection } from './CSVUploadSection';
 import { ContactsList } from './ContactsList';
 import { BatchCallProgress } from './BatchCallProgress';
+import { RealTimeProgressStatus } from './RealTimeProgressStatus';
 
 interface Contact {
   id: string;
@@ -39,6 +40,7 @@ interface BatchTabProps {
   totalCalls: number;
   currentCallStatus: string;
   callStatuses: CallStatus[];
+  startTime?: Date;
 }
 
 export const BatchTab: React.FC<BatchTabProps> = ({
@@ -55,6 +57,7 @@ export const BatchTab: React.FC<BatchTabProps> = ({
   totalCalls,
   currentCallStatus,
   callStatuses,
+  startTime,
 }) => {
   // Enhanced validation with detailed logging
   const agentValid = agentId && agentId.trim() !== '';
@@ -90,9 +93,9 @@ export const BatchTab: React.FC<BatchTabProps> = ({
     switch (buttonState) {
       case 'processing':
         return {
-          text: `Monitorizează... (${currentProgress}/${totalCalls})`,
+          text: `🔄 Se procesează... (${currentProgress}/${totalCalls})`,
           icon: <Loader2 className="w-4 h-4 mr-2 animate-spin" />,
-          className: "w-full bg-blue-600 hover:bg-blue-700 text-white"
+          className: "w-full bg-primary text-primary-foreground cursor-wait"
         };
       case 'no_agent':
         return {
@@ -142,14 +145,13 @@ export const BatchTab: React.FC<BatchTabProps> = ({
 
           {/* Enhanced Real-time Status Display */}
           {isProcessingBatch && (
-            <BatchCallProgress
+            <RealTimeProgressStatus
               currentProgress={currentProgress}
               totalCalls={totalCalls}
               currentCallStatus={currentCallStatus}
               callStatuses={callStatuses}
+              startTime={startTime}
               isProcessing={isProcessingBatch}
-              isPaused={false}
-              isStopped={false}
             />
           )}
 
@@ -167,10 +169,16 @@ export const BatchTab: React.FC<BatchTabProps> = ({
               });
               
               if (canProcessBatch) {
-                console.log('✅ Proceeding with batch process...');
+                console.log('✅ Proceeding with batch process - INSTANT FEEDBACK...');
                 onBatchProcess();
               } else {
                 console.log('❌ Cannot process batch - validation failed');
+                // INSTANT VALIDATION FEEDBACK
+                if (!agentValid) {
+                  alert('⚠️ Vă rugăm să selectați un agent înainte de a porni campania');
+                } else if (!contactsValid) {
+                  alert('⚠️ Vă rugăm să selectați cel puțin un contact pentru apeluri');
+                }
               }
             }}
             disabled={!canProcessBatch}
