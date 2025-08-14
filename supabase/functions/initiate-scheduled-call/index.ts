@@ -73,20 +73,58 @@ serve(async (req) => {
     const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY')
     
     console.log('API Key exists:', !!elevenLabsApiKey)
+    console.log('API Key length:', elevenLabsApiKey ? elevenLabsApiKey.length : 'undefined')
+    console.log('API Key preview:', elevenLabsApiKey ? `${elevenLabsApiKey.substring(0, 8)}...` : 'none')
     
-    if (!elevenLabsApiKey) {
-      console.error('❌ ElevenLabs API key not configured')
+    if (!elevenLabsApiKey || elevenLabsApiKey.length < 10) {
+      console.error('❌ ElevenLabs API key not configured or invalid')
       return new Response(
         JSON.stringify({ 
-          error: 'ElevenLabs API key nu este configurat în Supabase Secrets. Configurați ELEVENLABS_API_KEY în Edge Functions Secrets.',
+          error: 'ElevenLabs API key nu este configurat corect în Supabase Secrets. Verificați că ELEVENLABS_API_KEY este setat corect.',
           success: false,
-          details: 'Mergeți la Project Settings > Edge Functions > Manage secrets și adăugați ELEVENLABS_API_KEY'
+          details: 'API key lipsă sau invalid. Mergeți la Project Settings > Edge Functions > Manage secrets și actualizați ELEVENLABS_API_KEY'
         }),
         {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       )
+    }
+
+    // Test API key validity by making a simple request first
+    console.log('🔍 Testing ElevenLabs API key validity...')
+    try {
+      const testResponse = await fetch('https://api.elevenlabs.io/v1/user', {
+        method: 'GET',
+        headers: {
+          'xi-api-key': elevenLabsApiKey,
+        },
+      })
+      
+      console.log('🔑 API key test response status:', testResponse.status)
+      
+      if (testResponse.status === 401) {
+        console.error('❌ ElevenLabs API key is invalid (401 Unauthorized)')
+        return new Response(
+          JSON.stringify({ 
+            error: 'ElevenLabs API key este invalid. Verificați că key-ul este corect în setările Supabase.',
+            success: false,
+            details: 'API key test a returnat 401 Unauthorized. Actualizați ELEVENLABS_API_KEY în Edge Functions Secrets.'
+          }),
+          {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        )
+      } else if (!testResponse.ok) {
+        console.error('❌ ElevenLabs API key test failed:', testResponse.status)
+        console.error('📄 Response:', await testResponse.text())
+      } else {
+        console.log('✅ ElevenLabs API key is valid')
+      }
+    } catch (testError) {
+      console.error('❌ Failed to test ElevenLabs API key:', testError)
+      // Continue with the call attempt anyway
     }
 
     // Configure phone number for call - use test number for test calls
