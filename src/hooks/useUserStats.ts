@@ -48,7 +48,7 @@ export const useUserStats = () => {
     console.log('📊 Setting up real-time subscription for user statistics');
     
     const channel = supabase
-      .channel('user-statistics-realtime')
+      .channel(`user-statistics-${user.id}`)
       .on(
         'postgres_changes',
         {
@@ -68,7 +68,7 @@ export const useUserStats = () => {
       console.log('📊 Cleaning up user statistics real-time subscription');
       supabase.removeChannel(channel);
     };
-  }, [user?.id, statsQuery]);
+  }, [user?.id]);
 
   return statsQuery;
 };

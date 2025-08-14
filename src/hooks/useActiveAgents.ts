@@ -139,7 +139,7 @@ export const useActiveAgents = () => {
     console.log('🔄 Abonare la actualizări realtime pentru agenții activi');
 
     const channel = supabase
-      .channel('active_agents_updates')
+      .channel(`active_agents_${user.id}`)
       .on(
         'postgres_changes',
         {
@@ -197,13 +197,15 @@ export const useActiveAgents = () => {
 
   // Încarc agenții la mount și mă abonez la actualizări
   useEffect(() => {
+    if (!user?.id) return;
+    
     loadActiveAgents();
     const unsubscribe = subscribeToUpdates();
     
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [loadActiveAgents, subscribeToUpdates]);
+  }, [user?.id]);
 
   // Curat agenții inactivi (mai vechi de 10 minute)
   const cleanupInactiveAgents = useCallback(async () => {

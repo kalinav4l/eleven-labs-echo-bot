@@ -213,13 +213,15 @@ export const useCampaignPersistence = (sessionId: string) => {
 
   // Încarc sesiunea la mount și mă abonez la actualizări
   useEffect(() => {
+    if (!user?.id || !sessionId) return;
+    
     loadCampaignSession();
     const unsubscribe = subscribeToUpdates();
     
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [loadCampaignSession, subscribeToUpdates]);
+  }, [user?.id, sessionId]);
 
   return {
     campaignSession,
