@@ -38,7 +38,7 @@ export const useUserBalance = () => {
     console.log('💰 Setting up real-time subscription for user balance');
     
     const channel = supabase
-      .channel(`user-balance-${user.id}`)
+      .channel('user-balance-realtime')
       .on(
         'postgres_changes',
         {
@@ -71,7 +71,7 @@ export const useUserBalance = () => {
       console.log('💰 Cleaning up balance real-time subscription');
       supabase.removeChannel(channel);
     };
-  }, [user?.id]);
+  }, [user?.id, balanceQuery]);
 
   return balanceQuery;
 };

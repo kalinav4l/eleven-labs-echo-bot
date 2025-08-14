@@ -4,9 +4,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 import { KalinaWelcomeAnimation } from "./components/KalinaWelcomeAnimation";
 import UserActivityTracker from "./components/analytics/UserActivityTracker";
-import LoadingSpinner from './components/LoadingSpinner';
-import { SidebarProvider } from "@/components/ui/sidebar";
-import DashboardLayout from './components/DashboardLayout';
 
 // Lazy-loaded route components to reduce initial bundle size
 const Auth = React.lazy(() => import("./pages/Auth"));
@@ -56,50 +53,41 @@ function AppWithWelcome() {
           onComplete={() => setShowWelcome(false)}
         />
       )}
-      <Suspense fallback={
-        <div className="flex items-center justify-center min-h-screen">
-          <LoadingSpinner size="lg" message="Se încarcă aplicația..." variant="primary" />
-        </div>
-      }>
+      <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
         <Routes>
           <Route path="/" element={<Navigate to="/account" replace />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/admin" element={<Admin />} />
 
-          {/* Account routes wrapped in DashboardLayout */}
-          <Route path="/account/*" element={
-            <DashboardLayout>
-              <Routes>
-                <Route index element={<Account />} />
-                <Route path="kalina-agents" element={<KalinaAgents />} />
-                <Route path="agent-edit/:agentId" element={<AgentEdit />} />
-                <Route path="conversation-analytics" element={<ConversationAnalytics />} />
-                <Route path="actiuni" element={<Actiuni />} />
-                <Route path="conversation/:conversationId" element={<ConversationDetail />} />
-                <Route path="transcript" element={<Transcript />} />
-                <Route path="outbound" element={<Outbound />} />
-                <Route path="contacts" element={<Contacts />} />
-                <Route path="calls" element={<Calls />} />
-                <Route path="scraping" element={<Scraping />} />
-                <Route path="phone-numbers" element={<PhoneNumbers />} />
-                <Route path="test-call" element={<TestCall />} />
-                <Route path="construction" element={<Construction />} />
-                <Route path="webhooks" element={<Webhooks />} />
-                <Route path="calendar" element={<Calendar />} />
-                <Route path="agent-ai" element={<AgentAI />} />
-                <Route path="gmail" element={<Gmail />} />
-                <Route path="agent-consultant" element={<AgentConsultant />} />
-                <Route path="callback-scheduler" element={<CallbackScheduler />} />
-                <Route path="documentation" element={<Documentation />} />
-                <Route path="voice-demo" element={<VoiceDemo />} />
-                <Route path="agent-prompts" element={<AgentPrompts />} />
-                <Route path="workflow-database" element={<WorkflowDatabase />} />
-                <Route path="date" element={<DataPage />} />
-                <Route path="settings" element={<AccountSettings />} />
-              </Routes>
-            </DashboardLayout>
-          } />
+          {/* Account routes */}
+          <Route path="/account" element={<Account />} />
+          <Route path="/account/*" element={<Account />} />
+          <Route path="/account/kalina-agents" element={<KalinaAgents />} />
+          <Route path="/account/agent-edit/:agentId" element={<AgentEdit />} />
+          <Route path="/account/conversation-analytics" element={<ConversationAnalytics />} />
+          <Route path="/account/actiuni" element={<Actiuni />} />
+          <Route path="/account/conversation/:conversationId" element={<ConversationDetail />} />
+          <Route path="/account/transcript" element={<Transcript />} />
+          <Route path="/account/outbound" element={<Outbound />} />
+          <Route path="/account/contacts" element={<Contacts />} />
+          <Route path="/account/calls" element={<Calls />} />
+          <Route path="/account/scraping" element={<Scraping />} />
+          <Route path="/account/phone-numbers" element={<PhoneNumbers />} />
+          <Route path="/account/test-call" element={<TestCall />} />
+          <Route path="/account/construction" element={<Construction />} />
+          <Route path="/account/webhooks" element={<Webhooks />} />
+          <Route path="/account/calendar" element={<Calendar />} />
+          <Route path="/account/agent-ai" element={<AgentAI />} />
+          <Route path="/account/gmail" element={<Gmail />} />
+          <Route path="/account/agent-consultant" element={<AgentConsultant />} />
+          <Route path="/account/callback-scheduler" element={<CallbackScheduler />} />
+          <Route path="/account/documentation" element={<Documentation />} />
+          <Route path="/account/voice-demo" element={<VoiceDemo />} />
+          <Route path="/account/agent-prompts" element={<AgentPrompts />} />
+          <Route path="/account/workflow-database" element={<WorkflowDatabase />} />
+          <Route path="/account/date" element={<DataPage />} />
+          <Route path="/account/settings" element={<AccountSettings />} />
 
           {/* Catch-all for 404 */}
           <Route path="*" element={<NotFound />} />
@@ -114,9 +102,7 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
-          <SidebarProvider>
-            <AppWithWelcome />
-          </SidebarProvider>
+          <AppWithWelcome />
           <Toaster />
         </QueryClientProvider>
       </AuthProvider>

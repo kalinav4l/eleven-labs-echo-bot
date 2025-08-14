@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Home, Settings, Brain, FileText, Phone, TrendingUp, CalendarDays, 
@@ -51,7 +51,7 @@ const workflowItems = [
   { title: "Webhooks", url: "/account/webhooks", icon: Network },
 ];
 
-const AppSidebar = memo(function AppSidebar() {
+export function AppSidebar() {
   const location = useLocation();
   const { user } = useAuth();
   const isMobile = useIsMobile();
@@ -225,6 +225,4 @@ const AppSidebar = memo(function AppSidebar() {
       </SidebarFooter>
     </Sidebar>
   );
-});
-
-export { AppSidebar };
+}

@@ -41,7 +41,7 @@ export default function UserActivityModal({ open, userId, onOpenChange }: Props)
   useEffect(() => {
     if (!open || !userId) return;
     const channel = supabase
-      .channel(`user-activity-modal-${userId}`)
+      .channel('user-activity-modal')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_activity_events', filter: `user_id=eq.${userId}` }, (payload: any) => {
         setEvents(prev => [payload.new as any, ...prev].slice(0, 200));
       })
