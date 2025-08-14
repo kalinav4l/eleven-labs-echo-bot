@@ -8,17 +8,17 @@ const AIAgentInterface = () => {
   
   const conversation = useConversation({
     onConnect: () => {
-      console.log('Connected to AI agent');
+      
     },
     onDisconnect: () => {
-      console.log('Disconnected from AI agent');
+      
       setIsActive(false);
     },
     onMessage: (message) => {
-      console.log('Message received:', message);
+      
     },
     onError: (error) => {
-      console.error('Conversation error:', error);
+      
     }
   });
 
