@@ -82,7 +82,7 @@ export default function UserActivityFeed() {
     fetchEvents();
 
     const channel = supabase
-      .channel('user-activity-realtime')
+      .channel(`user-activity-realtime-${Date.now()}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_activity_events' }, async (payload: any) => {
         const ev = payload.new as ActivityEvent;
         setEvents(prev => [ev, ...prev].slice(0, 50));

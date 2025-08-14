@@ -77,7 +77,7 @@ const DashboardLayout = ({
     checkUserStatus();
 
     // Set up real-time subscription to listen for changes
-    const subscription = supabase.channel('profile_changes').on('postgres_changes', {
+    const channel = supabase.channel(`profile_changes_${user?.id}`).on('postgres_changes', {
       event: 'UPDATE',
       schema: 'public',
       table: 'profiles',
@@ -89,8 +89,9 @@ const DashboardLayout = ({
         setUserBlocked(false);
       }
     }).subscribe();
+    
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [user]);
   const handleSignOut = async () => {
