@@ -486,23 +486,47 @@ export const useCallInitiation = ({
               contactName: contact.name 
             });
             
+            // Determine error type for better UX
+            const errorMessage = callInitData?.error || 'Eroare necunoscută';
+            const isBusyError = errorMessage.includes('BUSY') || errorMessage.includes('UNAVAILABLE') || errorMessage.includes('480');
+            const isAuthError = errorMessage.includes('auth retry') || errorMessage.includes('authentication');
+            const is486Error = errorMessage.includes('486');
+            
             setCallStatuses(prev => prev.map(status => 
               status.contactId === contact.id 
                 ? { ...status, status: 'failed', endTime: new Date() }
                 : status
             ));
             
-            setCurrentCallStatus(`❌ Apel eșuat pentru ${contact.name}: ${callInitData?.error}`);
+            let userFriendlyMessage = '';
+            let toastVariant: "default" | "destructive" = "destructive";
             
-            // DIFFERENTIATED ERROR FEEDBACK for busy vs failed
-            const isBusyError = callInitData?.error?.includes('BUSY') || callInitData?.error?.includes('UNAVAILABLE');
+            if (isBusyError || is486Error) {
+              userFriendlyMessage = `${contact.name} este ocupat sau indisponibil`;
+              toastVariant = "default";
+            } else if (isAuthError) {
+              userFriendlyMessage = `Problemă de autentificare ElevenLabs pentru ${contact.name}`;
+            } else {
+              userFriendlyMessage = `Eroare tehnică pentru ${contact.name}: ${errorMessage}`;
+            }
+            
+            setCurrentCallStatus(`❌ ${userFriendlyMessage}`);
+            
             toast({
-              title: isBusyError ? "📞 Număr ocupat" : "❌ Apel eșuat",
-              description: isBusyError 
-                ? `${contact.name} este ocupat/indisponibil momentan`
-                : `Eroare la apelul către ${contact.name}: ${callInitData?.error}`,
-              variant: isBusyError ? "default" : "destructive",
+              title: isBusyError || is486Error ? "📞 Număr ocupat" : "❌ Apel eșuat",
+              description: userFriendlyMessage,
+              variant: toastVariant,
             });
+            
+            // If it's an auth error, show warning about API key
+            if (isAuthError) {
+              toast({
+                title: "⚠️ Problemă autentificare",
+                description: "Verificați API key-ul ElevenLabs în setări",
+                variant: "destructive",
+              });
+            }
+            
             continue;
           }
 
@@ -524,15 +548,9 @@ export const useCallInitiation = ({
               : status
           ));
 
-            // STEP 4: Start monitoring
+            // STEP 4: Start monitoring (no 5-minute delay for faster processing)
             logStep(`BATCH CONTACT ${i + 1}: Starting conversation monitoring`, { contactName: contact.name });
             setCurrentCallStatus(`Monitorizează conversații noi pentru ${contact.name}...`);
-            
-            // Add 5-minute delay between calls (as requested)
-            if (i < contacts.length - 1) { // Don't delay after the last contact
-              setCurrentCallStatus(`⏰ Pauză de 5 minute între apeluri...`);
-              await new Promise(resolve => setTimeout(resolve, 5 * 60 * 1000)); // 5 minutes
-            }
           
           const newConversations = await monitorCall(targetAgentId, contact, callStartTime);
           
