@@ -1,8 +1,6 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
 import { Play, Pause, Volume2, Settings } from 'lucide-react';
 
 export const InteractiveDemo = () => {
@@ -33,13 +31,7 @@ export const InteractiveDemo = () => {
   return (
     <section className="py-24 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
+        <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             Experience AI in{' '}
             <span className="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
@@ -49,21 +41,15 @@ export const InteractiveDemo = () => {
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Listen to real conversations between our AI agents and customers. See how natural and effective they are.
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Demo Selection */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="space-y-6"
-          >
+          <div className="space-y-6 animate-fade-in">
             {demos.map((demo) => (
               <Card
                 key={demo.id}
-                className={`p-6 cursor-pointer transition-all duration-300 border-2 ${
+                className={`p-6 cursor-pointer transition-all duration-300 border-2 hover:scale-105 ${
                   selectedDemo === demo.id
                     ? 'border-primary bg-primary/5'
                     : 'border-border hover:border-primary/50'
@@ -80,15 +66,10 @@ export const InteractiveDemo = () => {
                 </div>
               </Card>
             ))}
-          </motion.div>
+          </div>
 
           {/* Audio Player */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
+          <div className="animate-fade-in">
             <Card className="p-8 bg-gradient-to-br from-primary/5 to-blue-500/5 border-2">
               <div className="space-y-6">
                 <div className="text-center">
@@ -123,7 +104,7 @@ export const InteractiveDemo = () => {
                   <Button
                     size="lg"
                     onClick={() => setIsPlaying(!isPlaying)}
-                    className="rounded-full w-16 h-16 bg-primary hover:bg-primary/90"
+                    className="rounded-full w-16 h-16 bg-primary hover:bg-primary/90 hover:scale-110 transition-transform"
                   >
                     {isPlaying ? (
                       <Pause className="w-6 h-6" />
@@ -132,7 +113,7 @@ export const InteractiveDemo = () => {
                     )}
                   </Button>
                   
-                  <Button variant="outline" size="icon" className="rounded-full">
+                  <Button variant="outline" size="icon" className="rounded-full hover:scale-110 transition-transform">
                     <Settings className="w-4 h-4" />
                   </Button>
                 </div>
@@ -144,7 +125,7 @@ export const InteractiveDemo = () => {
                 </div>
               </div>
             </Card>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>
