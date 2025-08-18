@@ -52,29 +52,6 @@ export const dynamicImportWithRetry = async <T>(
   throw lastError!;
 };
 
-// Component lazy loading with better error handling
-export const createLazyComponent = <T extends React.ComponentType<any>>(
-  importFn: () => Promise<{ default: T }>,
-  fallback?: React.ComponentType
-) => {
-  const LazyComponent = React.lazy(() => 
-    dynamicImportWithRetry(importFn)
-  );
-  
-  return (props: React.ComponentProps<T>) => (
-    <React.Suspense 
-      fallback={
-        fallback ? React.createElement(fallback) : 
-        <div className="flex items-center justify-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      }
-    >
-      <LazyComponent {...props} />
-    </React.Suspense>
-  );
-};
-
 // Resource hints optimizer
 export const optimizeResourceHints = () => {
   // DNS prefetch for external resources
