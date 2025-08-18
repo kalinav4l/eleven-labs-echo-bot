@@ -100,7 +100,7 @@ export const AgentTestCallModal: React.FC<AgentTestCallModalProps> = ({
           user_id: user.id,
           batch_processing: false,
           is_test_call: true,
-          caller_number: 'phnum_01jz5v97bgfmdsvyy3hb095k3c' // Always use moldcel number
+          caller_number: 'phnum_9501k2y60kzjfr98sybbze66vy2x' // Always use moldcel number
         }
       });
 
