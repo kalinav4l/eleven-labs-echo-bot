@@ -44,11 +44,12 @@ const AgentConsultant: React.FC = () => {
     selectedVoice,
     generatePrompt: async () => {
       if (promptMode === 'generate' && !generatedPrompt) {
-        return await generatePrompt({
+        const prompt = await generatePrompt({
           websiteUrl,
           agentRole: '',
           additionalPrompt: ''
         });
+        return prompt || `Tu ești un consultant AI pentru ${agentName}. Ajută clienții cu întrebările lor.`;
       }
       return generatedPrompt || `Tu ești un consultant AI pentru ${agentName}. Ajută clienții cu întrebările lor.`;
     }
