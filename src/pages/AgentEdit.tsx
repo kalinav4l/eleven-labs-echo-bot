@@ -30,12 +30,9 @@ import AgentAccessManagement from '@/components/agent/AgentAccessManagement';
 import { AgentResponse, LanguagePreset } from "@/types/dtos.ts";
 import { VoiceController } from "@/controllers/VoiceController";
 import { supabase } from '@/integrations/supabase/client';
+
 const AgentEdit = () => {
-  const {
-    agentId
-  } = useParams<{
-    agentId: string;
-  }>();
+  const { agentId } = useParams<{ agentId: string; }>();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -91,6 +88,7 @@ const AgentEdit = () => {
       setAdditionalLanguages(prev => prev.filter(lang => lang !== currentLanguage));
     }
   }, [agentData?.conversation_config?.agent?.language]);
+
   useEffect(() => {
     const fetchAgentData = async () => {
       if (!agentId) return;
@@ -169,9 +167,7 @@ const AgentEdit = () => {
   const handleAdditionalLanguagesChange = (newLanguages: string[]) => {
     setAdditionalLanguages(newLanguages);
     const defaultLanguage = agentData?.conversation_config?.agent?.language || 'en';
-    const updatedMessages = {
-      ...multilingualMessages
-    };
+    const updatedMessages = { ...multilingualMessages };
     newLanguages.forEach(language => {
       if (!updatedMessages[language]) {
         updatedMessages[language] = '';
@@ -184,11 +180,13 @@ const AgentEdit = () => {
     });
     setMultilingualMessages(updatedMessages);
   };
+
   const handleAgentDataRefresh = (refreshedAgentData: AgentResponse) => {
     setAgentData(refreshedAgentData);
     const parsedAdditionalLanguages = parseAdditionalLanguagesFromResponse(refreshedAgentData);
     setAdditionalLanguages(parsedAdditionalLanguages);
   };
+
   const handleSave = async () => {
     if (!agentId || !agentData) return;
     setIsSaving(true);
@@ -199,15 +197,14 @@ const AgentEdit = () => {
 
       // Update agent name in database if it was changed
       if (agentData.name) {
-        const {
-          error: updateError
-        } = await supabase.from('kalina_agents').update({
+        const { error: updateError } = await supabase.from('kalina_agents').update({
           name: agentData.name
         }).eq('elevenlabs_agent_id', agentId);
         if (updateError) {
           console.error('Error updating agent name in database:', updateError);
         }
       }
+      
       if (documents.length > 0) {
         await updateAgentKnowledgeBase(true);
       }
@@ -232,6 +229,7 @@ const AgentEdit = () => {
       setIsSaving(false);
     }
   };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -240,6 +238,7 @@ const AgentEdit = () => {
       event.target.value = '';
     }
   };
+
   const addManualDocument = async () => {
     if (!newDocName.trim() || !newDocContent.trim()) {
       toast({
@@ -256,12 +255,15 @@ const AgentEdit = () => {
       setIsAddingDoc(false);
     }
   };
+
   const handleRemoveDocument = (id: string) => {
     removeDocument(id);
   };
+
   const handleUpdateKnowledgeBase = async () => {
     await updateAgentKnowledgeBase(false);
   };
+
   const handleAddExistingDocument = () => {
     if (!selectedExistingDocId) {
       toast({
@@ -274,9 +276,11 @@ const AgentEdit = () => {
     addExistingDocument(selectedExistingDocId);
     setSelectedExistingDocId('');
   };
+
   const getAvailableExistingDocuments = () => {
     return existingDocuments.filter(doc => !selectedExistingDocuments.has(doc.id));
   };
+
   const handleMultilingualMessagesUpdate = (messages: Record<string, string>) => {
     setMultilingualMessages(messages);
     const defaultLanguage = agentData?.conversation_config?.agent?.language || 'en';
@@ -285,9 +289,8 @@ const AgentEdit = () => {
       firstMessage: defaultLanguageFirstMessage,
       language: defaultLanguage
     });
-    const language_presets: {
-      [key: string]: LanguagePreset;
-    } = Object.entries(messages).filter(([lang]) => lang !== defaultLanguage).reduce((acc, [lang, firstMessageText]) => {
+
+    const language_presets: { [key: string]: LanguagePreset; } = Object.entries(messages).filter(([lang]) => lang !== defaultLanguage).reduce((acc, [lang, firstMessageText]) => {
       acc[lang] = {
         overrides: {
           agent: {
@@ -300,9 +303,8 @@ const AgentEdit = () => {
         }
       };
       return acc;
-    }, {} as {
-      [key: string]: LanguagePreset;
-    });
+    }, {} as { [key: string]: LanguagePreset; });
+
     if (messages[defaultLanguage]) {
       setAgentData({
         ...agentData!,
@@ -317,6 +319,7 @@ const AgentEdit = () => {
       });
     }
   };
+
   const openMultilingualModal = () => {
     const defaultLanguage = agentData?.conversation_config?.agent?.language || 'en';
     const currentMessage = agentData?.conversation_config?.agent?.first_message || '';
@@ -327,25 +330,33 @@ const AgentEdit = () => {
     setMultilingualMessages(initialMessages);
     setIsMultilingualModalOpen(true);
   };
+
   if (isLoading) {
-    return <DashboardLayout>
+    return (
+      <DashboardLayout>
         <div className="p-4 lg:p-6 space-y-6">
           <div className="flex justify-center items-center min-h-[400px]">
             <div className="text-muted-foreground">Se încarcă agentul...</div>
           </div>
         </div>
-      </DashboardLayout>;
+      </DashboardLayout>
+    );
   }
+
   if (!agentData) {
-    return <DashboardLayout>
+    return (
+      <DashboardLayout>
         <div className="p-4 lg:p-6 space-y-6">
           <div className="flex justify-center items-center min-h-[400px]">
             <div className="text-muted-foreground">Agentul nu a fost găsit</div>
           </div>
         </div>
-      </DashboardLayout>;
+      </DashboardLayout>
+    );
   }
-  return <DashboardLayout>
+
+  return (
+    <DashboardLayout>
       <div className="p-4 lg:p-6 space-y-4 lg:space-y-6 lg:px-[240px] lg:my-[60px] py-[38px]">
         {/* Header - Mobile optimized */}
         <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
@@ -408,141 +419,177 @@ const AgentEdit = () => {
           </TabsContent>
 
           <TabsContent value="knowledge" className="space-y-4">
-
-            {/* Enhanced Knowledge Base Section - Mobile optimized */}
-        <Card className="liquid-glass">
-          <CardHeader>
-            <CardTitle className="text-foreground">Knowledge Base</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Oferă LLM-ului informații specifice domeniului pentru a-l ajuta să răspundă mai precis la întrebări.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <Label className="text-foreground font-medium">Retrieval-Augmented Generation (RAG)</Label>
-                <p className="text-xs text-muted-foreground">
-                  RAG mărește dimensiunea maximă a Knowledge Base-ului agentului. Agentul va avea acces la informații relevante din Knowledge Base în timpul generării răspunsului.
+            <Card className="liquid-glass">
+              <CardHeader>
+                <CardTitle className="text-foreground">Knowledge Base</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Oferă LLM-ului informații specifice domeniului pentru a-l ajuta să răspundă mai precis la întrebări.
                 </p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <Button variant="outline" size="sm" onClick={loadExistingDocuments} disabled={isLoadingExisting} className="flex items-center justify-center gap-2 h-12 hover:bg-accent/5 transition-colors">
-                  <Database className="w-4 h-4" />
-                  <span className="text-sm font-medium">
-                    {isLoadingExisting ? 'Se încarcă...' : 'Selectează existente'}
-                  </span>
-                </Button>
-                
-                <Button variant="outline" size="sm" onClick={() => setIsAddingDoc(true)} className="flex items-center justify-center gap-2 h-12 hover:bg-accent/5 transition-colors">
-                  <FileText className="w-4 h-4" />
-                  <span className="text-sm font-medium">Adaugă Manual</span>
-                </Button>
-                
-                <label className="cursor-pointer">
-                  <Button variant="outline" size="sm" className="flex items-center justify-center gap-2 w-full h-12 hover:bg-accent/5 transition-colors" asChild>
-                    <span>
-                      <Upload className="w-4 h-4" />
-                      <span className="text-sm font-medium">Încarcă Document</span>
-                    </span>
-                  </Button>
-                  <input type="file" className="hidden" accept=".txt,.md,.pdf,.doc,.docx" onChange={handleFileUpload} />
-                </label>
-              </div>
-            </div>
-
-            {/* Existing Documents Selection */}
-            {existingDocuments.length > 0 && <div className="p-4 border border-gray-200 rounded-lg space-y-3">
-                <Label className="text-foreground font-medium">Documente Existente în ElevenLabs</Label>
-                <div className="flex flex-col space-y-2 sm:flex-row sm:gap-2 sm:space-y-0">
-                  <Select value={selectedExistingDocId} onValueChange={setSelectedExistingDocId}>
-                    <SelectTrigger className="glass-input flex-1">
-                      <SelectValue placeholder="Selectează un document existent" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                      {getAvailableExistingDocuments().map(doc => <SelectItem key={doc.id} value={doc.id}>
-                          {doc.name} ({doc.type})
-                        </SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <Button onClick={handleAddExistingDocument} disabled={!selectedExistingDocId} size="sm" className="flex items-center gap-2 w-full sm:w-auto">
-                    <Plus className="w-4 h-4" />
-                    Adaugă
-                  </Button>
-                </div>
-              </div>}
-
-            {/* Manual Document Addition - Mobile optimized */}
-            {isAddingDoc && <div className="p-4 border border-gray-200 rounded-lg space-y-3">
-                <Input value={newDocName} onChange={e => setNewDocName(e.target.value)} placeholder="Numele documentului" className="glass-input" />
-                <Textarea value={newDocContent} onChange={e => setNewDocContent(e.target.value)} placeholder="Conținutul documentului..." className="glass-input min-h-[100px]" />
-                <div className="flex flex-col space-y-2 sm:flex-row sm:gap-2 sm:space-y-0">
-                  <Button onClick={addManualDocument} size="sm" className="w-full sm:w-auto">
-                    Adaugă
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => setIsAddingDoc(false)} className="w-full sm:w-auto">
-                    Anulează
-                  </Button>
-                </div>
-              </div>}
-
-            {/* Documents List - Mobile optimized */}
-            <div className="space-y-2">
-              {documents.length === 0 ? <p className="text-muted-foreground text-sm text-center py-8">
-                  Nu ai adăugat încă documente în Knowledge Base.
-                  <br />
-                  Adaugă documente pentru a îmbunătăți răspunsurile agentului.
-                </p> : documents.map(doc => <div key={doc.id} className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-3 bg-muted/30 rounded-lg border">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-foreground">
-                        {doc.name} 
-                        <span className="text-xs text-muted-foreground ml-2">
-                          ({doc.type === 'existing' ? 'existent' : doc.type})
-                        </span>
-                      </h4>
-                        <p className="text-xs text-blue-600 mt-1">
-                          ElevenLabs ID: {doc.elevenLabsId}
-                        </p>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={() => handleRemoveDocument(doc.id)} className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full sm:w-auto">
-                      <Trash2 className="w-4 h-4" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <Label className="text-foreground font-medium">Retrieval-Augmented Generation (RAG)</Label>
+                    <p className="text-xs text-muted-foreground">
+                      RAG mărește dimensiunea maximă a Knowledge Base-ului agentului. Agentul va avea acces la informații relevante din Knowledge Base în timpul generării răspunsului.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <Button variant="outline" size="sm" onClick={loadExistingDocuments} disabled={isLoadingExisting} className="flex items-center justify-center gap-2 h-12 hover:bg-accent/5 transition-colors">
+                      <Database className="w-4 h-4" />
+                      <span className="text-sm font-medium">
+                        {isLoadingExisting ? 'Se încarcă...' : 'Selectează existente'}
+                      </span>
                     </Button>
-                  </div>)}
-            </div>
+                    
+                    <Button variant="outline" size="sm" onClick={() => setIsAddingDoc(true)} className="flex items-center justify-center gap-2 h-12 hover:bg-accent/5 transition-colors">
+                      <FileText className="w-4 h-4" />
+                      <span className="text-sm font-medium">Adaugă Manual</span>
+                    </Button>
+                    
+                    <label className="cursor-pointer">
+                      <Button variant="outline" size="sm" className="flex items-center justify-center gap-2 w-full h-12 hover:bg-accent/5 transition-colors" asChild>
+                        <span>
+                          <Upload className="w-4 h-4" />
+                          <span className="text-sm font-medium">Încarcă Document</span>
+                        </span>
+                      </Button>
+                      <input type="file" className="hidden" accept=".txt,.md,.pdf,.doc,.docx" onChange={handleFileUpload} />
+                    </label>
+                  </div>
+                </div>
 
-            {documents.length > 0 && <Button onClick={handleUpdateKnowledgeBase} disabled={isUpdatingKnowledge || !agentId} className="bg-accent text-white hover:bg-accent/90 w-full">
-                {isUpdatingKnowledge ? <>
-                    <Save className="w-4 h-4 mr-2 animate-spin" />
-                    Se Actualizează Knowledge Base pentru {agentId}
-                  </> : <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Actualizează Knowledge Base în ElevenLabs
-                  </>}
-              </Button>}
-          </CardContent>
-        </Card>
+                {/* Existing Documents Selection */}
+                {existingDocuments.length > 0 && (
+                  <div className="p-4 border border-gray-200 rounded-lg space-y-3">
+                    <Label className="text-foreground font-medium">Documente Existente în ElevenLabs</Label>
+                    <div className="flex flex-col space-y-2 sm:flex-row sm:gap-2 sm:space-y-0">
+                      <Select value={selectedExistingDocId} onValueChange={setSelectedExistingDocId}>
+                        <SelectTrigger className="glass-input flex-1">
+                          <SelectValue placeholder="Selectează un document existent" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                          {getAvailableExistingDocuments().map(doc => (
+                            <SelectItem key={doc.id} value={doc.id}>
+                              {doc.name} ({doc.type})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button onClick={handleAddExistingDocument} disabled={!selectedExistingDocId} size="sm" className="flex items-center gap-2 w-full sm:w-auto">
+                        <Plus className="w-4 h-4" />
+                        Adaugă
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Manual Document Addition - Mobile optimized */}
+                {isAddingDoc && (
+                  <div className="p-4 border border-gray-200 rounded-lg space-y-3">
+                    <Input value={newDocName} onChange={e => setNewDocName(e.target.value)} placeholder="Numele documentului" className="glass-input" />
+                    <Textarea value={newDocContent} onChange={e => setNewDocContent(e.target.value)} placeholder="Conținutul documentului..." className="glass-input min-h-[100px]" />
+                    <div className="flex flex-col space-y-2 sm:flex-row sm:gap-2 sm:space-y-0">
+                      <Button onClick={addManualDocument} size="sm" className="w-full sm:w-auto">
+                        Adaugă
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setIsAddingDoc(false)} className="w-full sm:w-auto">
+                        Anulează
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Documents List - Mobile optimized */}
+                <div className="space-y-2">
+                  {documents.length === 0 ? (
+                    <p className="text-muted-foreground text-sm text-center py-8">
+                      Nu ai adăugat încă documente în Knowledge Base.
+                      <br />
+                      Adaugă documente pentru a îmbunătăți răspunsurile agentului.
+                    </p>
+                  ) : (
+                    documents.map(doc => (
+                      <div key={doc.id} className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-3 bg-muted/30 rounded-lg border">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-foreground">
+                            {doc.name} 
+                            <span className="text-xs text-muted-foreground ml-2">
+                              ({doc.type === 'existing' ? 'existent' : doc.type})
+                            </span>
+                          </h4>
+                          <p className="text-xs text-blue-600 mt-1">
+                            ElevenLabs ID: {doc.elevenLabsId}
+                          </p>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => handleRemoveDocument(doc.id)} className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full sm:w-auto">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {documents.length > 0 && (
+                  <Button onClick={handleUpdateKnowledgeBase} disabled={isUpdatingKnowledge || !agentId} className="bg-accent text-white hover:bg-accent/90 w-full">
+                    {isUpdatingKnowledge ? (
+                      <>
+                        <Save className="w-4 h-4 mr-2 animate-spin" />
+                        Se Actualizează Knowledge Base pentru {agentId}
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        Actualizează Knowledge Base în ElevenLabs
+                      </>
+                    )}
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         {/* Bottom Action Buttons - Mobile optimized */}
-        {hasChanges && <div className="flex flex-col space-y-2 lg:flex-row lg:justify-end lg:gap-4 lg:space-y-0 sticky bottom-4 bg-background/95 backdrop-blur-sm p-4 -mx-4 border-t">
+        {hasChanges && (
+          <div className="flex flex-col space-y-2 lg:flex-row lg:justify-end lg:gap-4 lg:space-y-0 sticky bottom-4 bg-background/95 backdrop-blur-sm p-4 -mx-4 border-t">
             <Button variant="outline" onClick={() => navigate('/account/kalina-agents')} className="glass-button border-border w-full lg:w-auto hover:bg-muted/50 transition-colors" disabled={isSaving}>
               Anulează
             </Button>
             <Button onClick={handleSave} disabled={isSaving} className="bg-accent text-white hover:bg-accent/90 w-full lg:w-auto transition-all duration-200 shadow-md hover:shadow-lg">
-              {isSaving ? <>
+              {isSaving ? (
+                <>
                   <Save className="w-4 h-4 mr-2 animate-spin" />
                   Se salvează...
-                </> : <>
+                </>
+              ) : (
+                <>
                   <Save className="w-4 h-4 mr-2" />
                   Salvează
-                </>}
+                </>
+              )}
             </Button>
-          </div>}
+          </div>
+        )}
 
         {/* Test Modal */}
         <AgentTestModal agent={agentData} isOpen={isTestModalOpen} onClose={() => setIsTestModalOpen(false)} />
 
         {/* Multilingual First Message Modal */}
-        <MultilingualFirstMessageModal isOpen={isMultilingualModalOpen} onClose={() => setIsMultilingualModalOpen(false)} defaultLanguage={agentData?.conversation_config?.agent?.language || 'en'} additionalLanguages={additionalLanguages} messages={multilingualMessages} onMessagesUpdate={handleMultilingualMessagesUpdate} agentId={agentId} agentData={agentData} onAgentDataRefresh={handleAgentDataRefresh} />
+        <MultilingualFirstMessageModal 
+          isOpen={isMultilingualModalOpen} 
+          onClose={() => setIsMultilingualModalOpen(false)} 
+          defaultLanguage={agentData?.conversation_config?.agent?.language || 'en'} 
+          additionalLanguages={additionalLanguages} 
+          messages={multilingualMessages} 
+          onMessagesUpdate={handleMultilingualMessagesUpdate} 
+          agentId={agentId} 
+          agentData={agentData} 
+          onAgentDataRefresh={handleAgentDataRefresh} 
+        />
       </div>
-    </DashboardLayout>;
+    </DashboardLayout>
+  );
 };
+
 export default AgentEdit;
