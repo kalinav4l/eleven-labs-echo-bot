@@ -2,8 +2,8 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Home, Settings, Brain, FileText, Phone, TrendingUp, CalendarDays, 
-  Network, MessageSquare, Workflow, BookOpen, Smartphone, Zap, PhoneForwarded, 
-  CreditCard, Shield, Mic, Sparkles, Database, Search, Mail, Activity
+  MessageSquare, BookOpen, Smartphone, Zap, 
+  CreditCard, Shield, Database, Search
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -24,9 +24,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 const aiAnalyticsItems = [
   { title: "AI Agents", url: "/account/kalina-agents", icon: Brain },
   { title: "Rapoarte", url: "/account/conversation-analytics", icon: TrendingUp },
-  { title: "Acțiuni", url: "/account/actiuni", icon: Activity },
   { title: "Chat AI", url: "/account/agent-ai", icon: MessageSquare },
-  { title: "Test Voce", url: "/account/voice-demo", icon: Mic },
 ];
 
 const communicationsItems = [
@@ -34,21 +32,16 @@ const communicationsItems = [
   { title: "Programări", url: "/account/calendar", icon: CalendarDays },
   { title: "Numere", url: "/account/phone-numbers", icon: Smartphone },
   { title: "Test Apel", url: "/account/test-call", icon: Zap },
-  { title: "Reprogramări", url: "/account/callback-scheduler", icon: PhoneForwarded },
 ];
 
 const dataToolsItems = [
-  { title: "Date", url: "/account/date", icon: Database },
   { title: "Transcrieri", url: "/account/transcript", icon: FileText },
   { title: "Extragere Date", url: "/account/scraping", icon: Search },
-  { title: "Poșta", url: "/account/gmail", icon: Mail },
 ];
 
 const workflowItems = [
-  { title: "Prompt-uri AI", url: "/account/agent-prompts", icon: Sparkles },
+  { title: "Prompt-uri AI", url: "/account/agent-prompts", icon: Brain },
   { title: "Baza de Date", url: "/account/workflow-database", icon: Database },
-  { title: "Configurare", url: "/account/construction", icon: Workflow },
-  { title: "Webhooks", url: "/account/webhooks", icon: Network },
 ];
 
 export function AppSidebar() {
