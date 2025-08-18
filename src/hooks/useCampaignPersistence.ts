@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
 import { toast } from '@/components/ui/use-toast';
@@ -32,7 +32,7 @@ export const useCampaignPersistence = (sessionId: string) => {
   const { user } = useAuth();
   const [campaignSession, setCampaignSession] = useState<CampaignSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubscribed, setIsSubscribed] = useState(false);
+  const channelRef = useRef<any>(null);
 
   // Generez un session ID unic pentru această campanie
   const generateSessionId = useCallback(() => {
@@ -157,12 +157,12 @@ export const useCampaignPersistence = (sessionId: string) => {
 
   // Mă abonez la actualizări în timp real
   const subscribeToUpdates = useCallback(() => {
-    if (!user || !sessionId || isSubscribed) return;
+    if (!user || !sessionId || channelRef.current) return;
 
     console.log('🔄 Abonare la actualizări realtime pentru sesiunea:', sessionId);
 
     const channel = supabase
-      .channel(`campaign_session_${sessionId}`)
+      .channel(`campaign_session_${sessionId}_${Date.now()}`) // Canal unic cu timestamp
       .on(
         'postgres_changes',
         {
@@ -203,23 +203,38 @@ export const useCampaignPersistence = (sessionId: string) => {
       )
       .subscribe();
 
-    setIsSubscribed(true);
+    channelRef.current = channel;
 
     return () => {
-      supabase.removeChannel(channel);
-      setIsSubscribed(false);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
-  }, [user, sessionId, isSubscribed]);
+  }, [user, sessionId]);
 
   // Încarc sesiunea la mount și mă abonez la actualizări
   useEffect(() => {
+    // Cleanup la schimbarea user/sessionId
+    if (!user || !sessionId) {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+      return;
+    }
+
     loadCampaignSession();
     const unsubscribe = subscribeToUpdates();
     
     return () => {
       if (unsubscribe) unsubscribe();
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
-  }, [loadCampaignSession, subscribeToUpdates]);
+  }, [user?.id, sessionId]); // Fixed dependencies
 
   return {
     campaignSession,
