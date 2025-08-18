@@ -106,7 +106,7 @@ export const PhoneTestCallModal: React.FC<PhoneTestCallModalProps> = ({
           <DialogDescription>
             Face un apel de test de pe numărul {phoneNumber}
             <br />
-            <span className="text-green-700 text-xs">📞 Apelul va fi făcut automat de pe: +37379325040 (moldcel)</span>
+            <span className="text-green-700 text-xs">📞 Apelul va fi făcut automat de pe: +37379315040 (moldcel)</span>
           </DialogDescription>
         </DialogHeader>
 
