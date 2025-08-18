@@ -197,13 +197,15 @@ export const useActiveAgents = () => {
 
   // Încarc agenții la mount și mă abonez la actualizări
   useEffect(() => {
+    if (!user) return;
+    
     loadActiveAgents();
     const unsubscribe = subscribeToUpdates();
     
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [user]); // Only depend on user, not on the functions
+  }, [user?.id]); // Only depend on user ID to prevent loops
 
   // Curat agenții inactivi (mai vechi de 10 minute)
   const cleanupInactiveAgents = useCallback(async () => {

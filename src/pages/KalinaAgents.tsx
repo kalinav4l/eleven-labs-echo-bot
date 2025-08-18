@@ -54,6 +54,7 @@ const KalinaAgents = () => {
     }
   };
   const handleDeleteAgent = (agent: any) => {
+    console.log('🔄 Butonul de ștergere apăsat pentru agentul:', agent);
     deleteAgent({
       id: agent.id,
       agent_id: agent.agent_id
