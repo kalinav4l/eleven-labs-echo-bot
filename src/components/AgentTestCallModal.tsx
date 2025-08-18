@@ -116,7 +116,7 @@ export const AgentTestCallModal: React.FC<AgentTestCallModalProps> = ({
       if (data?.success) {
         toast({
           title: "✅ Apel inițiat cu succes!",
-          description: `Apelul către ${phoneNumber} a fost pornit de pe +37379325040`,
+          description: `Apelul către ${phoneNumber} a fost pornit de pe +37379315040`,
           duration: 5000
         });
         setPhoneNumber('');
