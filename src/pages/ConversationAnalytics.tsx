@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCallHistory } from '@/hooks/useCallHistory';
 import { useConversationAnalyticsCache } from '@/hooks/useConversationAnalyticsCache';
@@ -33,7 +33,7 @@ const ConversationAnalytics = () => {
   const { toast } = useToast();
 
   // Aggregated stats from cache
-  const aggregated = React.useMemo(() => {
+  const aggregated = useMemo(() => {
     const items = cachedConversations || [];
     const total = items.length;
     const withAnalysis = items.filter(i => i.analysis).length;
