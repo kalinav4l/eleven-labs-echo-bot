@@ -167,7 +167,7 @@ export const AgentTestCallModal: React.FC<AgentTestCallModalProps> = ({
           <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
             <p className="text-sm text-gray-900 font-medium">Agent:</p>
             <p className="text-xs text-gray-600">{agent.name}</p>
-            <p className="text-xs text-green-700 mt-1">📞 Apelul va fi făcut de pe: +37379325040 (moldcel)</p>
+            <p className="text-xs text-green-700 mt-1">📞 Apelul va fi făcut de pe: +37379315040 (moldcel)</p>
           </div>
 
           {/* Balance and Cost Information */}
