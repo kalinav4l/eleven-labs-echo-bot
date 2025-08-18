@@ -44,8 +44,7 @@ ENV SUPABASE_URL=https://pwfczzxwjfxomqzhhwvj.supabase.co
 ENV SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3ZmN6enh3amZ4b21xemhod3ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0NDI5NDYsImV4cCI6MjA2NDAxODk0Nn0.IgOvpvhe3fW4OnRLN39eVfP5E1hq4lHat0lZH_1jQfs
 ENV VITE_ELEVENLABS_BASE_URL=https://api.elevenlabs.io/v1
 ENV VITE_DEFAULT_MODEL_ID=eleven_flash_v2_5
-ENV VITE_AGENT_PHONE_NUMBER_ID=phnum_01jxaeyg3feh3tmx39d4ky63rd
-
+ENV VITE_AGENT_PHONE_NUMBER_ID=phnum_9501k2y60kzjfr98sybbze66vy2x
 # Use the startup script as entrypoint
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
