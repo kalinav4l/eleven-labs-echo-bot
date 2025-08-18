@@ -1,5 +1,3 @@
-import React from 'react';
-
 // Advanced bundle optimization utilities
 
 // Tree shaking analyzer
@@ -54,7 +52,6 @@ export const dynamicImportWithRetry = async <T>(
 
 // Resource hints optimizer
 export const optimizeResourceHints = () => {
-  // DNS prefetch for external resources
   const dnsPrefetchDomains = [
     'fonts.googleapis.com',
     'fonts.gstatic.com',
@@ -68,7 +65,6 @@ export const optimizeResourceHints = () => {
     document.head.appendChild(link);
   });
   
-  // Preconnect to critical resources
   const preconnectDomains = [
     'https://api.elevenlabs.io',
     'https://fonts.googleapis.com'
@@ -97,12 +93,11 @@ export const inlineCriticalCSS = () => {
   document.head.insertBefore(style, document.head.firstChild);
 };
 
-// Webpack chunk optimization hints
+// Chunk optimization
 export const optimizeChunkLoading = () => {
-  // Prefetch non-critical chunks
   const prefetchChunks = [
     '/pages/Settings',
-    '/pages/Analytics',
+    '/pages/Analytics', 
     '/pages/Documentation'
   ];
   
@@ -114,7 +109,7 @@ export const optimizeChunkLoading = () => {
   });
 };
 
-// Service worker registration for aggressive caching
+// Service worker registration
 export const registerServiceWorker = async () => {
   if ('serviceWorker' in navigator) {
     try {
@@ -124,13 +119,11 @@ export const registerServiceWorker = async () => {
       
       console.log('Service Worker registered:', registration);
       
-      // Update on reload
       registration.addEventListener('updatefound', () => {
         const newWorker = registration.installing;
         if (newWorker) {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // New content available, refresh page
               window.location.reload();
             }
           });
@@ -145,11 +138,9 @@ export const registerServiceWorker = async () => {
 
 // Initialize all optimizations
 export const initializeBundleOptimizations = () => {
-  // Run immediately
   optimizeResourceHints();
   inlineCriticalCSS();
   
-  // Run after DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       optimizeChunkLoading();
@@ -160,6 +151,5 @@ export const initializeBundleOptimizations = () => {
     analyzeUnusedCode();
   }
   
-  // Register service worker
   registerServiceWorker();
 };
