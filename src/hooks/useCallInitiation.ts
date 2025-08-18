@@ -706,7 +706,7 @@ export const useCallInitiation = ({
           phone_number: targetPhone,
           contact_name: contactName || targetPhone,
           user_id: user?.id,
-          caller_number: 'phnum_01jz5v97bgfmdsvyy3hb095k3c' // Always use this number for test calls
+          caller_number: 'phnum_9501k2y60kzjfr98sybbze66vy2x' // Always use this number for test calls
         }
       });
 
