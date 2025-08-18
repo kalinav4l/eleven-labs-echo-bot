@@ -7,7 +7,7 @@ import UserActivityTracker from "./components/analytics/UserActivityTracker";
 
 // Lazy-loaded route components to reduce initial bundle size
 const Auth = React.lazy(() => import("./pages/Auth"));
-const Account = React.lazy(() => import("./pages/Account"));
+const Account = React.lazy(() => import("./pages/AccountOptimized"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 const AccountSettings = React.lazy(() => import("./pages/AccountSettings"));
 const KalinaAgents = React.lazy(() => import("./pages/KalinaAgents"));

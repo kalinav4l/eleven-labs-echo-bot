@@ -1,5 +1,6 @@
 import React, { memo, Suspense } from 'react';
 import { Navigate } from 'react-router-dom';
+import { Bot, Phone } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useAuth } from '@/components/AuthContext';
 import { useOptimizedUserData } from '@/hooks/useOptimizedData';
@@ -116,12 +117,12 @@ const AccountOptimized = memo(() => {
     ...agents.slice(0, 2).map(agent => ({
       action: `Creat agentul "${agent.name}"`,
       time: new Date(agent.created_at).toLocaleDateString('ro-RO'),
-      icon: 'Bot' as const
+      icon: Bot
     })),
     ...recentCalls.slice(0, 2).map(call => ({
       action: `Apel către ${call.contact_name} - ${call.call_status}`,
       time: call.call_date,
-      icon: 'Phone' as const
+      icon: Phone
     }))
   ].slice(0, 4);
 
