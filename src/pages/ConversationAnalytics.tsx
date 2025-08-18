@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import DashboardLayout from '@/components/DashboardLayout';
 import { useCallHistory } from '@/hooks/useCallHistory';
 import { useConversationAnalyticsCache } from '@/hooks/useConversationAnalyticsCache';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -183,304 +182,301 @@ const ConversationAnalytics = () => {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">Se încarcă istoricul conversațiilor...</p>
-          </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Se încarcă istoricul conversațiilor...</p>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="container mx-auto p-2 sm:p-6 space-y-3 sm:space-y-6 max-w-full overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Analytics Conversații</h1>
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={handleManualRefresh}
-              disabled={refreshAllConversations.isPending}
-              size="sm"
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className={`w-4 h-4 ${refreshAllConversations.isPending ? 'animate-spin' : ''}`} />
-              Actualizează toate
-            </Button>
-          </div>
+    <div className="container mx-auto p-2 sm:p-6 space-y-3 sm:space-y-6 max-w-full overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Analytics Conversații</h1>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={handleManualRefresh}
+            disabled={refreshAllConversations.isPending}
+            size="sm"
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshAllConversations.isPending ? 'animate-spin' : ''}`} />
+            Actualizează toate
+          </Button>
         </div>
+      </div>
 
-        {/* Aggregated Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Card>
-            <CardContent className="p-4 flex items-center gap-3">
-              <BarChart3 className="w-4 h-4 text-gray-600" />
-              <div>
-                <div className="text-xs text-gray-500">Conversații în cache</div>
-                <div className="text-sm font-semibold">{aggregated.total}</div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-xs text-gray-500">Cu analiză</div>
-              <div className="text-sm font-semibold">{aggregated.withAnalysis}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-xs text-gray-500">Durată totală</div>
-              <div className="text-sm font-semibold">{Math.floor(aggregated.totalDuration/60)}m</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-xs text-gray-500">Cost total (credite)</div>
-              <div className="text-sm font-semibold">{aggregated.totalCost}</div>
-            </CardContent>
-          </Card>
-        </div>
-        {/* Mobile-Responsive Filters */}
-        <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 py-3 hover:bg-gray-50 transition-colors duration-200 rounded-lg px-3">
-          {/* Search Bar */}
-          <div className="relative flex-1 min-w-0 sm:min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input 
-              type="text" 
-              placeholder="Caută..." 
-              value={searchTerm} 
-              onChange={e => setSearchTerm(e.target.value)} 
-              className="pl-10 h-9 text-sm bg-white border-0" 
-            />
-          </div>
-
-          {/* Date Range - Stacked on mobile */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <Input 
-              type="date" 
-              value={dateAfter} 
-              onChange={e => setDateAfter(e.target.value)} 
-              className="h-9 w-full sm:w-36 text-sm bg-white border-0" 
-              placeholder="De la" 
-            />
-            <span className="text-muted-foreground text-sm text-center sm:text-left">până la</span>
-            <Input 
-              type="date" 
-              value={dateBefore} 
-              onChange={e => setDateBefore(e.target.value)} 
-              className="h-9 w-full sm:w-36 text-sm bg-white border-0" 
-              placeholder="Până la" 
-            />
-          </div>
-
-          {/* Filters - Full width on mobile */}
-          <div className="flex gap-2">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-9 flex-1 sm:w-28 text-sm bg-white border-0">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-0 z-50">
-                <SelectItem value="all">Toate</SelectItem>
-                <SelectItem value="initiated">Initiated</SelectItem>
-                <SelectItem value="failed">Error</SelectItem>
-                <SelectItem value="busy">Busy</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={selectedAgent} onValueChange={setSelectedAgent}>
-              <SelectTrigger className="h-9 flex-1 sm:w-28 text-sm bg-white border-0">
-                <SelectValue placeholder="Agent" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-0 z-50">
-                <SelectItem value="all">Toți</SelectItem>
-                {getUniqueAgents().map(agentName => (
-                  <SelectItem key={agentName} value={agentName}>
-                    {agentName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Clear Button */}
-          {(searchTerm || statusFilter !== 'all' || selectedAgent !== 'all' || dateAfter || dateBefore) && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => {
-                setSearchTerm('');
-                setStatusFilter('all');
-                setSelectedAgent('all');
-                setDateAfter('');
-                setDateBefore('');
-              }} 
-              className="h-9 px-3 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-            >
-              Clear
-            </Button>
-          )}
-        </div>
-
-        {/* Analytics Table - Mobile Responsive */}
-        <div className="bg-white rounded-lg overflow-hidden">
-          <div className="px-3 sm:px-6 py-4">
-            <h2 className="text-base sm:text-lg font-medium text-gray-900">Istoric Conversații</h2>
-          </div>
-          <div className="bg-white">
-            {/* Mobile Card Layout */}
-            <div className="block sm:hidden space-y-3 p-3">
-              {filteredCalls.length === 0 ? (
-                <div className="text-center p-8 text-muted-foreground">
-                  Nu sunt conversații disponibile
-                </div>
-              ) : filteredCalls.map(call => {
-                const conversationData = call.conversation_id ? getConversationData(call.conversation_id) : null;
-                return (
-                  <div 
-                    key={call.id} 
-                    className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer" 
-                    onClick={() => call.conversation_id && handleConversationClick(call.conversation_id)}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center text-sm">
-                        <Phone className="w-3 h-3 mr-1 text-muted-foreground" />
-                        {call.phone_number}
-                      </div>
-                      <div className={getStatusStyle(call.call_status)}>
-                        {call.call_status === 'done' ? '✓ Done' : 
-                         call.call_status === 'initiated' ? '⚡ Initiated' : 
-                         call.call_status === 'busy' ? '⏳ Busy' : 
-                         call.call_status === 'failed' ? '✕ Error' : 
-                         call.call_status === 'success' ? '✓ Success' : '? Unknown'}
-                      </div>
-                    </div>
-                    <div className="text-sm font-medium mb-1">
-                      {call.contact_name || 'Necunoscut'}
-                    </div>
-                    <div className="text-xs text-gray-500 mb-2">
-                      Agent: {call.agent_name || 'Agent necunoscut'}
-                    </div>
-                    <div className="flex justify-between items-center text-xs text-gray-500">
-                      <span>Cost: {formatCost(conversationData?.cost || 0)}</span>
-                      <span>Durată: {formatDuration(conversationData?.duration || call.duration_seconds || 0)}</span>
-                    </div>
-                    {conversationData?.isCached && (
-                      <div className="text-xs text-blue-600 mt-1 flex items-center gap-1">
-                        <Database className="w-3 h-3" />
-                        Cache: {formatLastUpdated(conversationData.lastUpdated)}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+      {/* Aggregated Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <BarChart3 className="w-4 h-4 text-gray-600" />
+            <div>
+              <div className="text-xs text-gray-500">Conversații în cache</div>
+              <div className="text-sm font-semibold">{aggregated.total}</div>
             </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-xs text-gray-500">Cu analiză</div>
+            <div className="text-sm font-semibold">{aggregated.withAnalysis}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-xs text-gray-500">Durată totală</div>
+            <div className="text-sm font-semibold">{Math.floor(aggregated.totalDuration/60)}m</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-xs text-gray-500">Cost total (credite)</div>
+            <div className="text-sm font-semibold">{aggregated.totalCost}</div>
+          </CardContent>
+        </Card>
+      </div>
 
-            {/* Desktop Table Layout */}
-            <div className="hidden sm:block overflow-x-auto">
-              <table className="w-full">
-                <thead>
+      {/* Mobile-Responsive Filters */}
+      <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 py-3 hover:bg-gray-50 transition-colors duration-200 rounded-lg px-3">
+        {/* Search Bar */}
+        <div className="relative flex-1 min-w-0 sm:min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input 
+            type="text" 
+            placeholder="Caută..." 
+            value={searchTerm} 
+            onChange={e => setSearchTerm(e.target.value)} 
+            className="pl-10 h-9 text-sm bg-white border-0" 
+          />
+        </div>
+
+        {/* Date Range - Stacked on mobile */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+          <Input 
+            type="date" 
+            value={dateAfter} 
+            onChange={e => setDateAfter(e.target.value)} 
+            className="h-9 w-full sm:w-36 text-sm bg-white border-0" 
+            placeholder="De la" 
+          />
+          <span className="text-muted-foreground text-sm text-center sm:text-left">până la</span>
+          <Input 
+            type="date" 
+            value={dateBefore} 
+            onChange={e => setDateBefore(e.target.value)} 
+            className="h-9 w-full sm:w-36 text-sm bg-white border-0" 
+            placeholder="Până la" 
+          />
+        </div>
+
+        {/* Filters - Full width on mobile */}
+        <div className="flex gap-2">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-9 flex-1 sm:w-28 text-sm bg-white border-0">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent className="bg-white border-0 z-50">
+              <SelectItem value="all">Toate</SelectItem>
+              <SelectItem value="initiated">Initiated</SelectItem>
+              <SelectItem value="failed">Error</SelectItem>
+              <SelectItem value="busy">Busy</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedAgent} onValueChange={setSelectedAgent}>
+            <SelectTrigger className="h-9 flex-1 sm:w-28 text-sm bg-white border-0">
+              <SelectValue placeholder="Agent" />
+            </SelectTrigger>
+            <SelectContent className="bg-white border-0 z-50">
+              <SelectItem value="all">Toți</SelectItem>
+              {getUniqueAgents().map(agentName => (
+                <SelectItem key={agentName} value={agentName}>
+                  {agentName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Clear Button */}
+        {(searchTerm || statusFilter !== 'all' || selectedAgent !== 'all' || dateAfter || dateBefore) && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              setSearchTerm('');
+              setStatusFilter('all');
+              setSelectedAgent('all');
+              setDateAfter('');
+              setDateBefore('');
+            }} 
+            className="h-9 px-3 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+          >
+            Clear
+          </Button>
+        )}
+      </div>
+
+      {/* Analytics Table - Mobile Responsive */}
+      <div className="bg-white rounded-lg overflow-hidden">
+        <div className="px-3 sm:px-6 py-4">
+          <h2 className="text-base sm:text-lg font-medium text-gray-900">Istoric Conversații</h2>
+        </div>
+        <div className="bg-white">
+          {/* Mobile Card Layout */}
+          <div className="block sm:hidden space-y-3 p-3">
+            {filteredCalls.length === 0 ? (
+              <div className="text-center p-8 text-muted-foreground">
+                Nu sunt conversații disponibile
+              </div>
+            ) : filteredCalls.map(call => {
+              const conversationData = call.conversation_id ? getConversationData(call.conversation_id) : null;
+              return (
+                <div 
+                  key={call.id} 
+                  className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer" 
+                  onClick={() => call.conversation_id && handleConversationClick(call.conversation_id)}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center text-sm">
+                      <Phone className="w-3 h-3 mr-1 text-muted-foreground" />
+                      {call.phone_number}
+                    </div>
+                    <div className={getStatusStyle(call.call_status)}>
+                      {call.call_status === 'done' ? '✓ Done' : 
+                       call.call_status === 'initiated' ? '⚡ Initiated' : 
+                       call.call_status === 'busy' ? '⏳ Busy' : 
+                       call.call_status === 'failed' ? '✕ Error' : 
+                       call.call_status === 'success' ? '✓ Success' : '? Unknown'}
+                    </div>
+                  </div>
+                  <div className="text-sm font-medium mb-1">
+                    {call.contact_name || 'Necunoscut'}
+                  </div>
+                  <div className="text-xs text-gray-500 mb-2">
+                    Agent: {call.agent_name || 'Agent necunoscut'}
+                  </div>
+                  <div className="flex justify-between items-center text-xs text-gray-500">
+                    <span>Cost: {formatCost(conversationData?.cost || 0)}</span>
+                    <span>Durată: {formatDuration(conversationData?.duration || call.duration_seconds || 0)}</span>
+                  </div>
+                  {conversationData?.isCached && (
+                    <div className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                      <Database className="w-3 h-3" />
+                      Cache: {formatLastUpdated(conversationData.lastUpdated)}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop Table Layout */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr>
+                  <th className="text-left p-3 text-sm font-medium text-muted-foreground">Contact</th>
+                  <th className="text-left p-3 text-sm font-medium text-muted-foreground">Agent</th>
+                  <th className="text-left p-3 text-sm font-medium text-muted-foreground">Cost</th>
+                  <th className="text-left p-3 text-sm font-medium text-muted-foreground">Durată</th>
+                  <th className="text-left p-3 text-sm font-medium text-muted-foreground">Status</th>
+                  <th className="text-left p-3 text-sm font-medium text-muted-foreground">Cache</th>
+                  <th className="text-left p-3 text-sm font-medium text-muted-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredCalls.length === 0 ? (
                   <tr>
-                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Contact</th>
-                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Agent</th>
-                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Cost</th>
-                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Durată</th>
-                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Status</th>
-                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Cache</th>
-                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Actions</th>
+                    <td colSpan={7} className="text-center p-8 text-muted-foreground">
+                      Nu sunt conversații disponibile
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {filteredCalls.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="text-center p-8 text-muted-foreground">
-                        Nu sunt conversații disponibile
+                ) : filteredCalls.map(call => {
+                  const conversationData = call.conversation_id ? getConversationData(call.conversation_id) : null;
+                  return (
+                    <tr 
+                      key={call.id} 
+                      className="hover:bg-gray-50 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:z-10 relative" 
+                      onClick={() => call.conversation_id && handleConversationClick(call.conversation_id)}
+                    >
+                      <td className="p-3">
+                        <div className="flex items-center text-sm">
+                          <Phone className="w-3 h-3 mr-1 text-muted-foreground" />
+                          <div>
+                            <div className="font-medium">{call.contact_name || 'Necunoscut'}</div>
+                            <div className="text-muted-foreground text-xs">{call.phone_number}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <div className="text-sm">
+                          {call.agent_name || 'Agent necunoscut'}
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <div className="text-sm font-medium">
+                          {formatCost(conversationData?.cost || 0)}
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <div className="text-sm font-medium">
+                          {formatDuration(conversationData?.duration || call.duration_seconds || 0)}
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <div className={getStatusStyle(call.call_status)}>
+                          {call.call_status === 'done' ? '✓ Done' : 
+                           call.call_status === 'initiated' ? '⚡ Initiated' : 
+                           call.call_status === 'busy' ? '⏳ Busy' : 
+                           call.call_status === 'failed' ? '✕ Error' : 
+                           call.call_status === 'success' ? '✓ Success' : '? Unknown'}
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center justify-center">
+                          {conversationData?.isCached ? (
+                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                          ) : (
+                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
+                          {call.conversation_id && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRefreshSingle(call.conversation_id!);
+                              }}
+                              disabled={refreshConversation.isPending}
+                              className="h-6 px-2"
+                            >
+                              <RefreshCw className={`w-3 h-3 ${refreshConversation.isPending ? 'animate-spin' : ''}`} />
+                            </Button>
+                          )}
+                        </div>
                       </td>
                     </tr>
-                  ) : filteredCalls.map(call => {
-                    const conversationData = call.conversation_id ? getConversationData(call.conversation_id) : null;
-                    return (
-                      <tr 
-                        key={call.id} 
-                        className="hover:bg-gray-50 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:z-10 relative" 
-                        onClick={() => call.conversation_id && handleConversationClick(call.conversation_id)}
-                      >
-                        <td className="p-3">
-                          <div className="flex items-center text-sm">
-                            <Phone className="w-3 h-3 mr-1 text-muted-foreground" />
-                            <div>
-                              <div className="font-medium">{call.contact_name || 'Necunoscut'}</div>
-                              <div className="text-muted-foreground text-xs">{call.phone_number}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-3">
-                          <div className="text-sm">
-                            {call.agent_name || 'Agent necunoscut'}
-                          </div>
-                        </td>
-                        <td className="p-3">
-                          <div className="text-sm font-medium">
-                            {formatCost(conversationData?.cost || 0)}
-                          </div>
-                        </td>
-                        <td className="p-3">
-                          <div className="text-sm font-medium">
-                            {formatDuration(conversationData?.duration || call.duration_seconds || 0)}
-                          </div>
-                        </td>
-                        <td className="p-3">
-                          <div className={getStatusStyle(call.call_status)}>
-                            {call.call_status === 'done' ? '✓ Done' : 
-                             call.call_status === 'initiated' ? '⚡ Initiated' : 
-                             call.call_status === 'busy' ? '⏳ Busy' : 
-                             call.call_status === 'failed' ? '✕ Error' : 
-                             call.call_status === 'success' ? '✓ Success' : '? Unknown'}
-                          </div>
-                        </td>
-                         <td className="p-3">
-                           <div className="flex items-center justify-center">
-                             {conversationData?.isCached ? (
-                               <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                             ) : (
-                               <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                             )}
-                           </div>
-                         </td>
-                        <td className="p-3">
-                          <div className="flex items-center gap-2">
-                            {call.conversation_id && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRefreshSingle(call.conversation_id!);
-                                }}
-                                disabled={refreshConversation.isPending}
-                                className="h-6 px-2"
-                              >
-                                <RefreshCw className={`w-3 h-3 ${refreshConversation.isPending ? 'animate-spin' : ''}`} />
-                              </Button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            
-            {filteredCalls.length > 0 && (
-              <div className="px-3 sm:px-6 py-4 text-sm text-gray-500">
-                Afișând {filteredCalls.length} din {callHistory.length} conversații
-              </div>
-            )}
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
+          
+          {filteredCalls.length > 0 && (
+            <div className="px-3 sm:px-6 py-4 text-sm text-gray-500">
+              Afișând {filteredCalls.length} din {callHistory.length} conversații
+            </div>
+          )}
         </div>
       </div>
       
@@ -497,7 +493,7 @@ const ConversationAnalytics = () => {
           </div>
         </SheetContent>
       </Sheet>
-    </DashboardLayout>
+    </div>
   );
 };
 
