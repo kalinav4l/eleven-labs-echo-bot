@@ -42,7 +42,16 @@ const AgentConsultant: React.FC = () => {
     agentName,
     agentLanguage,
     selectedVoice,
-    generatePrompt: () => Promise.resolve(generatedPrompt)
+    generatePrompt: async () => {
+      if (promptMode === 'generate' && !generatedPrompt) {
+        return await generatePrompt({
+          websiteUrl,
+          agentRole: '',
+          additionalPrompt: ''
+        });
+      }
+      return generatedPrompt || `Tu ești un consultant AI pentru ${agentName}. Ajută clienții cu întrebările lor.`;
+    }
   });
 
   // Authentication guard
