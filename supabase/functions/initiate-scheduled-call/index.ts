@@ -130,25 +130,26 @@ serve(async (req) => {
     // Configure phone number for call - use test number for test calls
     let agentPhoneId, callerNumber;
 
-    // If caller_number is provided (for test calls), use it directly
-    if (caller_number) {
-      console.log('Using provided caller_number for test call:', caller_number)
+    // For test calls, automatically find an available phone number
+    if (is_test_call) {
+      console.log('Looking for available phone number for test call...')
       
-      // Look up the phone configuration for the provided caller_number
+      // Get any available active phone number for test calls
       const { data: phoneConfig, error: phoneConfigError } = await supabase
         .from('phone_numbers')
         .select('elevenlabs_phone_id, phone_number')
-        .eq('elevenlabs_phone_id', caller_number)
         .eq('status', 'active')
-        .single()
+        .order('is_primary', { ascending: false }) // Prefer primary numbers
+        .order('created_at', { ascending: false })
+        .limit(1)
 
       if (phoneConfigError || !phoneConfig) {
-        console.error('❌ Error finding phone configuration for caller_number:', phoneConfigError)
+        console.error('❌ No active phone numbers available for test calls:', phoneConfigError)
         return new Response(
           JSON.stringify({ 
-            error: `Nu s-a putut găsi configurația pentru numărul de test ${caller_number}`,
+            error: 'Nu există numere de telefon active disponibile pentru apeluri de test',
             success: false,
-            details: phoneConfigError?.message || 'Phone configuration not found'
+            details: phoneConfigError?.message || 'No phone numbers found'
           }),
           {
             status: 400,
