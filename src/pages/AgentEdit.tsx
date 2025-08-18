@@ -349,7 +349,7 @@ const AgentEdit = () => {
                 <Bot className="w-5 h-5 text-accent" />
               </div>
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Editare Agent</h1>
+                <h1 className="text-2xl lg:text-3xl font-bold text-foreground">{agentData.name || 'Agent Fără Nume'}</h1>
                 <p className="text-sm text-muted-foreground">Modifică setările agentului tău AI</p>
               </div>
             </div>
