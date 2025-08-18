@@ -27,9 +27,18 @@ export default defineConfig(({ mode }) => ({
       compress: {
         drop_console: true,
         drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info'],
+        passes: 2,
+      },
+      mangle: {
+        safari10: true,
+      },
+      format: {
+        comments: false,
       },
     },
-    chunkSizeWarningLimit: 1200,
+    chunkSizeWarningLimit: 800,
+    assetsInlineLimit: 8192, // Inline assets smaller than 8kb
     rollupOptions: {
       output: {
         manualChunks: {
