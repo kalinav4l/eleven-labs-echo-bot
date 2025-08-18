@@ -77,7 +77,7 @@ export const PhoneTestCallModal: React.FC<PhoneTestCallModalProps> = ({
       if (data?.success) {
         toast({
           title: "✅ Apel inițiat cu succes!",
-          description: `Apelul către +373${targetPhoneNumber} a fost pornit de pe +37379325040`,
+          description: `Apelul către +373${targetPhoneNumber} a fost pornit de pe +37379315040`,
           duration: 5000
         });
         onClose();
