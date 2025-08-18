@@ -203,7 +203,7 @@ export const useActiveAgents = () => {
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [loadActiveAgents, subscribeToUpdates]);
+  }, [user]); // Only depend on user, not on the functions
 
   // Curat agenții inactivi (mai vechi de 10 minute)
   const cleanupInactiveAgents = useCallback(async () => {

@@ -163,16 +163,22 @@ export const useAgentOperations = () => {
 
   const deleteAgentMutation = useMutation({
     mutationFn: async (agent: { id: string; agent_id: string }) => {
+      console.log('🗑️ Starting agent deletion process for:', agent);
+      
       // Try to delete from ElevenLabs first, but don't fail if agent doesn't exist
       try {
+        console.log('🔄 Deleting from ElevenLabs...');
         await deleteAgentFromElevenLabs({ agentId: agent.agent_id });
+        console.log('✅ ElevenLabs deletion successful');
       } catch (error) {
         console.warn('Could not delete agent from ElevenLabs, but continuing with database deletion:', error);
         // Continue with database deletion even if ElevenLabs deletion fails
       }
       
       // Always delete from database
+      console.log('🔄 Deleting from database...');
       await deleteAgentFromDatabase(agent.id);
+      console.log('✅ Database deletion successful');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-agents'] });
