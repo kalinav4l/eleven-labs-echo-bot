@@ -132,18 +132,18 @@ serve(async (req) => {
 
     // For test calls, automatically find an available phone number
     if (is_test_call) {
-      console.log('Looking for available phone number for test call...')
+      console.log('🔍 Looking for available phone number for test call...')
       
       // Get any available active phone number for test calls
       const { data: phoneConfig, error: phoneConfigError } = await supabase
         .from('phone_numbers')
-        .select('elevenlabs_phone_id, phone_number')
+        .select('elevenlabs_phone_id, phone_number, id, label')
         .eq('status', 'active')
         .order('is_primary', { ascending: false }) // Prefer primary numbers
         .order('created_at', { ascending: false })
         .limit(1)
 
-      if (phoneConfigError || !phoneConfig) {
+      if (phoneConfigError || !phoneConfig || phoneConfig.length === 0) {
         console.error('❌ No active phone numbers available for test calls:', phoneConfigError)
         return new Response(
           JSON.stringify({ 
@@ -158,9 +158,38 @@ serve(async (req) => {
         )
       }
 
-      agentPhoneId = phoneConfig.elevenlabs_phone_id
-      callerNumber = phoneConfig.phone_number
-      console.log('✅ Using test phone configuration:', { agentPhoneId, callerNumber })
+      const phoneRecord = phoneConfig[0]
+      agentPhoneId = phoneRecord.elevenlabs_phone_id
+      callerNumber = phoneRecord.phone_number
+      
+      console.log('📞 Using test phone configuration:', { 
+        agentPhoneId, 
+        callerNumber,
+        phoneRecord: {
+          id: phoneRecord.id,
+          label: phoneRecord.label,
+          phone_number: phoneRecord.phone_number
+        }
+      })
+      
+      // Validate ElevenLabs phone ID before proceeding
+      if (!agentPhoneId || agentPhoneId.trim() === '') {
+        console.error('❌ Invalid ElevenLabs phone ID for test call:', {
+          phoneRecord,
+          agentPhoneId
+        })
+        return new Response(
+          JSON.stringify({ 
+            error: 'Numărul de telefon selectat nu este configurat corect cu ElevenLabs',
+            success: false,
+            details: 'Phone number missing valid elevenlabs_phone_id'
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        )
+      }
     } else {
       // Original logic for non-test calls - get user's phone number from database
       console.log('Looking up user phone numbers for regular call...')

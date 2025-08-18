@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -2023,32 +2023,32 @@ export type Database = {
     Functions: {
       admin_ban_user: {
         Args: {
-          p_target_user_id: string
-          p_ban_status: boolean
           p_admin_user_id: string
+          p_ban_status: boolean
+          p_target_user_id: string
         }
         Returns: boolean
       }
       admin_change_role: {
         Args: {
-          p_target_user_id: string
-          p_new_role: Database["public"]["Enums"]["app_role"]
           p_admin_user_id: string
+          p_new_role: Database["public"]["Enums"]["app_role"]
+          p_target_user_id: string
         }
         Returns: boolean
       }
       admin_create_agent: {
         Args: {
           p_admin_user_id: string
-          p_target_user_id: string
-          p_name: string
-          p_voice_id: string
-          p_system_prompt?: string
-          p_description?: string
-          p_is_active?: boolean
-          p_provider?: string
-          p_elevenlabs_agent_id?: string
           p_agent_id?: string
+          p_description?: string
+          p_elevenlabs_agent_id?: string
+          p_is_active?: boolean
+          p_name: string
+          p_provider?: string
+          p_system_prompt?: string
+          p_target_user_id: string
+          p_voice_id: string
         }
         Returns: {
           agent_id: string
@@ -2072,31 +2072,31 @@ export type Database = {
       admin_get_all_users: {
         Args: { p_admin_user_id: string }
         Returns: {
-          user_id: string
+          account_type: string
+          balance_usd: number
+          created_at: string
           email: string
           first_name: string
           last_name: string
-          account_type: string
-          user_role: Database["public"]["Enums"]["app_role"]
-          balance_usd: number
+          last_sign_in: string
+          plan: string
           total_calls: number
           total_minutes: number
           total_spent_usd: number
-          plan: string
-          created_at: string
-          last_sign_in: string
+          user_id: string
+          user_role: Database["public"]["Enums"]["app_role"]
         }[]
       }
       admin_get_top_active_users: {
-        Args: { period_hours?: number; limit_count?: number }
+        Args: { limit_count?: number; period_hours?: number }
         Returns: {
-          user_id: string
           event_count: number
           last_event_at: string
+          user_id: string
         }[]
       }
       admin_get_user_activity: {
-        Args: { _user_id: string; since_hours?: number; limit_count?: number }
+        Args: { _user_id: string; limit_count?: number; since_hours?: number }
         Returns: {
           action: string | null
           created_at: string
@@ -2114,59 +2114,59 @@ export type Database = {
       admin_get_user_agents: {
         Args: { p_admin_user_id: string; p_target_user_id: string }
         Returns: {
-          id: string
-          user_id: string
-          name: string
-          description: string
-          system_prompt: string
-          voice_id: string
-          is_active: boolean
-          provider: string
-          elevenlabs_agent_id: string
-          created_at: string
-          updated_at: string
           agent_id: string
+          created_at: string
+          description: string
+          elevenlabs_agent_id: string
+          id: string
+          is_active: boolean
+          name: string
+          provider: string
+          system_prompt: string
+          updated_at: string
+          user_id: string
+          voice_id: string
         }[]
       }
       admin_get_user_by_id: {
         Args: { p_admin_user_id: string; p_target_user_id: string }
         Returns: {
-          user_id: string
+          account_type: string
+          balance_usd: number
+          created_at: string
           email: string
           first_name: string
           last_name: string
-          account_type: string
-          user_role: Database["public"]["Enums"]["app_role"]
-          balance_usd: number
+          last_sign_in: string
+          plan: string
           total_calls: number
           total_minutes: number
           total_spent_usd: number
-          plan: string
-          created_at: string
-          last_sign_in: string
+          user_id: string
+          user_role: Database["public"]["Enums"]["app_role"]
         }[]
       }
       admin_modify_balance: {
         Args: {
-          p_target_user_id: string
+          p_admin_user_id: string
           p_balance_amount: number
           p_operation: string
-          p_admin_user_id: string
+          p_target_user_id: string
         }
         Returns: boolean
       }
       admin_update_agent: {
         Args: {
           p_admin_user_id: string
-          p_agent_row_id: string
-          p_name?: string
-          p_voice_id?: string
-          p_system_prompt?: string
-          p_description?: string
-          p_is_active?: boolean
-          p_provider?: string
-          p_elevenlabs_agent_id?: string
           p_agent_id?: string
+          p_agent_row_id: string
+          p_description?: string
+          p_elevenlabs_agent_id?: string
+          p_is_active?: boolean
+          p_name?: string
+          p_provider?: string
+          p_system_prompt?: string
+          p_voice_id?: string
         }
         Returns: boolean
       }
@@ -2176,20 +2176,20 @@ export type Database = {
       }
       deduct_balance: {
         Args: {
-          p_user_id: string
           p_amount: number
-          p_description?: string
           p_conversation_id?: string
+          p_description?: string
+          p_user_id: string
         }
         Returns: boolean
       }
       execute_atomic_call_transaction: {
         Args: {
-          p_user_id: string
           p_amount: number
-          p_duration_seconds: number
-          p_description: string
           p_conversation_id: string
+          p_description: string
+          p_duration_seconds: number
+          p_user_id: string
         }
         Returns: boolean
       }
@@ -2199,8 +2199,8 @@ export type Database = {
       }
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }
@@ -2210,20 +2210,20 @@ export type Database = {
       }
       log_admin_action: {
         Args: {
-          p_admin_user_id: string
           p_action: string
-          p_target_user_id?: string
+          p_admin_user_id: string
           p_details?: Json
           p_ip_address?: unknown
+          p_target_user_id?: string
         }
         Returns: boolean
       }
       match_document_embeddings: {
         Args: {
-          query_embedding: Json
           agent_id_param: string
-          match_threshold?: number
           match_count?: number
+          match_threshold?: number
+          query_embedding: Json
         }
         Returns: {
           chunk_text: string
@@ -2233,9 +2233,9 @@ export type Database = {
       }
       search_relevant_chunks: {
         Args: {
-          query_text: string
           agent_id_param: string
           match_count?: number
+          query_text: string
         }
         Returns: {
           chunk_text: string
@@ -2245,9 +2245,9 @@ export type Database = {
       }
       update_user_statistics_with_spending: {
         Args: {
-          p_user_id: string
-          p_duration_seconds: number
           p_cost_usd: number
+          p_duration_seconds: number
+          p_user_id: string
         }
         Returns: boolean
       }
