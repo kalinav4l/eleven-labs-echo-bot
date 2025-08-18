@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Bot, Save, Upload, FileText, Trash2, TestTube, Database, Plus } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import AgentTestModal from '@/components/AgentTestModal';
@@ -17,6 +18,15 @@ import AgentGeneralInfo from '@/components/agent/AgentGeneralInfo';
 import AgentSystemPrompt from '@/components/agent/AgentSystemPrompt';
 import AgentFirstMessage from '@/components/agent/AgentFirstMessage';
 import AgentToolConnection from '@/components/agent/AgentToolConnection';
+import AgentASRSettings from '@/components/agent/AgentASRSettings';
+import AgentTurnManagement from '@/components/agent/AgentTurnManagement';
+import AgentTTSAdvanced from '@/components/agent/AgentTTSAdvanced';
+import AgentConversationSettings from '@/components/agent/AgentConversationSettings';
+import AgentWidgetSettings from '@/components/agent/AgentWidgetSettings';
+import AgentPrivacySettings from '@/components/agent/AgentPrivacySettings';
+import AgentCallLimits from '@/components/agent/AgentCallLimits';
+import AgentSafetySettings from '@/components/agent/AgentSafetySettings';
+import AgentAccessManagement from '@/components/agent/AgentAccessManagement';
 import { AgentResponse, LanguagePreset } from "@/types/dtos.ts";
 import { VoiceController } from "@/controllers/VoiceController";
 import { supabase } from '@/integrations/supabase/client';
@@ -361,25 +371,45 @@ const AgentEdit = () => {
           </Button>
         </div>
 
-        {/* Main Content - Mobile optimized grid */}
-        <div className="grid grid-cols-1 gap-4 lg:gap-6">
-          {/* General Information */}
-          <AgentGeneralInfo agentData={agentData} setAgentData={setAgentData} />
+        {/* Main Content - Tabbed Interface */}
+        <Tabs defaultValue="general" className="w-full">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="conversation">Conversație</TabsTrigger>
+            <TabsTrigger value="platform">Platformă</TabsTrigger>
+            <TabsTrigger value="security">Securitate</TabsTrigger>
+            <TabsTrigger value="knowledge">Knowledge Base</TabsTrigger>
+          </TabsList>
 
-          {/* System Prompt */}
-          <AgentSystemPrompt agentData={agentData} setAgentData={setAgentData} />
-        </div>
+          <TabsContent value="general" className="space-y-4">
+            <AgentGeneralInfo agentData={agentData} setAgentData={setAgentData} />
+            <AgentSystemPrompt agentData={agentData} setAgentData={setAgentData} />
+            <AgentFirstMessage agentData={agentData} setAgentData={setAgentData} additionalLanguages={additionalLanguages} onOpenMultilingualModal={openMultilingualModal} />
+            <AdditionalLanguagesSection selectedLanguages={additionalLanguages} onLanguagesChange={handleAdditionalLanguagesChange} currentLanguage={agentData.conversation_config?.agent?.language} />
+            <AgentToolConnection agentData={agentData} setAgentData={setAgentData} />
+          </TabsContent>
 
-        {/* First Message Section - Mobile optimized */}
-        <AgentFirstMessage agentData={agentData} setAgentData={setAgentData} additionalLanguages={additionalLanguages} onOpenMultilingualModal={openMultilingualModal} />
+          <TabsContent value="conversation" className="space-y-4">
+            <AgentASRSettings agentData={agentData} setAgentData={setAgentData} />
+            <AgentTurnManagement agentData={agentData} setAgentData={setAgentData} />
+            <AgentTTSAdvanced agentData={agentData} setAgentData={setAgentData} />
+            <AgentConversationSettings agentData={agentData} setAgentData={setAgentData} />
+          </TabsContent>
 
-        {/* Additional Languages Section */}
-        <AdditionalLanguagesSection selectedLanguages={additionalLanguages} onLanguagesChange={handleAdditionalLanguagesChange} currentLanguage={agentData.conversation_config?.agent?.language} />
+          <TabsContent value="platform" className="space-y-4">
+            <AgentWidgetSettings agentData={agentData} setAgentData={setAgentData} />
+            <AgentCallLimits agentData={agentData} setAgentData={setAgentData} />
+          </TabsContent>
 
-        {/* Tool Connection Section */}
-        <AgentToolConnection agentData={agentData} setAgentData={setAgentData} />
+          <TabsContent value="security" className="space-y-4">
+            <AgentPrivacySettings agentData={agentData} setAgentData={setAgentData} />
+            <AgentSafetySettings agentData={agentData} setAgentData={setAgentData} />
+            <AgentAccessManagement agentData={agentData} setAgentData={setAgentData} />
+          </TabsContent>
 
-        {/* Enhanced Knowledge Base Section - Mobile optimized */}
+          <TabsContent value="knowledge" className="space-y-4">
+
+            {/* Enhanced Knowledge Base Section - Mobile optimized */}
         <Card className="liquid-glass">
           <CardHeader>
             <CardTitle className="text-foreground">Knowledge Base</CardTitle>
