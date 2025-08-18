@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
 
@@ -132,14 +132,17 @@ export const useActiveAgents = () => {
     }
   }, [user]);
 
+  // Ref pentru a ține evidența canalului activ
+  const channelRef = useRef<any>(null);
+
   // Mă abonez la actualizări în timp real
   const subscribeToUpdates = useCallback(() => {
-    if (!user || isSubscribed) return;
+    if (!user || channelRef.current) return;
 
     console.log('🔄 Abonare la actualizări realtime pentru agenții activi');
 
     const channel = supabase
-      .channel('active_agents_updates')
+      .channel(`active_agents_updates_${user.id}_${Date.now()}`) // Canal unic per user și timp
       .on(
         'postgres_changes',
         {
@@ -187,23 +190,40 @@ export const useActiveAgents = () => {
       )
       .subscribe();
 
+    channelRef.current = channel;
     setIsSubscribed(true);
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
       setIsSubscribed(false);
     };
-  }, [user, isSubscribed]);
+  }, [user]);
 
   // Încarc agenții la mount și mă abonez la actualizări
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      // Cleanup dacă nu avem user
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+        setIsSubscribed(false);
+      }
+      return;
+    }
     
     loadActiveAgents();
     const unsubscribe = subscribeToUpdates();
     
     return () => {
       if (unsubscribe) unsubscribe();
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+        setIsSubscribed(false);
+      }
     };
   }, [user?.id]); // Only depend on user ID to prevent loops
 
