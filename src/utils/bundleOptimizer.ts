@@ -1,3 +1,5 @@
+import React from 'react';
+
 // Advanced bundle optimization utilities
 
 // Tree shaking analyzer
