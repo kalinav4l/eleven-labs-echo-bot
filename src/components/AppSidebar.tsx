@@ -44,16 +44,22 @@ const workflowItems = [
   { title: "Baza de Date", url: "/account/workflow-database", icon: Database },
 ];
 
-export function AppSidebar() {
+export const AppSidebar = React.memo(() => {
   const location = useLocation();
   const { user } = useAuth();
   const isMobile = useIsMobile();
   
   // Check if user is the specific admin user
-  const isSpecificAdmin = user?.id === 'a698e3c2-f0e6-4f42-8955-971d91e725ce' && 
-                         user?.email === 'mariusvirlan109@gmail.com';
+  const isSpecificAdmin = React.useMemo(() => 
+    user?.id === 'a698e3c2-f0e6-4f42-8955-971d91e725ce' && 
+    user?.email === 'mariusvirlan109@gmail.com', 
+    [user?.id, user?.email]
+  );
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = React.useCallback(
+    (path: string) => location.pathname === path,
+    [location.pathname]
+  );
 
   return (
     <Sidebar className={`${isMobile ? 'w-72' : ''}`}>
@@ -218,4 +224,4 @@ export function AppSidebar() {
       </SidebarFooter>
     </Sidebar>
   );
-}
+});

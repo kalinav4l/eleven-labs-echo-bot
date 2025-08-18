@@ -1,7 +1,7 @@
 import React, { memo, Suspense } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Bot, Phone } from 'lucide-react';
-import DashboardLayout from '@/components/DashboardLayout';
+
 import { useAuth } from '@/components/AuthContext';
 import { useOptimizedUserData } from '@/hooks/useOptimizedData';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -56,42 +56,38 @@ const AccountOptimized = memo(() => {
   // Show error state
   if (error) {
     return (
-      <DashboardLayout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h2>
-            <p className="text-gray-600">Please refresh the page and try again.</p>
-          </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h2>
+          <p className="text-gray-600">Please refresh the page and try again.</p>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
   // Loading state with optimized skeletons
   if (isLoading) {
     return (
-      <DashboardLayout>
-        <div className="min-h-screen bg-white">
-          <div className="px-6 py-8 space-y-8">
-            {/* Header skeleton */}
-            <div className="h-32 bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg animate-pulse" />
-            
-            {/* Stats grid skeleton */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <SkeletonCard key={i} />
-              ))}
-            </div>
-            
-            {/* Charts skeleton */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="h-64 bg-gray-100 rounded-lg animate-pulse" />
-              ))}
-            </div>
+      <div className="min-h-screen bg-white">
+        <div className="px-6 py-8 space-y-8">
+          {/* Header skeleton */}
+          <div className="h-32 bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg animate-pulse" />
+          
+          {/* Stats grid skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+          
+          {/* Charts skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-64 bg-gray-100 rounded-lg animate-pulse" />
+            ))}
           </div>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
@@ -127,9 +123,8 @@ const AccountOptimized = memo(() => {
   ].slice(0, 4);
 
   return (
-    <DashboardLayout>
-      <div className="min-h-screen bg-white relative">
-        <div className="relative px-6 py-8 space-y-8">
+    <div className="min-h-screen bg-white relative">
+      <div className="relative px-6 py-8 space-y-8">
           {/* Suspense wrapped components for better performance */}
           <Suspense fallback={<div className="h-32 bg-gray-100 rounded-lg animate-pulse" />}>
             <GlassWelcomeCard 
@@ -208,9 +203,8 @@ const AccountOptimized = memo(() => {
               )}
             </div>
           </div>
-        </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 });
 

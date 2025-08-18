@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import DashboardLayout from '@/components/DashboardLayout';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -207,8 +207,8 @@ const Account = () => {
   })) || [])].slice(0, 4);
   
   if (profileLoading || agentsLoading || statsLoading) {
-    return <DashboardLayout>
-        <div className="min-h-screen">
+    return (
+      <div className="min-h-screen">
           {/* Header with loading animation */}
           <div className="bg-white border-b border-gray-200">
             <div className="px-6 py-6">
@@ -251,11 +251,11 @@ const Account = () => {
             </div>
           </div>
         </div>
-      </DashboardLayout>;
+      );
   }
   
-  return <DashboardLayout>
-      <div className="min-h-screen bg-white relative">
+  return (
+    <div className="min-h-screen bg-white relative">
         <div className="relative px-6 py-8 space-y-8">
           {/* Glass Welcome Section */}
           <GlassWelcomeCard displayName={displayName} totalCalls={totalCalls} totalCost={totalCost} />
@@ -315,7 +315,7 @@ const Account = () => {
           </div>
         </div>
       </div>
-    </DashboardLayout>;
+    );
 };
 
 export default Account;

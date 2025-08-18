@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
-import DashboardLayout from '@/components/DashboardLayout';
+
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Send, Bot, User } from 'lucide-react';
 
@@ -160,8 +160,7 @@ const AgentAI = () => {
 
 
   return (
-    <DashboardLayout>
-      <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6">
         <div className={`${isMobile ? 'mb-4' : 'mb-6'}`}>
           <div className={`${isMobile ? 'space-y-4' : 'flex items-center justify-between'}`}>
             <div>
@@ -276,8 +275,7 @@ const AgentAI = () => {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 };
 

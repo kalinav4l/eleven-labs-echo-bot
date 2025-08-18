@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Phone, Plus, Settings, Globe, Lock, Trash2, Edit3, PhoneCall, ChevronDown, ChevronRight, Copy } from 'lucide-react';
 import { PhoneTestCallModal } from '@/components/outbound/PhoneTestCallModal';
-import DashboardLayout from '@/components/DashboardLayout';
+
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
@@ -329,8 +329,8 @@ export default function PhoneNumbers() {
       });
     }
   };
-  return <DashboardLayout>
-      <div className="container mx-auto p-6 max-w-6xl">
+  return (
+    <div className="container mx-auto p-6 max-w-6xl">
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div>

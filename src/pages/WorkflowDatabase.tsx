@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
+
 import { useAuth } from '@/components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';

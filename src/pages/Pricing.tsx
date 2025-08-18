@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import DashboardLayout from '@/components/DashboardLayout';
+
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 const PricingPage = () => {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -161,8 +161,8 @@ const PricingPage = () => {
   }
 
   console.log('Rendering pricing page with plans:', plans.length, 'Loading:', loading);
-  return <DashboardLayout>
-      <div className="min-h-screen py-12 bg-white relative overflow-hidden">
+  return (
+    <div className="min-h-screen py-12 bg-white relative overflow-hidden">
         {/* Liquid Glass Background Effects */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-br from-blue-200/20 to-purple-200/20 rounded-full blur-3xl animate-pulse"></div>
@@ -330,6 +330,6 @@ const PricingPage = () => {
           </div>
         </div>
       </div>
-    </DashboardLayout>;
+    );
 };
 export default PricingPage;

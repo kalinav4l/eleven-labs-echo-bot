@@ -3,6 +3,7 @@ import React, { Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 import { KalinaWelcomeAnimation } from "./components/KalinaWelcomeAnimation";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import UserActivityTracker from "./components/analytics/UserActivityTracker";
 
 // Lazy-loaded route components to reduce initial bundle size
@@ -49,31 +50,35 @@ function AppWithWelcome() {
       <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
         <Routes>
           <Route path="/" element={<Navigate to="/account" replace />} />
+          
+          {/* Public routes without sidebar */}
           <Route path="/auth" element={<Auth />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/admin" element={<Admin />} />
-
-          {/* Account routes */}
-          <Route path="/account" element={<Account />} />
-          <Route path="/account/*" element={<Account />} />
-          <Route path="/account/kalina-agents" element={<KalinaAgents />} />
-          <Route path="/account/agent-edit/:agentId" element={<AgentEdit />} />
-          <Route path="/account/conversation-analytics" element={<ConversationAnalytics />} />
-          <Route path="/account/conversation/:conversationId" element={<ConversationDetail />} />
-          <Route path="/account/transcript" element={<Transcript />} />
-          <Route path="/account/outbound" element={<Outbound />} />
-          <Route path="/account/contacts" element={<Contacts />} />
-          <Route path="/account/calls" element={<Calls />} />
-          <Route path="/account/scraping" element={<Scraping />} />
-          <Route path="/account/phone-numbers" element={<PhoneNumbers />} />
-          <Route path="/account/test-call" element={<TestCall />} />
-          <Route path="/account/calendar" element={<Calendar />} />
-          <Route path="/account/agent-ai" element={<AgentAI />} />
-          <Route path="/account/agent-consultant" element={<AgentConsultant />} />
-          <Route path="/account/documentation" element={<Documentation />} />
-          <Route path="/account/agent-prompts" element={<AgentPrompts />} />
-          <Route path="/account/workflow-database" element={<WorkflowDatabase />} />
-          <Route path="/account/settings" element={<AccountSettings />} />
+          
+          {/* Protected routes with persistent sidebar */}
+          <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+          <Route path="/account/*" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+          <Route path="/account/kalina-agents" element={<ProtectedRoute><KalinaAgents /></ProtectedRoute>} />
+          <Route path="/account/agent-edit/:agentId" element={<ProtectedRoute><AgentEdit /></ProtectedRoute>} />
+          <Route path="/account/conversation-analytics" element={<ProtectedRoute><ConversationAnalytics /></ProtectedRoute>} />
+          <Route path="/account/conversation/:conversationId" element={<ProtectedRoute><ConversationDetail /></ProtectedRoute>} />
+          <Route path="/account/transcript" element={<ProtectedRoute><Transcript /></ProtectedRoute>} />
+          <Route path="/account/outbound" element={<ProtectedRoute><Outbound /></ProtectedRoute>} />
+          <Route path="/account/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
+          <Route path="/account/calls" element={<ProtectedRoute><Calls /></ProtectedRoute>} />
+          <Route path="/account/scraping" element={<ProtectedRoute><Scraping /></ProtectedRoute>} />
+          <Route path="/account/phone-numbers" element={<ProtectedRoute><PhoneNumbers /></ProtectedRoute>} />
+          <Route path="/account/test-call" element={<ProtectedRoute><TestCall /></ProtectedRoute>} />
+          <Route path="/account/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+          <Route path="/account/agent-ai" element={<ProtectedRoute><AgentAI /></ProtectedRoute>} />
+          <Route path="/account/agent-consultant" element={<ProtectedRoute><AgentConsultant /></ProtectedRoute>} />
+          <Route path="/account/documentation" element={<ProtectedRoute><Documentation /></ProtectedRoute>} />
+          <Route path="/account/agent-prompts" element={<ProtectedRoute><AgentPrompts /></ProtectedRoute>} />
+          <Route path="/account/workflow-database" element={<ProtectedRoute><WorkflowDatabase /></ProtectedRoute>} />
+          <Route path="/account/settings" element={<ProtectedRoute><AccountSettings /></ProtectedRoute>} />
+          
+          {/* Special routes */}
+          <Route path="/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
 
           {/* Catch-all for 404 */}
           <Route path="*" element={<NotFound />} />
