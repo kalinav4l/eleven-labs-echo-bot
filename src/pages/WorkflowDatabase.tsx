@@ -179,11 +179,9 @@ export default function WorkflowDatabase() {
     setSelectedColumns(prev => prev.filter(c => c !== columnKey));
   };
   if (!user) return <Navigate to="/auth" replace />;
-  return <DashboardLayout>
-      <div className="min-h-screen bg-white">`
-        
-
-        <div className="flex items-center justify-between mb-6 bg-card/50 backdrop-blur-sm p-4 rounded-xl border shadow-sm">
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="flex items-center justify-between mb-6 bg-card/50 backdrop-blur-sm p-4 rounded-xl border shadow-sm">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-muted-foreground">
               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -202,7 +200,7 @@ export default function WorkflowDatabase() {
                   <Plus className="w-4 h-4 mr-2" /> Selectează coloane
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg bg-black/20 backdrop-blur-md border border-white/20 text-white">`
+              <DialogContent className="max-w-lg bg-black/20 backdrop-blur-md border border-white/20 text-white">
                 <DialogHeader>
                   <DialogTitle className="text-xl font-semibold text-white">
                     Alege coloanele (maxim 4)
@@ -272,7 +270,7 @@ export default function WorkflowDatabase() {
                           <Phone className="w-6 h-6 text-white" />
                         </div>
                         <p className="text-sm text-white/80 font-medium">Nicio înregistrare</p>
-                      </div> : col.items.map(item => <div key={item.phone_number} className="bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-200 hover:bg-white border-2 border-white/60">`
+                      </div> : col.items.map(item => <div key={item.phone_number} className="bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-200 hover:bg-white border-2 border-white/60">
                           <div className="flex items-center justify-between mb-3">
                             <div className="font-semibold text-sm text-black truncate flex-1 mr-3">
                               {item.contact_name || 'Necunoscut'}
@@ -302,5 +300,5 @@ export default function WorkflowDatabase() {
             </div>
           </section>}
       </div>
-    </DashboardLayout>;
-}
+    );
+  }

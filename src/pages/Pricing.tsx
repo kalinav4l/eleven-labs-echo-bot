@@ -133,14 +133,12 @@ const PricingPage = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Se încarcă planurile...</p>
-          </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Se încarcă planurile...</p>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
@@ -148,15 +146,13 @@ const PricingPage = () => {
   if (!loading && plans.length === 0) {
     console.log('No plans found, loading state:', loading);
     return (
-      <DashboardLayout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-gray-600 mb-4">Nu s-au găsit planuri active.</p>
-            <p className="text-sm text-gray-500 mb-4">Loading: {loading.toString()}</p>
-            <Button onClick={() => window.location.reload()}>Reîncarcă</Button>
-          </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">Nu s-au găsit planuri active.</p>
+          <p className="text-sm text-gray-500 mb-4">Loading: {loading.toString()}</p>
+          <Button onClick={() => window.location.reload()}>Reîncarcă</Button>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 

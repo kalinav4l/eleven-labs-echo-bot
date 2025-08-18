@@ -822,5 +822,5 @@ export default function PhoneNumbers() {
           phoneLabel={testCallModal.phone?.label || ''}
         />
       </div>
-    </DashboardLayout>;
+    );
 }
