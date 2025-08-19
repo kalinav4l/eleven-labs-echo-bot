@@ -28,6 +28,36 @@ serve(async (req) => {
       throw new Error('ElevenLabs API key is not configured')
     }
 
+    // Validate SIP data before sending to ElevenLabs
+    if (!sipData.phone_number || !sipData.label) {
+      throw new Error('Phone number and label are required')
+    }
+
+    // Ensure outbound configuration is complete for SIP trunks
+    if (!sipData.outbound_trunk_config?.address || !sipData.outbound_trunk_config?.credentials?.username) {
+      throw new Error('Outbound SIP configuration (address and username) is required')
+    }
+
+    // Fix inbound trunk config - ElevenLabs may not support empty arrays
+    if (sipData.inbound_trunk_config) {
+      // If no specific allowed addresses, remove the field entirely
+      if (!sipData.inbound_trunk_config.allowed_addresses || sipData.inbound_trunk_config.allowed_addresses.length === 0) {
+        delete sipData.inbound_trunk_config.allowed_addresses
+      }
+      
+      // If no specific allowed numbers, remove the field entirely  
+      if (!sipData.inbound_trunk_config.allowed_numbers || sipData.inbound_trunk_config.allowed_numbers.length === 0) {
+        delete sipData.inbound_trunk_config.allowed_numbers
+      }
+      
+      // If no credentials provided, remove them entirely
+      if (!sipData.inbound_trunk_config.credentials?.username && !sipData.inbound_trunk_config.credentials?.password) {
+        delete sipData.inbound_trunk_config.credentials
+      }
+    }
+
+    console.log('Processed SIP data:', JSON.stringify(sipData, null, 2))
+
     // Call ElevenLabs API to create phone number
     const response = await fetch('https://api.elevenlabs.io/v1/convai/phone-numbers', {
       method: 'POST',
@@ -43,7 +73,18 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error('ElevenLabs API error:', result)
-      throw new Error(result.detail?.message || result.message || 'Failed to create phone number in ElevenLabs')
+      const errorMessage = result.detail?.message || result.message || 'Failed to create phone number in ElevenLabs'
+      
+      // Provide more specific error messages for common issues
+      if (errorMessage.includes('inbound trunk')) {
+        throw new Error('Configurația SIP inbound nu este validă. Verifică adresele permise și credențialele.')
+      } else if (errorMessage.includes('outbound trunk')) {
+        throw new Error('Configurația SIP outbound nu este validă. Verifică adresa serverului și credențialele.')
+      } else if (errorMessage.includes('phone_number')) {
+        throw new Error('Numărul de telefon nu este valid sau este deja în folosință.')
+      }
+      
+      throw new Error(errorMessage)
     }
 
     return new Response(
