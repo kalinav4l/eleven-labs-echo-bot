@@ -170,12 +170,12 @@ export const BatchCallProgress: React.FC<BatchCallProgressProps> = ({
         </div>
         <div className="text-sm text-gray-700 space-y-1">
           <p>• Inițiere apel → Așteptare 30s → Verificare conversații noi la fiecare 25s</p>
+          <p>• <strong>Delay 5 minute între apeluri</strong> pentru a respecta intervalul dorit</p>
           <p>• Monitorizare inteligentă prin lista conversațiilor agentului</p>
           <p>• Detectare automată a conversațiilor noi (nu în istoric)</p>
           <p>• <strong>Verifică status final:</strong> Successful, Error sau Failed</p>
-          <p>• <strong>Trece la următorul apel</strong> doar după primirea unui status final</p>
+          <p>• <strong>Trece la următorul apel</strong> după delay de 5 minute</p>
           <p>• Salvare garantată a tuturor datelor găsite</p>
-          <p>• Timeout optimizat la 2.5 minute per apel pentru eficiență maximă</p>
         </div>
       </div>
 
