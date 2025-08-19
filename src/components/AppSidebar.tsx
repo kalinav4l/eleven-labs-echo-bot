@@ -25,6 +25,7 @@ const aiAnalyticsItems = [
   { title: "AI Agents", url: "/account/kalina-agents", icon: Brain },
   { title: "Rapoarte", url: "/account/conversation-analytics", icon: TrendingUp },
   { title: "Chat AI", url: "/account/agent-ai", icon: Sparkles },
+  { title: "Test Voce", url: "/account/voice-demo", icon: Mic },
 ];
 
 const communicationsItems = [
@@ -32,14 +33,19 @@ const communicationsItems = [
   { title: "Programări", url: "/account/calendar", icon: CalendarDays },
   { title: "Numere", url: "/account/phone-numbers", icon: Smartphone },
   { title: "Test Apel", url: "/account/test-call", icon: Zap },
+  { title: "Reprogramări", url: "/account/callback-scheduler", icon: PhoneForwarded },
 ];
 
 const dataToolsItems = [
   { title: "Transcrieri", url: "/account/transcript", icon: FileText },
   { title: "Extragere Date", url: "/account/scraping", icon: Search },
+  { title: "Poșta", url: "/account/gmail", icon: Mail },
 ];
 
-const workflowItems = [];
+const workflowItems = [
+  { title: "Configurare", url: "/account/construction", icon: Workflow },
+  { title: "Webhooks", url: "/account/webhooks", icon: Network },
+];
 
 export function AppSidebar() {
   const location = useLocation();
@@ -144,6 +150,29 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {/* Workflow */}
+        <SidebarGroup>
+          <SidebarGroupLabel className={`text-xs uppercase tracking-wider text-muted-foreground ${isMobile ? 'px-6 py-2' : ''}`}>
+            Workflow
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {workflowItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)} className={isMobile ? 'touch-target text-base py-3' : ''}>
+                    <Link 
+                      to={item.url}
+                      onClick={() => console.log(`🔗 Navigating to: ${item.url} (${item.title})`)}
+                    >
+                      <item.icon className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'}`} />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className={`${isMobile ? 'p-4' : 'p-2'}`}>
@@ -169,6 +198,14 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={isActive('/account/documentation')} className={isMobile ? 'touch-target text-base py-3' : ''}>
+              <Link to="/account/documentation">
+                <BookOpen className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'}`} />
+                <span>Documentation</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           
           <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={isActive('/account/settings')} className={isMobile ? 'touch-target text-base py-3' : ''}>
