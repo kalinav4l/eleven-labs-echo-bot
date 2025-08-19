@@ -34,6 +34,7 @@ import Pricing from "./pages/Pricing";
 import Admin from "./pages/Admin";
 import Contacts from "./pages/Contacts";
 import Webhooks from "./pages/Webhooks";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -54,29 +55,29 @@ function AppWithWelcome() {
         <Route path="/admin" element={<Admin />} />
         
         {/* Account routes */}
-        <Route path="/account" element={<Account />} />
-        <Route path="/account/*" element={<Account />} />
-        <Route path="/account/kalina-agents" element={<KalinaAgents />} />
-        <Route path="/account/agent-edit/:agentId" element={<AgentEdit />} />
-        <Route path="/account/conversation-analytics" element={<ConversationAnalytics />} />
-        <Route path="/account/conversation/:conversationId" element={<ConversationDetail />} />
-        <Route path="/account/transcript" element={<Transcript />} />
-        <Route path="/account/outbound" element={<Outbound />} />
-        <Route path="/account/contacts" element={<Contacts />} />
-        <Route path="/account/calls" element={<Calls />} />
-        <Route path="/account/scraping" element={<Scraping />} />
-        <Route path="/account/phone-numbers" element={<PhoneNumbers />} />
-        <Route path="/account/test-call" element={<TestCall />} />
-        <Route path="/account/construction" element={<Construction />} />
-        <Route path="/account/webhooks" element={<Webhooks />} />
-        <Route path="/account/calendar" element={<Calendar />} />
-        <Route path="/account/agent-ai" element={<AgentAI />} />
-        <Route path="/account/gmail" element={<Gmail />} />
-        <Route path="/account/agent-consultant" element={<AgentConsultant />} />
-        <Route path="/account/callback-scheduler" element={<CallbackScheduler />} />
-        <Route path="/account/documentation" element={<Documentation />} />
-        <Route path="/account/voice-demo" element={<VoiceDemo />} />
-        <Route path="/account/settings" element={<AccountSettings />} />
+        <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+        <Route path="/account/*" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+        <Route path="/account/kalina-agents" element={<ProtectedRoute><KalinaAgents /></ProtectedRoute>} />
+        <Route path="/account/agent-edit/:agentId" element={<ProtectedRoute><AgentEdit /></ProtectedRoute>} />
+        <Route path="/account/conversation-analytics" element={<ProtectedRoute><ConversationAnalytics /></ProtectedRoute>} />
+        <Route path="/account/conversation/:conversationId" element={<ProtectedRoute><ConversationDetail /></ProtectedRoute>} />
+        <Route path="/account/transcript" element={<ProtectedRoute><Transcript /></ProtectedRoute>} />
+        <Route path="/account/outbound" element={<ProtectedRoute><Outbound /></ProtectedRoute>} />
+        <Route path="/account/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
+        <Route path="/account/calls" element={<ProtectedRoute><Calls /></ProtectedRoute>} />
+        <Route path="/account/scraping" element={<ProtectedRoute><Scraping /></ProtectedRoute>} />
+        <Route path="/account/phone-numbers" element={<ProtectedRoute><PhoneNumbers /></ProtectedRoute>} />
+        <Route path="/account/test-call" element={<ProtectedRoute><TestCall /></ProtectedRoute>} />
+        <Route path="/account/construction" element={<ProtectedRoute><Construction /></ProtectedRoute>} />
+        <Route path="/account/webhooks" element={<ProtectedRoute><Webhooks /></ProtectedRoute>} />
+        <Route path="/account/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+        <Route path="/account/agent-ai" element={<ProtectedRoute><AgentAI /></ProtectedRoute>} />
+        <Route path="/account/gmail" element={<ProtectedRoute><Gmail /></ProtectedRoute>} />
+        <Route path="/account/agent-consultant" element={<ProtectedRoute><AgentConsultant /></ProtectedRoute>} />
+        <Route path="/account/callback-scheduler" element={<ProtectedRoute><CallbackScheduler /></ProtectedRoute>} />
+        <Route path="/account/documentation" element={<ProtectedRoute><Documentation /></ProtectedRoute>} />
+        <Route path="/account/voice-demo" element={<ProtectedRoute><VoiceDemo /></ProtectedRoute>} />
+        <Route path="/account/settings" element={<ProtectedRoute><AccountSettings /></ProtectedRoute>} />
 
         {/* Catch-all for 404 */}
         <Route path="*" element={<NotFound />} />
