@@ -25,7 +25,7 @@ const aiAnalyticsItems = [
   { title: "AI Agents", url: "/account/kalina-agents", icon: Brain },
   { title: "Rapoarte", url: "/account/conversation-analytics", icon: TrendingUp },
   { title: "Chat AI", url: "/account/agent-ai", icon: Sparkles },
-  { title: "Test Voce", url: "/account/voice-demo", icon: Mic },
+  // { title: "Test Voce", url: "/account/voice-demo", icon: Mic },
 ];
 
 const communicationsItems = [
@@ -39,12 +39,12 @@ const communicationsItems = [
 const dataToolsItems = [
   { title: "Transcrieri", url: "/account/transcript", icon: FileText },
   { title: "Extragere Date", url: "/account/scraping", icon: Search },
-  { title: "Poșta", url: "/account/gmail", icon: Mail },
+  // { title: "Poșta", url: "/account/gmail", icon: Mail },
 ];
 
 const workflowItems = [
-  { title: "Configurare", url: "/account/construction", icon: Workflow },
-  { title: "Webhooks", url: "/account/webhooks", icon: Network },
+  // { title: "Configurare", url: "/account/construction", icon: Workflow },
+  // { title: "Webhooks", url: "/account/webhooks", icon: Network },
 ];
 
 export function AppSidebar() {
@@ -152,9 +152,9 @@ export function AppSidebar() {
 
         {/* Workflow */}
         <SidebarGroup>
-          <SidebarGroupLabel className={`text-xs uppercase tracking-wider text-muted-foreground ${isMobile ? 'px-6 py-2' : ''}`}>
+          {/* <SidebarGroupLabel className={`text-xs uppercase tracking-wider text-muted-foreground ${isMobile ? 'px-6 py-2' : ''}`}>
             Workflow
-          </SidebarGroupLabel>
+          </SidebarGroupLabel> */}
           <SidebarGroupContent>
             <SidebarMenu>
               {workflowItems.map((item) => (
@@ -198,14 +198,14 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           
-          <SidebarMenuItem>
+          {/* <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={isActive('/account/documentation')} className={isMobile ? 'touch-target text-base py-3' : ''}>
               <Link to="/account/documentation">
                 <BookOpen className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'}`} />
                 <span>Documentation</span>
               </Link>
             </SidebarMenuButton>
-          </SidebarMenuItem>
+          </SidebarMenuItem> */}
           
           <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={isActive('/account/settings')} className={isMobile ? 'touch-target text-base py-3' : ''}>

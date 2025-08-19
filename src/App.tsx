@@ -23,17 +23,17 @@ import { Toaster } from "@/components/ui/toaster";
 import AgentConsultant from "./pages/AgentConsultant";
 import Scraping from "./pages/Scraping";
 import Gmail from "./pages/Gmail";
-import Construction from "./pages/Construction";
-import Documentation from "./pages/Documentation";
+// import Construction from "./pages/Construction";
+// import Documentation from "./pages/Documentation";
 import PhoneNumbers from "./pages/PhoneNumbers";
 import TestCall from "./pages/TestCall";
 import ConversationDetail from "./pages/ConversationDetail";
-import VoiceDemo from "./pages/VoiceDemo";
+// import VoiceDemo from "./pages/VoiceDemo";
 // import CallbackScheduler from "./pages/CallbackScheduler";
 import Pricing from "./pages/Pricing";
 import Admin from "./pages/Admin";
 import Contacts from "./pages/Contacts";
-import Webhooks from "./pages/Webhooks";
+// import Webhooks from "./pages/Webhooks";
 
 const queryClient = new QueryClient();
 
@@ -67,15 +67,15 @@ function AppWithWelcome() {
         <Route path="/account/scraping" element={<Scraping />} />
         <Route path="/account/phone-numbers" element={<PhoneNumbers />} />
         <Route path="/account/test-call" element={<TestCall />} />
-        <Route path="/account/construction" element={<Construction />} />
-        <Route path="/account/webhooks" element={<Webhooks />} />
+        {/* <Route path="/account/construction" element={<Construction />} /> */}
+        {/* <Route path="/account/webhooks" element={<Webhooks />} /> */}
         <Route path="/account/calendar" element={<Calendar />} />
         <Route path="/account/agent-ai" element={<AgentAI />} />
-        <Route path="/account/gmail" element={<Gmail />} />
+        {/* <Route path="/account/gmail" element={<Gmail />} /> */}
         <Route path="/account/agent-consultant" element={<AgentConsultant />} />
         {/* <Route path="/account/callback-scheduler" element={<CallbackScheduler />} /> */}
-        <Route path="/account/documentation" element={<Documentation />} />
-        <Route path="/account/voice-demo" element={<VoiceDemo />} />
+        {/* <Route path="/account/documentation" element={<Documentation />} /> */}
+        {/* <Route path="/account/voice-demo" element={<VoiceDemo />} /> */}
         <Route path="/account/settings" element={<AccountSettings />} />
 
         {/* Catch-all for 404 */}
