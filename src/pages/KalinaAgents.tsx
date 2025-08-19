@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-
+import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,7 +54,6 @@ const KalinaAgents = () => {
     }
   };
   const handleDeleteAgent = (agent: any) => {
-    console.log('🔄 Butonul de ștergere apăsat pentru agentul:', agent);
     deleteAgent({
       id: agent.id,
       agent_id: agent.agent_id
@@ -74,15 +73,15 @@ const KalinaAgents = () => {
     setTestCallAgent(agent);
   };
   if (isLoading) {
-    return (
+  return <DashboardLayout>
       <div className="p-6 space-y-6">
         <div className="flex justify-center items-center min-h-[400px]">
           <div className="text-gray-500">Se încarcă agenții...</div>
         </div>
       </div>
-    );
+    </DashboardLayout>;
   }
-  return (
+  return <DashboardLayout>
     <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
@@ -280,6 +279,6 @@ const KalinaAgents = () => {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
+  </DashboardLayout>;
 };
 export default KalinaAgents;

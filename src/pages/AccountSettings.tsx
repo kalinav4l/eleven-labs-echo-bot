@@ -18,7 +18,6 @@ const AccountSettings = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState({
     defaultLanguage: 'ro'
   });
@@ -34,40 +33,6 @@ const AccountSettings = () => {
     chatId: ''
   });
   const [isDeleting, setIsDeleting] = useState(false);
-
-  // Load user settings on component mount
-  React.useEffect(() => {
-    const loadUserSettings = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('default_language, telegram_bot_token, telegram_chat_id')
-          .eq('id', user.id)
-          .single();
-
-        if (error) {
-          console.error('Error loading user settings:', error);
-          return;
-        }
-
-        if (data) {
-          setSettings({
-            defaultLanguage: (data as any).default_language || 'ro'
-          });
-          setTelegramSettings({
-            botToken: (data as any).telegram_bot_token || '',
-            chatId: (data as any).telegram_chat_id || ''
-          });
-        }
-      } catch (error) {
-        console.error('Error loading settings:', error);
-      }
-    };
-
-    loadUserSettings();
-  }, [user]);
 
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -165,22 +130,16 @@ const AccountSettings = () => {
 
       if (error) throw error;
 
-      // Update profile table as well
-      await supabase
-        .from('profiles')
-        .update({ email: emailSettings.newEmail })
-        .eq('id', user.id);
-
       toast({
         title: "Email updated",
-        description: "Check your new email for confirmation link."
+        description: "Email address has been updated. Check your email for confirmation."
       });
       setEmailSettings(prev => ({ ...prev, newEmail: '' }));
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating email:', error);
       toast({
         title: "Error",
-        description: error.message || "Could not update email address.",
+        description: "Could not update email address.",
         variant: "destructive"
       });
     }
@@ -205,15 +164,6 @@ const AccountSettings = () => {
       return;
     }
 
-    if (emailSettings.newPassword.length < 6) {
-      toast({
-        title: "Error",
-        description: "Password must be at least 6 characters long.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     try {
       const { error } = await supabase.auth.updateUser({
         password: emailSettings.newPassword
@@ -226,70 +176,11 @@ const AccountSettings = () => {
         description: "Password has been updated successfully."
       });
       setEmailSettings(prev => ({ ...prev, newPassword: '', confirmPassword: '' }));
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating password:', error);
       toast({
         title: "Error",
-        description: error.message || "Could not update password.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleSaveTelegramSettings = async () => {
-    if (!telegramSettings.botToken || !telegramSettings.chatId) {
-      toast({
-        title: "Error",
-        description: "Please fill in both Bot Token and Chat ID.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      // Save to profiles table or create a new table for user settings
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          telegram_bot_token: telegramSettings.botToken,
-          telegram_chat_id: telegramSettings.chatId
-        } as any)
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Settings saved",
-        description: "Telegram settings have been saved successfully."
-      });
-    } catch (error: any) {
-      console.error('Error saving Telegram settings:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Could not save Telegram settings.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleSaveLanguage = async () => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ default_language: settings.defaultLanguage } as any)
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Language updated",
-        description: "Default language has been updated."
-      });
-    } catch (error: any) {
-      console.error('Error updating language:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Could not update language.",
+        description: "Could not update password.",
         variant: "destructive"
       });
     }
@@ -297,7 +188,7 @@ const AccountSettings = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-white">
         <div className="max-w-4xl mx-auto px-6 py-8">
           {/* Header */}
           <div className="mb-8">
@@ -368,30 +259,25 @@ const AccountSettings = () => {
             <div className="border-b border-gray-200 pb-8">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Preferences</h2>
               <div className="space-y-4">
-                  <div>
-                   <Label className="text-sm text-gray-600 mb-2 block">Default Language</Label>
-                   <div className="flex gap-3 max-w-xs">
-                     <Select 
-                       value={settings.defaultLanguage} 
-                       onValueChange={(value) => setSettings({...settings, defaultLanguage: value})}
-                     >
-                       <SelectTrigger className="bg-white border-gray-200">
-                         <SelectValue />
-                       </SelectTrigger>
-                       <SelectContent className="bg-white border-gray-200">
-                         <SelectItem value="ro">Română</SelectItem>
-                         <SelectItem value="en">English</SelectItem>
-                         <SelectItem value="es">Español</SelectItem>
-                         <SelectItem value="fr">Français</SelectItem>
-                         <SelectItem value="de">Deutsch</SelectItem>
-                         <SelectItem value="it">Italiano</SelectItem>
-                       </SelectContent>
-                     </Select>
-                     <Button onClick={handleSaveLanguage} size="sm">
-                       Save
-                     </Button>
-                   </div>
-                 </div>
+                <div>
+                  <Label className="text-sm text-gray-600 mb-2 block">Default Language</Label>
+                  <Select 
+                    value={settings.defaultLanguage} 
+                    onValueChange={(value) => setSettings({...settings, defaultLanguage: value})}
+                  >
+                    <SelectTrigger className="bg-white border-gray-200 max-w-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-gray-200">
+                      <SelectItem value="ro">Română</SelectItem>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="es">Español</SelectItem>
+                      <SelectItem value="fr">Français</SelectItem>
+                      <SelectItem value="de">Deutsch</SelectItem>
+                      <SelectItem value="it">Italiano</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
@@ -416,7 +302,7 @@ const AccountSettings = () => {
                       className="bg-white border-gray-200"
                     />
                   </div>
-                  <Button onClick={handleSaveTelegramSettings} className="mt-2" size="sm">
+                  <Button className="mt-2" size="sm">
                     <Bot className="w-4 h-4 mr-2" />
                     Save Telegram Settings
                   </Button>

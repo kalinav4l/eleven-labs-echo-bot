@@ -50,8 +50,6 @@ const Calendar = () => {
   const emptyCellsAtStart = Array(firstDayOfWeek).fill(null);
   
   const getEventsForDate = (date: Date) => {
-    if (!callbacks) return [];
-    
     return callbacks.filter(callback => {
       const callbackDate = new Date(callback.scheduled_time || callback.scheduled_datetime);
       return isSameDay(callbackDate, date);
@@ -131,7 +129,7 @@ const Calendar = () => {
 
   return (
     <DashboardLayout>
-      <div className="flex-1 min-h-screen">
+      <div className="flex-1 min-h-screen bg-white">
         {/* Header cu efect liquid glass */}
         <div className="bg-white/80 backdrop-blur-lg border-0 px-6 py-4">
           <div className="flex items-center justify-between">

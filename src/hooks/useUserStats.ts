@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 export const useUserStats = () => {
   const { user } = useAuth();
@@ -41,27 +41,14 @@ export const useUserStats = () => {
     refetchOnReconnect: true,
   });
 
-  // Ref pentru a ține evidența canalului activ
-  const channelRef = useRef<any>(null);
-
   // Real-time updates for user statistics
   useEffect(() => {
-    // Cleanup existent dacă nu avem user
-    if (!user?.id) {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
-      return;
-    }
-
-    // Previne multiple subscriptions
-    if (channelRef.current) return;
+    if (!user?.id) return;
 
     console.log('📊 Setting up real-time subscription for user statistics');
     
     const channel = supabase
-      .channel(`user-statistics-realtime-${user.id}-${Date.now()}`) // Canal unic
+      .channel('user-statistics-realtime')
       .on(
         'postgres_changes',
         {
@@ -77,16 +64,11 @@ export const useUserStats = () => {
       )
       .subscribe();
 
-    channelRef.current = channel;
-
     return () => {
       console.log('📊 Cleaning up user statistics real-time subscription');
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
+      supabase.removeChannel(channel);
     };
-  }, [user?.id]); // Removed statsQuery dependency
+  }, [user?.id, statsQuery]);
 
   return statsQuery;
 };

@@ -7,58 +7,13 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
+  // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
   public: {
     Tables: {
-      active_agents: {
-        Row: {
-          agent_id: string
-          agent_name: string
-          call_started_at: string | null
-          conversation_id: string | null
-          created_at: string
-          current_contact_name: string | null
-          current_phone_number: string | null
-          id: string
-          last_activity_at: string
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          agent_id: string
-          agent_name: string
-          call_started_at?: string | null
-          conversation_id?: string | null
-          created_at?: string
-          current_contact_name?: string | null
-          current_phone_number?: string | null
-          id?: string
-          last_activity_at?: string
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          agent_id?: string
-          agent_name?: string
-          call_started_at?: string | null
-          conversation_id?: string | null
-          created_at?: string
-          current_contact_name?: string | null
-          current_phone_number?: string | null
-          id?: string
-          last_activity_at?: string
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       admin_audit_log: {
         Row: {
           action: string
@@ -426,54 +381,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      campaign_sessions: {
-        Row: {
-          agent_id: string
-          call_statuses: Json
-          completed_at: string | null
-          current_contact_name: string | null
-          current_progress: number
-          id: string
-          phone_id: string | null
-          session_id: string
-          started_at: string
-          status: string
-          total_contacts: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          agent_id: string
-          call_statuses?: Json
-          completed_at?: string | null
-          current_contact_name?: string | null
-          current_progress?: number
-          id?: string
-          phone_id?: string | null
-          session_id: string
-          started_at?: string
-          status?: string
-          total_contacts?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          agent_id?: string
-          call_statuses?: Json
-          completed_at?: string | null
-          current_contact_name?: string | null
-          current_progress?: number
-          id?: string
-          phone_id?: string | null
-          session_id?: string
-          started_at?: string
-          status?: string
-          total_contacts?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
       }
       campaigns: {
         Row: {
@@ -1197,7 +1104,6 @@ export type Database = {
           inbound_media_encryption: string | null
           inbound_password: string | null
           inbound_username: string | null
-          is_primary: boolean | null
           label: string
           outbound_address: string | null
           outbound_headers: Json | null
@@ -1220,7 +1126,6 @@ export type Database = {
           inbound_media_encryption?: string | null
           inbound_password?: string | null
           inbound_username?: string | null
-          is_primary?: boolean | null
           label: string
           outbound_address?: string | null
           outbound_headers?: Json | null
@@ -1243,7 +1148,6 @@ export type Database = {
           inbound_media_encryption?: string | null
           inbound_password?: string | null
           inbound_username?: string | null
-          is_primary?: boolean | null
           label?: string
           outbound_address?: string | null
           outbound_headers?: Json | null
@@ -1302,88 +1206,34 @@ export type Database = {
           account_type: string | null
           avatar_url: string | null
           created_at: string
-          default_language: string | null
           email: string | null
           first_name: string | null
           id: string
           last_name: string | null
           plan: string | null
-          telegram_bot_token: string | null
-          telegram_chat_id: string | null
           updated_at: string
         }
         Insert: {
           account_type?: string | null
           avatar_url?: string | null
           created_at?: string
-          default_language?: string | null
           email?: string | null
           first_name?: string | null
           id: string
           last_name?: string | null
           plan?: string | null
-          telegram_bot_token?: string | null
-          telegram_chat_id?: string | null
           updated_at?: string
         }
         Update: {
           account_type?: string | null
           avatar_url?: string | null
           created_at?: string
-          default_language?: string | null
           email?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
           plan?: string | null
-          telegram_bot_token?: string | null
-          telegram_chat_id?: string | null
           updated_at?: string
-        }
-        Relationships: []
-      }
-      prompt_history: {
-        Row: {
-          additional_info: string | null
-          agent_name: string
-          agent_type: string
-          company_name: string | null
-          contact_number: string | null
-          created_at: string
-          domain: string | null
-          generated_prompt: string
-          id: string
-          updated_at: string
-          user_id: string
-          website_url: string | null
-        }
-        Insert: {
-          additional_info?: string | null
-          agent_name: string
-          agent_type: string
-          company_name?: string | null
-          contact_number?: string | null
-          created_at?: string
-          domain?: string | null
-          generated_prompt: string
-          id?: string
-          updated_at?: string
-          user_id: string
-          website_url?: string | null
-        }
-        Update: {
-          additional_info?: string | null
-          agent_name?: string
-          agent_type?: string
-          company_name?: string | null
-          contact_number?: string | null
-          created_at?: string
-          domain?: string | null
-          generated_prompt?: string
-          id?: string
-          updated_at?: string
-          user_id?: string
-          website_url?: string | null
         }
         Relationships: []
       }
@@ -1549,48 +1399,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_activity_events: {
-        Row: {
-          action: string | null
-          created_at: string
-          description: string | null
-          event_type: string
-          id: string
-          ip_address: unknown | null
-          metadata: Json | null
-          page_path: string | null
-          session_id: string | null
-          user_agent: string | null
-          user_id: string
-        }
-        Insert: {
-          action?: string | null
-          created_at?: string
-          description?: string | null
-          event_type: string
-          id?: string
-          ip_address?: unknown | null
-          metadata?: Json | null
-          page_path?: string | null
-          session_id?: string | null
-          user_agent?: string | null
-          user_id: string
-        }
-        Update: {
-          action?: string | null
-          created_at?: string
-          description?: string | null
-          event_type?: string
-          id?: string
-          ip_address?: unknown | null
-          metadata?: Json | null
-          page_path?: string | null
-          session_id?: string | null
-          user_agent?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_balance: {
         Row: {
           balance_usd: number
@@ -1636,125 +1444,6 @@ export type Database = {
           preferences?: Json
           updated_at?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      user_data: {
-        Row: {
-          created_at: string
-          custom_fields: Json | null
-          database_id: string | null
-          date_user: string
-          id: string
-          info: string | null
-          location: string | null
-          name: string
-          number: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          custom_fields?: Json | null
-          database_id?: string | null
-          date_user?: string
-          id?: string
-          info?: string | null
-          location?: string | null
-          name: string
-          number?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          custom_fields?: Json | null
-          database_id?: string | null
-          date_user?: string
-          id?: string
-          info?: string | null
-          location?: string | null
-          name?: string
-          number?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_data_columns: {
-        Row: {
-          column_name: string
-          column_type: string
-          created_at: string
-          database_id: string
-          display_order: number
-          id: string
-          is_required: boolean
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          column_name: string
-          column_type?: string
-          created_at?: string
-          database_id: string
-          display_order?: number
-          id?: string
-          is_required?: boolean
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          column_name?: string
-          column_type?: string
-          created_at?: string
-          database_id?: string
-          display_order?: number
-          id?: string
-          is_required?: boolean
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_user_data_columns_database"
-            columns: ["database_id"]
-            isOneToOne: false
-            referencedRelation: "user_databases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_databases: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          is_default: boolean
-          name: string
-          updated_at: string
-          user_id: string
-          webhook_token: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_default?: boolean
-          name: string
-          updated_at?: string
-          user_id: string
-          webhook_token?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_default?: boolean
-          name?: string
-          updated_at?: string
-          user_id?: string
-          webhook_token?: string
         }
         Relationships: []
       }
@@ -1986,36 +1675,6 @@ export type Database = {
         }
         Relationships: []
       }
-      workflow_columns: {
-        Row: {
-          created_at: string
-          id: string
-          prompt: string
-          sort_order: number
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          prompt: string
-          sort_order?: number
-          title: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          prompt?: string
-          sort_order?: number
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
@@ -2023,150 +1682,44 @@ export type Database = {
     Functions: {
       admin_ban_user: {
         Args: {
-          p_admin_user_id: string
-          p_ban_status: boolean
           p_target_user_id: string
+          p_ban_status: boolean
+          p_admin_user_id: string
         }
         Returns: boolean
       }
       admin_change_role: {
         Args: {
-          p_admin_user_id: string
+          p_target_user_id: string
           p_new_role: Database["public"]["Enums"]["app_role"]
-          p_target_user_id: string
-        }
-        Returns: boolean
-      }
-      admin_create_agent: {
-        Args: {
           p_admin_user_id: string
-          p_agent_id?: string
-          p_description?: string
-          p_elevenlabs_agent_id?: string
-          p_is_active?: boolean
-          p_name: string
-          p_provider?: string
-          p_system_prompt?: string
-          p_target_user_id: string
-          p_voice_id: string
         }
-        Returns: {
-          agent_id: string
-          created_at: string
-          description: string | null
-          elevenlabs_agent_id: string | null
-          id: string
-          is_active: boolean
-          name: string
-          provider: string | null
-          system_prompt: string | null
-          updated_at: string
-          user_id: string
-          voice_id: string | null
-        }
-      }
-      admin_delete_agent: {
-        Args: { p_admin_user_id: string; p_agent_row_id: string }
         Returns: boolean
       }
       admin_get_all_users: {
         Args: { p_admin_user_id: string }
         Returns: {
-          account_type: string
-          balance_usd: number
-          created_at: string
+          user_id: string
           email: string
           first_name: string
           last_name: string
-          last_sign_in: string
-          plan: string
-          total_calls: number
-          total_minutes: number
-          total_spent_usd: number
-          user_id: string
-          user_role: Database["public"]["Enums"]["app_role"]
-        }[]
-      }
-      admin_get_top_active_users: {
-        Args: { limit_count?: number; period_hours?: number }
-        Returns: {
-          event_count: number
-          last_event_at: string
-          user_id: string
-        }[]
-      }
-      admin_get_user_activity: {
-        Args: { _user_id: string; limit_count?: number; since_hours?: number }
-        Returns: {
-          action: string | null
-          created_at: string
-          description: string | null
-          event_type: string
-          id: string
-          ip_address: unknown | null
-          metadata: Json | null
-          page_path: string | null
-          session_id: string | null
-          user_agent: string | null
-          user_id: string
-        }[]
-      }
-      admin_get_user_agents: {
-        Args: { p_admin_user_id: string; p_target_user_id: string }
-        Returns: {
-          agent_id: string
-          created_at: string
-          description: string
-          elevenlabs_agent_id: string
-          id: string
-          is_active: boolean
-          name: string
-          provider: string
-          system_prompt: string
-          updated_at: string
-          user_id: string
-          voice_id: string
-        }[]
-      }
-      admin_get_user_by_id: {
-        Args: { p_admin_user_id: string; p_target_user_id: string }
-        Returns: {
           account_type: string
+          user_role: Database["public"]["Enums"]["app_role"]
           balance_usd: number
-          created_at: string
-          email: string
-          first_name: string
-          last_name: string
-          last_sign_in: string
-          plan: string
           total_calls: number
           total_minutes: number
           total_spent_usd: number
-          user_id: string
-          user_role: Database["public"]["Enums"]["app_role"]
+          plan: string
+          created_at: string
+          last_sign_in: string
         }[]
       }
       admin_modify_balance: {
         Args: {
-          p_admin_user_id: string
+          p_target_user_id: string
           p_balance_amount: number
           p_operation: string
-          p_target_user_id: string
-        }
-        Returns: boolean
-      }
-      admin_update_agent: {
-        Args: {
           p_admin_user_id: string
-          p_agent_id?: string
-          p_agent_row_id: string
-          p_description?: string
-          p_elevenlabs_agent_id?: string
-          p_is_active?: boolean
-          p_name?: string
-          p_provider?: string
-          p_system_prompt?: string
-          p_voice_id?: string
         }
         Returns: boolean
       }
@@ -2176,20 +1729,20 @@ export type Database = {
       }
       deduct_balance: {
         Args: {
-          p_amount: number
-          p_conversation_id?: string
-          p_description?: string
           p_user_id: string
+          p_amount: number
+          p_description?: string
+          p_conversation_id?: string
         }
         Returns: boolean
       }
       execute_atomic_call_transaction: {
         Args: {
-          p_amount: number
-          p_conversation_id: string
-          p_description: string
-          p_duration_seconds: number
           p_user_id: string
+          p_amount: number
+          p_duration_seconds: number
+          p_description: string
+          p_conversation_id: string
         }
         Returns: boolean
       }
@@ -2199,8 +1752,8 @@ export type Database = {
       }
       has_role: {
         Args: {
-          _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
         }
         Returns: boolean
       }
@@ -2210,20 +1763,20 @@ export type Database = {
       }
       log_admin_action: {
         Args: {
-          p_action: string
           p_admin_user_id: string
+          p_action: string
+          p_target_user_id?: string
           p_details?: Json
           p_ip_address?: unknown
-          p_target_user_id?: string
         }
         Returns: boolean
       }
       match_document_embeddings: {
         Args: {
-          agent_id_param: string
-          match_count?: number
-          match_threshold?: number
           query_embedding: Json
+          agent_id_param: string
+          match_threshold?: number
+          match_count?: number
         }
         Returns: {
           chunk_text: string
@@ -2233,9 +1786,9 @@ export type Database = {
       }
       search_relevant_chunks: {
         Args: {
+          query_text: string
           agent_id_param: string
           match_count?: number
-          query_text: string
         }
         Returns: {
           chunk_text: string
@@ -2245,9 +1798,9 @@ export type Database = {
       }
       update_user_statistics_with_spending: {
         Args: {
-          p_cost_usd: number
-          p_duration_seconds: number
           p_user_id: string
+          p_duration_seconds: number
+          p_cost_usd: number
         }
         Returns: boolean
       }

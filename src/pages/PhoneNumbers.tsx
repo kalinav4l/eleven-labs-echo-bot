@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Phone, Plus, Settings, Globe, Lock, Trash2, Edit3, PhoneCall, ChevronDown, ChevronRight, Copy } from 'lucide-react';
 import { PhoneTestCallModal } from '@/components/outbound/PhoneTestCallModal';
-
+import DashboardLayout from '@/components/DashboardLayout';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
@@ -56,7 +56,6 @@ export default function PhoneNumbers() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [expandedPhone, setExpandedPhone] = useState<string | null>(null);
   const [testCallModal, setTestCallModal] = useState<{isOpen: boolean, phone?: PhoneNumber}>({isOpen: false});
-  const [editingPhone, setEditingPhone] = useState<PhoneNumber | null>(null);
   const [formData, setFormData] = useState<SIPTrunkData>({
     label: '',
     phone_number: '',
@@ -175,11 +174,10 @@ export default function PhoneNumbers() {
           throw new Error('Nu sunteți autentificat');
         }
 
-        // Save to database (edit or create)
-        let dbError;
-        if (editingPhone) {
-          // Update existing phone number
-          const { error } = await supabase.from('phone_numbers').update({
+        // Save to database
+        const {
+          error: dbError
+        } = await supabase.from('phone_numbers').insert({
           user_id: user.id,
           label: formData.label,
           phone_number: formData.phone_number,
@@ -195,29 +193,7 @@ export default function PhoneNumbers() {
           inbound_password: formData.inbound_password,
           inbound_media_encryption: formData.inbound_media_encryption,
           inbound_allowed_numbers: formData.inbound_allowed_numbers ? formData.inbound_allowed_numbers.split(',').map(s => s.trim()) : []
-        }).eq('id', editingPhone.id);
-          dbError = error;
-        } else {
-          // Create new phone number
-          const { error } = await supabase.from('phone_numbers').insert({
-            user_id: user.id,
-            label: formData.label,
-            phone_number: formData.phone_number,
-            elevenlabs_phone_id: result.phone_number_id,
-            outbound_address: formData.outbound_address,
-            outbound_transport: formData.outbound_transport,
-            outbound_username: formData.outbound_username,
-            outbound_password: formData.outbound_password,
-            outbound_media_encryption: formData.outbound_media_encryption,
-            outbound_headers: headersObj,
-            inbound_allowed_addresses: formData.inbound_allowed_addresses ? formData.inbound_allowed_addresses.split(',').map(s => s.trim()) : [],
-            inbound_username: formData.inbound_username,
-            inbound_password: formData.inbound_password,
-            inbound_media_encryption: formData.inbound_media_encryption,
-            inbound_allowed_numbers: formData.inbound_allowed_numbers ? formData.inbound_allowed_numbers.split(',').map(s => s.trim()) : []
-          });
-          dbError = error;
-        }
+        });
         if (dbError) {
           console.error('Database error:', dbError);
           toast({
@@ -248,7 +224,6 @@ export default function PhoneNumbers() {
             inbound_allowed_numbers: ''
           });
           setShowAddForm(false);
-          setEditingPhone(null);
           loadPhoneNumbers();
         }
       } else {
@@ -265,28 +240,6 @@ export default function PhoneNumbers() {
       setIsLoading(false);
     }
   };
-  
-  const handleEditPhone = (phone: PhoneNumber) => {
-    // Load phone data into form for editing
-    setFormData({
-      label: phone.label,
-      phone_number: phone.phone_number,
-      outbound_address: phone.outbound_address || '',
-      outbound_transport: phone.outbound_transport || 'tcp',
-      outbound_username: phone.outbound_username || '',
-      outbound_password: phone.outbound_password || '',
-      outbound_media_encryption: phone.outbound_media_encryption || 'allowed',
-      outbound_headers: phone.outbound_headers ? JSON.stringify(phone.outbound_headers, null, 2) : '',
-      inbound_allowed_addresses: phone.inbound_allowed_addresses ? phone.inbound_allowed_addresses.join(', ') : '',
-      inbound_username: phone.inbound_username || '',
-      inbound_password: phone.inbound_password || '',
-      inbound_media_encryption: phone.inbound_media_encryption || 'allowed',
-      inbound_allowed_numbers: phone.inbound_allowed_numbers ? phone.inbound_allowed_numbers.join(', ') : ''
-    });
-    setEditingPhone(phone);
-    setShowAddForm(true);
-  };
-  
   const deletePhoneNumber = async (id: string) => {
     try {
       const {
@@ -329,8 +282,8 @@ export default function PhoneNumbers() {
       });
     }
   };
-  return (
-    <div className="container mx-auto p-6 max-w-6xl">
+  return <DashboardLayout>
+      <div className="container mx-auto p-6 max-w-6xl">
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div>
@@ -342,29 +295,7 @@ export default function PhoneNumbers() {
                 Gestiona numerele de telefon SIP pentru agenții conversationali
               </p>
             </div>
-            <Button onClick={() => {
-              if (showAddForm) {
-                setShowAddForm(false);
-                setEditingPhone(null);
-                setFormData({
-                  label: '',
-                  phone_number: '',
-                  outbound_address: '',
-                  outbound_transport: 'tcp',
-                  outbound_username: '',
-                  outbound_password: '',
-                  outbound_media_encryption: 'allowed',
-                  outbound_headers: '',
-                  inbound_allowed_addresses: '',
-                  inbound_username: '',
-                  inbound_password: '',
-                  inbound_media_encryption: 'allowed',
-                  inbound_allowed_numbers: ''
-                });
-              } else {
-                setShowAddForm(true);
-              }
-            }}>
+            <Button onClick={() => setShowAddForm(!showAddForm)}>
               <Plus className="mr-2 h-4 w-4" />
               {showAddForm ? 'Anulează' : 'Adaugă număr'}
             </Button>
@@ -420,12 +351,9 @@ export default function PhoneNumbers() {
                         }}>
                           <PhoneCall className="h-4 w-4" />
                         </Button>
-        <Button variant="outline" size="sm" onClick={e => {
-                           e.stopPropagation();
-                           handleEditPhone(phone);
-                         }}>
-                           <Edit3 className="h-4 w-4" />
-                         </Button>
+                        <Button variant="outline" size="sm" onClick={e => e.stopPropagation()}>
+                          <Edit3 className="h-4 w-4" />
+                        </Button>
                         <Button variant="outline" size="sm" onClick={e => {
                     e.stopPropagation();
                     deletePhoneNumber(phone.id);
@@ -510,35 +438,15 @@ export default function PhoneNumbers() {
                                           <Globe className="h-3 w-3" />
                                         </div>
                                       </div>
-                                       <p className="text-sm text-muted-foreground">
-                                         {phone.inbound_allowed_addresses && phone.inbound_allowed_addresses.length > 0 
-                                           ? phone.inbound_allowed_addresses.join(', ') 
-                                           : 'All addresses'
-                                         }
-                                       </p>
+                                      <p className="text-sm text-muted-foreground">All addresses</p>
                                     </div>
-                                   </div>
-                                   
-                                   {/* Show allowed numbers if configured */}
-                                   {phone.inbound_allowed_numbers && phone.inbound_allowed_numbers.length > 0 && (
-                                     <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-                                       <div className="flex items-center gap-2 mb-2">
-                                         <h5 className="text-sm font-medium">Allowed Numbers</h5>
-                                         <div className="bg-background rounded-lg p-1">
-                                           <Phone className="h-3 w-3" />
-                                         </div>
-                                       </div>
-                                       <p className="text-sm text-muted-foreground font-mono">
-                                         {phone.inbound_allowed_numbers.join(', ')}
-                                       </p>
-                                     </div>
-                                   )}
-                                 </div>
-                               </div>
-                             </div>
-                           </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
 
-                           {/* Outbound Configuration */}
+                          {/* Outbound Configuration */}
                           <div className="space-y-4">
                             <div className="flex items-start gap-3">
                               <div className="bg-muted rounded-xl p-3">
@@ -623,8 +531,8 @@ export default function PhoneNumbers() {
         {showAddForm && <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                {editingPhone ? <Edit3 className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
-                {editingPhone ? 'Editare SIP Trunk' : 'Configurare SIP Trunk'}
+                <Plus className="h-5 w-5" />
+                Configurare SIP Trunk
               </CardTitle>
               <CardDescription>
                 Completează toate informațiile pentru a conecta un SIP trunk la sistemul conversațional
@@ -779,34 +687,16 @@ export default function PhoneNumbers() {
                 </div>
 
                 <div className="flex justify-end gap-2 pt-6">
-                  <Button type="button" variant="outline" onClick={() => {
-                    setShowAddForm(false);
-                    setEditingPhone(null);
-                    setFormData({
-                      label: '',
-                      phone_number: '',
-                      outbound_address: '',
-                      outbound_transport: 'tcp',
-                      outbound_username: '',
-                      outbound_password: '',
-                      outbound_media_encryption: 'allowed',
-                      outbound_headers: '',
-                      inbound_allowed_addresses: '',
-                      inbound_username: '',
-                      inbound_password: '',
-                      inbound_media_encryption: 'allowed',
-                      inbound_allowed_numbers: ''
-                    });
-                  }}>
+                  <Button type="button" variant="outline" onClick={() => setShowAddForm(false)}>
                     Anulează
                   </Button>
                   <Button type="submit" disabled={isLoading} className="min-w-[140px]">
                     {isLoading ? <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Importing...
-                       </> : <>
-                        {editingPhone ? <Edit3 className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
-                        {editingPhone ? 'Salvează' : 'Import'}
+                      </> : <>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Import
                       </>}
                   </Button>
                 </div>
@@ -822,5 +712,5 @@ export default function PhoneNumbers() {
           phoneLabel={testCallModal.phone?.label || ''}
         />
       </div>
-    );
+    </DashboardLayout>;
 }

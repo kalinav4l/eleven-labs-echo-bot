@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 export const useUserBalance = () => {
   const { user } = useAuth();
@@ -31,27 +31,14 @@ export const useUserBalance = () => {
     refetchOnReconnect: true,
   });
 
-  // Ref pentru a ține evidența canalului activ
-  const channelRef = useRef<any>(null);
-
   // Real-time updates for user balance
   useEffect(() => {
-    // Cleanup existent dacă nu avem user
-    if (!user?.id) {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
-      return;
-    }
-
-    // Previne multiple subscriptions
-    if (channelRef.current) return;
+    if (!user?.id) return;
 
     console.log('💰 Setting up real-time subscription for user balance');
     
     const channel = supabase
-      .channel(`user-balance-realtime-${user.id}-${Date.now()}`) // Canal unic
+      .channel('user-balance-realtime')
       .on(
         'postgres_changes',
         {
@@ -80,16 +67,11 @@ export const useUserBalance = () => {
       )
       .subscribe();
 
-    channelRef.current = channel;
-
     return () => {
       console.log('💰 Cleaning up balance real-time subscription');
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
+      supabase.removeChannel(channel);
     };
-  }, [user?.id]); // Removed balanceQuery dependency
+  }, [user?.id, balanceQuery]);
 
   return balanceQuery;
 };

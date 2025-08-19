@@ -73,16 +73,14 @@ serve(async (req) => {
     const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY')
     
     console.log('API Key exists:', !!elevenLabsApiKey)
-    console.log('API Key length:', elevenLabsApiKey ? elevenLabsApiKey.length : 'undefined')
-    console.log('API Key preview:', elevenLabsApiKey ? `${elevenLabsApiKey.substring(0, 8)}...` : 'none')
     
-    if (!elevenLabsApiKey || elevenLabsApiKey.length < 10) {
-      console.error('❌ ElevenLabs API key not configured or invalid')
+    if (!elevenLabsApiKey) {
+      console.error('❌ ElevenLabs API key not configured')
       return new Response(
         JSON.stringify({ 
-          error: 'ElevenLabs API key nu este configurat corect în Supabase Secrets. Verificați că ELEVENLABS_API_KEY este setat corect.',
+          error: 'ElevenLabs API key nu este configurat în Supabase Secrets. Configurați ELEVENLABS_API_KEY în Edge Functions Secrets.',
           success: false,
-          details: 'API key lipsă sau invalid. Mergeți la Project Settings > Edge Functions > Manage secrets și actualizați ELEVENLABS_API_KEY'
+          details: 'Mergeți la Project Settings > Edge Functions > Manage secrets și adăugați ELEVENLABS_API_KEY'
         }),
         {
           status: 500,
@@ -91,195 +89,69 @@ serve(async (req) => {
       )
     }
 
-    // Test API key validity by making a simple request first
-    console.log('🔍 Testing ElevenLabs API key validity...')
-    try {
-      const testResponse = await fetch('https://api.elevenlabs.io/v1/user', {
-        method: 'GET',
-        headers: {
-          'xi-api-key': elevenLabsApiKey,
-        },
-      })
-      
-      console.log('🔑 API key test response status:', testResponse.status)
-      
-      if (testResponse.status === 401) {
-        console.error('❌ ElevenLabs API key is invalid (401 Unauthorized)')
-        return new Response(
-          JSON.stringify({ 
-            error: 'ElevenLabs API key este invalid. Verificați că key-ul este corect în setările Supabase.',
-            success: false,
-            details: 'API key test a returnat 401 Unauthorized. Actualizați ELEVENLABS_API_KEY în Edge Functions Secrets.'
-          }),
-          {
-            status: 401,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        )
-      } else if (!testResponse.ok) {
-        console.error('❌ ElevenLabs API key test failed:', testResponse.status)
-        console.error('📄 Response:', await testResponse.text())
-      } else {
-        console.log('✅ ElevenLabs API key is valid')
-      }
-    } catch (testError) {
-      console.error('❌ Failed to test ElevenLabs API key:', testError)
-      // Continue with the call attempt anyway
-    }
-
     // Configure phone number for call - use test number for test calls
     let agentPhoneId, callerNumber;
 
-    // For test calls, automatically find an available phone number
-    if (is_test_call) {
-      console.log('🔍 Looking for available phone number for test call...')
-      
-      // Get any available active phone number for test calls
-      const { data: phoneConfig, error: phoneConfigError } = await supabase
-        .from('phone_numbers')
-        .select('elevenlabs_phone_id, phone_number, id, label')
-        .eq('status', 'active')
-        .order('is_primary', { ascending: false }) // Prefer primary numbers
-        .order('created_at', { ascending: false })
-        .limit(1)
-
-      if (phoneConfigError || !phoneConfig || phoneConfig.length === 0) {
-        console.error('❌ No active phone numbers available for test calls:', phoneConfigError)
-        return new Response(
-          JSON.stringify({ 
-            error: 'Nu există numere de telefon active disponibile pentru apeluri de test',
-            success: false,
-            details: phoneConfigError?.message || 'No phone numbers found'
-          }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        )
-      }
-
-      const phoneRecord = phoneConfig[0]
-      agentPhoneId = phoneRecord.elevenlabs_phone_id
-      callerNumber = phoneRecord.phone_number
-      
-      console.log('📞 Using test phone configuration:', { 
-        agentPhoneId, 
-        callerNumber,
-        phoneRecord: {
-          id: phoneRecord.id,
-          label: phoneRecord.label,
-          phone_number: phoneRecord.phone_number
-        }
-      })
-      
-      // Validate ElevenLabs phone ID before proceeding
-      if (!agentPhoneId || agentPhoneId.trim() === '') {
-        console.error('❌ Invalid ElevenLabs phone ID for test call:', {
-          phoneRecord,
-          agentPhoneId
-        })
-        return new Response(
-          JSON.stringify({ 
-            error: 'Numărul de telefon selectat nu este configurat corect cu ElevenLabs',
-            success: false,
-            details: 'Phone number missing valid elevenlabs_phone_id'
-          }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        )
-      }
-    } else {
-      // Original logic for non-test calls - get user's phone number from database
-      console.log('Looking up user phone numbers for regular call...')
-
-      // Get user's phone number from database (for regular calls)
-      const { data: userPhoneNumbers, error: phoneError } = await supabase
-        .from('phone_numbers')
-        .select('elevenlabs_phone_id, phone_number')
-        .eq('user_id', user_id)
-        .eq('status', 'active')
-        .order('is_primary', { ascending: false }) // Prefer primary phone numbers
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (phoneError) {
-        console.error('❌ Error fetching user phone numbers:', phoneError);
-        return new Response(
-          JSON.stringify({ 
-            error: 'Nu s-au putut găsi numerele de telefon ale utilizatorului',
-            success: false,
-            details: phoneError.message
-          }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
-      }
-
-      if (!userPhoneNumbers || userPhoneNumbers.length === 0) {
-        console.error('❌ No active phone numbers found for user:', user_id);
-        return new Response(
-          JSON.stringify({ 
-            error: 'Nu aveți niciun număr de telefon activ înregistrat. Vă rugăm să adăugați un număr de telefon în secțiunea Phone Numbers.',
-            success: false,
-            details: 'Utilizatorul nu are numere de telefon active'
-          }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
-      }
-
-      const userPhone = userPhoneNumbers[0];
-      agentPhoneId = userPhone.elevenlabs_phone_id;
-      callerNumber = userPhone.phone_number;
-
-      if (!agentPhoneId) {
-        console.error('❌ Phone number missing ElevenLabs configuration');
-        return new Response(
-          JSON.stringify({ 
-            error: 'Numărul de telefon nu este configurat corect cu ElevenLabs. Vă rugăm să reconfigurați numărul în secțiunea Phone Numbers.',
-            success: false,
-            details: 'Phone number missing elevenlabs_phone_id'
-          }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
-      }
-
-      console.log('User phone details:', { agentPhoneId, callerNumber, user_id })
-    }
-
-    // Validate agent exists (for both test and regular calls)
-    const { data: agentData, error: agentError } = await supabase
-      .from('kalina_agents')
-      .select('elevenlabs_agent_id, name')
-      .eq('elevenlabs_agent_id', agent_id)
+    // Get user's phone number from database (for both test and regular calls)
+    const { data: userPhoneNumbers, error: phoneError } = await supabase
+      .from('phone_numbers')
+      .select('elevenlabs_phone_id, phone_number')
       .eq('user_id', user_id)
-      .single()
+      .eq('status', 'active')
+      .order('is_primary', { ascending: false }) // Prefer primary phone numbers
+      .order('created_at', { ascending: false })
+      .limit(1);
 
-    if (agentError || !agentData) {
-      console.error('❌ Agent not found or access denied:', agentError)
+    if (phoneError) {
+      console.error('❌ Error fetching user phone numbers:', phoneError);
       return new Response(
         JSON.stringify({ 
-          error: `Agent cu ID-ul ${agent_id} nu a fost găsit sau nu aveți acces la el`,
+          error: 'Nu s-au putut găsi numerele de telefon ale utilizatorului',
           success: false,
-          details: agentError?.message || 'Agent inexistent'
+          details: phoneError.message
         }),
         {
-          status: 404,
+          status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
-      )
+      );
     }
 
-    console.log('✅ Agent validated:', { id: agentData.elevenlabs_agent_id, name: agentData.name })
+    if (!userPhoneNumbers || userPhoneNumbers.length === 0) {
+      console.error('❌ No active phone numbers found for user:', user_id);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Nu aveți niciun număr de telefon activ înregistrat. Vă rugăm să adăugați un număr de telefon în secțiunea Phone Numbers.',
+          success: false,
+          details: 'Utilizatorul nu are numere de telefon active'
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const userPhone = userPhoneNumbers[0];
+    agentPhoneId = userPhone.elevenlabs_phone_id;
+    callerNumber = userPhone.phone_number;
+
+    if (!agentPhoneId) {
+      console.error('❌ Phone number missing ElevenLabs configuration');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Numărul de telefon nu este configurat corect cu ElevenLabs. Vă rugăm să reconfigurați numărul în secțiunea Phone Numbers.',
+          success: false,
+          details: 'Phone number missing elevenlabs_phone_id'
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    console.log('User phone details:', { agentPhoneId, callerNumber, user_id })
 
     // Fetch contact information from the contacts database
     let contactInfo = null

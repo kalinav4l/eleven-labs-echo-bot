@@ -2,8 +2,8 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Home, Settings, Brain, FileText, Phone, TrendingUp, CalendarDays, 
-  MessageSquare, BookOpen, Smartphone, Zap, 
-  CreditCard, Shield, Database, Search
+  Network, MessageSquare, Workflow, BookOpen, Smartphone, Zap, PhoneForwarded, 
+  CreditCard, Shield, Mic, Sparkles, Database, Search, Mail
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -24,7 +24,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 const aiAnalyticsItems = [
   { title: "AI Agents", url: "/account/kalina-agents", icon: Brain },
   { title: "Rapoarte", url: "/account/conversation-analytics", icon: TrendingUp },
-  { title: "Chat AI", url: "/account/agent-ai", icon: MessageSquare },
+  { title: "Chat AI", url: "/account/agent-ai", icon: Sparkles },
+  { title: "Test Voce", url: "/account/voice-demo", icon: Mic },
 ];
 
 const communicationsItems = [
@@ -32,40 +33,34 @@ const communicationsItems = [
   { title: "Programări", url: "/account/calendar", icon: CalendarDays },
   { title: "Numere", url: "/account/phone-numbers", icon: Smartphone },
   { title: "Test Apel", url: "/account/test-call", icon: Zap },
+  { title: "Reprogramări", url: "/account/callback-scheduler", icon: PhoneForwarded },
 ];
 
 const dataToolsItems = [
   { title: "Transcrieri", url: "/account/transcript", icon: FileText },
   { title: "Extragere Date", url: "/account/scraping", icon: Search },
+  { title: "Poșta", url: "/account/gmail", icon: Mail },
 ];
 
 const workflowItems = [
-  { title: "Prompt-uri AI", url: "/account/agent-prompts", icon: Brain },
-  { title: "Baza de Date", url: "/account/workflow-database", icon: Database },
+  { title: "Configurare", url: "/account/construction", icon: Workflow },
+  { title: "Webhooks", url: "/account/webhooks", icon: Network },
 ];
 
-export const AppSidebar = React.memo(() => {
+export function AppSidebar() {
   const location = useLocation();
   const { user } = useAuth();
   const isMobile = useIsMobile();
   
   // Check if user is the specific admin user
-  const isSpecificAdmin = React.useMemo(() => 
-    user?.id === 'a698e3c2-f0e6-4f42-8955-971d91e725ce' && 
-    user?.email === 'mariusvirlan109@gmail.com', 
-    [user?.id, user?.email]
-  );
+  const isSpecificAdmin = user?.id === 'a698e3c2-f0e6-4f42-8955-971d91e725ce' && 
+                         user?.email === 'mariusvirlan109@gmail.com';
 
-  const isActive = React.useCallback(
-    (path: string) => location.pathname === path,
-    [location.pathname]
-  );
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <Sidebar className={`${isMobile ? 'w-72' : ''}`}>
-
       <SidebarHeader className={`${isMobile ? 'p-6' : 'p-4'}`}>
-
         <Link to="/account" className={`flex items-center gap-3 text-lg font-semibold text-foreground hover:text-foreground/80 transition-colors ${isMobile ? 'touch-target' : ''}`}>
           <Avatar className={`${isMobile ? 'w-10 h-10' : 'w-8 h-8'}`}>
             <AvatarImage alt="Kalina AI" src="/lovable-uploads/f617a44e-5bc3-46cb-8232-3110c0cee83d.png" />
@@ -75,7 +70,7 @@ export const AppSidebar = React.memo(() => {
         </Link>
       </SidebarHeader>
 
-      <SidebarContent className="p-0 space-y-0 pb-56 md:pb-40 overflow-y-auto">
+      <SidebarContent className="p-0 space-y-0">
         {/* Home */}
         <SidebarGroup>
           <SidebarGroupContent>
@@ -180,12 +175,12 @@ export const AppSidebar = React.memo(() => {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className={`sticky bottom-0 z-10 border-t border-border bg-background ${isMobile ? 'p-4' : 'p-2'}`}>
+      <SidebarFooter className={`${isMobile ? 'p-4' : 'p-2'}`}>
         <SidebarMenu>
           {/* Admin Panel - Only for specific user */}
           {isSpecificAdmin && (
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={isActive('/admin')} className={`${isMobile ? 'touch-target text-base py-3' : ''}`}>
+              <SidebarMenuButton asChild isActive={isActive('/admin')} className={`bg-destructive/10 text-destructive hover:bg-destructive/20 ${isMobile ? 'touch-target text-base py-3' : ''}`}>
                 <Link to="/admin">
                   <Shield className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'}`} />
                   <span className="font-medium">Admin Panel</span>
@@ -224,4 +219,4 @@ export const AppSidebar = React.memo(() => {
       </SidebarFooter>
     </Sidebar>
   );
-});
+}

@@ -1,10 +1,9 @@
-import React, { Suspense } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-
-const LoginForm = React.lazy(() => import('@/components/LoginForm'));
-const AdminDashboard = React.lazy(() => import('@/components/AdminDashboard'));
+import { LoginForm } from '@/components/LoginForm';
+import { AdminDashboard } from '@/components/AdminDashboard';
 import '@/index.css';
 
 const queryClient = new QueryClient();
@@ -35,11 +34,9 @@ function AppRoutes() {
   }
 
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Se încarcă...</div>}>
-      <Routes>
-        <Route path="/*" element={<AdminDashboard />} />
-      </Routes>
-    </Suspense>
+    <Routes>
+      <Route path="/*" element={<AdminDashboard />} />
+    </Routes>
   );
 }
 

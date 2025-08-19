@@ -24,25 +24,25 @@ const AnalyticsSidebar = ({ conversation }: AnalyticsSidebarProps) => {
       {/* Sentiment Timeline */}
       <div className="bg-white rounded-lg border border-gray-200 p-4">
         <h3 className="text-lg font-semibold text-gray-900 mb-3">Sentiment Evolution</h3>
-        <SentimentTimeline data={conversation?.sentiment_data || []} />
+        <SentimentTimeline data={conversation.sentiment_data} />
       </div>
 
       {/* Emotion Wheel */}
       <div className="bg-white rounded-lg border border-gray-200 p-4">
         <h3 className="text-lg font-semibold text-gray-900 mb-3">Emotion Analysis</h3>
-        <EmotionWheel emotions={conversation?.emotions || {}} />
+        <EmotionWheel emotions={conversation.emotions} />
       </div>
 
       {/* Metrics Grid */}
       <div className="bg-white rounded-lg border border-gray-200 p-4">
         <h3 className="text-lg font-semibold text-gray-900 mb-3">Key Metrics</h3>
-        <MetricsGrid metrics={conversation?.metrics || {}} />
+        <MetricsGrid metrics={conversation.metrics} />
       </div>
 
       {/* Keywords Cloud */}
       <div className="bg-white rounded-lg border border-gray-200 p-4">
         <h3 className="text-lg font-semibold text-gray-900 mb-3">Keywords</h3>
-        <KeywordsCloud keywords={conversation?.keywords || []} />
+        <KeywordsCloud keywords={conversation.keywords} />
       </div>
 
       {/* Topic Timeline */}

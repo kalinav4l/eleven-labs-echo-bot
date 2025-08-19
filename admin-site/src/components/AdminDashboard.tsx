@@ -9,7 +9,6 @@ import { AuditLogs } from './pages/AuditLogs';
 import { SystemMonitor } from './pages/SystemMonitor';
 import { FinancialReports } from './pages/FinancialReports';
 import { AgentManagement } from './pages/AgentManagement';
-import { UserDetails } from './pages/UserDetails';
 
 export function AdminDashboard() {
   return (
@@ -21,7 +20,6 @@ export function AdminDashboard() {
           <Routes>
             <Route path="/" element={<DashboardOverview />} />
             <Route path="/users" element={<UsersManagement />} />
-            <Route path="/users/:id" element={<UserDetails />} />
             <Route path="/calls" element={<CallHistory />} />
             <Route path="/audit" element={<AuditLogs />} />
             <Route path="/system-monitor" element={<SystemMonitor />} />

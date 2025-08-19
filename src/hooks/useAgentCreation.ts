@@ -96,10 +96,7 @@ export const useAgentCreation = ({
       };
 
       console.log('Creating agent with request:', createAgentRequest);
-      
-      try {
-        const response = await elevenLabsApi.createAgent(createAgentRequest);
-        console.log('Agent creation response:', response);
+      const response = await elevenLabsApi.createAgent(createAgentRequest);
       
       // Salvez agentul în baza de date
       const { error: dbError } = await supabase
@@ -135,15 +132,11 @@ export const useAgentCreation = ({
       setTimeout(() => {
         navigate(`/account/agent-edit/${response.agent_id}`);
       }, 1500);
-      } catch (agentError) {
-        console.error('Agent creation API error:', agentError);
-        throw new Error(`Failed to create agent: ${agentError.message}`);
-      }
     } catch (error) {
       console.error('Error creating agent:', error);
       toast({
         title: "Eroare",
-        description: `Eroare la crearea agentului: ${error.message}`,
+        description: MESSAGES.ERRORS.AGENT_CREATION_FAILED,
         variant: "destructive",
       });
     } finally {

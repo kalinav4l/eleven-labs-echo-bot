@@ -1,8 +1,6 @@
 import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { useCallSessionTracking } from '@/hooks/useCallSessionTracking';
-import { useCampaignPersistence } from '@/hooks/useCampaignPersistence';
-import { useActiveAgents } from '@/hooks/useActiveAgents';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
 import { useSMSService } from './useSMSService';
@@ -58,17 +56,6 @@ export const useCallInitiation = ({
   const [currentContact, setCurrentContact] = useState<string>('');
   const [callStatuses, setCallStatuses] = useState<CallStatus[]>([]);
   const [currentCallStatus, setCurrentCallStatus] = useState<string>('');
-  const [sessionId, setSessionId] = useState<string>('');
-  const [startTime, setStartTime] = useState<Date | null>(null);
-
-  // Hook-uri pentru persistență și monitorizare
-  const { 
-    saveCampaignSession, 
-    generateSessionId,
-    campaignSession 
-  } = useCampaignPersistence(sessionId);
-  
-  const { updateAgentStatus, removeActiveAgent } = useActiveAgents();
 
   // Enhanced logging function
   const logStep = (step: string, details: any = {}) => {
@@ -161,9 +148,9 @@ export const useCallInitiation = ({
       targetAgentId
     });
     
-    // REDUCED DELAY: Wait only 10 seconds for faster feedback
+    // Wait 30 seconds for call to process
     setCurrentCallStatus(`⏳ Procesează apel ${contact.name}...`);
-    await new Promise(resolve => setTimeout(resolve, 10000));
+    await new Promise(resolve => setTimeout(resolve, 30000));
     
     // Get existing conversation IDs to compare
     const existingConversationIds = await getExistingConversationIds();
@@ -311,14 +298,8 @@ export const useCallInitiation = ({
     }
   };
 
-  // Enhanced batch processing with instant feedback
+  // Enhanced batch processing with detailed logging
   const processBatchCalls = useCallback(async (contacts: Contact[], targetAgentId: string) => {
-    // INSTANT FEEDBACK: Toast imediat când se apasă butonul
-    toast({
-      title: "⏳ Inițiez apelurile...",
-      description: `Pornesc procesarea pentru ${contacts.length} contacte`,
-    });
-
     logStep('START: Batch processing initiated', { 
       contactCount: contacts.length,
       targetAgentId 
@@ -337,14 +318,6 @@ export const useCallInitiation = ({
       return;
     }
 
-    // INSTANT STATE UPDATES: Set states immediately
-    setIsProcessingBatch(true);
-    setIsPaused(false);
-    setIsStopped(false);
-    setTotalCalls(contacts.length);
-    setCurrentProgress(0);
-    setCurrentCallStatus('🚀 Pornind campania...');
-
     // Validate user has phone number before starting batch
     if (user?.id) {
       const phoneValidation = await validateUserHasPhoneNumber(user.id);
@@ -354,15 +327,21 @@ export const useCallInitiation = ({
           description: phoneValidation.error || "Nu aveți un număr de telefon înregistrat",
           variant: "destructive",
         });
-        setIsProcessingBatch(false);
         return;
       }
       
       toast({
-        title: "✅ Număr de telefon găsit",
+        title: "Număr de telefon găsit",
         description: `Apelurile vor fi făcute de pe: ${phoneValidation.phoneNumber?.phone_number}`,
       });
     }
+
+    setIsProcessingBatch(true);
+    setIsPaused(false);
+    setIsStopped(false);
+    setTotalCalls(contacts.length);
+    setCurrentProgress(0);
+    setCurrentCallStatus('Inițiere procesare optimizată...');
     
     // Initialize all contacts with 'waiting' status
     const initialStatuses: CallStatus[] = contacts.map(contact => ({
@@ -468,13 +447,6 @@ export const useCallInitiation = ({
             ));
             
             setCurrentCallStatus(`❌ Eroare Supabase pentru ${contact.name}: ${callInitError.message}`);
-            
-            // INSTANT ERROR FEEDBACK
-            toast({
-              title: "❌ Eroare tehnică",
-              description: `Problemă la inițierea apelului către ${contact.name}`,
-              variant: "destructive",
-            });
             continue;
           }
           
@@ -486,59 +458,19 @@ export const useCallInitiation = ({
               contactName: contact.name 
             });
             
-            // Determine error type for better UX
-            const errorMessage = callInitData?.error || 'Eroare necunoscută';
-            const isBusyError = errorMessage.includes('BUSY') || errorMessage.includes('UNAVAILABLE') || errorMessage.includes('480');
-            const isAuthError = errorMessage.includes('auth retry') || errorMessage.includes('authentication');
-            const is486Error = errorMessage.includes('486');
-            
             setCallStatuses(prev => prev.map(status => 
               status.contactId === contact.id 
                 ? { ...status, status: 'failed', endTime: new Date() }
                 : status
             ));
             
-            let userFriendlyMessage = '';
-            let toastVariant: "default" | "destructive" = "destructive";
-            
-            if (isBusyError || is486Error) {
-              userFriendlyMessage = `${contact.name} este ocupat sau indisponibil`;
-              toastVariant = "default";
-            } else if (isAuthError) {
-              userFriendlyMessage = `Problemă de autentificare ElevenLabs pentru ${contact.name}`;
-            } else {
-              userFriendlyMessage = `Eroare tehnică pentru ${contact.name}: ${errorMessage}`;
-            }
-            
-            setCurrentCallStatus(`❌ ${userFriendlyMessage}`);
-            
-            toast({
-              title: isBusyError || is486Error ? "📞 Număr ocupat" : "❌ Apel eșuat",
-              description: userFriendlyMessage,
-              variant: toastVariant,
-            });
-            
-            // If it's an auth error, show warning about API key
-            if (isAuthError) {
-              toast({
-                title: "⚠️ Problemă autentificare",
-                description: "Verificați API key-ul ElevenLabs în setări",
-                variant: "destructive",
-              });
-            }
-            
+            setCurrentCallStatus(`❌ Apel eșuat pentru ${contact.name}: ${callInitData?.error}`);
             continue;
           }
 
           logStep(`BATCH CONTACT ${i + 1}: Call initiated successfully`, { 
             conversationId: callInitData.conversationId,
             contactName: contact.name 
-          });
-
-          // INSTANT SUCCESS FEEDBACK
-          toast({
-            title: "📞 Apel inițiat",
-            description: `Apelul către ${contact.name} a fost trimis către ElevenLabs`,
           });
 
           // STEP 3: Update status and start monitoring
@@ -548,9 +480,9 @@ export const useCallInitiation = ({
               : status
           ));
 
-            // STEP 4: Start monitoring (no 5-minute delay for faster processing)
-            logStep(`BATCH CONTACT ${i + 1}: Starting conversation monitoring`, { contactName: contact.name });
-            setCurrentCallStatus(`Monitorizează conversații noi pentru ${contact.name}...`);
+          // STEP 4: Start monitoring
+          logStep(`BATCH CONTACT ${i + 1}: Starting conversation monitoring`, { contactName: contact.name });
+          setCurrentCallStatus(`Monitorizează conversații noi pentru ${contact.name}...`);
           
           const newConversations = await monitorCall(targetAgentId, contact, callStartTime);
           
@@ -705,8 +637,7 @@ export const useCallInitiation = ({
           agent_id: targetAgentId,
           phone_number: targetPhone,
           contact_name: contactName || targetPhone,
-          user_id: user?.id,
-          caller_number: 'phnum_9501k2y60kzjfr98sybbze66vy2x' // Always use this number for test calls
+          user_id: user?.id
         }
       });
 
@@ -823,8 +754,5 @@ export const useCallInitiation = ({
     pauseBatch,
     resumeBatch,
     stopBatch,
-    sessionId,
-    startTime,
-    campaignSession,
   };
 };

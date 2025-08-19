@@ -6,7 +6,6 @@ import { useConversation } from '@11labs/react';
 import { toast } from '@/components/ui/use-toast';
 import { useConversationTracking } from '@/hooks/useConversationTracking';
 import { useCallSessionTracking } from '@/hooks/useCallSessionTracking';
-import { calculateCostFromSeconds } from '@/utils/costCalculations';
 
 interface Message {
   id: string;
@@ -147,7 +146,7 @@ const VoiceTestButton: React.FC<VoiceTestButtonProps> = ({
           contact_name: `Test vocal cu ${agentName}`,
           summary: `Test vocal cu ${agentName} - ${messages.length} mesaje în ${duration}s`,
           duration_seconds: duration,
-          cost_usd: calculateCostFromSeconds(duration),
+          cost_usd: 0.05 * (duration / 60),
           transcript: messages,
           status: 'success' as const,
           conversation_id: currentConversationId,

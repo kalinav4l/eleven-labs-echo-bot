@@ -19,17 +19,17 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Găsește toate taskurile care trebuie executate acum (inclusiv cele întârziate)
+    // Găsește toate taskurile care trebuie executate acum
     const now = new Date()
-    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000) // 24 ore toleranță pentru taskuri întârziate
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000) // 5 minute toleranță
 
-    console.log(`⏰ Căutare taskuri între ${twentyFourHoursAgo.toISOString()} și ${now.toISOString()}`)
+    console.log(`⏰ Căutare taskuri între ${fiveMinutesAgo.toISOString()} și ${now.toISOString()}`)
 
     const { data: scheduledTasks, error } = await supabase
       .from('scheduled_calls')
       .select('*')
       .eq('status', 'scheduled')
-      .gte('scheduled_datetime', twentyFourHoursAgo.toISOString())
+      .gte('scheduled_datetime', fiveMinutesAgo.toISOString())
       .lte('scheduled_datetime', now.toISOString())
 
     if (error) {
@@ -40,12 +40,10 @@ serve(async (req) => {
     console.log(`📋 Găsite ${scheduledTasks?.length || 0} taskuri de executat`)
 
     if (!scheduledTasks || scheduledTasks.length === 0) {
-      // Even dacă nu sunt taskuri, rulează procesarea de analytics pentru conversațiile mai vechi de 10 minute
-      await supabase.functions.invoke('process-conversation-analytics', { body: {} })
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'Nu sunt taskuri de executat. Analytics backfill declanșat.',
+          message: 'Nu sunt taskuri de executat',
           executedTasks: 0
         }),
         {
@@ -68,32 +66,20 @@ serve(async (req) => {
           .update({ status: 'executing' })
           .eq('id', task.id)
 
-        // Găsește agentul asociat din kalina_agents (după agent_id sau elevenlabs_agent_id)
-        let elevenLabsAgentId: string | null = null;
-        const { data: byInternal } = await supabase
+        // Găsește agentul asociat din kalina_agents
+        const { data: agentData } = await supabase
           .from('kalina_agents')
           .select('elevenlabs_agent_id')
           .eq('agent_id', task.agent_id)
           .eq('user_id', task.user_id)
-          .maybeSingle();
+          .single()
 
-        if (byInternal?.elevenlabs_agent_id) {
-          elevenLabsAgentId = byInternal.elevenlabs_agent_id as string;
-        } else {
-          const { data: byEleven } = await supabase
-            .from('kalina_agents')
-            .select('elevenlabs_agent_id')
-            .eq('elevenlabs_agent_id', task.agent_id)
-            .eq('user_id', task.user_id)
-            .maybeSingle();
-          elevenLabsAgentId = byEleven?.elevenlabs_agent_id ?? null;
-        }
+        const elevenLabsAgentId = agentData?.elevenlabs_agent_id
 
         if (!elevenLabsAgentId) {
           console.error(`❌ Nu s-a găsit ElevenLabs agent ID pentru ${task.agent_id}`)
           throw new Error('Agent ElevenLabs nu a fost găsit')
         }
-
 
         // Apelează funcția de inițiere apel
         const callResponse = await supabase.functions.invoke('initiate-scheduled-call', {
@@ -137,7 +123,7 @@ serve(async (req) => {
           throw new Error(callData.error || 'Apel eșuat')
         }
 
-      } catch (taskError: any) {
+      } catch (taskError) {
         console.error(`❌ Eroare la executarea task ${task.id}:`, taskError)
         
         // Marchează taskul ca eșuat
@@ -159,15 +145,12 @@ serve(async (req) => {
       }
     }
 
-    // După execuția taskurilor, rulează backfill de analytics
-    await supabase.functions.invoke('process-conversation-analytics', { body: {} })
-
     console.log(`🎯 Rezultat: ${executedTasks.length} succese, ${failedTasks.length} eșecuri`)
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Executate ${executedTasks.length} taskuri cu succes, ${failedTasks.length} eșecuri` ,
+        message: `Executate ${executedTasks.length} taskuri cu succes, ${failedTasks.length} eșecuri`,
         executedTasks: executedTasks.length,
         failedTasks: failedTasks.length,
         details: {
@@ -180,7 +163,7 @@ serve(async (req) => {
       }
     )
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('💥 Eroare critică în verificarea taskurilor:', error)
     
     return new Response(

@@ -1,17 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Activity, Server, Database, Zap, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
-
-const Progress = ({ value = 0, className = '' }: { value?: number; className?: string }) => (
-  <div className={`w-full h-2 bg-gray-200 rounded ${className}`}>
-    <div
-      className="h-2 bg-blue-500 rounded"
-      style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
-    />
-  </div>
-);
 
 interface SystemMetrics {
   cpu_usage: number;

@@ -5,7 +5,6 @@ import { Phone, Loader2 } from 'lucide-react';
 import { CSVUploadSection } from './CSVUploadSection';
 import { ContactsList } from './ContactsList';
 import { BatchCallProgress } from './BatchCallProgress';
-import { RealTimeProgressStatus } from './RealTimeProgressStatus';
 
 interface Contact {
   id: string;
@@ -40,7 +39,6 @@ interface BatchTabProps {
   totalCalls: number;
   currentCallStatus: string;
   callStatuses: CallStatus[];
-  startTime?: Date;
 }
 
 export const BatchTab: React.FC<BatchTabProps> = ({
@@ -57,74 +55,17 @@ export const BatchTab: React.FC<BatchTabProps> = ({
   totalCalls,
   currentCallStatus,
   callStatuses,
-  startTime,
 }) => {
-  // Enhanced validation with detailed logging
-  const agentValid = agentId && agentId.trim() !== '';
-  const contactsValid = selectedContacts.size > 0;
-  const canProcessBatch = agentValid && contactsValid && !isProcessingBatch;
+  // Check if we can process batch calls
+  const canProcessBatch = agentId.trim() !== '' && selectedContacts.size > 0 && !isProcessingBatch;
 
-  // Enhanced debug logging
-  console.log('📋 BatchTab - Enhanced Debug Info:', {
+  console.log('BatchTab - Debug info:', {
     agentId: agentId,
-    agentIdLength: agentId?.length || 0,
-    agentIdTrimmed: agentId?.trim() || '',
-    agentValid: agentValid,
+    agentIdTrimmed: agentId.trim(),
     selectedContactsSize: selectedContacts.size,
-    contactsValid: contactsValid,
     isProcessingBatch: isProcessingBatch,
-    canProcessBatch: canProcessBatch,
-    contactsArray: Array.from(selectedContacts),
-    timestamp: new Date().toISOString()
+    canProcessBatch: canProcessBatch
   });
-
-  // Function to get detailed button state
-  const getButtonState = () => {
-    if (isProcessingBatch) return 'processing';
-    if (!agentValid) return 'no_agent';
-    if (!contactsValid) return 'no_contacts';
-    return 'ready';
-  };
-
-  const buttonState = getButtonState();
-
-  // Enhanced button text and styling
-  const getButtonConfig = () => {
-    switch (buttonState) {
-      case 'processing':
-        return {
-          text: `🔄 Se procesează... (${currentProgress}/${totalCalls})`,
-          icon: <Loader2 className="w-4 h-4 mr-2 animate-spin" />,
-          className: "w-full bg-primary text-primary-foreground cursor-wait"
-        };
-      case 'no_agent':
-        return {
-          text: "⚠️ Selectează un agent mai întâi",
-          icon: <Phone className="w-4 h-4 mr-2" />,
-          className: "w-full bg-gray-400 text-white cursor-not-allowed"
-        };
-      case 'no_contacts':
-        return {
-          text: "⚠️ Selectează contacte pentru apeluri",
-          icon: <Phone className="w-4 h-4 mr-2" />,
-          className: "w-full bg-gray-400 text-white cursor-not-allowed"
-        };
-      case 'ready':
-        return {
-          text: `🚀 Procesează cu Monitorizare (${selectedContacts.size} contacte)`,
-          icon: <Phone className="w-4 h-4 mr-2" />,
-          className: "w-full bg-green-600 hover:bg-green-700 text-white"
-        };
-      default:
-        return {
-          text: "Procesează cu Monitorizare",
-          icon: <Phone className="w-4 h-4 mr-2" />,
-          className: "w-full bg-gray-900 hover:bg-gray-800 text-white"
-        };
-    }
-  };
-
-  const buttonConfig = getButtonConfig();
 
   return (
     <div className="space-y-6">
@@ -145,67 +86,41 @@ export const BatchTab: React.FC<BatchTabProps> = ({
 
           {/* Enhanced Real-time Status Display */}
           {isProcessingBatch && (
-            <RealTimeProgressStatus
+            <BatchCallProgress
               currentProgress={currentProgress}
               totalCalls={totalCalls}
               currentCallStatus={currentCallStatus}
               callStatuses={callStatuses}
-              startTime={startTime}
               isProcessing={isProcessingBatch}
+              isPaused={false}
+              isStopped={false}
             />
           )}
 
           <Button
-            onClick={() => {
-              console.log('🎯 Button clicked - Enhanced logging:', {
-                buttonState,
-                canProcessBatch,
-                agentValid,
-                contactsValid,
-                isProcessingBatch,
-                selectedContacts: Array.from(selectedContacts),
-                agentId,
-                timestamp: new Date().toISOString()
-              });
-              
-              if (canProcessBatch) {
-                console.log('✅ Proceeding with batch process - INSTANT FEEDBACK...');
-                onBatchProcess();
-              } else {
-                console.log('❌ Cannot process batch - validation failed');
-                // INSTANT VALIDATION FEEDBACK
-                if (!agentValid) {
-                  alert('⚠️ Vă rugăm să selectați un agent înainte de a porni campania');
-                } else if (!contactsValid) {
-                  alert('⚠️ Vă rugăm să selectați cel puțin un contact pentru apeluri');
-                }
-              }
-            }}
+            onClick={onBatchProcess}
             disabled={!canProcessBatch}
-            className={buttonConfig.className + (canProcessBatch ? '' : ' disabled:opacity-50 disabled:cursor-not-allowed')}
+            className="w-full bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {buttonConfig.icon}
-            {buttonConfig.text}
+            {isProcessingBatch ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Monitorizează... ({currentProgress}/{totalCalls})
+              </>
+            ) : (
+              <>
+                <Phone className="w-4 h-4 mr-2" />
+                Procesează cu Monitorizare ({selectedContacts.size} contacte)
+              </>
+            )}
           </Button>
 
-          {/* Enhanced Validation Status Display */}
-          <div className="space-y-2">
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <div className={`p-2 rounded ${agentValid ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                {agentValid ? '✅' : '❌'} Agent: {agentValid ? 'Valid' : 'Lipsește'}
-              </div>
-              <div className={`p-2 rounded ${contactsValid ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                {contactsValid ? '✅' : '❌'} Contacte: {contactsValid ? selectedContacts.size : '0'}
-              </div>
-            </div>
-            
-            {/* Debug Info Enhanced */}
+          {/* Debug Info */}
+          {process.env.NODE_ENV === 'development' && (
             <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded">
-              <div>🔧 Debug: Agent ID: "{agentId}" ({agentId?.length || 0} chars)</div>
-              <div>📋 Selected: {selectedContacts.size} | Processing: {isProcessingBatch.toString()}</div>
-              <div>🎯 State: {buttonState} | Can Process: {canProcessBatch.toString()}</div>
+              Debug: Agent ID: "{agentId}" | Selected: {selectedContacts.size} | Processing: {isProcessingBatch.toString()}
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>

@@ -10,9 +10,8 @@ import { Phone, PlayCircle, Loader2, MessageSquare, RefreshCw, Wallet, AlertTria
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
-// Temporarily removing TestCallHistory to fix module loading issue
-// import TestCallHistory from '@/components/TestCallHistory';
-// import { useTestCallHistory } from '@/hooks/useTestCallHistory';
+import TestCallHistory from '@/components/TestCallHistory';
+import { useTestCallHistory } from '@/hooks/useTestCallHistory';
 import { AgentSelector } from '@/components/outbound/AgentSelector';
 import { COST_PER_MINUTE, calculateCostFromMinutes } from '@/utils/costCalculations';
 const TestCall = () => {
@@ -26,8 +25,7 @@ const TestCall = () => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const { toast } = useToast();
   const { user } = useAuth();
-  // Temporarily removing test call history to fix module loading issue
-  // const { history, addToHistory, updateHistoryItem, clearHistory } = useTestCallHistory();
+  const { history, addToHistory, updateHistoryItem, clearHistory } = useTestCallHistory();
 
   // Fetch user balance
   const fetchBalance = async () => {
@@ -112,8 +110,7 @@ const TestCall = () => {
           contact_name: `Test Call - ${phoneNumber}`,
           user_id: user.id,
           batch_processing: false,
-          is_test_call: true,
-          // Let the edge function determine the appropriate phone number
+          is_test_call: true
         }
       });
       if (error) {
@@ -127,42 +124,36 @@ const TestCall = () => {
       }
       if (data?.success) {
         toast({
-          title: "✅ Apel inițiat cu succes!",
-          description: `Apelul a fost pornit către ${phoneNumber}. Se va conecta în câteva secunde.`,
-          duration: 5000
+          title: "Apel de test inițiat cu succes!",
+          description: `Apelul a fost inițiat către ${phoneNumber}. Conversation ID: ${data.conversationId}`
         });
 
         // Store conversation ID for later retrieval
         setConversationId(data.conversationId);
         
-        // Temporarily disabled history feature
-        // addToHistory({
-        //   conversationId: data.conversationId,
-        //   agentId,
-        //   phoneNumber,
-        // });
+        // Add to history
+        addToHistory({
+          conversationId: data.conversationId,
+          agentId,
+          phoneNumber,
+        });
         
         // Clear form after successful call
         setAgentId('');
         setPhoneNumber('');
-        
-        // Refresh balance after call
-        fetchBalance();
       } else {
         toast({
-          title: "❌ Apelul nu a putut fi inițiat",
-          description: data?.error || "A apărut o eroare necunoscută. Încearcă din nou.",
-          variant: "destructive",
-          duration: 5000
+          title: "Eroare la inițierea apelului",
+          description: data?.error || "A apărut o eroare necunoscută",
+          variant: "destructive"
         });
       }
     } catch (error) {
       console.error('Test call error:', error);
       toast({
-        title: "❌ Eroare la conectare",
-        description: "Nu s-a putut conecta la serviciul de apeluri. Verifică conexiunea internet.",
-        variant: "destructive",
-        duration: 5000
+        title: "Eroare la inițierea apelului",
+        description: "A apărut o eroare la inițierea apelului de test",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
@@ -209,10 +200,10 @@ const TestCall = () => {
       setConversation(data);
       setConversationId(idToFetch);
       
-      // Temporarily disabled history feature
-      // if (data.cost) {
-      //   updateHistoryItem(idToFetch, { cost: parseFloat(data.cost) });
-      // }
+      // Update history with cost if available
+      if (data.cost) {
+        updateHistoryItem(idToFetch, { cost: parseFloat(data.cost) });
+      }
       
       toast({
         title: "Conversația a fost încărcată cu succes!",
@@ -295,103 +286,110 @@ const TestCall = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-white flex items-center justify-center p-6">
-        <div className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="w-full max-w-sm space-y-8">
           
-          {/* Main Card */}
-          <Card className="bg-white border shadow-2xl rounded-3xl overflow-hidden">
-            <CardContent className="p-8 space-y-6">
-              
-              {/* Header */}
-              <div className="text-center space-y-4">
-                <div className="w-16 h-16 mx-auto bg-gray-800 rounded-2xl flex items-center justify-center shadow-lg">
-                  <Phone className="w-8 h-8 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-800">
-                    Test Apel
-                  </h1>
-                  <div className="flex items-center justify-center gap-2 mt-2">
-                    {isAdmin ? (
-                      <Badge className="bg-green-500 text-white border-0">
-                        <Sparkles className="w-3 h-3 mr-1" />
-                        Apeluri nelimitate
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="bg-blue-50 border-blue-200">
-                        <Wallet className="w-3 h-3 mr-1" />
-                        ${userBalance.toFixed(2)} disponibili
-                      </Badge>
-                    )}
-                  </div>
-                </div>
+          {/* Header */}
+          <div className="text-center space-y-3">
+            <h1 className="text-2xl font-light">Test Apel</h1>
+            <p className="text-sm text-muted-foreground">
+              {isAdmin ? 'Apeluri nelimitate' : `$${userBalance.toFixed(2)} disponibili`}
+            </p>
+          </div>
+
+          {/* Form */}
+          <div className="space-y-4">
+            <div>
+              <AgentSelector
+                selectedAgentId={agentId}
+                onAgentSelect={setAgentId}
+              />
+            </div>
+
+            <div>
+              <Input
+                placeholder="Numărul de telefon"
+                value={phoneNumber}
+                onChange={e => setPhoneNumber(e.target.value)}
+                disabled={isLoading}
+                className="text-center"
+              />
+            </div>
+
+            {hasInsufficientBalance && (
+              <p className="text-xs text-amber-600 text-center">
+                Sold insuficient
+              </p>
+            )}
+
+            <Button
+              onClick={handleTestCall}
+              disabled={isLoading || !agentId || !phoneNumber || hasInsufficientBalance}
+              className="w-full"
+            >
+              {isLoading ? 'Se pornește...' : 'Test'}
+            </Button>
+          </div>
+
+          {/* Status */}
+          {conversationId && (
+            <div className="text-center space-y-3">
+              <div className="text-xs text-green-600">
+                Apel activ
               </div>
+              <Button
+                onClick={() => fetchConversation()}
+                disabled={isLoadingConversation}
+                variant="outline"
+                size="sm"
+                className="text-xs"
+              >
+                {isLoadingConversation ? 'Se încarcă...' : 'Vezi conversația'}
+              </Button>
+            </div>
+          )}
 
-              {/* Form */}
-              <div className="space-y-5">
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Selectează agentul</Label>
-                  <AgentSelector
-                    selectedAgentId={agentId}
-                    onAgentSelect={setAgentId}
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Numărul de telefon</Label>
-                  <Input
-                    placeholder="Ex: +40 123 456 789"
-                    value={phoneNumber}
-                    onChange={e => setPhoneNumber(e.target.value)}
-                    disabled={isLoading}
-                    className="text-center text-lg py-3 border-2 rounded-xl focus:ring-2 focus:ring-blue-500/20"
-                  />
-                </div>
-
-                {hasInsufficientBalance && (
-                  <Alert className="border-amber-200 bg-amber-50">
-                    <AlertTriangle className="h-4 w-4 text-amber-600" />
-                    <AlertDescription className="text-amber-700">
-                      Sold insuficient pentru a efectua apelul. Necesită cel puțin ${estimatedCostPerMinute.toFixed(2)}.
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                <Button
-                  onClick={handleTestCall}
-                  disabled={isLoading || !agentId || !phoneNumber || hasInsufficientBalance}
-                  className="w-full h-12 text-lg font-semibold rounded-xl bg-gray-800 hover:bg-gray-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Se pornește...
-                    </>
-                  ) : (
-                    <>
-                      <PlayCircle className="w-5 h-5 mr-2" />
-                      Inițiază Test
-                    </>
-                  )}
-                </Button>
-              </div>
-
-              {/* Balance Info */}
-              {!isAdmin && (
-                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Minute disponibile:</span>
-                    <span className="font-semibold text-blue-700">{availableMinutes} min</span>
+          {/* Conversation */}
+          {conversation && (
+            <div className="space-y-3 max-h-60 overflow-y-auto">
+              {conversation.transcript?.length > 0 ? (
+                conversation.transcript.map((message, index) => (
+                  <div
+                    key={index}
+                    className={`text-xs p-2 rounded ${
+                      message.role === 'agent'
+                        ? 'bg-primary/5 text-left'
+                        : 'bg-muted/50 text-right'
+                    }`}
+                  >
+                    {message.content || message.text}
                   </div>
-                  <div className="flex items-center justify-between text-sm mt-1">
-                    <span className="text-gray-600">Cost estimat/min:</span>
-                    <span className="font-semibold text-blue-700">${estimatedCostPerMinute.toFixed(2)}</span>
-                  </div>
-                </div>
+                ))
+              ) : (
+                <p className="text-xs text-muted-foreground text-center">
+                  Fără mesaje
+                </p>
               )}
+            </div>
+          )}
 
-            </CardContent>
-          </Card>
+          {/* History */}
+          {history.length > 0 && (
+            <div className="space-y-2">
+              <div className="text-xs text-muted-foreground text-center">
+                Recente
+              </div>
+              {history.slice(0, 2).map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => handleHistoryDoubleClick(item.conversationId)}
+                  className="text-xs p-2 border rounded cursor-pointer hover:bg-muted/30"
+                >
+                  {item.phoneNumber}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>

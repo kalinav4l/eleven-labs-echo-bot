@@ -14,9 +14,10 @@ export const useTestCallHistory = () => {
   const { user } = useAuth();
   const [history, setHistory] = useState<TestCallHistoryItem[]>([]);
 
+  const storageKey = `test_call_history_${user?.id || 'guest'}`;
+
   useEffect(() => {
     if (user) {
-      const storageKey = `test_call_history_${user.id}`;
       const savedHistory = localStorage.getItem(storageKey);
       if (savedHistory) {
         try {
@@ -26,12 +27,8 @@ export const useTestCallHistory = () => {
           setHistory([]);
         }
       }
-    } else {
-      setHistory([]); // Clear history when no user
     }
-  }, [user?.id]); // Only depend on user.id, not the computed storageKey
-
-  const getStorageKey = () => `test_call_history_${user?.id || 'guest'}`;
+  }, [user, storageKey]);
 
   const addToHistory = (item: Omit<TestCallHistoryItem, 'id' | 'timestamp'>) => {
     const newItem: TestCallHistoryItem = {
@@ -42,7 +39,7 @@ export const useTestCallHistory = () => {
 
     const updatedHistory = [newItem, ...history].slice(0, 10); // Keep only last 10 calls
     setHistory(updatedHistory);
-    localStorage.setItem(getStorageKey(), JSON.stringify(updatedHistory));
+    localStorage.setItem(storageKey, JSON.stringify(updatedHistory));
   };
 
   const updateHistoryItem = (conversationId: string, updates: Partial<TestCallHistoryItem>) => {
@@ -52,12 +49,12 @@ export const useTestCallHistory = () => {
         : item
     );
     setHistory(updatedHistory);
-    localStorage.setItem(getStorageKey(), JSON.stringify(updatedHistory));
+    localStorage.setItem(storageKey, JSON.stringify(updatedHistory));
   };
 
   const clearHistory = () => {
     setHistory([]);
-    localStorage.removeItem(getStorageKey());
+    localStorage.removeItem(storageKey);
   };
 
   return {

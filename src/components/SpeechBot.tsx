@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -45,31 +46,54 @@ const SpeechBot: React.FC = () => {
             }
 
         } catch (error: any) {
+            console.error('Error generating speech:', error);
             alert(`Error: ${error.message}`);
         } finally {
             setIsLoading(false);
         }
     };
 
+    const sectionVariants = {
+        hidden: { opacity: 0, y: 50 },
+        visible: { opacity: 1, y: 0 },
+    };
+
     return (
-        <section
+        <motion.section
             id="elevenlabs-bot"
             className="py-20 bg-gradient-to-br from-background via-muted/20 to-accent/10"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            variants={sectionVariants}
+            transition={{ duration: 0.8 }}
         >
             <div className="container mx-auto px-4">
-                <div className="text-center mb-12 animate-fade-in">
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6 }}
+                    className="text-center mb-12"
+                >
                     <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
                         Transformă Textul în Voce cu AI
                     </h2>
                     <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
                         Experimentează puterea Eleven Labs! Introdu orice text, iar AI-ul nostru avansat îl va transforma într-o voce naturală, de înaltă calitate. Perfect pentru demo-uri rapide sau mesaje personalizate.
                     </p>
-                </div>
+                </motion.div>
 
                 <div className="max-w-3xl mx-auto">
                     <Card className="bg-card/50 backdrop-blur-sm border shadow-2xl">
                         <CardContent className="p-8">
-                            <div className="p-6 animate-scale-in space-y-6">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: 0.2, duration: 0.5 }}
+                                className="space-y-6"
+                            >
                                 <div className="space-y-4">
                                     <label className="text-sm font-medium text-muted-foreground">
                                         Textul de transformat în voce
@@ -83,7 +107,10 @@ const SpeechBot: React.FC = () => {
                                     />
                                 </div>
 
-                                <div className="hover:scale-105 transition-transform">
+                                <motion.div
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                >
                                     <Button
                                         onClick={handleGenerateSpeech}
                                         disabled={isLoading || !inputText.trim()}
@@ -101,10 +128,14 @@ const SpeechBot: React.FC = () => {
                                             </>
                                         )}
                                     </Button>
-                                </div>
+                                </motion.div>
 
                                 <div className="pt-4">
-                                    <div className="text-center animate-fade-in">
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="text-center"
+                                    >
                                         <p className="text-sm text-muted-foreground mb-4">
                                             Audio generat cu Eleven Labs AI
                                         </p>
@@ -118,15 +149,21 @@ const SpeechBot: React.FC = () => {
                                                 borderRadius: '8px'
                                             }}
                                         />
-                                    </div>
+                                    </motion.div>
                                 </div>
-                            </div>
+                            </motion.div>
                         </CardContent>
                     </Card>
                 </div>
 
                 {/* Features Grid */}
-                <div className="grid md:grid-cols-3 gap-6 mt-16 animate-fade-in">
+                <motion.div
+                    initial={{ opacity: 0, y: 40 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.4, duration: 0.6 }}
+                    className="grid md:grid-cols-3 gap-6 mt-16"
+                >
                     {[
                         {
                             title: "Voce Naturală",
@@ -144,7 +181,11 @@ const SpeechBot: React.FC = () => {
                             icon: "🎵"
                         }
                     ].map((feature, index) => (
-                        <div key={index} className="hover:scale-105 transition-transform">
+                        <motion.div
+                            key={index}
+                            whileHover={{ y: -5 }}
+                            transition={{ duration: 0.2 }}
+                        >
                             <Card className="text-center p-6 bg-card/30 backdrop-blur-sm border-muted hover:border-primary/50 transition-colors">
                                 <CardContent className="p-0">
                                     <div className="text-3xl mb-4">{feature.icon}</div>
@@ -152,11 +193,11 @@ const SpeechBot: React.FC = () => {
                                     <p className="text-sm text-muted-foreground">{feature.description}</p>
                                 </CardContent>
                             </Card>
-                        </div>
+                        </motion.div>
                     ))}
-                </div>
+                </motion.div>
             </div>
-        </section>
+        </motion.section>
     );
 };
 

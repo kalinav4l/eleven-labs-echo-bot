@@ -11,7 +11,6 @@ import { useCallInitiation } from '@/hooks/useCallInitiation';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
 import { COST_PER_MINUTE } from '@/utils/costCalculations';
-import { toast } from '@/hooks/use-toast';
 
 interface AgentTestCallModalProps {
   isOpen: boolean;
@@ -90,44 +89,11 @@ export const AgentTestCallModal: React.FC<AgentTestCallModalProps> = ({
       return; // Button should be disabled anyway
     }
     
-    // Use direct call with caller_number for test calls
-    try {
-      const { data, error } = await supabase.functions.invoke('initiate-scheduled-call', {
-        body: {
-          agent_id: agent.agent_id,
-          phone_number: phoneNumber,
-          contact_name: `Test pentru ${agent.name}`,
-          user_id: user.id,
-          batch_processing: false,
-          is_test_call: true,
-          caller_number: 'phnum_9501k2y60kzjfr98sybbze66vy2x' // Always use moldcel number
-        }
-      });
-
-      if (error) {
-        toast({
-          title: "Eroare",
-          description: error.message || "Nu s-a putut iniția apelul",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (data?.success) {
-        toast({
-          title: "✅ Apel inițiat cu succes!",
-          description: `Apelul către ${phoneNumber} a fost pornit de pe +37379315040`,
-          duration: 5000
-        });
-        setPhoneNumber('');
-        onClose();
-      }
-    } catch (error) {
-      toast({
-        title: "Eroare",
-        description: "Nu s-a putut iniția apelul de test",
-        variant: "destructive",
-      });
+    await initiateCall(agent.agent_id, phoneNumber, `Test pentru ${agent.name}`);
+    
+    if (!isInitiating) {
+      setPhoneNumber('');
+      onClose();
     }
   };
 
@@ -167,7 +133,6 @@ export const AgentTestCallModal: React.FC<AgentTestCallModalProps> = ({
           <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
             <p className="text-sm text-gray-900 font-medium">Agent:</p>
             <p className="text-xs text-gray-600">{agent.name}</p>
-            <p className="text-xs text-green-700 mt-1">📞 Apelul va fi făcut de pe: +37379315040 (moldcel)</p>
           </div>
 
           {/* Balance and Cost Information */}

@@ -14,8 +14,6 @@ import { Phone, Loader2 } from 'lucide-react';
 import { useUserAgents } from '@/hooks/useUserAgents';
 import { useCallInitiation } from '@/hooks/useCallInitiation';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/components/AuthContext';
 
 interface PhoneTestCallModalProps {
   isOpen: boolean;
@@ -35,7 +33,6 @@ export const PhoneTestCallModal: React.FC<PhoneTestCallModalProps> = ({
   const [contactName, setContactName] = useState('');
 
   const { data: agents = [] } = useUserAgents();
-  const { user } = useAuth();
   const { initiateCall, isInitiating } = useCallInitiation({
     agentId: selectedAgentId,
     phoneNumber: targetPhoneNumber
@@ -51,47 +48,13 @@ export const PhoneTestCallModal: React.FC<PhoneTestCallModalProps> = ({
       return;
     }
 
-    // Use direct call with caller_number for test calls
-    try {
-      const { data, error } = await supabase.functions.invoke('initiate-scheduled-call', {
-        body: {
-          agent_id: selectedAgentId,
-          phone_number: `+373${targetPhoneNumber}`,
-          contact_name: contactName || 'Test Call',
-          user_id: user?.id,
-          batch_processing: false,
-          is_test_call: true,
-          caller_number: 'phnum_9501k2y60kzjfr98sybbze66vy2x' // Always use moldcel number
-        }
-      });
-
-      if (error) {
-        toast({
-          title: "Eroare",
-          description: error.message || "Nu s-a putut iniția apelul",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (data?.success) {
-        toast({
-          title: "✅ Apel inițiat cu succes!",
-          description: `Apelul către +373${targetPhoneNumber} a fost pornit de pe +37379315040`,
-          duration: 5000
-        });
-        onClose();
-        // Reset form
-        setContactName('');
-        setTargetPhoneNumber('');
-        setSelectedAgentId('');
-      }
-    } catch (error) {
-      toast({
-        title: "Eroare",
-        description: "Nu s-a putut iniția apelul de test",
-        variant: "destructive",
-      });
+    const result = await initiateCall(selectedAgentId, targetPhoneNumber, contactName || 'Test Call');
+    if (result) {
+      onClose();
+      // Reset form
+      setContactName('');
+      setTargetPhoneNumber('');
+      setSelectedAgentId('');
     }
   };
 
@@ -105,8 +68,6 @@ export const PhoneTestCallModal: React.FC<PhoneTestCallModalProps> = ({
           </DialogTitle>
           <DialogDescription>
             Face un apel de test de pe numărul {phoneNumber}
-            <br />
-            <span className="text-green-700 text-xs">📞 Apelul va fi făcut automat de pe: +37379315040 (moldcel)</span>
           </DialogDescription>
         </DialogHeader>
 

@@ -168,7 +168,7 @@ const Transcript = () => {
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center min-h-screen bg-white">
           <div className="text-center">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto"></div>
             <p className="mt-3 text-gray-600 text-sm">Se încarcă transcripturile...</p>
@@ -180,7 +180,7 @@ const Transcript = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto px-6 py-8">
           {!selectedTranscript ? (
             <>

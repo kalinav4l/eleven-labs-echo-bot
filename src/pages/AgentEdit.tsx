@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-
+import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -318,25 +318,25 @@ const AgentEdit = () => {
     setIsMultilingualModalOpen(true);
   };
   if (isLoading) {
-    return (
-      <div className="p-4 lg:p-6 space-y-6">
-        <div className="flex justify-center items-center min-h-[400px]">
-          <div className="text-muted-foreground">Se încarcă agentul...</div>
+    return <DashboardLayout>
+        <div className="p-4 lg:p-6 space-y-6">
+          <div className="flex justify-center items-center min-h-[400px]">
+            <div className="text-muted-foreground">Se încarcă agentul...</div>
+          </div>
         </div>
-      </div>
-    );
+      </DashboardLayout>;
   }
   if (!agentData) {
-    return (
-      <div className="p-4 lg:p-6 space-y-6">
-        <div className="flex justify-center items-center min-h-[400px]">
-          <div className="text-muted-foreground">Agentul nu a fost găsit</div>
+    return <DashboardLayout>
+        <div className="p-4 lg:p-6 space-y-6">
+          <div className="flex justify-center items-center min-h-[400px]">
+            <div className="text-muted-foreground">Agentul nu a fost găsit</div>
+          </div>
         </div>
-      </div>
-    );
+      </DashboardLayout>;
   }
-  return (
-    <div className="p-4 lg:p-6 space-y-4 lg:space-y-6 lg:px-[240px] lg:my-[60px] py-[38px]">
+  return <DashboardLayout>
+      <div className="p-4 lg:p-6 space-y-4 lg:space-y-6 lg:px-[240px] lg:my-[60px] py-[38px]">
         {/* Header - Mobile optimized */}
         <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
           <div className="flex items-center gap-4">
@@ -349,7 +349,7 @@ const AgentEdit = () => {
                 <Bot className="w-5 h-5 text-accent" />
               </div>
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold text-foreground">{agentData.name || 'Agent Fără Nume'}</h1>
+                <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Editare Agent</h1>
                 <p className="text-sm text-muted-foreground">Modifică setările agentului tău AI</p>
               </div>
             </div>
@@ -513,6 +513,6 @@ const AgentEdit = () => {
         {/* Multilingual First Message Modal */}
         <MultilingualFirstMessageModal isOpen={isMultilingualModalOpen} onClose={() => setIsMultilingualModalOpen(false)} defaultLanguage={agentData?.conversation_config?.agent?.language || 'en'} additionalLanguages={additionalLanguages} messages={multilingualMessages} onMessagesUpdate={handleMultilingualMessagesUpdate} agentId={agentId} agentData={agentData} onAgentDataRefresh={handleAgentDataRefresh} />
       </div>
-    );
+    </DashboardLayout>;
 };
 export default AgentEdit;

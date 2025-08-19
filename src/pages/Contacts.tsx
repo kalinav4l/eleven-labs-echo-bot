@@ -62,53 +62,6 @@ export default function Contacts() {
     refreshContacts();
   };
 
-  const handleCSVImport = async (csvData: any[]) => {
-    // Import CSV data into contacts
-    for (const row of csvData) {
-      try {
-        await createContact({
-          nume: row.nume || row.Nume || '',
-          telefon: row.telefon || row.Telefon || '',
-          email: row.email || row.Email || '',
-          tara: row.tara || row.Tara || '',
-          locatie: row.locatie || row.Locatie || '',
-          company: row.company || row.Company || '',
-          info: row.info || row.Info || '',
-          notes: row.notes || row.Notes || '',
-          status: row.status || row.Status || 'active'
-        });
-      } catch (error) {
-        console.error('Error importing contact:', error);
-      }
-    }
-    refreshContacts();
-  };
-
-  const downloadContactTemplate = () => {
-    // Dynamic template with all possible fields and multiple examples
-    const headers = ['nume', 'telefon', 'email', 'tara', 'locatie', 'company', 'info', 'notes', 'status', 'tags'];
-    const examples = [
-      ['Ion Popescu', '+40712345678', 'ion@example.com', 'România', 'București', 'ABC Company', 'Client VIP', 'Preferat dimineața', 'active', 'vip,important'],
-      ['Maria Ionescu', '+40723456789', 'maria@test.ro', 'România', 'Cluj-Napoca', 'XYZ SRL', 'Prospect cald', 'Contact după-amiaza', 'potential', 'prospect,cald'],
-      ['Ana Georgescu', '+40734567890', '', 'România', 'Timișoara', '', 'Lead nou', 'Verificat telefonic', 'new', 'lead,nou']
-    ];
-    
-    const csvContent = [
-      headers.join(','),
-      ...examples.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'template_contacte.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -177,13 +130,7 @@ export default function Contacts() {
         </Card>
 
         {/* CSV Import/Export */}
-        <CSVImportExport 
-          onImportSuccess={handleCSVImport}
-          onDownloadTemplate={downloadContactTemplate}
-          expectedHeaders={['nume', 'telefon']}
-          data={contacts}
-          filename="contacte"
-        />
+        <CSVImportExport onImportSuccess={refreshContacts} />
 
         {/* Contacts List */}
         <ContactsList

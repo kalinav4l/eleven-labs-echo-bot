@@ -13,10 +13,6 @@ import { Search, Users, Phone, CreditCard, Activity, Edit, DollarSign, Ban, User
 import { UserEditModal } from '@/components/UserEditModal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ApiKeyManager from '@/components/admin/ApiKeyManager';
-import UserActivityFeed from '@/components/admin/UserActivityFeed';
-import TopActiveUsers from '@/components/admin/TopActiveUsers';
-import UserActivityModal from '@/components/admin/UserActivityModal';
-import UserDetailsModal from '@/components/admin/UserDetailsModal';
 
 interface AdminUser {
   user_id: string;
@@ -51,10 +47,6 @@ const Admin = () => {
   const [loadingData, setLoadingData] = useState(true);
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [activityUserId, setActivityUserId] = useState<string | null>(null);
-const [activityOpen, setActivityOpen] = useState(false);
-  const [detailsUserId, setDetailsUserId] = useState<string | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
 
   // Check if user has admin role through database
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -241,6 +233,13 @@ const [activityOpen, setActivityOpen] = useState(false);
   }
 
   if (!user || !isAdmin) {
+    React.useEffect(() => {
+      toast({
+        title: "Acces restricționat",
+        description: "Nu aveți permisiuni de administrator.",
+        variant: "destructive"
+      });
+    }, []);
     return <Navigate to="/pricing" replace />;
   }
 
@@ -252,7 +251,7 @@ const [activityOpen, setActivityOpen] = useState(false);
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-white dark:bg-gray-900">
         <div className="container mx-auto p-6 max-w-6xl">
           {/* Header Section */}
           <div className="flex items-center justify-between mb-8">
@@ -327,16 +326,6 @@ const [activityOpen, setActivityOpen] = useState(false);
             </div>
           )}
 
-          {/* Activity Monitor */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-            <div className="lg:col-span-1">
-              <TopActiveUsers onUserClick={(id) => { setActivityUserId(id); setActivityOpen(true); }} />
-            </div>
-            <div className="lg:col-span-2">
-              <UserActivityFeed />
-            </div>
-          </div>
-
           {/* Users List */}
           <div className="space-y-2">
             {loadingData ? (
@@ -404,14 +393,6 @@ const [activityOpen, setActivityOpen] = useState(false);
                         Credite
                       </Button>
                       <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => { setDetailsUserId(user.user_id); setDetailsOpen(true); }}
-                        className="border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                      >
-                        Detalii
-                      </Button>
-                      <Button
                         variant={user.account_type === 'banned' ? 'outline' : 'destructive'}
                         size="sm"
                         onClick={() => handleBlockUser(user)}
@@ -450,11 +431,6 @@ const [activityOpen, setActivityOpen] = useState(false);
             open={editModalOpen}
             onOpenChange={setEditModalOpen}
             onUserUpdated={fetchUsers}
-          />
-          <UserDetailsModal
-            userId={detailsUserId}
-            open={detailsOpen}
-            onOpenChange={setDetailsOpen}
           />
             </TabsContent>
 

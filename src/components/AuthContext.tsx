@@ -24,32 +24,22 @@ export const useAuth = () => {
   return context;
 };
 
-// Enhanced utility function to clean up auth state
+// Utility function to clean up auth state
 const cleanupAuthState = () => {
-  try {
-    // Remove standard auth tokens
-    localStorage.removeItem('supabase.auth.token');
-    
-    // Remove all Supabase auth keys from localStorage
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-') || key.startsWith('sb-pwfczzxwjfxomqzhhwvj')) {
-        localStorage.removeItem(key);
-      }
-    });
-    
-    // Remove from sessionStorage if in use
-    Object.keys(sessionStorage || {}).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-') || key.startsWith('sb-pwfczzxwjfxomqzhhwvj')) {
-        sessionStorage.removeItem(key);
-      }
-    });
-    
-    // Clear additional auth-related items
-    localStorage.removeItem('supabaseSession');
-    sessionStorage.removeItem('supabaseSession');
-  } catch (error) {
-    console.warn('Cleanup warning:', error);
-  }
+  // Remove standard auth tokens
+  localStorage.removeItem('supabase.auth.token');
+  // Remove all Supabase auth keys from localStorage
+  Object.keys(localStorage).forEach((key) => {
+    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      localStorage.removeItem(key);
+    }
+  });
+  // Remove from sessionStorage if in use
+  Object.keys(sessionStorage || {}).forEach((key) => {
+    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      sessionStorage.removeItem(key);
+    }
+  });
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -205,9 +195,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setSession(null);
       
-      // Force page reload for clean state
-      window.location.href = '/auth';
-      
     } catch (error) {
       console.error('Sign out error:', error);
       // Clear state anyway and reset flags
@@ -215,8 +202,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(null);
       setShowWelcome(false);
       setHasExistingSession(false);
-      // Force reload even on error
-      window.location.href = '/auth';
     }
   };
 
@@ -231,9 +216,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return React.createElement(AuthContext.Provider, { value }, children);
 };

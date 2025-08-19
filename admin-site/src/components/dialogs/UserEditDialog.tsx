@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { AdminUser } from '../../types/admin';
 import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../contexts/AuthContext';
 import {
   Dialog,
   DialogContent,
@@ -30,7 +29,6 @@ interface UserEditDialogProps {
 
 export function UserEditDialog({ user, open, onOpenChange, onUserUpdated }: UserEditDialogProps) {
   const [loading, setLoading] = useState(false);
-  const { user: adminUser } = useAuth();
   const [formData, setFormData] = useState({
     first_name: user?.first_name || '',
     last_name: user?.last_name || '',
@@ -112,14 +110,13 @@ export function UserEditDialog({ user, open, onOpenChange, onUserUpdated }: User
 
       if (roleError) throw roleError;
 
-      // Update balance via secure RPC
-      if (!adminUser) throw new Error('Not authenticated');
-      const { error: balanceError } = await supabase.rpc('admin_modify_balance', {
-        p_target_user_id: user.user_id,
-        p_balance_amount: parseFloat(formData.balance_usd),
-        p_operation: 'set',
-        p_admin_user_id: adminUser.id
-      });
+      // Update balance
+      const { error: balanceError } = await supabase
+        .from('user_balance')
+        .update({
+          balance_usd: parseFloat(formData.balance_usd),
+        })
+        .eq('user_id', user.user_id);
 
       if (balanceError) throw balanceError;
 

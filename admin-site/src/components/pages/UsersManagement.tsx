@@ -182,13 +182,6 @@ export function UsersManagement() {
                       >
                         Acțiuni
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                      >
-                        <a href={`/users/${adminUser.user_id}`}>Detalii</a>
-                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>

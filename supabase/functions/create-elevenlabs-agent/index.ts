@@ -13,14 +13,11 @@ serve(async (req) => {
 
   try {
     const body = await req.json()
-    console.log('Function called with body:', JSON.stringify(body, null, 2))
     
     // Get ElevenLabs API key from Supabase Secrets
     const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY')
-    console.log('API key exists:', !!elevenLabsApiKey)
     
     if (!elevenLabsApiKey) {
-      console.error('ElevenLabs API key not found in environment variables')
       throw new Error('ElevenLabs API key not configured in Supabase Secrets')
     }
 

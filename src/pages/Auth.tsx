@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -40,7 +40,7 @@ const Auth = () => {
     return emailRegex.test(email);
   };
   if (user) {
-    return <Navigate to="/account" replace />;
+    return <Navigate to="/" replace />;
   }
   const handleGoogleLogin = async () => {
     try {
@@ -50,7 +50,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/account`
+          redirectTo: `${window.location.origin}/`
         }
       });
       
@@ -94,8 +94,8 @@ const Auth = () => {
           }
           setError(errorMessage);
         } else {
-          // Redirect to account page after successful login
-          navigate('/account');
+          // Redirect to home page after successful login
+          navigate('/');
         }
       } else {
         // Enhanced validation for sign up
@@ -111,7 +111,7 @@ const Auth = () => {
           return;
         }
         console.log('Attempting signup for:', email, 'with name:', firstName, lastName);
-        const redirectUrl = `${window.location.origin}/account`;
+        const redirectUrl = `${window.location.origin}/`;
         result = await signUp(email, password, firstName, lastName);
         if (result.error) {
           console.error('Signup error:', result.error);
@@ -147,14 +147,27 @@ const Auth = () => {
       {/* Left Side - 3D Vocal Visualization */}
       <div className="auth-visual-section">
         <div className="auth-3d-container">
-          <div className="w-full h-full relative flex items-center justify-center">
-            <spline-viewer url="https://prod.spline.design/n-YvIXxfmd6DNmtp/scene.splinecode" style={{ width: "100%", height: "100%" }}></spline-viewer>
-            {/* Fixed overlay to mask Spline badge across left half */}
-            <div
-              className="pointer-events-none fixed rounded-lg z-[2147483647]"
-              style={{ width: 220, height: 56, left: 'calc(50% - 240px)', bottom: 16, backgroundColor: 'hsl(0 0% 0%)' }}
-              aria-hidden="true"
-            />
+          {/* Audio Wave Visualization */}
+          <div className="audio-wave-3d px-[33px] py-[240px] my-0">
+            {Array.from({
+            length: 50
+          }, (_, i) => <div key={i} className="wave-bar-3d" style={{
+            animationDelay: `${i * 0.1}s`,
+            height: `${20 + Math.random() * 80}px`,
+            left: `${i * 100 / 50}%`
+          }} />)}
+          </div>
+          
+          {/* Simple Pulse Rings */}
+          <div className="pulse-rings">
+            <div className="pulse-ring ring-1"></div>
+            <div className="pulse-ring ring-2"></div>
+          </div>
+          
+          {/* Logo/Title */}
+          <div className="auth-visual-title">
+            <h1 className="my-0 py-[222px]">KALLINA</h1>
+            <p>AI Voice Platform</p>
           </div>
         </div>
       </div>
