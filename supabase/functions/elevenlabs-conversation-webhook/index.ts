@@ -110,9 +110,10 @@ serve(async (req) => {
 });
 
 async function processConversation(supabase: any, payload: ElevenLabsWebhookPayload) {
-  // Find the agent owner based on elevenlabs_agent_id
-  console.log('🔍 Caut agentul în baza de date cu elevenlabs_agent_id:', payload.agent_id);
-    
+  try {
+    // Find the agent owner based on elevenlabs_agent_id
+    console.log('🔍 Caut agentul în baza de date cu elevenlabs_agent_id:', payload.agent_id);
+      
     const { data: agentData, error: agentError } = await supabase
       .from('kalina_agents')
       .select('user_id, name, agent_id')
@@ -344,7 +345,7 @@ async function processConversation(supabase: any, payload: ElevenLabsWebhookPayl
     });
 
   } catch (error) {
-    console.error('Error in ElevenLabs conversation webhook:', error);
+    console.error('Error in processConversation:', error);
     return new Response(JSON.stringify({
       success: false,
       error: error.message
