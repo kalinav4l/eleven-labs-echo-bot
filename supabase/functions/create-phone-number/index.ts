@@ -38,22 +38,12 @@ serve(async (req) => {
       throw new Error('Outbound SIP configuration (address and username) is required')
     }
 
-    // Fix inbound trunk config - ElevenLabs may not support empty arrays
+    // Simplify inbound trunk config - ElevenLabs API is strict about this
     if (sipData.inbound_trunk_config) {
-      // If no specific allowed addresses, remove the field entirely
-      if (!sipData.inbound_trunk_config.allowed_addresses || sipData.inbound_trunk_config.allowed_addresses.length === 0) {
-        delete sipData.inbound_trunk_config.allowed_addresses
-      }
-      
-      // If no specific allowed numbers, remove the field entirely  
-      if (!sipData.inbound_trunk_config.allowed_numbers || sipData.inbound_trunk_config.allowed_numbers.length === 0) {
-        delete sipData.inbound_trunk_config.allowed_numbers
-      }
-      
-      // If no credentials provided, remove them entirely
-      if (!sipData.inbound_trunk_config.credentials?.username && !sipData.inbound_trunk_config.credentials?.password) {
-        delete sipData.inbound_trunk_config.credentials
-      }
+      // Try removing inbound config entirely if it's causing issues
+      // Some providers don't need or support complex inbound configurations
+      delete sipData.inbound_trunk_config;
+      console.log('Removed inbound_trunk_config to avoid ElevenLabs API issues');
     }
 
     console.log('Processed SIP data:', JSON.stringify(sipData, null, 2))
