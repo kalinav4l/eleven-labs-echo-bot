@@ -33,7 +33,7 @@ const communicationsItems = [
   { title: "Programări", url: "/account/calendar", icon: CalendarDays },
   { title: "Numere", url: "/account/phone-numbers", icon: Smartphone },
   { title: "Test Apel", url: "/account/test-call", icon: Zap },
-  { title: "Reprogramări", url: "/account/callback-scheduler", icon: PhoneForwarded },
+  // { title: "Reprogramări", url: "/account/callback-scheduler", icon: PhoneForwarded },
 ];
 
 const dataToolsItems = [

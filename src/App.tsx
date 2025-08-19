@@ -29,7 +29,7 @@ import PhoneNumbers from "./pages/PhoneNumbers";
 import TestCall from "./pages/TestCall";
 import ConversationDetail from "./pages/ConversationDetail";
 import VoiceDemo from "./pages/VoiceDemo";
-import CallbackScheduler from "./pages/CallbackScheduler";
+// import CallbackScheduler from "./pages/CallbackScheduler";
 import Pricing from "./pages/Pricing";
 import Admin from "./pages/Admin";
 import Contacts from "./pages/Contacts";
@@ -73,7 +73,7 @@ function AppWithWelcome() {
         <Route path="/account/agent-ai" element={<AgentAI />} />
         <Route path="/account/gmail" element={<Gmail />} />
         <Route path="/account/agent-consultant" element={<AgentConsultant />} />
-        <Route path="/account/callback-scheduler" element={<CallbackScheduler />} />
+        {/* <Route path="/account/callback-scheduler" element={<CallbackScheduler />} /> */}
         <Route path="/account/documentation" element={<Documentation />} />
         <Route path="/account/voice-demo" element={<VoiceDemo />} />
         <Route path="/account/settings" element={<AccountSettings />} />
