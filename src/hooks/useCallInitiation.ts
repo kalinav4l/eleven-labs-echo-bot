@@ -561,37 +561,10 @@ export const useCallInitiation = ({
           ));
         }
         
-        // 5-minute delay before next contact
+        // Brief pause before next contact
         if (i < contacts.length - 1) {
-          logStep(`BATCH CONTACT ${i + 1}: Starting 5-minute delay before next contact`, { contactName: contact.name });
-          setCurrentCallStatus(`⏰ Așteptare 5 minute până la următorul apel...`);
-          
-          // 5-minute countdown (300 seconds)
-          const delaySeconds = 300;
-          for (let countdown = delaySeconds; countdown > 0; countdown--) {
-            // Check if stopped or paused during delay
-            if (isStopped) {
-              logStep('BATCH PROCESSING: STOPPED during delay');
-              setCurrentCallStatus('🛑 Procesare oprită de utilizator');
-              return;
-            }
-            
-            while (isPaused && !isStopped) {
-              setCurrentCallStatus('⏸️ Procesare în pauză...');
-              await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-            
-            if (isStopped) return;
-            
-            const minutes = Math.floor(countdown / 60);
-            const seconds = countdown % 60;
-            const nextContact = contacts[i + 1];
-            setCurrentCallStatus(`⏰ Următorul apel în ${minutes}:${seconds.toString().padStart(2, '0')} (${nextContact?.name || 'Contact necunoscut'})`);
-            
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
-          
-          logStep(`BATCH: Delay completed, proceeding to next contact (${i + 2}/${contacts.length})`);
+          logStep(`BATCH: Brief pause before next contact (${i + 2}/${contacts.length})`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
         }
       }
 
