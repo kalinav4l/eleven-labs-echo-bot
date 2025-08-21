@@ -446,6 +446,258 @@ const generateUserContext = (userData: any) => {
   return context;
 };
 
+// Tool execution functions pentru MCP/JARVIS functionality
+const executeInitiateCall = async (userId: string, contactName: string, phoneNumber: string, agentType?: string) => {
+  try {
+    console.log('🚀 Initiating call:', { userId, contactName, phoneNumber, agentType });
+    
+    // Find suitable agent
+    const agents = await getUserAgents(userId);
+    let selectedAgent = null;
+    
+    if (agentType) {
+      // Search for agent by type/description
+      selectedAgent = agents.find(agent => 
+        agent.description?.toLowerCase().includes(agentType.toLowerCase()) ||
+        agent.name.toLowerCase().includes(agentType.toLowerCase())
+      );
+    }
+    
+    // Fallback to first active agent
+    if (!selectedAgent) {
+      selectedAgent = agents.find(agent => agent.is_active) || agents[0];
+    }
+    
+    if (!selectedAgent) {
+      return {
+        success: false,
+        message: 'Nu am găsit niciun agent disponibil în contul tău. Te rog să creezi mai întâi un agent.',
+        data: null
+      };
+    }
+    
+    // Call the initiate-scheduled-call function
+    const { data: callResult, error } = await supabase.functions.invoke('initiate-scheduled-call', {
+      body: {
+        agent_id: selectedAgent.agent_id,
+        phone_number: phoneNumber,
+        contact_name: contactName,
+        user_id: userId,
+        is_test_call: false
+      }
+    });
+    
+    if (error) {
+      console.error('Error initiating call:', error);
+      return {
+        success: false,
+        message: `Eroare la inițierea apelului: ${error.message}`,
+        data: null
+      };
+    }
+    
+    console.log('✅ Call initiated successfully:', callResult);
+    
+    return {
+      success: true,
+      message: `Apelul către ${contactName} (${phoneNumber}) a fost inițiat cu succes folosind agentul "${selectedAgent.name}". ID conversație: ${callResult?.conversation_id || 'N/A'}`,
+      data: {
+        agent: selectedAgent.name,
+        contact: contactName,
+        phone: phoneNumber,
+        conversationId: callResult?.conversation_id,
+        callResult
+      }
+    };
+    
+  } catch (error) {
+    console.error('Error in executeInitiateCall:', error);
+    return {
+      success: false,
+      message: `Eroare la inițierea apelului: ${error.message}`,
+      data: null
+    };
+  }
+};
+
+const executeFindAgent = async (userId: string, agentType: string) => {
+  try {
+    const agents = await getUserAgents(userId);
+    
+    const matchingAgents = agents.filter(agent => 
+      agent.description?.toLowerCase().includes(agentType.toLowerCase()) ||
+      agent.name.toLowerCase().includes(agentType.toLowerCase()) ||
+      agent.system_prompt?.toLowerCase().includes(agentType.toLowerCase())
+    );
+    
+    return {
+      success: true,
+      message: `Am găsit ${matchingAgents.length} agent(i) pentru "${agentType}"`,
+      data: matchingAgents
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: `Eroare la căutarea agentului: ${error.message}`,
+      data: null
+    };
+  }
+};
+
+const executeSearchContact = async (userId: string, query: string) => {
+  try {
+    const contacts = await getUserContacts(userId);
+    
+    const matchingContacts = contacts.filter(contact => 
+      contact.nume?.toLowerCase().includes(query.toLowerCase()) ||
+      contact.telefon?.includes(query) ||
+      contact.company?.toLowerCase().includes(query.toLowerCase())
+    );
+    
+    return {
+      success: true,
+      message: `Am găsit ${matchingContacts.length} contact(e) pentru "${query}"`,
+      data: matchingContacts
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: `Eroare la căutarea contactului: ${error.message}`,
+      data: null
+    };
+  }
+};
+
+const executeScheduleCallback = async (userId: string, clientName: string, phoneNumber: string, scheduledTime: string, reason?: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('callback_requests')
+      .insert({
+        user_id: userId,
+        client_name: clientName,
+        phone_number: phoneNumber,
+        scheduled_time: new Date(scheduledTime).toISOString(),
+        reason: reason || 'Programat din chat AI',
+        status: 'scheduled',
+        priority: 'medium'
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      return {
+        success: false,
+        message: `Eroare la programarea callback-ului: ${error.message}`,
+        data: null
+      };
+    }
+    
+    return {
+      success: true,
+      message: `Callback-ul pentru ${clientName} (${phoneNumber}) a fost programat cu succes pentru ${new Date(scheduledTime).toLocaleString('ro-RO')}`,
+      data: data
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: `Eroare la programarea callback-ului: ${error.message}`,
+      data: null
+    };
+  }
+};
+
+// Tool definitions for OpenAI function calling
+const tools = [
+  {
+    type: "function",
+    function: {
+      name: "initiate_call",
+      description: "Inițiază un apel telefonic către un contact folosind un agent AI. Utilizează această funcție când utilizatorul cere să sune pe cineva.",
+      parameters: {
+        type: "object",
+        properties: {
+          contact_name: {
+            type: "string",
+            description: "Numele persoanei care va fi sunată"
+          },
+          phone_number: {
+            type: "string",
+            description: "Numărul de telefon (format internațional cu +)"
+          },
+          agent_type: {
+            type: "string",
+            description: "Tipul de agent dorit (ex: vânzări, suport, consultanță)"
+          }
+        },
+        required: ["contact_name", "phone_number"]
+      }
+    }
+  },
+  {
+    type: "function", 
+    function: {
+      name: "find_agent",
+      description: "Găsește agenți AI potriviți pe baza unei descrieri sau tipului dorit",
+      parameters: {
+        type: "object",
+        properties: {
+          agent_type: {
+            type: "string",
+            description: "Tipul sau descrierea agentului căutat"
+          }
+        },
+        required: ["agent_type"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "search_contact",
+      description: "Caută contacte în baza de date pe baza numelui, telefonului sau companiei",
+      parameters: {
+        type: "object", 
+        properties: {
+          query: {
+            type: "string",
+            description: "Termenul de căutare (nume, telefon sau companie)"
+          }
+        },
+        required: ["query"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "schedule_callback",
+      description: "Programează un callback pentru o dată și oră viitoare",
+      parameters: {
+        type: "object",
+        properties: {
+          client_name: {
+            type: "string",
+            description: "Numele clientului"
+          },
+          phone_number: {
+            type: "string", 
+            description: "Numărul de telefon"
+          },
+          scheduled_time: {
+            type: "string",
+            description: "Data și ora programată (format ISO)"
+          },
+          reason: {
+            type: "string",
+            description: "Motivul callback-ului"
+          }
+        },
+        required: ["client_name", "phone_number", "scheduled_time"]
+      }
+    }
+  }
+];
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -589,7 +841,7 @@ ${contextText}
       { role: 'user', content: message }
     ];
 
-    // Pas 4: Trimite request la OpenAI
+    // Pas 4: Trimite request la OpenAI cu tool calling
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -600,7 +852,9 @@ ${contextText}
         model: model,
         messages: messages,
         max_tokens: 1000,
-        temperature: 0.3, // Temperatură mai mică pentru răspunsuri mai consistente
+        temperature: 0.3,
+        tools: tools, // Add tool calling capabilities
+        tool_choice: "auto" // Let AI decide when to use tools
       }),
     });
 
@@ -611,19 +865,124 @@ ${contextText}
     }
 
     const openaiData = await openaiResponse.json();
-    const aiResponse = openaiData.choices[0]?.message?.content;
+    const aiMessage = openaiData.choices[0]?.message;
 
-    if (!aiResponse) {
+    if (!aiMessage) {
       throw new Error('No response generated');
     }
 
-    console.log('Generated response:', aiResponse);
+    let finalResponse = aiMessage.content || '';
+    let toolResults = [];
+
+    // Handle tool calls if present
+    if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
+      console.log('🛠️ Tool calls detected:', aiMessage.tool_calls.length);
+      
+      for (const toolCall of aiMessage.tool_calls) {
+        console.log('Executing tool:', toolCall.function.name, toolCall.function.arguments);
+        
+        try {
+          const args = JSON.parse(toolCall.function.arguments);
+          let toolResult;
+          
+          switch (toolCall.function.name) {
+            case 'initiate_call':
+              toolResult = await executeInitiateCall(
+                userId, 
+                args.contact_name, 
+                args.phone_number, 
+                args.agent_type
+              );
+              break;
+              
+            case 'find_agent':
+              toolResult = await executeFindAgent(userId, args.agent_type);
+              break;
+              
+            case 'search_contact':
+              toolResult = await executeSearchContact(userId, args.query);
+              break;
+              
+            case 'schedule_callback':
+              toolResult = await executeScheduleCallback(
+                userId,
+                args.client_name,
+                args.phone_number,
+                args.scheduled_time,
+                args.reason
+              );
+              break;
+              
+            default:
+              toolResult = {
+                success: false,
+                message: `Tool necunoscut: ${toolCall.function.name}`,
+                data: null
+              };
+          }
+          
+          toolResults.push({
+            tool: toolCall.function.name,
+            ...toolResult
+          });
+          
+          console.log(`✅ Tool ${toolCall.function.name} executed:`, toolResult);
+          
+        } catch (error) {
+          console.error(`❌ Error executing tool ${toolCall.function.name}:`, error);
+          toolResults.push({
+            tool: toolCall.function.name,
+            success: false,
+            message: `Eroare la executarea acțiunii: ${error.message}`,
+            data: null
+          });
+        }
+      }
+      
+      // If tools were executed, create a follow-up response
+      if (toolResults.length > 0) {
+        const toolSummary = toolResults.map(result => 
+          `${result.success ? '✅' : '❌'} ${result.message}`
+        ).join('\n');
+        
+        // Generate a follow-up response that includes tool results
+        const followUpMessages = [
+          { role: 'system', content: finalSystemPrompt },
+          { role: 'user', content: message },
+          { role: 'assistant', content: aiMessage.content || '', tool_calls: aiMessage.tool_calls },
+          { role: 'user', content: `Rezultatele acțiunilor executate:\n${toolSummary}\n\nTe rog să confirmi utilizatorului ce s-a întâmplat și să oferi un răspuns relevant.` }
+        ];
+        
+        const followUpResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: followUpMessages,
+            max_tokens: 1000,
+            temperature: 0.3,
+          }),
+        });
+        
+        if (followUpResponse.ok) {
+          const followUpData = await followUpResponse.json();
+          finalResponse = followUpData.choices[0]?.message?.content || finalResponse;
+        }
+      }
+    }
+
+    console.log('Generated response:', finalResponse);
 
     return new Response(
       JSON.stringify({ 
-        response: aiResponse,
+        response: finalResponse,
         contextFound: contextText.length > 0,
-        chunksUsed: contextText ? contextText.split('\n\n').length : 0
+        chunksUsed: contextText ? contextText.split('\n\n').length : 0,
+        toolsExecuted: toolResults.length,
+        toolResults: toolResults
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
