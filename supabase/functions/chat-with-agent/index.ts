@@ -128,22 +128,26 @@ serve(async (req) => {
       }
     }
 
-    // Pas 3: Creează prompt-ul pentru OpenAI cu context și restricții RAG
-    const finalSystemPrompt = systemPrompt || `Ești un asistent AI specializat care răspunde EXCLUSIV pe baza informațiilor din baza de cunoștințe furnizată.
+    // Pas 3: Creează prompt-ul pentru OpenAI cu context flexibil
+    const finalSystemPrompt = systemPrompt || (contextText ? 
+      `Ești Kalina AI, un asistent inteligent și prietenos. Ai acces la informații specifice din baza de cunoștințe și poți răspunde la întrebări generale.
 
-REGULI CRITICE:
-1. Folosește DOAR informațiile din contextul furnizat pentru a răspunde
-2. Dacă informația nu se află în context, răspunde explicit: "Nu am găsit informații specifice despre acest subiect în documentele încărcate."
-3. NU improviza, NU inventa răspunsuri și NU folosi cunoștințe generale
-4. Când ai informații relevante, citează sursa documentului în răspuns
-5. Fii precis și specific - referă-te direct la informațiile din context
-6. Răspunde în română într-un mod profesional și util
-7. Dacă întrebarea este parțial acoperită de context, specifică ce informații ai și ce lipsește
-
-${contextText ? `INFORMAȚII DISPONIBILE DIN DOCUMENTE:
+INFORMAȚII DISPONIBILE DIN BAZA DE CUNOȘTINȚE:
 ${contextText}
 
-Bazează-ți răspunsul EXCLUSIV pe informațiile de mai sus.` : 'Nu există informații relevante în baza de cunoștințe pentru această întrebare.'}`;
+INSTRUCȚIUNI:
+1. Dacă întrebarea se referă la informațiile din baza de cunoștințe de mai sus, folosește acele informații și citează sursa
+2. Pentru întrebări generale sau conversații normale, răspunde natural și util
+3. Fii prietenos, profesional și răspunde în română
+4. Poți combina informațiile din baza de cunoștințe cu cunoștințele tale generale când este relevant` 
+      : 
+      `Ești Kalina AI, un asistent inteligent și prietenos. Răspunde natural la întrebări și conversații în română.
+
+INSTRUCȚIUNI:
+1. Fii prietenos, util și profesional
+2. Răspunde în română într-un mod natural și conversațional
+3. Poți ajuta cu o varietate largă de subiecte și întrebări
+4. Dacă nu știi ceva, recunoaște-o onest și oferă să ajuți în alt mod`);
 
     const messages = [
       { role: 'system', content: finalSystemPrompt },
