@@ -76,10 +76,18 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/account')}>
-                  <Link to="/account">
+                <SidebarMenuButton asChild isActive={isActive('/') || isActive('/account')}>
+                  <Link to="/">
                     <Home className="w-4 h-4" />
                     <span>Home</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/dashboard')}>
+                  <Link to="/dashboard">
+                    <TrendingUp className="w-4 h-4" />
+                    <span>Dashboard</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

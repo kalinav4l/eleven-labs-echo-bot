@@ -7,6 +7,8 @@ import { KalinaWelcomeAnimation } from "./components/KalinaWelcomeAnimation";
 import Auth from "./pages/Auth";
 import Account from "./pages/Account";
 import Home from "./pages/Home";
+import MainChat from "./pages/MainChat";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import AccountSettings from "./pages/AccountSettings";
 import KalinaAgents from "./pages/KalinaAgents";
@@ -48,13 +50,14 @@ function AppWithWelcome() {
         />
       )}
       <Routes>
-        <Route path="/" element={<Navigate to="/account" replace />} />
+        <Route path="/" element={<MainChat />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/admin" element={<Admin />} />
         
         {/* Account routes */}
-        <Route path="/account" element={<Account />} />
+        <Route path="/account" element={<MainChat />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/account/*" element={<Account />} />
         <Route path="/account/kalina-agents" element={<KalinaAgents />} />
         <Route path="/account/agent-edit/:agentId" element={<AgentEdit />} />
