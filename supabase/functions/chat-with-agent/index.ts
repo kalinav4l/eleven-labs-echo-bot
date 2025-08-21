@@ -631,8 +631,9 @@ const executeCreateAgent = async (userId: string, agentDescription: string, agen
   try {
     console.log('🤖 Creating agent:', { userId, agentDescription, agentType });
     
-    // Generate agent name
+    // Generate agent name and ID first
     const agentName = `Agent ${agentType || 'Personalizat'} ${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const generatedAgentId = `agent_${Math.random().toString(36).substring(2, 15)}`;
     
     // Generate system prompt using the generate-agent-prompt function
     let systemPrompt = `Ești ${agentName}, un asistent AI specializat în ${agentType || 'asistență generală'}. ${agentDescription}`;
@@ -659,11 +660,12 @@ const executeCreateAgent = async (userId: string, agentDescription: string, agen
     // Select appropriate voice
     const voiceId = voicePreference || '9BWtsMINqrJLrRacOk9x'; // Default to Aria
 
-    // Create the agent in database first
+    // Create the agent in database with pre-generated agent_id
     const { data: agentData, error: dbError } = await supabase
       .from('kalina_agents')
       .insert({
         user_id: userId,
+        agent_id: generatedAgentId,
         name: agentName,
         description: agentDescription,
         system_prompt: systemPrompt,
@@ -686,7 +688,7 @@ const executeCreateAgent = async (userId: string, agentDescription: string, agen
     // Create ElevenLabs agent
     const elevenLabsConfig = {
       name: agentName,
-      agent_id: `agent_${Math.random().toString(36).substring(2, 15)}`,
+      agent_id: generatedAgentId, // Use the same ID we generated for database
       system_prompt: systemPrompt,
       first_message: `Bună ziua! Sunt ${agentName}. Cum vă pot ajuta astăzi?`,
       language: "ro",
