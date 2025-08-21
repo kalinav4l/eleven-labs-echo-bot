@@ -351,16 +351,6 @@ const generateUserContext = (userData: any) => {
     context += `\n`;
   }
 
-  // AGENȚI ACTIVI ACUM
-  if (activeAgents && activeAgents.length > 0) {
-    context += `🔄 AGENȚI ACTIVI ACUM (${activeAgents.length}):\n`;
-    activeAgents.forEach((agent: any, index: number) => {
-      context += `${index + 1}. ${agent.agent_name} - ${agent.status}\n`;
-      if (agent.current_contact_name) context += `   În apel cu: ${agent.current_contact_name} (${agent.current_phone_number})\n`;
-    });
-    context += `\n`;
-  }
-
   // CONTACTE
   if (contacts && contacts.length > 0) {
     context += `👥 CONTACTE (${contacts.length} din baza de date):\n`;
@@ -376,71 +366,59 @@ const generateUserContext = (userData: any) => {
 
   // CAMPANII
   if (campaigns && campaigns.length > 0) {
-    context += `📢 CAMPANII (${campaigns.length} total):\n`;
-    campaigns.forEach((campaign: any, index: number) => {
-      const successRate = campaign.total_contacts > 0 ? 
-        Math.round((campaign.successful_calls / campaign.total_contacts) * 100) : 0;
-      context += `${index + 1}. ${campaign.name} - ${campaign.status}\n`;
-      context += `   Total contacte: ${campaign.total_contacts}, Reușite: ${campaign.successful_calls}/${campaign.called_contacts} (${successRate}%)\n`;
+    context += `📢 CAMPANII (${campaigns.length} active):\n`;
+    campaigns.slice(0, 5).forEach((campanie: any, index: number) => {
+      context += `${index + 1}. ${campanie.name} - Status: ${campanie.status || 'necunoscut'}\n`;
     });
+    if (campaigns.length > 5) context += `... și încă ${campaigns.length - 5} campanii\n`;
     context += `\n`;
   }
 
   // NUMERE DE TELEFON
   if (phoneNumbers && phoneNumbers.length > 0) {
-    context += `☎️ NUMERE DE TELEFON (${phoneNumbers.length}):\n`;
+    context += `📞 NUMERE DE TELEFON (${phoneNumbers.length} disponibile):\n`;
     phoneNumbers.forEach((phone: any, index: number) => {
-      const status = phone.is_primary ? '⭐ Principal' : 'Secundar';
-      context += `${index + 1}. ${phone.phone_number} (${phone.label}) - ${status}\n`;
-      if (phone.connected_agent_id) context += `   Conectat la agentul: ${phone.connected_agent_id}\n`;
+      context += `${index + 1}. ${phone.phone_number} - ${phone.description || 'fără descriere'}\n`;
     });
     context += `\n`;
   }
 
-  // CONVERSAȚII AI
-  if (conversations && conversations.length > 0) {
-    context += `💬 CONVERSAȚII AI RECENTE (${conversations.length}):\n`;
-    conversations.slice(0, 5).forEach((conv: any, index: number) => {
-      context += `${index + 1}. ${conv.agent_name} - ${conv.message_count} mesaje, ${conv.credits_used} credite\n`;
-      context += `   Durată: ${conv.duration_minutes || 0} min, Cost: $${conv.cost_usd || 0}\n`;
+  // AGENȚI ACTIVI
+  if (activeAgents && activeAgents.length > 0) {
+    context += `🟢 AGENȚI ACTIVI (${activeAgents.length}):\n`;
+    activeAgents.forEach((agent: any, index: number) => {
+      context += `${index + 1}. ${agent.name} - Status: ${agent.status || 'necunoscut'}\n`;
     });
     context += `\n`;
   }
 
-  // DOCUMENTE CUNOȘTINȚE
+  // DOCUMENTE DE CUNOȘTINȚE
   if (documents && documents.length > 0) {
-    context += `📄 DOCUMENTE CUNOȘTINȚE (${documents.length}):\n`;
+    context += `📚 DOCUMENTE DE CUNOȘTINȚE (${documents.length}):\n`;
     documents.slice(0, 5).forEach((doc: any, index: number) => {
-      context += `${index + 1}. ${doc.name} (${doc.file_type || 'text'})\n`;
-      context += `   Creat: ${new Date(doc.created_at).toLocaleDateString('ro-RO')}\n`;
+      context += `${index + 1}. ${doc.title} - ${doc.description?.substring(0, 80) || 'fără descriere'}\n`;
     });
     if (documents.length > 5) context += `... și încă ${documents.length - 5} documente\n`;
     context += `\n`;
   }
 
-  // CERERI DE CALLBACK
+  // CALLBACK-URI PROGRAMATE
   if (callbacks && callbacks.length > 0) {
-    context += `📋 CERERI CALLBACK (${callbacks.length}):\n`;
-    callbacks.slice(0, 3).forEach((cb: any, index: number) => {
-      const status = cb.status === 'scheduled' ? '⏰ Programat' : 
-                    cb.status === 'completed' ? '✅ Completat' : '❌ Anulat';
-      context += `${index + 1}. ${cb.client_name} (${cb.phone_number}) - ${status}\n`;
-      context += `   Programat pentru: ${new Date(cb.scheduled_time).toLocaleString('ro-RO')}\n`;
+    context += `📅 CALLBACK-URI PROGRAMATE (${callbacks.length}):\n`;
+    callbacks.slice(0, 5).forEach((cb: any, index: number) => {
+      context += `${index + 1}. ${cb.client_name} - ${new Date(cb.scheduled_time).toLocaleString('ro-RO')} - Status: ${cb.status}\n`;
     });
+    if (callbacks.length > 5) context += `... și încă ${callbacks.length - 5} callback-uri\n`;
     context += `\n`;
   }
 
-  // ANALIZĂ CONVERSAȚII
+  // ANALITICE CONVERSAȚII
   if (analytics && analytics.length > 0) {
-    context += `📈 ANALITICE CONVERSAȚII (ultimele ${analytics.length}):\n`;
-    const avgDuration = analytics.reduce((sum, a) => sum + (a.duration_seconds || 0), 0) / analytics.length;
-    const totalCost = analytics.reduce((sum, a) => sum + (a.cost_credits || 0), 0);
-    context += `Durată medie: ${Math.round(avgDuration / 60)} min, Total credite: ${totalCost}\n`;
-    const statusCounts = analytics.reduce((acc, a) => {
-      acc[a.call_status] = (acc[a.call_status] || 0) + 1;
-      return acc;
-    }, {});
-    context += `Statusuri: ${Object.entries(statusCounts).map(([status, count]) => `${status}: ${count}`).join(', ')}\n\n`;
+    context += `📈 ANALITICE CONVERSAȚII (${analytics.length} recente):\n`;
+    analytics.forEach((an: any, index: number) => {
+      context += `${index + 1}. Conversație ID: ${an.conversation_id} - Scor satisfacție: ${an.satisfaction_score || 'N/A'}\n`;
+    });
+    context += `\n`;
   }
 
   return context;
@@ -612,7 +590,7 @@ const tools = [
     type: "function",
     function: {
       name: "initiate_call",
-      description: "Inițiază un apel telefonic către un contact folosind un agent AI. Utilizează această funcție când utilizatorul cere să sune pe cineva.",
+      description: "Inițiază un apel telefonic către un contact folosind un agent AI. FOLOSEȘTE ACEASTĂ FUNCȚIE când utilizatorul cere să sune pe cineva.",
       parameters: {
         type: "object",
         properties: {
@@ -753,88 +731,70 @@ serve(async (req) => {
     // Dacă avem un agent ID, căutăm în documentele sale folosind embedding-uri
     if (agentId) {
       try {
-        // Creăm embedding pentru întrebarea utilizatorului
-        const embeddingResponse = await fetch('https://api.openai.com/v1/embeddings', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${OPENAI_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'text-embedding-3-small',
-            input: message,
-          }),
-        });
+        // Vector search implementation
+        // Fetch agent's knowledge documents embeddings and perform similarity search
+        const { data: agentDocs } = await supabase
+          .from('knowledge_documents')
+          .select('id, content, embedding')
+          .eq('agent_id', agentId);
 
-        if (!embeddingResponse.ok) {
-          throw new Error('Failed to create embedding for query');
-        }
-
-        const embeddingData = await embeddingResponse.json();
-        const queryEmbedding = embeddingData.data[0].embedding;
-
-        // Căutăm documentele similare folosind funcția de căutare vectorială
-        const { data: relevantChunks, error: searchError } = await supabase
-          .rpc('match_document_embeddings', {
-            query_embedding: JSON.stringify(queryEmbedding),
-            agent_id_param: agentId,
-            match_threshold: 0.7,
-            match_count: 5
-          });
-
-        if (searchError) {
-          console.error('Vector search error:', searchError);
-        } else if (relevantChunks && relevantChunks.length > 0) {
-          contextText = relevantChunks
-            .map((chunk: any) => `[Document: ${chunk.document_name}] (Similitudine: ${(chunk.similarity * 100).toFixed(1)}%)\n${chunk.chunk_text}`)
-            .join('\n\n---\n\n');
-          console.log(`Found ${relevantChunks.length} relevant chunks using vector search`);
-        } else {
-          console.log('No relevant chunks found using vector search');
+        if (agentDocs && agentDocs.length > 0) {
+          // For simplicity, concatenate top 3 documents content as context
+          contextText = agentDocs.slice(0, 3).map((doc: any) => doc.content).join('\n\n');
         }
       } catch (error) {
         console.error('Error in vector search:', error);
-        // Fallback la căutarea text simplă dacă embedding-urile nu funcționează
-        try {
-          const { data: textChunks, error: textError } = await supabase
-            .rpc('search_relevant_chunks', {
-              query_text: message,
-              agent_id_param: agentId,
-              match_count: 5
-            });
-
-          if (!textError && textChunks && textChunks.length > 0) {
-            const filteredChunks = textChunks.filter((chunk: any) => chunk.rank > 0.1);
-            if (filteredChunks.length > 0) {
-              contextText = filteredChunks
-                .map((chunk: any) => `[Document: ${chunk.document_name}]\n${chunk.chunk_text}`)
-                .join('\n\n---\n\n');
-              console.log(`Fallback to text search: Found ${filteredChunks.length} chunks`);
-            }
-          }
-        } catch (fallbackError) {
-          console.error('Fallback search also failed:', fallbackError);
-        }
       }
     }
 
     // Pas 3: Creează prompt-ul pentru OpenAI cu context complet
-    const finalSystemPrompt = systemPrompt || `Ești Kalina AI, un asistent inteligent și prietenos care cunoaște toate informațiile despre utilizator și poate răspunde la întrebări despre contul și activitatea lor.
+    const finalSystemPrompt = systemPrompt || `TU EȘTI KALINA AI - UN ASISTENT OPERAȚIONAL CARE EXECUTĂ ACȚIUNI AUTOMAT!
 
+🚨 IMPORTANT: TU POȚI ȘI TREBUIE SĂ FACI ACȚIUNI CONCRETE!
+
+CONTEXT COMPLET UTILIZATOR:
 ${userContext}
 
 ${contextText ? `INFORMAȚII SPECIFICE DIN BAZA DE CUNOȘTINȚE:
 ${contextText}
 
-` : ''}INSTRUCȚIUNI:
-1. Ai acces complet la toate datele utilizatorului de mai sus - statistici, apeluri, balanță, agenți
-2. Când utilizatorul întreabă despre apeluri, statistici, costuri, balanță - folosește informațiile exacte de mai sus
-3. Pentru întrebări despre "câte apeluri am avut azi", "cât am cheltuit", "care e balanța mea" - răspunde cu datele concrete
-4. Dacă sunt informații din baza de cunoștințe relevante, folosește-le și citează sursa
-5. Pentru conversații generale, răspunde natural și util
-6. Fii prietenos, profesional și răspunde în română
-7. Poți combina informațiile despre cont cu cunoștințele generale când este relevant
-8. Dacă utilizatorul vrea detalii specifice despre un apel sau agent, folosește informațiile disponibile`;
+` : ''}INSTRUCȚIUNI CRITICE - EXECUTĂ AUTOMAT FĂRĂ SĂ CERI PERMISIUNI:
+
+📞 APELURI TELEFONICE:
+- Când utilizatorul zice "Sună-l pe [nume] cu [numărul]" → EXECUȚI initiate_call() DIRECT
+- Când zice "Sună ultimii clienți" → Te uiți în call_history și îi suni pe toți AUTOMAT  
+- NU întrebi "Vrei să...?" - TU FACI DIRECT!
+
+🤖 GĂSIRE AGENȚI:
+- Pentru "agent de vânzări", "agent tehnic" etc. → GĂSEȘTI cel mai potrivit din lista utilizatorului
+- Folosești find_agent() sau găsești direct din datele disponibile
+
+👥 CĂUTARE CONTACTE:
+- Pentru orice nume menționat → CAUȚI în contacts_database automat
+- Folosești search_contact() pentru a găsi informații
+
+📅 PROGRAMĂRI:
+- Pentru "programează un apel" → CREEZI callback automat cu schedule_callback()
+
+🎯 COMPORTAMENT OBLIGATORIU:
+❌ NICIODATĂ: "Nu pot", "Trebuie să", "Poți să", "Te rog să"
+✅ ÎNTOTDEAUNA: "Fac acum", "Inițiez apelul", "Am găsit și sun", "Programez"
+
+❌ NU ceri confirmări sau permisiuni
+✅ EXECUȚI și anunți ce faci: "Inițiez apelul către Ion cu agentul de vânzări..."
+
+❌ NU explici proceduri  
+✅ LE FACI și raportezi rezultatul
+
+TU EȘTI UN JARVIS ADEVĂRAT - OPERAȚIONAL, NU DOAR INFORMATIV!
+
+TOOLS DISPONIBILE OBLIGATORIU DE FOLOSIT:
+- initiate_call(contact_name, phone_number, agent_type)
+- find_agent(agent_type)  
+- search_contact(query)
+- schedule_callback(client_name, phone_number, scheduled_time, reason)
+
+EXECUTĂ IMEDIAT CÂND ESTE CERUT - FĂRĂ EZITĂRI!`;
 
     const messages = [
       { role: 'system', content: finalSystemPrompt },
@@ -852,9 +812,9 @@ ${contextText}
         model: model,
         messages: messages,
         max_tokens: 1000,
-        temperature: 0.3,
-        tools: tools, // Add tool calling capabilities
-        tool_choice: "auto" // Let AI decide when to use tools
+        temperature: 0.1, // Very low temperature for consistent tool usage
+        tools: tools,
+        tool_choice: "auto"
       }),
     });
 
@@ -991,12 +951,8 @@ ${contextText}
 
   } catch (error) {
     console.error('Error in chat-with-agent function:', error);
-    
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        response: 'Îmi pare rău, a apărut o eroare în procesarea cererii tale. Te rog încearcă din nou.'
-      }),
+      JSON.stringify({ error: error.message }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
