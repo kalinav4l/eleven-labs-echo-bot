@@ -11,15 +11,15 @@ export const API_CONFIG = {
 } as const;
 
 export const VOICES = [
-  { id: 'vrlYThSLKW8zkmzKp6HB', name: 'Lili' },
+  { id: '21m00Tcm4TlvDq8ikWAM', name: 'Lili' },
   { id: 'cjVigY5qzO86Huf0OWal', name: 'Eric' },
-  { id: 'hnrrfdVZhpEHlvvBppOW', name: 'Kalina' },
-  { id: 'YKAmPotHIjfmLzh5daE4', name: 'Andreea' },
-  { id: 'kdmDKE6EkgrWrrykO9Qt', name: 'Alexandra' },
+  { id: 'CwhRBWXzGAHq8TQ4Fs17', name: 'Kalina' },
+  { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Andreea' },
+  { id: 'Xb7hH8MSUJpSbSDYk0k2', name: 'Alexandra' },
   { id: 'GRHbHyXbUO8nF4YexVTa', name: 'Anca' },
-  { id: 'sGcPNcpR5PikknzyXcy7', name: 'Cristi' },
-  { id: 'LQd9MAmzrUHnAF1Nmi1o', name: 'Oleg' },
-  { id: 'khu4amlCJPHOSeWZ9pyq', name: 'Marius' },
+  { id: 'bIHbv24MWmeRgasZH58o', name: 'Cristi' },
+  { id: 'bIHbv24MWmeRgasZH58o', name: 'Oleg' },
+  { id: 'pqHfZKP75CvOlQylNhV4', name: 'Marius' },
 ] as const;
 
 // Complete language map with language IDs as keys
