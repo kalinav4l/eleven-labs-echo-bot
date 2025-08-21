@@ -493,7 +493,7 @@ const Dashboard = () => {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-gray-600">Transcrieri salvate</p>
                     <p className="text-xl font-bold text-gray-900">
-                      <AnimatedCounter value={totalTranscripts} />
+                      <AnimatedCounter target={totalTranscripts} />
                     </p>
                   </div>
                 </div>
@@ -541,7 +541,7 @@ const Dashboard = () => {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-gray-600">Conversații active</p>
                     <p className="text-xl font-bold text-gray-900">
-                      <AnimatedCounter value={recentConversations?.length || 0} />
+                      <AnimatedCounter target={recentConversations?.length || 0} />
                     </p>
                   </div>
                 </div>

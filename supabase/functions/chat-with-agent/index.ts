@@ -46,6 +46,143 @@ const validateInput = (data: any) => {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Helper functions pentru extragerea datelor utilizatorului
+const getUserStatistics = async (userId: string) => {
+  try {
+    const { data: stats } = await supabase
+      .from('user_statistics')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+    
+    const { data: balance } = await supabase
+      .from('user_balance')
+      .select('balance_usd')
+      .eq('user_id', userId)
+      .single();
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('first_name, last_name, email, account_type')
+      .eq('id', userId)
+      .single();
+
+    return { stats, balance, profile };
+  } catch (error) {
+    console.error('Error fetching user statistics:', error);
+    return { stats: null, balance: null, profile: null };
+  }
+};
+
+const getTodaysCallHistory = async (userId: string) => {
+  try {
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+    const { data: calls } = await supabase
+      .from('call_history')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('created_at', startOfDay.toISOString())
+      .lt('created_at', endOfDay.toISOString())
+      .order('created_at', { ascending: false });
+
+    return calls || [];
+  } catch (error) {
+    console.error('Error fetching today calls:', error);
+    return [];
+  }
+};
+
+const getRecentCallHistory = async (userId: string, limit = 10) => {
+  try {
+    const { data: calls } = await supabase
+      .from('call_history')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    return calls || [];
+  } catch (error) {
+    console.error('Error fetching recent calls:', error);
+    return [];
+  }
+};
+
+const getUserAgents = async (userId: string) => {
+  try {
+    const { data: agents } = await supabase
+      .from('kalina_agents')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('is_active', true);
+
+    return agents || [];
+  } catch (error) {
+    console.error('Error fetching user agents:', error);
+    return [];
+  }
+};
+
+const generateUserContext = (userData: any) => {
+  const { stats, balance, profile, todaysCalls, recentCalls, agents } = userData;
+  
+  let context = `INFORMAȚII DESPRE UTILIZATOR:\n`;
+  
+  if (profile) {
+    context += `Nume: ${profile.first_name || ''} ${profile.last_name || ''}\n`;
+    context += `Email: ${profile.email || 'Nu este disponibil'}\n`;
+    context += `Tip cont: ${profile.account_type || 'regular'}\n\n`;
+  }
+
+  if (balance) {
+    context += `BALANȚĂ CONT:\n`;
+    context += `Balanța curentă: $${balance.balance_usd || 0}\n\n`;
+  }
+
+  if (stats) {
+    context += `STATISTICI GENERALE:\n`;
+    context += `Total apeluri efectuate: ${stats.total_voice_calls || 0}\n`;
+    context += `Total minute vorbite: ${stats.total_minutes_talked || 0}\n`;
+    context += `Total cheltuit: $${stats.total_spent_usd || 0}\n\n`;
+  }
+
+  if (todaysCalls && todaysCalls.length > 0) {
+    context += `APELURI DE ASTĂZI (${todaysCalls.length} total):\n`;
+    todaysCalls.slice(0, 5).forEach((call: any, index: number) => {
+      const duration = call.duration_seconds ? Math.round(call.duration_seconds / 60) : 0;
+      const cost = call.cost_usd || 0;
+      const time = new Date(call.created_at).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+      context += `${index + 1}. ${call.contact_name || call.phone_number} - ${duration} min - $${cost} (${time})\n`;
+    });
+    context += `\n`;
+  } else {
+    context += `APELURI DE ASTĂZI: Nu au fost efectuate apeluri astăzi.\n\n`;
+  }
+
+  if (agents && agents.length > 0) {
+    context += `AGENȚII ACTIVI (${agents.length} total):\n`;
+    agents.forEach((agent: any, index: number) => {
+      context += `${index + 1}. ${agent.name} (ID: ${agent.agent_id})\n`;
+    });
+    context += `\n`;
+  }
+
+  if (recentCalls && recentCalls.length > 0) {
+    const successfulCalls = recentCalls.filter((call: any) => call.call_status === 'completed');
+    const failedCalls = recentCalls.filter((call: any) => call.call_status === 'failed');
+    
+    context += `STATISTICI RECENTE:\n`;
+    context += `Apeluri reușite recent: ${successfulCalls.length}\n`;
+    context += `Apeluri eșuate recent: ${failedCalls.length}\n`;
+    context += `Ultimul apel: ${recentCalls[0] ? new Date(recentCalls[0].created_at).toLocaleDateString('ro-RO') : 'Nu există'}\n\n`;
+  }
+
+  return context;
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -57,6 +194,22 @@ serve(async (req) => {
     const { message, userId, model, agentId, systemPrompt } = validateInput(requestData);
 
     console.log('Processing chat message:', { message, userId, model, agentId });
+
+    // Extrage datele utilizatorului pentru context
+    const [userStats, todaysCalls, recentCalls, userAgents] = await Promise.all([
+      getUserStatistics(userId),
+      getTodaysCallHistory(userId),
+      getRecentCallHistory(userId),
+      getUserAgents(userId)
+    ]);
+
+    // Generează contextul cu datele utilizatorului
+    const userContext = generateUserContext({
+      ...userStats,
+      todaysCalls,
+      recentCalls,
+      agents: userAgents
+    });
 
     let contextText = '';
     
@@ -128,26 +281,23 @@ serve(async (req) => {
       }
     }
 
-    // Pas 3: Creează prompt-ul pentru OpenAI cu context flexibil
-    const finalSystemPrompt = systemPrompt || (contextText ? 
-      `Ești Kalina AI, un asistent inteligent și prietenos. Ai acces la informații specifice din baza de cunoștințe și poți răspunde la întrebări generale.
+    // Pas 3: Creează prompt-ul pentru OpenAI cu context complet
+    const finalSystemPrompt = systemPrompt || `Ești Kalina AI, un asistent inteligent și prietenos care cunoaște toate informațiile despre utilizator și poate răspunde la întrebări despre contul și activitatea lor.
 
-INFORMAȚII DISPONIBILE DIN BAZA DE CUNOȘTINȚE:
+${userContext}
+
+${contextText ? `INFORMAȚII SPECIFICE DIN BAZA DE CUNOȘTINȚE:
 ${contextText}
 
-INSTRUCȚIUNI:
-1. Dacă întrebarea se referă la informațiile din baza de cunoștințe de mai sus, folosește acele informații și citează sursa
-2. Pentru întrebări generale sau conversații normale, răspunde natural și util
-3. Fii prietenos, profesional și răspunde în română
-4. Poți combina informațiile din baza de cunoștințe cu cunoștințele tale generale când este relevant` 
-      : 
-      `Ești Kalina AI, un asistent inteligent și prietenos. Răspunde natural la întrebări și conversații în română.
-
-INSTRUCȚIUNI:
-1. Fii prietenos, util și profesional
-2. Răspunde în română într-un mod natural și conversațional
-3. Poți ajuta cu o varietate largă de subiecte și întrebări
-4. Dacă nu știi ceva, recunoaște-o onest și oferă să ajuți în alt mod`);
+` : ''}INSTRUCȚIUNI:
+1. Ai acces complet la toate datele utilizatorului de mai sus - statistici, apeluri, balanță, agenți
+2. Când utilizatorul întreabă despre apeluri, statistici, costuri, balanță - folosește informațiile exacte de mai sus
+3. Pentru întrebări despre "câte apeluri am avut azi", "cât am cheltuit", "care e balanța mea" - răspunde cu datele concrete
+4. Dacă sunt informații din baza de cunoștințe relevante, folosește-le și citează sursa
+5. Pentru conversații generale, răspunde natural și util
+6. Fii prietenos, profesional și răspunde în română
+7. Poți combina informațiile despre cont cu cunoștințele generale când este relevant
+8. Dacă utilizatorul vrea detalii specifice despre un apel sau agent, folosește informațiile disponibile`;
 
     const messages = [
       { role: 'system', content: finalSystemPrompt },
