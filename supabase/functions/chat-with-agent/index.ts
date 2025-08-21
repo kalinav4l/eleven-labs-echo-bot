@@ -584,8 +584,219 @@ const executeScheduleCallback = async (userId: string, clientName: string, phone
   }
 };
 
+const executeGetConversationDetails = async (userId: string, conversationId: string) => {
+  try {
+    console.log('🔍 Getting conversation details:', { userId, conversationId });
+    
+    // Call the get-elevenlabs-conversation function
+    const { data, error } = await supabase.functions.invoke('get-elevenlabs-conversation', {
+      body: { conversationId }
+    });
+
+    if (error) {
+      console.error('Error getting conversation details:', error);
+      return {
+        success: false,
+        message: `Nu am putut obține detaliile conversației: ${error.message}`,
+        data: null
+      };
+    }
+
+    console.log('✅ Conversation details retrieved successfully');
+    return {
+      success: true,
+      message: `Am găsit conversația ${conversationId}`,
+      data: {
+        conversationId,
+        transcript: data.transcript || [],
+        analysis: data.analysis || {},
+        metadata: data.metadata || {},
+        duration: data.metadata?.call_duration_secs || 0,
+        cost: data.metadata?.cost || 0,
+        status: data.status || 'unknown',
+        summary: data.analysis?.transcript_summary || 'Fără sumar disponibil'
+      }
+    };
+  } catch (error) {
+    console.error('Error in executeGetConversationDetails:', error);
+    return {
+      success: false,
+      message: `Eroare la obținerea detaliilor conversației: ${error.message}`,
+      data: null
+    };
+  }
+};
+
+const executeCreateAgent = async (userId: string, agentDescription: string, agentType?: string, voicePreference?: string) => {
+  try {
+    console.log('🤖 Creating agent:', { userId, agentDescription, agentType });
+    
+    // Generate agent name
+    const agentName = `Agent ${agentType || 'Personalizat'} ${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    
+    // Generate system prompt using the generate-agent-prompt function
+    let systemPrompt = `Ești ${agentName}, un asistent AI specializat în ${agentType || 'asistență generală'}. ${agentDescription}`;
+    
+    // Try to generate a better prompt if we have more context
+    if (agentType && agentType !== 'general') {
+      try {
+        const { data: promptData, error: promptError } = await supabase.functions.invoke('generate-agent-prompt', {
+          body: { 
+            websiteUrl: `https://example.com/${agentType}`,
+            agentType,
+            description: agentDescription
+          }
+        });
+
+        if (!promptError && promptData?.prompt) {
+          systemPrompt = promptData.prompt;
+        }
+      } catch (promptErr) {
+        console.log('Using fallback prompt generation');
+      }
+    }
+
+    // Select appropriate voice
+    const voiceId = voicePreference || '9BWtsMINqrJLrRacOk9x'; // Default to Aria
+
+    // Create the agent in database first
+    const { data: agentData, error: dbError } = await supabase
+      .from('kalina_agents')
+      .insert({
+        user_id: userId,
+        name: agentName,
+        description: agentDescription,
+        system_prompt: systemPrompt,
+        voice_id: voiceId,
+        provider: 'elevenlabs',
+        is_active: true
+      })
+      .select()
+      .single();
+
+    if (dbError) {
+      console.error('Database error creating agent:', dbError);
+      return {
+        success: false,
+        message: `Eroare la salvarea agentului în baza de date: ${dbError.message}`,
+        data: null
+      };
+    }
+
+    // Create ElevenLabs agent
+    const elevenLabsConfig = {
+      name: agentName,
+      agent_id: `agent_${Math.random().toString(36).substring(2, 15)}`,
+      system_prompt: systemPrompt,
+      first_message: `Bună ziua! Sunt ${agentName}. Cum vă pot ajuta astăzi?`,
+      language: "ro",
+      voice_id: voiceId,
+      max_duration: 600,
+      responsiveness: 0.7,
+      interruption_threshold: 100,
+      llm: {
+        model: "gemini-2.5-flash-lite",
+        temperature: 0.8,
+        max_tokens: 300
+      },
+      tts: {
+        model: "eleven_multilingual_v2",
+        voice_id: voiceId
+      }
+    };
+
+    const { data: elevenLabsData, error: elevenLabsError } = await supabase.functions.invoke('create-elevenlabs-agent', {
+      body: elevenLabsConfig
+    });
+
+    if (elevenLabsError) {
+      console.error('ElevenLabs error:', elevenLabsError);
+      // Update the database record with error info but don't fail completely
+      await supabase
+        .from('kalina_agents')
+        .update({ 
+          elevenlabs_agent_id: null,
+          agent_id: elevenLabsConfig.agent_id 
+        })
+        .eq('id', agentData.id);
+    } else if (elevenLabsData?.agent_id) {
+      // Update the database record with ElevenLabs info
+      await supabase
+        .from('kalina_agents')
+        .update({ 
+          elevenlabs_agent_id: elevenLabsData.agent_id,
+          agent_id: elevenLabsData.agent_id 
+        })
+        .eq('id', agentData.id);
+    }
+
+    console.log('✅ Agent created successfully');
+    return {
+      success: true,
+      message: `Am creat agentul "${agentName}" cu succes! Este gata pentru apeluri.`,
+      data: {
+        agentId: agentData.id,
+        name: agentName,
+        description: agentDescription,
+        elevenLabsId: elevenLabsData?.agent_id || elevenLabsConfig.agent_id,
+        voiceId: voiceId
+      }
+    };
+  } catch (error) {
+    console.error('Error in executeCreateAgent:', error);
+    return {
+      success: false,
+      message: `Eroare la crearea agentului: ${error.message}`,
+      data: null
+    };
+  }
+};
+
 // Tool definitions for OpenAI function calling
 const tools = [
+  {
+    type: "function",
+    function: {
+      name: "get_conversation_details",
+      description: "Obține detaliile complete ale unei conversații, inclusiv transcript-ul complet și analiza",
+      parameters: {
+        type: "object",
+        properties: {
+          conversation_id: {
+            type: "string",
+            description: "ID-ul conversației de analizat"
+          }
+        },
+        required: ["conversation_id"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "create_agent",
+      description: "Creează automat un agent AI nou cu prompt și setări generate inteligent",
+      parameters: {
+        type: "object",
+        properties: {
+          agent_description: {
+            type: "string",
+            description: "Descrierea detaliată a ce trebuie să facă agentul"
+          },
+          agent_type: {
+            type: "string",
+            description: "Tipul de agent (ex: 'vânzări auto', 'suport tehnic', 'programări medicale', etc.)"
+          },
+          voice_preference: {
+            type: "string",
+            description: "Preferința pentru voce (ex: 'masculin', 'feminin', 'professional')",
+            default: "professional"
+          }
+        },
+        required: ["agent_description", "agent_type"]
+      }
+    }
+  },
   {
     type: "function",
     function: {
@@ -789,6 +1000,8 @@ ${contextText}
 TU EȘTI UN JARVIS ADEVĂRAT - OPERAȚIONAL, NU DOAR INFORMATIV!
 
 TOOLS DISPONIBILE OBLIGATORIU DE FOLOSIT:
+- get_conversation_details(conversation_id) - Obține transcript-ul complet al unei conversații
+- create_agent(agent_description, agent_type, voice_preference) - Creează automat agenți noi
 - initiate_call(contact_name, phone_number, agent_type)
 - find_agent(agent_type)  
 - search_contact(query)
@@ -846,6 +1059,22 @@ EXECUTĂ IMEDIAT CÂND ESTE CERUT - FĂRĂ EZITĂRI!`;
           let toolResult;
           
           switch (toolCall.function.name) {
+            case 'get_conversation_details':
+              toolResult = await executeGetConversationDetails(
+                userId,
+                args.conversation_id
+              );
+              break;
+              
+            case 'create_agent':
+              toolResult = await executeCreateAgent(
+                userId,
+                args.agent_description,
+                args.agent_type,
+                args.voice_preference
+              );
+              break;
+              
             case 'initiate_call':
               toolResult = await executeInitiateCall(
                 userId, 
