@@ -78,16 +78,13 @@ export const AgentTestCallModal: React.FC<AgentTestCallModalProps> = ({
     }
   }, [user, isOpen]);
 
-  const estimatedCostPerMinute = COST_PER_MINUTE;
-  const availableMinutes = Math.floor(userBalance / COST_PER_MINUTE);
-  const hasInsufficientBalance = !isAdmin && userBalance < estimatedCostPerMinute;
+  // Test calls are free for all users
+  const estimatedCostPerMinute = 0;
+  const availableMinutes = 999;
+  const hasInsufficientBalance = false;
 
   const handleTestCall = async () => {
     if (!phoneNumber.trim()) return;
-    
-    if (hasInsufficientBalance) {
-      return; // Button should be disabled anyway
-    }
     
     await initiateCall(agent.agent_id, phoneNumber, `Test pentru ${agent.name}`);
     
@@ -141,41 +138,17 @@ export const AgentTestCallModal: React.FC<AgentTestCallModalProps> = ({
               <div className="flex items-center gap-2">
                 <Wallet className="w-4 h-4 text-[#0A5B4C]" />
                 <span className="text-sm font-medium text-gray-900">
-                  {isAdmin ? 'Administrator (nelimitat)' : 'Soldul tău'}
+                  Test Apel Gratuit
                 </span>
               </div>
-              <Badge variant={hasInsufficientBalance ? "destructive" : isAdmin ? "default" : "secondary"}>
-                {isAdmin ? 'ADMIN' : `$${userBalance.toFixed(2)}`}
+              <Badge variant="default">
+                GRATUIT
               </Badge>
             </div>
             
-            {!isAdmin && (
-              <div className="space-y-1 text-xs text-gray-600">
-                <div className="flex justify-between">
-                  <span>Cost per minut:</span>
-                  <span className="font-medium">${estimatedCostPerMinute.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Minute disponibile:</span>
-                  <span className="font-medium">{availableMinutes} minute</span>
-                </div>
-              </div>
-            )}
-            
-            {isAdmin && (
-              <div className="text-xs text-green-700 bg-green-50 p-2 rounded border border-green-200">
-                <span className="font-medium">✓ Apeluri nelimitate ca administrator</span>
-              </div>
-            )}
-
-            {hasInsufficientBalance && (
-              <Alert className="border-red-200 bg-red-50">
-                <AlertTriangle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-700 text-xs">
-                  Sold insuficient pentru apeluri.
-                </AlertDescription>
-              </Alert>
-            )}
+            <div className="text-xs text-green-700 bg-green-50 p-2 rounded border border-green-200">
+              <span className="font-medium">✓ Apeluri de test gratuite pentru toți utilizatorii</span>
+            </div>
           </div>
 
           <div className="flex gap-2 pt-4">
@@ -189,8 +162,8 @@ export const AgentTestCallModal: React.FC<AgentTestCallModalProps> = ({
             </Button>
             <Button
               onClick={handleTestCall}
-              disabled={!phoneNumber.trim() || isInitiating || hasInsufficientBalance}
-              className={`flex-1 bg-gray-900 hover:bg-gray-800 text-white border border-gray-700 ${hasInsufficientBalance ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={!phoneNumber.trim() || isInitiating}
+              className="flex-1 bg-gray-900 hover:bg-gray-800 text-white border border-gray-700"
             >
               {isInitiating ? (
                 <>

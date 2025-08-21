@@ -66,10 +66,10 @@ const TestCall = () => {
     checkAdminStatus();
   }, [user]);
 
-  // Calculate estimated cost for a 1-minute call
-  const estimatedCostPerMinute = COST_PER_MINUTE;
-  const availableMinutes = Math.floor(userBalance / COST_PER_MINUTE);
-  const hasInsufficientBalance = !isAdmin && userBalance < estimatedCostPerMinute;
+  // Test calls are free for all users
+  const estimatedCostPerMinute = 0;
+  const availableMinutes = 999;
+  const hasInsufficientBalance = false;
   const handleTestCall = async () => {
     if (!agentId || !phoneNumber) {
       toast({
@@ -89,15 +89,7 @@ const TestCall = () => {
       return;
     }
 
-    // Check if user has sufficient balance for at least 1 minute (skip for admins)
-    if (hasInsufficientBalance) {
-      toast({
-        title: "Sold insuficient",
-        description: `Ai nevoie de cel puțin $${estimatedCostPerMinute.toFixed(2)} pentru un apel de test. Soldul tău: $${userBalance.toFixed(2)}`,
-        variant: "destructive"
-      });
-      return;
-    }
+    // Test calls are free - no balance check needed
     setIsLoading(true);
     try {
       const {
@@ -293,7 +285,7 @@ const TestCall = () => {
           <div className="text-center space-y-3">
             <h1 className="text-2xl font-light">Test Apel</h1>
             <p className="text-sm text-muted-foreground">
-              {isAdmin ? 'Apeluri nelimitate' : `$${userBalance.toFixed(2)} disponibili`}
+              Apeluri de test gratuite
             </p>
           </div>
 
@@ -316,15 +308,10 @@ const TestCall = () => {
               />
             </div>
 
-            {hasInsufficientBalance && (
-              <p className="text-xs text-amber-600 text-center">
-                Sold insuficient
-              </p>
-            )}
 
             <Button
               onClick={handleTestCall}
-              disabled={isLoading || !agentId || !phoneNumber || hasInsufficientBalance}
+              disabled={isLoading || !agentId || !phoneNumber}
               className="w-full"
             >
               {isLoading ? 'Se pornește...' : 'Test'}
