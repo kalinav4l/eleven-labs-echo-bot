@@ -44,21 +44,16 @@ const AgentGeneralInfo: React.FC<AgentGeneralInfoProps> = ({ agentData, setAgent
       <CardContent className="space-y-4">
         <div>
           <Label htmlFor="agent-name" className="text-foreground">Numele Agentului</Label>
-          <Input 
-            id="agent-name" 
-            value={agentData.name || ''} 
-            onChange={e => setAgentData({
-              ...agentData,
-              name: e.target.value
-            })} 
-            className="glass-input" 
-          />
-        </div>
-
-        <div>
-          <Label className="text-foreground">Nume Agent</Label>
           <div className="flex items-center gap-2">
-            <Input value={agentData.name || ''} readOnly className="glass-input bg-muted/50" />
+            <Input 
+              id="agent-name" 
+              value={agentData.name || ''} 
+              onChange={e => setAgentData({
+                ...agentData,
+                name: e.target.value
+              })} 
+              className="glass-input" 
+            />
             <Button variant="outline" size="sm" onClick={() => copyToClipboard(agentData.name)} className="glass-button border-border">
               <Copy className="w-4 h-4" />
             </Button>
