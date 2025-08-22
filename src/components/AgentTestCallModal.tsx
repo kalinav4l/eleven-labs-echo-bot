@@ -31,6 +31,10 @@ export const AgentTestCallModal: React.FC<AgentTestCallModalProps> = ({
   const [userBalance, setUserBalance] = useState<number>(0);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const { user } = useAuth();
+
+  // Use the hardcoded test phone number for all users
+  const testPhoneNumber = "+37379315040"; // This phone number will be used for all test calls
+  const testPhoneId = "phnum_9501k2y60kzjfr98sybbze66vy2x";
   
   const { initiateCall, isInitiating } = useCallInitiation({
     agentId: agent.agent_id,
@@ -86,9 +90,19 @@ export const AgentTestCallModal: React.FC<AgentTestCallModalProps> = ({
   const handleTestCall = async () => {
     if (!phoneNumber.trim()) return;
     
-    await initiateCall(agent.agent_id, phoneNumber, `Test pentru ${agent.name}`);
-    
-    if (!isInitiating) {
+    // Make the test call using the hardcoded phone number as caller
+    const { data, error } = await supabase.functions.invoke('initiate-scheduled-call', {
+      body: {
+        agent_id: agent.agent_id,
+        phone_number: phoneNumber.trim(),
+        contact_name: `Test pentru ${agent.name}`,
+        user_id: user?.id,
+        is_test_call: true,
+        caller_number: testPhoneNumber
+      }
+    });
+
+    if (!error) {
       setPhoneNumber('');
       onClose();
     }
@@ -148,6 +162,8 @@ export const AgentTestCallModal: React.FC<AgentTestCallModalProps> = ({
             
             <div className="text-xs text-green-700 bg-green-50 p-2 rounded border border-green-200">
               <span className="font-medium">✓ Apeluri de test gratuite pentru toți utilizatorii</span>
+              <br />
+              <span className="text-green-600">Apelul se va face de pe numărul nostru oficial: {testPhoneNumber}</span>
             </div>
           </div>
 
