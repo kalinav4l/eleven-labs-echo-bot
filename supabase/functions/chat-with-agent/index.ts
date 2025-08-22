@@ -685,26 +685,13 @@ const executeCreateAgent = async (userId: string, agentDescription: string, agen
       };
     }
 
-    // Create ElevenLabs agent
+    // Create ElevenLabs agent using the new structure
     const elevenLabsConfig = {
       name: agentName,
-      agent_id: generatedAgentId, // Use the same ID we generated for database
       system_prompt: systemPrompt,
       first_message: `Bună ziua! Sunt ${agentName}. Cum vă pot ajuta astăzi?`,
       language: "ro",
-      voice_id: voiceId,
-      max_duration: 600,
-      responsiveness: 0.7,
-      interruption_threshold: 100,
-      llm: {
-        model: "gemini-2.5-flash-lite",
-        temperature: 0.8,
-        max_tokens: 300
-      },
-      tts: {
-        model: "eleven_multilingual_v2",
-        voice_id: voiceId
-      }
+      voice_id: voiceId
     };
 
     const { data: elevenLabsData, error: elevenLabsError } = await supabase.functions.invoke('create-elevenlabs-agent', {

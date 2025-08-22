@@ -23,13 +23,36 @@ serve(async (req) => {
 
     console.log('Creating ElevenLabs agent with request:', JSON.stringify(body, null, 2))
 
+    // Transform the request to use the new conversation_config structure
+    const elevenLabsRequest = {
+      name: body.name,
+      conversation_config: {
+        agent: {
+          prompt: {
+            prompt: body.system_prompt
+          },
+          first_message: body.first_message || `Bună ziua! Sunt ${body.name}. Cum vă pot ajuta astăzi?`,
+          language: body.language || "ro"
+        },
+        tts: {
+          voice_id: body.voice_id || '9BWtsMINqrJLrRacOk9x',
+          model_id: "eleven_multilingual_v2"
+        },
+        asr: {
+          quality: "high"
+        }
+      }
+    }
+
+    console.log('Transformed request for ElevenLabs:', JSON.stringify(elevenLabsRequest, null, 2))
+
     const response = await fetch('https://api.elevenlabs.io/v1/convai/agents/create', {
       method: 'POST',
       headers: {
         'Xi-Api-Key': elevenLabsApiKey,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(elevenLabsRequest),
     })
 
     if (!response.ok) {
