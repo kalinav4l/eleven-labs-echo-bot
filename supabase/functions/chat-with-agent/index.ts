@@ -991,8 +991,713 @@ const executeCreateAgent = async (userId: string, agentName: string, agentType?:
   }
 };
 
+// === 🛠️ MCP EXECUTION FUNCTIONS - ACCES TOTAL ===
+
+// === AGENT MANAGEMENT FUNCTIONS ===
+const executeManageAgent = async (userId: string, args: any) => {
+  try {
+    let stepLog = "🤖 **Gestionez agenții AI...**\n\n";
+    const { action, agent_id, agent_name, system_prompt, voice_id, description, new_name } = args;
+
+    switch (action) {
+      case 'list':
+        const agents = await getUserAgents(userId);
+        stepLog += `📋 **Lista agenți (${agents.length} total):**\n`;
+        agents.forEach((agent: any, index: number) => {
+          const status = agent.is_active ? '🟢 Activ' : '🔴 Inactiv';
+          stepLog += `${index + 1}. **${agent.name}** ${status}\n`;
+          stepLog += `   • ID: ${agent.agent_id || agent.elevenlabs_agent_id}\n`;
+          stepLog += `   • Tip: ${agent.description || 'General'}\n`;
+          if (agent.voice_id) stepLog += `   • Voce: ${agent.voice_id}\n`;
+          stepLog += `\n`;
+        });
+        break;
+
+      case 'get_details':
+        if (!agent_id) throw new Error('ID agent necesar pentru detalii');
+        const { data: agentDetails } = await supabase
+          .from('kalina_agents')
+          .select('*')
+          .eq('user_id', userId)
+          .or(`agent_id.eq.${agent_id},elevenlabs_agent_id.eq.${agent_id}`)
+          .single();
+
+        if (!agentDetails) throw new Error('Agent nu a fost găsit');
+
+        stepLog += `🔍 **Detalii agent "${agentDetails.name}":**\n`;
+        stepLog += `   • ID: ${agentDetails.agent_id || agentDetails.elevenlabs_agent_id}\n`;
+        stepLog += `   • Status: ${agentDetails.is_active ? '🟢 Activ' : '🔴 Inactiv'}\n`;
+        stepLog += `   • Descriere: ${agentDetails.description || 'Fără descriere'}\n`;
+        stepLog += `   • Voce: ${agentDetails.voice_id}\n`;
+        stepLog += `   • Provider: ${agentDetails.provider || 'custom'}\n`;
+        stepLog += `   • Creat: ${new Date(agentDetails.created_at).toLocaleDateString('ro-RO')}\n`;
+        if (agentDetails.system_prompt) {
+          stepLog += `   • Prompt: ${agentDetails.system_prompt.substring(0, 100)}...\n`;
+        }
+        break;
+
+      case 'update':
+        if (!agent_id) throw new Error('ID agent necesar pentru actualizare');
+        
+        const updateData: any = {};
+        if (agent_name) updateData.name = agent_name;
+        if (system_prompt) updateData.system_prompt = system_prompt;
+        if (voice_id) updateData.voice_id = voice_id;
+        if (description) updateData.description = description;
+        updateData.updated_at = new Date().toISOString();
+
+        const { error: updateError } = await supabase
+          .from('kalina_agents')
+          .update(updateData)
+          .eq('user_id', userId)
+          .or(`agent_id.eq.${agent_id},elevenlabs_agent_id.eq.${agent_id}`);
+
+        if (updateError) throw updateError;
+
+        stepLog += `✅ **Agent actualizat cu succes!**\n`;
+        stepLog += `   • Modificările au fost salvate\n`;
+        if (agent_name) stepLog += `   • Nume nou: ${agent_name}\n`;
+        if (description) stepLog += `   • Descriere nouă: ${description}\n`;
+        break;
+
+      case 'activate':
+      case 'deactivate':
+        if (!agent_id) throw new Error('ID agent necesar');
+        
+        const isActive = action === 'activate';
+        const { error: statusError } = await supabase
+          .from('kalina_agents')
+          .update({ is_active: isActive, updated_at: new Date().toISOString() })
+          .eq('user_id', userId)
+          .or(`agent_id.eq.${agent_id},elevenlabs_agent_id.eq.${agent_id}`);
+
+        if (statusError) throw statusError;
+
+        stepLog += `✅ **Agent ${isActive ? 'activat' : 'dezactivat'} cu succes!**\n`;
+        stepLog += `   • Status nou: ${isActive ? '🟢 Activ' : '🔴 Inactiv'}\n`;
+        break;
+
+      case 'delete':
+        if (!agent_id) throw new Error('ID agent necesar pentru ștergere');
+        
+        const { error: deleteError } = await supabase
+          .from('kalina_agents')
+          .delete()
+          .eq('user_id', userId)
+          .or(`agent_id.eq.${agent_id},elevenlabs_agent_id.eq.${agent_id}`);
+
+        if (deleteError) throw deleteError;
+
+        stepLog += `✅ **Agent șters cu succes!**\n`;
+        stepLog += `   • Agentul a fost eliminat din baza de date\n`;
+        stepLog += `   • ⚠️ Această acțiune nu poate fi anulată\n`;
+        break;
+
+      case 'clone':
+        if (!agent_id || !new_name) throw new Error('ID agent și nume nou necesare pentru clonare');
+        
+        const { data: originalAgent } = await supabase
+          .from('kalina_agents')
+          .select('*')
+          .eq('user_id', userId)
+          .or(`agent_id.eq.${agent_id},elevenlabs_agent_id.eq.${agent_id}`)
+          .single();
+
+        if (!originalAgent) throw new Error('Agent original nu a fost găsit');
+
+        // Create cloned agent in database
+        const { data: clonedAgent, error: cloneError } = await supabase
+          .from('kalina_agents')
+          .insert({
+            user_id: userId,
+            name: new_name,
+            description: `Clonat din ${originalAgent.name}`,
+            system_prompt: originalAgent.system_prompt,
+            voice_id: originalAgent.voice_id,
+            provider: originalAgent.provider,
+            is_active: false
+          })
+          .select()
+          .single();
+
+        if (cloneError) throw cloneError;
+
+        stepLog += `✅ **Agent clonat cu succes!**\n`;
+        stepLog += `   • Nume nou: ${new_name}\n`;
+        stepLog += `   • Status: 🔴 Inactiv (se va activa manual)\n`;
+        stepLog += `   • ID nou: ${clonedAgent.id}\n`;
+        break;
+
+      default:
+        throw new Error(`Acțiune necunoscută: ${action}`);
+    }
+
+    return {
+      success: true,
+      message: stepLog,
+      data: null
+    };
+
+  } catch (error) {
+    console.error('Error in executeManageAgent:', error);
+    return {
+      success: false,
+      message: `❌ **Eroare la gestionarea agentului:** ${error.message}`,
+      data: null
+    };
+  }
+};
+
+// === CONTACT MANAGEMENT FUNCTIONS ===
+const executeManageContacts = async (userId: string, args: any) => {
+  try {
+    let stepLog = "👥 **Gestionez contactele...**\n\n";
+    const { action, contact_id, nume, telefon, email, company, locatie, notes, tags, csv_data } = args;
+
+    switch (action) {
+      case 'list':
+        const contacts = await getUserContacts(userId);
+        stepLog += `📋 **Lista contacte (${contacts.length} total):**\n`;
+        contacts.forEach((contact: any, index: number) => {
+          stepLog += `${index + 1}. **${contact.nume}** - ${contact.telefon}\n`;
+          if (contact.company) stepLog += `   • Companie: ${contact.company}\n`;
+          if (contact.email) stepLog += `   • Email: ${contact.email}\n`;
+          if (contact.locatie) stepLog += `   • Locație: ${contact.locatie}\n`;
+          stepLog += `\n`;
+        });
+        break;
+
+      case 'create':
+        if (!nume || !telefon) throw new Error('Nume și telefon sunt obligatorii');
+        
+        const { data: newContact, error: createError } = await supabase
+          .from('contacts_database')
+          .insert({
+            user_id: userId,
+            nume,
+            telefon,
+            email,
+            company,
+            locatie,
+            notes,
+            tags,
+            status: 'active'
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+
+        stepLog += `✅ **Contact creat cu succes!**\n`;
+        stepLog += `   • Nume: ${nume}\n`;
+        stepLog += `   • Telefon: ${telefon}\n`;
+        if (email) stepLog += `   • Email: ${email}\n`;
+        if (company) stepLog += `   • Companie: ${company}\n`;
+        break;
+
+      case 'update':
+        if (!contact_id) throw new Error('ID contact necesar pentru actualizare');
+        
+        const updateData: any = {};
+        if (nume) updateData.nume = nume;
+        if (telefon) updateData.telefon = telefon;
+        if (email) updateData.email = email;
+        if (company) updateData.company = company;
+        if (locatie) updateData.locatie = locatie;
+        if (notes) updateData.notes = notes;
+        if (tags) updateData.tags = tags;
+        updateData.updated_at = new Date().toISOString();
+
+        const { error: updateError } = await supabase
+          .from('contacts_database')
+          .update(updateData)
+          .eq('id', contact_id)
+          .eq('user_id', userId);
+
+        if (updateError) throw updateError;
+
+        stepLog += `✅ **Contact actualizat cu succes!**\n`;
+        stepLog += `   • Modificările au fost salvate\n`;
+        break;
+
+      case 'delete':
+        if (!contact_id) throw new Error('ID contact necesar pentru ștergere');
+        
+        const { error: deleteError } = await supabase
+          .from('contacts_database')
+          .delete()
+          .eq('id', contact_id)
+          .eq('user_id', userId);
+
+        if (deleteError) throw deleteError;
+
+        stepLog += `✅ **Contact șters cu succes!**\n`;
+        stepLog += `   • Contactul a fost eliminat din baza de date\n`;
+        break;
+
+      case 'import_csv':
+        if (!csv_data) throw new Error('Date CSV necesare pentru import');
+        
+        const lines = csv_data.split('\n').filter(line => line.trim());
+        const importedContacts = [];
+        let errors = 0;
+
+        for (let i = 0; i < lines.length; i++) {
+          try {
+            const [csvNume, csvTelefon, csvEmail, csvCompany] = lines[i].split(',').map(s => s.trim());
+            if (csvNume && csvTelefon) {
+              const { error } = await supabase
+                .from('contacts_database')
+                .insert({
+                  user_id: userId,
+                  nume: csvNume,
+                  telefon: csvTelefon,
+                  email: csvEmail || null,
+                  company: csvCompany || null,
+                  status: 'active'
+                });
+
+              if (!error) {
+                importedContacts.push(csvNume);
+              } else {
+                errors++;
+              }
+            }
+          } catch {
+            errors++;
+          }
+        }
+
+        stepLog += `✅ **Import CSV finalizat!**\n`;
+        stepLog += `   • Contacte importate: ${importedContacts.length}\n`;
+        if (errors > 0) stepLog += `   • Erori: ${errors}\n`;
+        break;
+
+      case 'export_csv':
+        const exportContacts = await getUserContacts(userId);
+        let csvContent = 'Nume,Telefon,Email,Companie,Locatie\n';
+        exportContacts.forEach(contact => {
+          csvContent += `"${contact.nume}","${contact.telefon}","${contact.email || ''}","${contact.company || ''}","${contact.locatie || ''}"\n`;
+        });
+
+        stepLog += `✅ **Export CSV pregătit!**\n`;
+        stepLog += `   • Total contacte: ${exportContacts.length}\n`;
+        stepLog += `   • Format: CSV standard\n`;
+        stepLog += `\n📄 **Date CSV:**\n\`\`\`\n${csvContent.substring(0, 500)}...\n\`\`\`\n`;
+        break;
+
+      default:
+        throw new Error(`Acțiune necunoscută: ${action}`);
+    }
+
+    return {
+      success: true,
+      message: stepLog,
+      data: null
+    };
+
+  } catch (error) {
+    console.error('Error in executeManageContacts:', error);
+    return {
+      success: false,
+      message: `❌ **Eroare la gestionarea contactelor:** ${error.message}`,
+      data: null
+    };
+  }
+};
+
+// === CAMPAIGN MANAGEMENT FUNCTIONS ===
+const executeManageCampaigns = async (userId: string, args: any) => {
+  try {
+    let stepLog = "📢 **Gestionez campaniile...**\n\n";
+    const { action, campaign_id, name, description, agent_id, contacts, sms_enabled, sms_message } = args;
+
+    switch (action) {
+      case 'list':
+        const campaigns = await getUserCampaigns(userId);
+        stepLog += `📋 **Lista campanii (${campaigns.length} total):**\n`;
+        campaigns.forEach((campaign: any, index: number) => {
+          const status = campaign.status || 'draft';
+          const statusIcon = status === 'active' ? '🟢' : status === 'completed' ? '✅' : '⏸️';
+          stepLog += `${index + 1}. **${campaign.name}** ${statusIcon} ${status}\n`;
+          stepLog += `   • Total contacte: ${campaign.total_contacts || 0}\n`;
+          stepLog += `   • Apeluri efectuate: ${campaign.called_contacts || 0}\n`;
+          stepLog += `   • Reușite: ${campaign.successful_calls || 0}\n`;
+          stepLog += `\n`;
+        });
+        break;
+
+      case 'create':
+        if (!name) throw new Error('Numele campaniei este obligatoriu');
+        
+        const { data: newCampaign, error: createError } = await supabase
+          .from('campaigns')
+          .insert({
+            user_id: userId,
+            name,
+            description,
+            agent_id,
+            sms_enabled: sms_enabled || false,
+            sms_message,
+            status: 'draft',
+            total_contacts: contacts ? contacts.length : 0
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+
+        stepLog += `✅ **Campanie creată cu succes!**\n`;
+        stepLog += `   • Nume: ${name}\n`;
+        stepLog += `   • Status: 📝 Draft\n`;
+        if (agent_id) stepLog += `   • Agent: ${agent_id}\n`;
+        if (contacts) stepLog += `   • Contacte: ${contacts.length}\n`;
+        break;
+
+      case 'start':
+        if (!campaign_id) throw new Error('ID campanie necesar');
+        
+        const { error: startError } = await supabase
+          .from('campaigns')
+          .update({ 
+            status: 'active',
+            updated_at: new Date().toISOString() 
+          })
+          .eq('id', campaign_id)
+          .eq('user_id', userId);
+
+        if (startError) throw startError;
+
+        stepLog += `✅ **Kampanie pornită cu succes!**\n`;
+        stepLog += `   • Status: 🟢 Activă\n`;
+        stepLog += `   • Apelurile vor începe în curând\n`;
+        break;
+
+      case 'stop':
+        if (!campaign_id) throw new Error('ID campanie necesar');
+        
+        const { error: stopError } = await supabase
+          .from('campaigns')
+          .update({ 
+            status: 'paused',
+            updated_at: new Date().toISOString() 
+          })
+          .eq('id', campaign_id)
+          .eq('user_id', userId);
+
+        if (stopError) throw stopError;
+
+        stepLog += `✅ **Campanie oprită cu succes!**\n`;
+        stepLog += `   • Status: ⏸️ Pauză\n`;
+        stepLog += `   • Apelurile au fost oprite\n`;
+        break;
+
+      default:
+        throw new Error(`Acțiune necunoscută: ${action}`);
+    }
+
+    return {
+      success: true,
+      message: stepLog,
+      data: null
+    };
+
+  } catch (error) {
+    console.error('Error in executeManageCampaigns:', error);
+    return {
+      success: false,
+      message: `❌ **Eroare la gestionarea campaniei:** ${error.message}`,
+      data: null
+    };
+  }
+};
+
+// === DOCUMENT MANAGEMENT FUNCTIONS ===
+const executeManageDocuments = async (userId: string, args: any) => {
+  try {
+    let stepLog = "📚 **Gestionez documentele...**\n\n";
+    const { action, document_id, agent_id, document_name, document_content, file_type } = args;
+
+    switch (action) {
+      case 'list':
+        const documents = await getUserKnowledgeDocuments(userId);
+        stepLog += `📋 **Lista documente (${documents.length} total):**\n`;
+        documents.forEach((doc: any, index: number) => {
+          stepLog += `${index + 1}. **${doc.name}**\n`;
+          stepLog += `   • Tip: ${doc.file_type || 'text'}\n`;
+          stepLog += `   • Mărime: ${doc.content?.length || 0} caractere\n`;
+          stepLog += `   • Creat: ${new Date(doc.created_at).toLocaleDateString('ro-RO')}\n`;
+          stepLog += `\n`;
+        });
+        break;
+
+      case 'upload':
+        if (!document_name || !document_content) throw new Error('Nume și conținut document necesare');
+        
+        const { data: newDoc, error: uploadError } = await supabase
+          .from('knowledge_documents')
+          .insert({
+            user_id: userId,
+            name: document_name,
+            content: document_content,
+            file_type: file_type || 'text'
+          })
+          .select()
+          .single();
+
+        if (uploadError) throw uploadError;
+
+        stepLog += `✅ **Document încărcat cu succes!**\n`;
+        stepLog += `   • Nume: ${document_name}\n`;
+        stepLog += `   • Tip: ${file_type || 'text'}\n`;
+        stepLog += `   • Mărime: ${document_content.length} caractere\n`;
+        break;
+
+      case 'delete':
+        if (!document_id) throw new Error('ID document necesar pentru ștergere');
+        
+        const { error: deleteError } = await supabase
+          .from('knowledge_documents')
+          .delete()
+          .eq('id', document_id)
+          .eq('user_id', userId);
+
+        if (deleteError) throw deleteError;
+
+        stepLog += `✅ **Document șters cu succes!**\n`;
+        stepLog += `   • Documentul a fost eliminat din baza de date\n`;
+        break;
+
+      case 'link_to_agent':
+        if (!document_id || !agent_id) throw new Error('ID document și agent necesare');
+        
+        const { error: linkError } = await supabase
+          .from('agent_documents')
+          .insert({
+            agent_id,
+            document_id
+          });
+
+        if (linkError) throw linkError;
+
+        stepLog += `✅ **Document asociat cu agentul!**\n`;
+        stepLog += `   • Documentul este acum disponibil pentru agent\n`;
+        break;
+
+      default:
+        throw new Error(`Acțiune necunoscută: ${action}`);
+    }
+
+    return {
+      success: true,
+      message: stepLog,
+      data: null
+    };
+
+  } catch (error) {
+    console.error('Error in executeManageDocuments:', error);
+    return {
+      success: false,
+      message: `❌ **Eroare la gestionarea documentelor:** ${error.message}`,
+      data: null
+    };
+  }
+};
+
+// === SYSTEM CONFIGURATION FUNCTIONS ===
+const executeSystemConfig = async (userId: string, args: any) => {
+  try {
+    let stepLog = "⚙️ **Configurez sistemul...**\n\n";
+    const { action, phone_number, label } = args;
+
+    switch (action) {
+      case 'list_phone_numbers':
+        const phoneNumbers = await getUserPhoneNumbers(userId);
+        stepLog += `📞 **Numere de telefon (${phoneNumbers.length} total):**\n`;
+        phoneNumbers.forEach((phone: any, index: number) => {
+          const isPrimary = phone.is_primary ? '⭐ Principal' : '';
+          stepLog += `${index + 1}. **${phone.phone_number}** ${isPrimary}\n`;
+          stepLog += `   • Etichetă: ${phone.label || 'Fără etichetă'}\n`;
+          stepLog += `   • Status: ${phone.status || 'active'}\n`;
+          stepLog += `\n`;
+        });
+        break;
+
+      case 'get_system_status':
+        const userStats = await getUserStatistics(userId);
+        stepLog += `📊 **Status sistem pentru utilizator:**\n`;
+        stepLog += `   • Balanță: $${userStats.balance?.balance_usd || 0}\n`;
+        stepLog += `   • Total apeluri: ${userStats.stats?.total_voice_calls || 0}\n`;
+        stepLog += `   • Total minute: ${userStats.stats?.total_minutes_talked || 0}\n`;
+        stepLog += `   • Total cheltuit: $${userStats.stats?.total_spent_usd || 0}\n`;
+        
+        const agents = await getUserAgents(userId);
+        const activeAgents = agents.filter(a => a.is_active).length;
+        stepLog += `   • Agenți activi: ${activeAgents}/${agents.length}\n`;
+        break;
+
+      case 'check_balance':
+        const balance = await getUserStatistics(userId);
+        stepLog += `💰 **Balanță cont:**\n`;
+        stepLog += `   • Balanța curentă: $${balance.balance?.balance_usd || 0}\n`;
+        
+        const transactions = await getBalanceTransactions(userId);
+        if (transactions && transactions.length > 0) {
+          stepLog += `   • Ultima tranzacție: ${transactions[0].description}\n`;
+          stepLog += `   • Suma: $${transactions[0].amount}\n`;
+          stepLog += `   • Data: ${new Date(transactions[0].created_at).toLocaleDateString('ro-RO')}\n`;
+        }
+        break;
+
+      default:
+        throw new Error(`Acțiune necunoscută: ${action}`);
+    }
+
+    return {
+      success: true,
+      message: stepLog,
+      data: null
+    };
+
+  } catch (error) {
+    console.error('Error in executeSystemConfig:', error);
+    return {
+      success: false,
+      message: `❌ **Eroare la configurarea sistemului:** ${error.message}`,
+      data: null
+    };
+  }
+};
+
+// === ANALYTICS & REPORTING FUNCTIONS ===
+const executeAnalyticsReporting = async (userId: string, args: any) => {
+  try {
+    let stepLog = "📊 **Generez analize și rapoarte...**\n\n";
+    const { action, report_type, start_date, end_date, export_format, agent_id } = args;
+
+    switch (action) {
+      case 'generate_report':
+        stepLog += `📈 **Raport ${report_type || 'general'}:**\n`;
+        
+        const userStats = await getUserStatistics(userId);
+        const allCalls = await getAllCallHistory(userId);
+        
+        stepLog += `   • Perioada: ${report_type || 'toată perioada'}\n`;
+        stepLog += `   • Total apeluri: ${allCalls.length}\n`;
+        
+        const successful = allCalls.filter(call => call.call_status === 'completed').length;
+        const failed = allCalls.length - successful;
+        stepLog += `   • Apeluri reușite: ${successful} (${((successful/allCalls.length)*100).toFixed(1)}%)\n`;
+        stepLog += `   • Apeluri eșuate: ${failed} (${((failed/allCalls.length)*100).toFixed(1)}%)\n`;
+        
+        const totalCost = allCalls.reduce((sum, call) => sum + (Number(call.cost_usd) || 0), 0);
+        stepLog += `   • Cost total: $${totalCost.toFixed(4)}\n`;
+        
+        const totalDuration = allCalls.reduce((sum, call) => sum + (Number(call.duration_seconds) || 0), 0);
+        stepLog += `   • Timp total: ${Math.round(totalDuration / 60)} minute\n`;
+        break;
+
+      case 'call_analytics':
+        const todaysCalls = await getTodaysCallHistory(userId);
+        const yesterdaysCalls = await getYesterdayCallHistory(userId);
+        
+        stepLog += `📞 **Analiză apeluri:**\n`;
+        stepLog += `   • Astăzi: ${todaysCalls.length} apeluri\n`;
+        stepLog += `   • Ieri: ${yesterdaysCalls.length} apeluri\n`;
+        
+        if (todaysCalls.length > 0) {
+          const avgDuration = todaysCalls.reduce((sum, call) => sum + (call.duration_seconds || 0), 0) / todaysCalls.length;
+          stepLog += `   • Durată medie astăzi: ${Math.round(avgDuration / 60)} minute\n`;
+        }
+        break;
+
+      case 'agent_performance':
+        const agents = await getUserAgents(userId);
+        stepLog += `🤖 **Performanță agenți:**\n`;
+        
+        for (const agent of agents) {
+          const agentCalls = allCalls.filter(call => call.agent_id === agent.agent_id);
+          stepLog += `   • **${agent.name}**: ${agentCalls.length} apeluri\n`;
+        }
+        break;
+
+      default:
+        throw new Error(`Acțiune necunoscută: ${action}`);
+    }
+
+    return {
+      success: true,
+      message: stepLog,
+      data: null
+    };
+
+  } catch (error) {
+    console.error('Error in executeAnalyticsReporting:', error);
+    return {
+      success: false,
+      message: `❌ **Eroare la generarea raportului:** ${error.message}`,
+      data: null
+    };
+  }
+};
+
+// === USER CLARIFICATION FUNCTIONS ===
+const executeClarifyIntent = async (args: any) => {
+  try {
+    const { clarification_type, question, options, suggested_action } = args;
+    let stepLog = "🤔 **Solicit clarificări...**\n\n";
+
+    stepLog += `❓ **${question}**\n\n`;
+
+    if (options && options.length > 0) {
+      stepLog += `📋 **Opțiuni disponibile:**\n`;
+      options.forEach((option: string, index: number) => {
+        stepLog += `${index + 1}. ${option}\n`;
+      });
+      stepLog += `\n`;
+    }
+
+    if (suggested_action) {
+      stepLog += `💡 **Sugestie:** ${suggested_action}\n\n`;
+    }
+
+    switch (clarification_type) {
+      case 'unclear_request':
+        stepLog += `ℹ️ Te rog să oferi mai multe detalii pentru a putea să te ajut mai binet.`;
+        break;
+      case 'multiple_options':
+        stepLog += `ℹ️ Te rog să alegi una dintre opțiunile de mai sus.`;
+        break;
+      case 'missing_info':
+        stepLog += `ℹ️ Te rog să completezi informațiile lipsă.`;
+        break;
+      case 'confirm_action':
+        stepLog += `⚠️ Te rog să confirmi dacă vrei să continui cu această acțiune.`;
+        break;
+      default:
+        stepLog += `ℹ️ Te rog să clarifici cererea pentru a putea să te ajut.`;
+    }
+
+    return {
+      success: true,
+      message: stepLog,
+      data: { clarification_type, question, options, suggested_action }
+    };
+
+  } catch (error) {
+    console.error('Error in executeClarifyIntent:', error);
+    return {
+      success: false,
+      message: `❌ **Eroare la cererea de clarificare:** ${error.message}`,
+      data: null
+    };
+  }
+};
+
 // Tool definitions for OpenAI function calling
+// 🛠️ TOOLS MCP - ACCES TOTAL PLATFORMĂ
 const tools = [
+  // === DATA ACCESS & ANALYSIS ===
   {
     type: "function",
     function: {
@@ -1041,6 +1746,8 @@ const tools = [
       }
     }
   },
+
+  // === AGENT MANAGEMENT ===
   {
     type: "function",
     function: {
@@ -1067,6 +1774,50 @@ const tools = [
       }
     }
   },
+  {
+    type: "function",
+    function: {
+      name: "manage_agent",
+      description: "Gestionează agenți existenți - editează, șterge, testează, clonează sau obține detalii",
+      parameters: {
+        type: "object",
+        properties: {
+          action: {
+            type: "string",
+            enum: ["update", "delete", "clone", "test", "list", "get_details", "activate", "deactivate"],
+            description: "Acțiunea care va fi executată asupra agentului"
+          },
+          agent_id: {
+            type: "string",
+            description: "ID-ul agentului (pentru update, delete, clone, test, get_details)"
+          },
+          agent_name: {
+            type: "string",
+            description: "Numele nou al agentului (pentru update)"
+          },
+          system_prompt: {
+            type: "string",
+            description: "Prompt-ul nou pentru agent (pentru update)"
+          },
+          voice_id: {
+            type: "string",
+            description: "ID-ul vocii noi (pentru update)"
+          },
+          description: {
+            type: "string",
+            description: "Descrierea nouă (pentru update)"
+          },
+          new_name: {
+            type: "string",
+            description: "Numele pentru agentul clonat (pentru clone)"
+          }
+        },
+        required: ["action"]
+      }
+    }
+  },
+
+  // === CALL MANAGEMENT ===
   {
     type: "function",
     function: {
@@ -1109,6 +1860,8 @@ const tools = [
       }
     }
   },
+
+  // === CONTACT MANAGEMENT ===
   {
     type: "function",
     function: {
@@ -1126,6 +1879,222 @@ const tools = [
       }
     }
   },
+  {
+    type: "function",
+    function: {
+      name: "manage_contacts",
+      description: "Gestionează contactele - creează, editează, șterge, caută sau face import/export",
+      parameters: {
+        type: "object",
+        properties: {
+          action: {
+            type: "string",
+            enum: ["create", "update", "delete", "list", "get_details", "import_csv", "export_csv"],
+            description: "Acțiunea care va fi executată"
+          },
+          contact_id: {
+            type: "string",
+            description: "ID-ul contactului (pentru update, delete, get_details)"
+          },
+          nume: {
+            type: "string",
+            description: "Numele contactului"
+          },
+          telefon: {
+            type: "string",
+            description: "Numărul de telefon"
+          },
+          email: {
+            type: "string",
+            description: "Adresa de email"
+          },
+          company: {
+            type: "string",
+            description: "Compania"
+          },
+          locatie: {
+            type: "string",
+            description: "Locația"
+          },
+          notes: {
+            type: "string",
+            description: "Note despre contact"
+          },
+          tags: {
+            type: "array",
+            items: { type: "string" },
+            description: "Tag-uri pentru contact"
+          },
+          csv_data: {
+            type: "string",
+            description: "Datele CSV pentru import (format: nume,telefon,email,company)"
+          }
+        },
+        required: ["action"]
+      }
+    }
+  },
+
+  // === CAMPAIGN MANAGEMENT ===
+  {
+    type: "function",
+    function: {
+      name: "manage_campaigns",
+      description: "Gestionează campaniile - creează, editează, start/stop, analizează rezultate",
+      parameters: {
+        type: "object",
+        properties: {
+          action: {
+            type: "string",
+            enum: ["create", "update", "start", "stop", "pause", "delete", "list", "get_results", "get_details"],
+            description: "Acțiunea care va fi executată"
+          },
+          campaign_id: {
+            type: "string",
+            description: "ID-ul campaniei (pentru update, start, stop, delete, get_results)"
+          },
+          name: {
+            type: "string",
+            description: "Numele campaniei"
+          },
+          description: {
+            type: "string",
+            description: "Descrierea campaniei"
+          },
+          agent_id: {
+            type: "string",
+            description: "ID-ul agentului pentru campanie"
+          },
+          contacts: {
+            type: "array",
+            items: { type: "string" },
+            description: "Lista de ID-uri ale contactelor"
+          },
+          sms_enabled: {
+            type: "boolean",
+            description: "Dacă SMS-ul este activat"
+          },
+          sms_message: {
+            type: "string",
+            description: "Mesajul SMS"
+          }
+        },
+        required: ["action"]
+      }
+    }
+  },
+
+  // === DOCUMENT & KNOWLEDGE BASE ===
+  {
+    type: "function",
+    function: {
+      name: "manage_documents",
+      description: "Gestionează documentele și knowledge base - upload, editare, ștergere, asociere cu agenți",
+      parameters: {
+        type: "object",
+        properties: {
+          action: {
+            type: "string",
+            enum: ["upload", "delete", "list", "link_to_agent", "unlink_from_agent", "get_agent_documents"],
+            description: "Acțiunea care va fi executată"
+          },
+          document_id: {
+            type: "string",
+            description: "ID-ul documentului (pentru delete, link, unlink)"
+          },
+          agent_id: {
+            type: "string",
+            description: "ID-ul agentului (pentru link, unlink, get_agent_documents)"
+          },
+          document_name: {
+            type: "string",
+            description: "Numele documentului (pentru upload)"
+          },
+          document_content: {
+            type: "string",
+            description: "Conținutul documentului (pentru upload)"
+          },
+          file_type: {
+            type: "string",
+            description: "Tipul fișierului (pentru upload)"
+          }
+        },
+        required: ["action"]
+      }
+    }
+  },
+
+  // === SYSTEM CONFIGURATION ===
+  {
+    type: "function",
+    function: {
+      name: "system_config",
+      description: "Configurează sistemul - numere telefon, webhook-uri, setări avansate",
+      parameters: {
+        type: "object",
+        properties: {
+          action: {
+            type: "string",
+            enum: ["list_phone_numbers", "add_phone_number", "update_phone_number", "delete_phone_number", "get_system_status", "check_balance", "view_settings"],
+            description: "Acțiunea de configurare"
+          },
+          phone_number: {
+            type: "string",
+            description: "Numărul de telefon"
+          },
+          label: {
+            type: "string",
+            description: "Eticheta pentru numărul de telefon"
+          }
+        },
+        required: ["action"]
+      }
+    }
+  },
+
+  // === ANALYTICS & REPORTING ===
+  {
+    type: "function",
+    function: {
+      name: "analytics_reporting",
+      description: "Generează rapoarte și analize - rapoarte personalizate, export date, analize sentiment",
+      parameters: {
+        type: "object",
+        properties: {
+          action: {
+            type: "string",
+            enum: ["generate_report", "export_data", "analyze_sentiment", "get_dashboard_data", "call_analytics", "agent_performance"],
+            description: "Tipul de analiză sau raport"
+          },
+          report_type: {
+            type: "string",
+            enum: ["daily", "weekly", "monthly", "custom"],
+            description: "Tipul raportului"
+          },
+          start_date: {
+            type: "string",
+            description: "Data de început pentru raport"
+          },
+          end_date: {
+            type: "string",
+            description: "Data de sfârșit pentru raport"
+          },
+          export_format: {
+            type: "string",
+            enum: ["csv", "excel", "json"],
+            description: "Formatul de export"
+          },
+          agent_id: {
+            type: "string",
+            description: "ID-ul agentului pentru analiză specifică"
+          }
+        },
+        required: ["action"]
+      }
+    }
+  },
+
+  // === SCHEDULING & CALLBACKS ===
   {
     type: "function",
     function: {
@@ -1152,6 +2121,39 @@ const tools = [
           }
         },
         required: ["client_name", "phone_number", "scheduled_time"]
+      }
+    }
+  },
+
+  // === USER CLARIFICATION & LEARNING ===
+  {
+    type: "function",
+    function: {
+      name: "clarify_intent",
+      description: "Întreabă utilizatorul pentru clarificări când ceva nu este clar sau oferă sugestii alternative",
+      parameters: {
+        type: "object",
+        properties: {
+          clarification_type: {
+            type: "string",
+            enum: ["unclear_request", "multiple_options", "missing_info", "suggest_alternatives", "confirm_action"],
+            description: "Tipul clarificării necesare"
+          },
+          question: {
+            type: "string",
+            description: "Întrebarea specifică pentru utilizator"
+          },
+          options: {
+            type: "array",
+            items: { type: "string" },
+            description: "Opțiunile disponibile (dacă este cazul)"
+          },
+          suggested_action: {
+            type: "string",
+            description: "Acțiunea sugerată"
+          }
+        },
+        required: ["clarification_type", "question"]
       }
     }
   }
@@ -1411,6 +2413,11 @@ Folosește tool-urile disponibile pentru a ajuta utilizatorul cu toate nevoile s
                 args.custom_prompt
               );
               break;
+
+            // === AGENT MANAGEMENT ===
+            case 'manage_agent':
+              toolResult = await executeManageAgent(userId, args);
+              break;
               
             case 'initiate_call':
               toolResult = await executeInitiateCall(
@@ -1424,9 +2431,34 @@ Folosește tool-urile disponibile pentru a ajuta utilizatorul cu toate nevoile s
             case 'find_agent':
               toolResult = await executeFindAgent(userId, args.agent_type);
               break;
-              
+
+            // === CONTACT MANAGEMENT ===
             case 'search_contact':
               toolResult = await executeSearchContact(userId, args.query);
+              break;
+
+            case 'manage_contacts':
+              toolResult = await executeManageContacts(userId, args);
+              break;
+
+            // === CAMPAIGN MANAGEMENT ===
+            case 'manage_campaigns':
+              toolResult = await executeManageCampaigns(userId, args);
+              break;
+
+            // === DOCUMENT MANAGEMENT ===
+            case 'manage_documents':
+              toolResult = await executeManageDocuments(userId, args);
+              break;
+
+            // === SYSTEM CONFIGURATION ===
+            case 'system_config':
+              toolResult = await executeSystemConfig(userId, args);
+              break;
+
+            // === ANALYTICS & REPORTING ===
+            case 'analytics_reporting':
+              toolResult = await executeAnalyticsReporting(userId, args);
               break;
               
             case 'schedule_callback':
@@ -1437,6 +2469,11 @@ Folosește tool-urile disponibile pentru a ajuta utilizatorul cu toate nevoile s
                 args.scheduled_time,
                 args.reason
               );
+              break;
+
+            // === USER CLARIFICATION ===
+            case 'clarify_intent':
+              toolResult = await executeClarifyIntent(args);
               break;
               
             default:
