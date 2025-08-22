@@ -33,9 +33,16 @@ const MainChat = () => {
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-focus on input when component mounts
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, []);
 
   // Convert chat messages to local format
   useEffect(() => {
@@ -166,20 +173,42 @@ const MainChat = () => {
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
+      {/* Header - Always visible */}
+      <div className="absolute top-0 left-0 right-0 z-10 h-12 flex items-center border-b border-border bg-card/95 backdrop-blur-sm">
+        <Button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          variant="ghost"
+          size="sm"
+          className="ml-3 mr-2"
+        >
+          <Menu className="w-4 h-4" />
+        </Button>
+        <h1 className="text-lg font-semibold">ChatGPT</h1>
+      </div>
+
       {/* Sidebar */}
       <div className={cn(
-        "flex flex-col transition-all duration-300 bg-card border-r border-border",
-        sidebarOpen ? "w-80" : "w-0 md:w-80"
+        "flex flex-col transition-all duration-300 bg-card border-r border-border mt-12 z-20",
+        sidebarOpen ? "w-80" : "w-0",
+        "absolute md:relative h-[calc(100vh-3rem)]"
       )}>
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
           <Button 
             onClick={handleNewChat}
-            className="flex items-center gap-2 w-full justify-start h-10 px-3 rounded-lg border border-border hover:bg-muted/50 bg-background text-foreground"
+            className="flex items-center gap-2 flex-1 justify-start h-10 px-3 rounded-lg border border-border hover:bg-muted/50 bg-background text-foreground mr-2"
             variant="outline"
           >
             <Plus className="w-4 h-4" />
             <span>Nou chat</span>
+          </Button>
+          <Button
+            onClick={() => setSidebarOpen(false)}
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 md:hidden"
+          >
+            <Trash2 className="w-3 h-3" />
           </Button>
         </div>
 
@@ -221,38 +250,29 @@ const MainChat = () => {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Mobile Header */}
-        <div className="md:hidden flex items-center p-4 border-b border-border bg-card">
-          <Button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            variant="ghost"
-            size="sm"
-            className="mr-2"
-          >
-            <Menu className="w-4 h-4" />
-          </Button>
-          <h1 className="text-lg font-semibold">ChatGPT</h1>
-        </div>
-
+      <div className={cn(
+        "flex-1 flex flex-col mt-12 transition-all duration-300",
+        sidebarOpen ? "md:ml-0" : "ml-0"
+      )}>
+        
         {/* Messages Container */}
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-3xl mx-auto px-4 py-6">
-            {localMessages.length === 0 ? (
-              // Welcome State - ChatGPT Style
-              <div className="flex flex-col items-center justify-center h-full min-h-[60vh] text-center">
-                <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center mb-6">
-                  <Bot className="w-6 h-6 text-primary-foreground" />
-                </div>
-                <h2 className="text-2xl font-medium text-foreground mb-4">
-                  Над чем ты работаешь?
-                </h2>
-                <p className="text-muted-foreground text-sm max-w-md">
-                  Întreabă-mă orice despre contul tău, apelurile tale, contactele, agenții sau orice altceva. Pot să te ajut cu programări, verificări și multe altele.
-                </p>
+          {localMessages.length === 0 ? (
+            // Welcome State - ChatGPT Style - Centered
+            <div className="flex flex-col items-center justify-center h-full text-center px-4">
+              <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center mb-6">
+                <Bot className="w-6 h-6 text-primary-foreground" />
               </div>
-            ) : (
-              // Messages
+              <h2 className="text-2xl font-medium text-foreground mb-4">
+                Над чем ты работаешь?
+              </h2>
+              <p className="text-muted-foreground text-sm max-w-md">
+                Întreabă-mă orice despre contul tău, apelurile tale, contactele, agenții sau orice altceva. Pot să te ajut cu programări, verificări și multe altele.
+              </p>
+            </div>
+          ) : (
+            // Messages - Normal flow from top
+            <div className="max-w-3xl mx-auto px-4 py-6">
               <div className="space-y-6">
                 {localMessages.map((message) => (
                   <div
@@ -319,12 +339,12 @@ const MainChat = () => {
 
                 <div ref={messagesEndRef} />
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
-        {/* Input Area - ChatGPT Style */}
-        <div className="border-t border-border bg-card">
+        {/* Input Area - ChatGPT Style - Always at bottom */}
+        <div className="border-t border-border bg-card/95 backdrop-blur-sm">
           <div className="max-w-3xl mx-auto p-4">
             <form onSubmit={handleSendMessage} className="relative">
               <div className="relative flex items-end gap-2 bg-background border border-border rounded-2xl p-3 shadow-sm focus-within:border-primary/50 transition-colors">
@@ -375,6 +395,14 @@ const MainChat = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/20 z-10 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 };
