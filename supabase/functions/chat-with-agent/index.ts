@@ -547,10 +547,22 @@ const executeInitiateCall = async (userId: string, contactName: string, phoneNum
     stepByStepLog += `   • Contact: ${contactName}\n`;
     stepByStepLog += `   • Telefon: ${phoneNumber}\n\n`;
     
+    // Check if ElevenLabs agent exists and is valid
+    if (!selectedAgent.elevenlabs_agent_id && !selectedAgent.agent_id) {
+      stepByStepLog += `❌ **EROARE: Agentul nu are ID valid pentru ElevenLabs!**\n`;
+      stepByStepLog += `   • **Soluție**: Recrează agentul sau contactează support\n`;
+      
+      return {
+        success: false,
+        message: stepByStepLog,
+        data: { agent: selectedAgent.name, contact: contactName, phone: phoneNumber, error: 'Invalid agent ID' }
+      };
+    }
+
     // Call the initiate-scheduled-call function
     const { data: callResult, error } = await supabase.functions.invoke('initiate-scheduled-call', {
       body: {
-        agent_id: selectedAgent.agent_id,
+        agent_id: selectedAgent.elevenlabs_agent_id || selectedAgent.agent_id,
         phone_number: phoneNumber,
         contact_name: contactName,
         user_id: userId,
@@ -560,14 +572,53 @@ const executeInitiateCall = async (userId: string, contactName: string, phoneNum
     
     if (error) {
       console.error('Error initiating call:', error);
-      stepByStepLog += `❌ **EROARE la inițierea apelului:**\n`;
-      stepByStepLog += `   • Detalii: ${error.message}\n`;
-      stepByStepLog += `   • Verifică configurația ElevenLabs API în setări\n`;
+      stepByStepLog += `❌ **EROARE ÎN APELARE!**\n`;
+      stepByStepLog += `   • Eroare: ${error.message}\n`;
+      
+      if (error.message.includes('auth retry') || error.message.includes('authentication')) {
+        stepByStepLog += `   • **Cauză probabilă**: Problemă cu ElevenLabs API key\n`;
+        stepByStepLog += `   • **Soluții**:\n`;
+        stepByStepLog += `     - Verifică că ElevenLabs API key este valid\n`;
+        stepByStepLog += `     - Încearcă să recreezi agentul\n`;
+        stepByStepLog += `     - Contactează administratorul pentru verificarea API key-ului\n`;
+      }
       
       return {
         success: false,
         message: stepByStepLog,
-        data: null
+        data: { 
+          agent: selectedAgent.name, 
+          contact: contactName, 
+          phone: phoneNumber, 
+          error: error.message,
+          agentId: selectedAgent.elevenlabs_agent_id || selectedAgent.agent_id
+        }
+      };
+    }
+
+    if (!callResult?.success) {
+      const errorMsg = callResult?.message || 'Apelul nu a putut fi inițiat';
+      stepByStepLog += `❌ **APELUL A EȘUAT!**\n`;
+      stepByStepLog += `   • Eroare: ${errorMsg}\n`;
+      
+      if (errorMsg.includes('auth retry') || errorMsg.includes('max auth')) {
+        stepByStepLog += `   • **Problemă**: ElevenLabs API authentication\n`;
+        stepByStepLog += `   • **Soluții posibile**:\n`;
+        stepByStepLog += `     1. Verifică ElevenLabs API key în setări\n`;
+        stepByStepLog += `     2. Verifică că agentul există în ElevenLabs\n`;
+        stepByStepLog += `     3. Încearcă cu alt agent sau recreează agentul\n`;
+      }
+      
+      return {
+        success: false,
+        message: stepByStepLog,
+        data: { 
+          agent: selectedAgent.name, 
+          contact: contactName, 
+          phone: phoneNumber, 
+          error: errorMsg,
+          callResult 
+        }
       };
     }
     
@@ -575,6 +626,15 @@ const executeInitiateCall = async (userId: string, contactName: string, phoneNum
     stepByStepLog += `✅ **APEL INIȚIAT CU SUCCES!**\n`;
     stepByStepLog += `   • ID conversație: ${callResult?.conversation_id || 'N/A'}\n`;
     stepByStepLog += `   • Status: Apelul este în curs...\n`;
+
+    // Additional success info if available
+    if (callResult.elevenlabs_data) {
+      if (callResult.elevenlabs_data.success) {
+        stepByStepLog += `   • ElevenLabs: ✅ Conectat cu succes\n`;
+      } else {
+        stepByStepLog += `   • ElevenLabs: ⚠️ ${callResult.elevenlabs_data.message}\n`;
+      }
+    }
     
     return {
       success: true,
@@ -750,152 +810,183 @@ const executeGetConversationDetails = async (userId: string, conversationId: str
   }
 };
 
-const executeCreateAgent = async (userId: string, agentDescription: string, agentType?: string, voicePreference?: string) => {
+const executeCreateAgent = async (userId: string, agentName: string, agentType?: string, customPrompt?: string) => {
+  console.log('🤖 Creating agent:', { userId, agentName, agentType, customPrompt });
+  
+  let stepLog = `🤖 **Creez agentul "${agentName}"...**\n\n`;
+  
   try {
-    let stepLog = `🤖 **Creez agent nou: "${agentType || 'Personalizat'}"**\n\n`;
+    // Step 1: Determine agent type and generate prompt
+    stepLog += `📝 **Configurez tipul de agent...**\n`;
     
-    console.log('🤖 Creating agent:', { userId, agentDescription, agentType });
-    
-    // Generate agent name and ID first
-    const agentName = `Agent ${agentType || 'Personalizat'} ${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-    const generatedAgentId = `agent_${Math.random().toString(36).substring(2, 15)}`;
-    
-    stepLog += `📝 **Generez configurația agentului:**\n`;
-    stepLog += `   • Nume: ${agentName}\n`;
-    stepLog += `   • Tip: ${agentType || 'Personalizat'}\n`;
-    stepLog += `   • ID generat: ${generatedAgentId}\n\n`;
-    
-    // Generate system prompt using the generate-agent-prompt function
-    let systemPrompt = `Ești ${agentName}, un asistent AI specializat în ${agentType || 'asistență generală'}. ${agentDescription}`;
-    
-    stepLog += `🧠 **Generez prompt-ul inteligent...**\n`;
-    
-    // Try to generate a better prompt if we have more context
-    if (agentType && agentType !== 'general') {
-      try {
-        const { data: promptData, error: promptError } = await supabase.functions.invoke('generate-agent-prompt', {
-          body: { 
-            websiteUrl: `https://example.com/${agentType}`,
-            agentType,
-            description: agentDescription
-          }
-        });
-
-        if (!promptError && promptData?.prompt) {
-          systemPrompt = promptData.prompt;
-          stepLog += `   ✅ Prompt generat cu AI pentru "${agentType}"\n\n`;
-        } else {
-          stepLog += `   ⚠️ Folosesc template standard pentru prompt\n\n`;
-        }
-      } catch (promptErr) {
-        stepLog += `   ⚠️ Folosesc template standard pentru prompt\n\n`;
-        console.log('Using fallback prompt generation');
+    const agentTemplates = {
+      'sales': {
+        prompt: 'Ești un agent de vânzări profesionist și persuasiv. Obiectivul tău este să convingi clienții să cumpere produsele noastre prin prezentarea beneficiilor și rezolvarea obiecțiilor. Folosești tehnici de vânzare eficiente și ești persistent dar respectuos.',
+        voice: 'EXAVITQu4vr4xnSDxMaL', // Sarah - professional voice
+        description: 'Agent specializat în vânzări și conversii'
+      },
+      'support': {
+        prompt: 'Ești un agent de suport client amabil și eficient. Obiectivul tău este să ajuți clienții să rezolve problemele și să răspunzi la întrebările lor. Ești răbdător, empatic și găsești întotdeauna soluții.',
+        voice: '9BWtsMINqrJLrRacOk9x', // Aria - friendly voice  
+        description: 'Agent pentru suport client și rezolvare probleme'
+      },
+      'consultant': {
+        prompt: 'Ești un consultant expert în domeniul tău. Obiectivul tău este să oferi sfaturi valoroase și să ghidezi clienții către cele mai bune soluții. Ești cunoscător, profesionist și oferă recomandări personalizate.',
+        voice: 'CwhRBWXzGAHq8TQ4Fs17', // Roger - authoritative voice
+        description: 'Agent consultant pentru sfaturi și ghidare'
+      },
+      'marketing': {
+        prompt: 'Ești un agent de marketing creativ și persuasiv. Te concentrezi pe prezentarea ofertelor, promoțiilor și beneficiilor produselor într-un mod atractiv. Știi să creezi interes și să motivezi acțiunea.',
+        voice: 'XB0fDUnXU5powFXDhCwa', // Charlotte - energetic voice
+        description: 'Agent pentru marketing și promovare'
       }
-    } else {
-      stepLog += `   ✅ Prompt personalizat creat\n\n`;
-    }
+    };
 
-    // Select appropriate voice
-    const voiceId = voicePreference || '9BWtsMINqrJLrRacOk9x'; // Default to Aria
-    stepLog += `🎤 **Configurez vocea:**\n`;
-    stepLog += `   • Voce selectată: ${voiceId} (${voicePreference || 'Aria - default'})\n\n`;
+    const selectedType = agentType || 'consultant';
+    const template = agentTemplates[selectedType] || agentTemplates['consultant'];
+    const systemPrompt = customPrompt || template.prompt;
 
-    stepLog += `💾 **Salvez agentul în baza de date...**\n`;
+    stepLog += `   • Tip agent: ${selectedType.toUpperCase()}\n`;
+    stepLog += `   • Voce selectată: ${template.voice}\n`;
+    stepLog += `   • Prompt generat: ✅\n\n`;
+
+    // Step 2: Generate enhanced prompt using AI
+    stepLog += `🧠 **Generez prompt personalizat cu AI...**\n`;
     
-    // Create the agent in database with pre-generated agent_id
-    const { data: agentData, error: dbError } = await supabase
-      .from('kalina_agents')
-      .insert({
-        user_id: userId,
-        agent_id: generatedAgentId,
-        name: agentName,
-        description: agentDescription,
-        system_prompt: systemPrompt,
-        voice_id: voiceId,
-        provider: 'elevenlabs',
-        is_active: true
-      })
-      .select()
-      .single();
+    const { data: promptResult, error: promptError } = await supabase.functions.invoke('prompt-generation', {
+      body: {
+        websiteUrl: '',
+        additionalPrompt: systemPrompt,
+        agentType: selectedType,
+        language: 'ro'
+      }
+    });
 
-    if (dbError) {
-      console.error('Database error creating agent:', dbError);
-      stepLog += `❌ **EROARE la salvarea în baza de date:**\n`;
-      stepLog += `   • Detalii: ${dbError.message}\n`;
+    let enhancedPrompt = systemPrompt;
+    if (!promptError && promptResult?.response) {
+      enhancedPrompt = promptResult.response;
+      stepLog += `   • Prompt îmbunătățit cu AI: ✅\n`;
+    } else {
+      stepLog += `   • Folosesc prompt standard: ⚠️\n`;
+    }
+    stepLog += "\n";
+
+    // Step 3: Create agent in ElevenLabs
+    stepLog += `🚀 **Creez agentul în ElevenLabs...**\n`;
+    
+    const { data: result, error } = await supabase.functions.invoke('create-elevenlabs-agent', {
+      body: {
+        conversation_config: {
+          agent: {
+            language: 'ro',
+            prompt: {
+              prompt: enhancedPrompt
+            }
+          },
+          tts: {
+            voice_id: template.voice,
+            model_id: 'eleven_multilingual_v2'
+          }
+        },
+        name: agentName
+      }
+    });
+
+    if (error) {
+      stepLog += `❌ **EROARE la crearea în ElevenLabs!**\n`;
+      stepLog += `   • Detalii: ${error.message}\n`;
+      stepLog += `   • **Soluții posibile:**\n`;
+      stepLog += `     1. Verifică ElevenLabs API key\n`;
+      stepLog += `     2. Verifică quota și billing ElevenLabs\n`;
+      stepLog += `     3. Încearcă cu alt nume pentru agent\n`;
       
       return {
         success: false,
         message: stepLog,
-        data: null
+        data: { error: error.message }
       };
     }
-    
-    stepLog += `   ✅ Agent salvat cu ID: ${agentData.id}\n\n`;
-    stepLog += `🔗 **Creez agentul în ElevenLabs...**\n`;
 
-    // Create ElevenLabs agent using the new structure
-    const elevenLabsConfig = {
-      name: agentName,
-      system_prompt: systemPrompt,
-      first_message: `Bună ziua! Sunt ${agentName}. Cum vă pot ajuta astăzi?`,
-      language: "ro",
-      voice_id: voiceId
-    };
-
-    const { data: elevenLabsData, error: elevenLabsError } = await supabase.functions.invoke('create-elevenlabs-agent', {
-      body: elevenLabsConfig
-    });
-
-    if (elevenLabsError) {
-      console.error('ElevenLabs error:', elevenLabsError);
-      stepLog += `⚠️ **Eroare ElevenLabs, dar agentul local funcționează:**\n`;
-      stepLog += `   • Detalii: ${elevenLabsError.message}\n`;
-      stepLog += `   • Agentul poate fi folosit cu provider custom\n\n`;
-      
-      // Update the database record with error info but don't fail completely
-      await supabase
-        .from('kalina_agents')
-        .update({ 
-          elevenlabs_agent_id: null,
-          agent_id: elevenLabsConfig.agent_id 
-        })
-        .eq('id', agentData.id);
-    } else if (elevenLabsData?.agent_id) {
-      stepLog += `   ✅ Agent ElevenLabs creat cu ID: ${elevenLabsData.agent_id}\n\n`;
-      
-      // Update the database record with ElevenLabs info
-      await supabase
-        .from('kalina_agents')
-        .update({ 
-          elevenlabs_agent_id: elevenLabsData.agent_id,
-          agent_id: elevenLabsData.agent_id 
-        })
-        .eq('id', agentData.id);
+    if (!result?.agent_id) {
+      stepLog += `❌ **EROARE: Nu am primit ID pentru agent!**\n`;
+      return {
+        success: false,
+        message: stepLog,
+        data: { error: 'No agent ID received' }
+      };
     }
 
-    console.log('✅ Agent created successfully');
-    stepLog += `🎉 **AGENT CREAT CU SUCCES!**\n`;
-    stepLog += `   • Numele: ${agentName}\n`;
-    stepLog += `   • Status: Activ și gata pentru apeluri\n`;
-    stepLog += `   • Poți folosi agentul imediat pentru apeluri\n`;
+    stepLog += `   • Agent creat în ElevenLabs: ✅\n`;
+    stepLog += `   • Agent ID: ${result.agent_id}\n\n`;
+
+    // Step 4: Save to database
+    stepLog += `💾 **Salvez agentul în baza de date...**\n`;
     
+    const { error: dbError } = await supabase
+      .from('kalina_agents')
+      .insert({
+        agent_id: result.agent_id,
+        user_id: userId,
+        name: agentName,
+        description: template.description,
+        system_prompt: enhancedPrompt,
+        voice_id: template.voice,
+        provider: 'elevenlabs',
+        elevenlabs_agent_id: result.agent_id,
+        is_active: true
+      });
+
+    if (dbError) {
+      stepLog += `⚠️ **Avertisment**: Agent creat dar nu salvat în DB\n`;
+      stepLog += `   • Eroare DB: ${dbError.message}\n`;
+    } else {
+      stepLog += `   • Salvat în baza de date: ✅\n`;
+    }
+
+    stepLog += `\n✅ **AGENT CREAT CU SUCCES!**\n`;
+    stepLog += `   • Nume: ${agentName}\n`;
+    stepLog += `   • Tip: ${selectedType}\n`;
+    stepLog += `   • ID: ${result.agent_id}\n`;
+    stepLog += `   • Status: Activ și gata de utilizare\n`;
+    stepLog += `\n🎯 **Agentul poate fi folosit pentru:**\n`;
+    
+    if (selectedType === 'sales') {
+      stepLog += `   • Apeluri de vânzări\n   • Prezentarea produselor\n   • Închiderea dealurilor\n`;
+    } else if (selectedType === 'support') {
+      stepLog += `   • Suport clienți\n   • Rezolvarea problemelor\n   • Întrebări și răspunsuri\n`;
+    } else if (selectedType === 'marketing') {
+      stepLog += `   • Promovarea ofertelor\n   • Prezentarea campaniilor\n   • Generarea interesului\n`;
+    } else {
+      stepLog += `   • Consultanță și sfaturi\n   • Ghidare clienți\n   • Recomandări personalizate\n`;
+    }
+
     return {
       success: true,
       message: stepLog,
       data: {
-        agentId: agentData.id,
+        agentId: result.agent_id,
         name: agentName,
-        description: agentDescription,
-        elevenLabsId: elevenLabsData?.agent_id || elevenLabsConfig.agent_id,
-        voiceId: voiceId
+        type: selectedType,
+        voice: template.voice,
+        prompt: enhancedPrompt,
+        result
       }
     };
+
   } catch (error) {
-    console.error('Error in executeCreateAgent:', error);
+    console.error('❌ Error in executeCreateAgent:', error);
+    stepLog += `❌ **EROARE CRITICĂ la crearea agentului!**\n`;
+    stepLog += `   • Detalii tehnice: ${error.message}\n`;
+    stepLog += `   • **Acțiuni recomandate:**\n`;
+    stepLog += `     1. Verifică conexiunea la internet\n`;
+    stepLog += `     2. Verifică configurația ElevenLabs\n`;
+    stepLog += `     3. Încearcă cu alt nume sau tip de agent\n`;
+    stepLog += `     4. Contactează support pentru asistență\n`;
+    
     return {
       success: false,
-      message: `❌ **EROARE CRITICĂ la crearea agentului:** ${error.message}`,
-      data: null
+      message: stepLog,
+      data: { error: error.message }
     };
   }
 };
@@ -922,26 +1013,57 @@ const tools = [
   {
     type: "function",
     function: {
-      name: "create_agent",
-      description: "Creează automat un agent AI nou cu prompt și setări generate inteligent",
+      name: "get_historical_data",
+      description: "Obține date istorice despre apeluri, agenți sau activitate din orice perioadă. FOLOSEȘTE ACEASTĂ FUNCȚIE pentru toate întrebările despre date din trecut!",
       parameters: {
         type: "object",
         properties: {
-          agent_description: {
+          data_type: {
             type: "string",
-            description: "Descrierea detaliată a ce trebuie să facă agentul"
+            enum: ['calls', 'agents', 'contacts', 'campaigns', 'statistics'],
+            description: "Tipul de date solicitate"
+          },
+          time_period: {
+            type: "string",
+            enum: ['today', 'yesterday', 'last_week', 'last_month', 'custom'],
+            description: "Perioada pentru care se solicită datele"
+          },
+          start_date: {
+            type: "string",
+            description: "Data de început (format YYYY-MM-DD) pentru perioada custom"
+          },
+          end_date: {
+            type: "string", 
+            description: "Data de sfârșit (format YYYY-MM-DD) pentru perioada custom"
+          }
+        },
+        required: ["data_type", "time_period"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "create_agent",
+      description: "Creează un nou agent AI pentru apeluri. Oferă opțiuni multiple și explică fiecare pas.",
+      parameters: {
+        type: "object",
+        properties: {
+          agent_name: {
+            type: "string",
+            description: "Numele agentului"
           },
           agent_type: {
             type: "string",
-            description: "Tipul de agent (ex: 'vânzări auto', 'suport tehnic', 'programări medicale', etc.)"
+            enum: ['sales', 'support', 'consultant', 'marketing'],
+            description: "Tipul agentului - sales (vânzări), support (suport client), consultant (consultanță), marketing (promovare)"
           },
-          voice_preference: {
+          custom_prompt: {
             type: "string",
-            description: "Preferința pentru voce (ex: 'masculin', 'feminin', 'professional')",
-            default: "professional"
+            description: "Prompt personalizat pentru agent (opțional)"
           }
         },
-        required: ["agent_description", "agent_type"]
+        required: ["agent_name"]
       }
     }
   },
@@ -1109,55 +1231,37 @@ serve(async (req) => {
     }
 
     // Pas 3: Creează prompt-ul pentru OpenAI cu context complet
-    const finalSystemPrompt = systemPrompt || `TU EȘTI KALINA AI - UN ASISTENT OPERAȚIONAL CARE EXECUTĂ ACȚIUNI AUTOMAT!
+    const finalSystemPrompt = systemPrompt || `Ești JARVIS, asistentul AI personal al utilizatorului pentru platforma Kalina. Ești foarte inteligent, prietenos și eficient.
 
-🚨 IMPORTANT: TU POȚI ȘI TREBUIE SĂ FACI ACȚIUNI CONCRETE!
+INFORMAȚII IMPORTANTE:
+- Utilizatorul are acces COMPLET la toată istorica sa de apeluri și date din contul său
+- Poți accesa informații despre apelurile de azi, ieri și din orice perioadă din trecut
+- Ai acces la toate agentii, contactele și campaniile utilizatorului  
+- Poți inițializa apeluri, căuta contacte, programa callback-uri și crea agenți
+- NICIODATĂ nu spune că nu ai acces la datele istorice - le ai!
 
-CONTEXT COMPLET UTILIZATOR:
+CONTEXT UTILIZATOR (include date de azi ȘI ieri):
 ${userContext}
 
 ${contextText ? `INFORMAȚII SPECIFICE DIN BAZA DE CUNOȘTINȚE:
 ${contextText}
 
-` : ''}INSTRUCȚIUNI CRITICE - EXECUTĂ AUTOMAT FĂRĂ SĂ CERI PERMISIUNI:
+` : ''}INSTRUCȚIUNI SPECIALE - RAPORTARE PAS CU PAS:
+1. 🔍 Când cauți ceva, spune "🔍 **Caut [ce cauți]...**"
+2. 📊 Când analizezi date, spune "📊 **Analizez istoricul...**" 
+3. 🚀 Când inițiezi acțiuni, spune "🚀 **Inițiez [acțiunea]...**"
+4. ✅ Când reușești, spune "✅ **[Rezultatul pozitiv]**"
+5. ❌ Când eșuezi, spune "❌ **[Problema și soluția]**"
 
-📞 APELURI TELEFONICE:
-- Când utilizatorul zice "Sună-l pe [nume] cu [numărul]" → EXECUȚI initiate_call() DIRECT
-- Când zice "Sună ultimii clienți" → Te uiți în call_history și îi suni pe toți AUTOMAT  
-- NU întrebi "Vrei să...?" - TU FACI DIRECT!
+PENTRU APELURI:
+- Verifică ÎNTOTDEAUNA istoricul contactului înainte de apel
+- Raportează: "📞 **Am găsit contactul [nume] în istoric:**\n   • Total apeluri: X\n   • Apeluri reușite: Y\n   • Ultimul apel: [dată]"
 
-🤖 GĂSIRE AGENȚI:
-- Pentru "agent de vânzări", "agent tehnic" etc. → GĂSEȘTI cel mai potrivit din lista utilizatorului
-- Folosești find_agent() sau găsești direct din datele disponibile
+PENTRU CREAREA AGENȚILOR:
+- Raportează fiecare pas: generare prompt, configurare voce, testare
+- Oferă opțiuni pentru tipuri de agenți (vânzări, suport, consultanță)
 
-👥 CĂUTARE CONTACTE:
-- Pentru orice nume menționat → CAUȚI în contacts_database automat
-- Folosești search_contact() pentru a găsi informații
-
-📅 PROGRAMĂRI:
-- Pentru "programează un apel" → CREEZI callback automat cu schedule_callback()
-
-🎯 COMPORTAMENT OBLIGATORIU:
-❌ NICIODATĂ: "Nu pot", "Trebuie să", "Poți să", "Te rog să"
-✅ ÎNTOTDEAUNA: "Fac acum", "Inițiez apelul", "Am găsit și sun", "Programez"
-
-❌ NU ceri confirmări sau permisiuni
-✅ EXECUȚI și anunți ce faci: "Inițiez apelul către Ion cu agentul de vânzări..."
-
-❌ NU explici proceduri  
-✅ LE FACI și raportezi rezultatul
-
-TU EȘTI UN JARVIS ADEVĂRAT - OPERAȚIONAL, NU DOAR INFORMATIV!
-
-TOOLS DISPONIBILE OBLIGATORIU DE FOLOSIT:
-- get_conversation_details(conversation_id) - Obține transcript-ul complet al unei conversații
-- create_agent(agent_description, agent_type, voice_preference) - Creează automat agenți noi
-- initiate_call(contact_name, phone_number, agent_type)
-- find_agent(agent_type)  
-- search_contact(query)
-- schedule_callback(client_name, phone_number, scheduled_time, reason)
-
-EXECUTĂ IMEDIAT CÂND ESTE CERUT - FĂRĂ EZITĂRI!`;
+Folosește tool-urile disponibile pentru a ajuta utilizatorul cu toate nevoile sale.`;
 
     const messages = [
       { role: 'system', content: finalSystemPrompt },
@@ -1216,12 +1320,95 @@ EXECUTĂ IMEDIAT CÂND ESTE CERUT - FĂRĂ EZITĂRI!`;
               );
               break;
               
+            case 'get_historical_data':
+              const { data_type, time_period, start_date, end_date } = args;
+              console.log('🔍 Getting historical data:', { data_type, time_period, start_date, end_date });
+              
+              let historicalData = '';
+              let stepLog = `🔍 **Caut date istorice pentru ${data_type}...**\n\n`;
+              
+              try {
+                if (data_type === 'calls') {
+                  if (time_period === 'yesterday') {
+                    const yesterdayData = await getYesterdayCallHistory(userId);
+                    stepLog += `📊 **Analiza apeluri de ieri:**\n`;
+                    stepLog += `   • Total apeluri: ${yesterdayData.length}\n`;
+                    
+                    const successful = yesterdayData.filter(call => call.call_status === 'completed').length;
+                    const failed = yesterdayData.length - successful;
+                    stepLog += `   • Apeluri reușite: ${successful}\n`;
+                    stepLog += `   • Apeluri eșuate: ${failed}\n`;
+                    
+                    if (yesterdayData.length > 0) {
+                      const avgDuration = yesterdayData.reduce((sum, call) => sum + (call.duration_seconds || 0), 0) / yesterdayData.length;
+                      stepLog += `   • Durata medie: ${avgDuration.toFixed(1)} secunde\n`;
+                    }
+                    
+                    historicalData = stepLog;
+                    
+                  } else if (time_period === 'today') {
+                    const todayData = await getTodaysCallHistory(userId);
+                    stepLog += `📊 **Analiza apeluri de azi:**\n`;
+                    stepLog += `   • Total apeluri: ${todayData.length}\n`;
+                    
+                    const successful = todayData.filter(call => call.call_status === 'completed').length;
+                    const failed = todayData.length - successful;
+                    stepLog += `   • Apeluri reușite: ${successful}\n`;
+                    stepLog += `   • Apeluri eșuate: ${failed}\n`;
+                    
+                    historicalData = stepLog;
+                    
+                  } else if (time_period === 'last_week' || time_period === 'last_month') {
+                    const days = time_period === 'last_week' ? 7 : 30;
+                    const periodData = await getDateRangeCallHistory(userId, days);
+                    
+                    stepLog += `📊 **Analiza apeluri ultima ${time_period === 'last_week' ? 'săptămână' : 'lună'}:**\n`;
+                    stepLog += `   • Total apeluri: ${periodData?.length || 0}\n`;
+                    
+                    if (periodData && periodData.length > 0) {
+                      const successful = periodData.filter(call => call.call_status === 'completed').length;
+                      const failed = periodData.length - successful;
+                      stepLog += `   • Apeluri reușite: ${successful}\n`;
+                      stepLog += `   • Apeluri eșuate: ${failed}\n`;
+                      
+                      const avgDuration = periodData.reduce((sum, call) => sum + (call.duration_seconds || 0), 0) / periodData.length;
+                      stepLog += `   • Durata medie: ${avgDuration.toFixed(1)} secunde\n`;
+                    }
+                    
+                    historicalData = stepLog;
+                  }
+                } else if (data_type === 'statistics') {
+                  const { stats } = await getUserStatistics(userId);
+                  stepLog += `📊 **Statistici generale utilizator:**\n`;
+                  if (stats) {
+                    stepLog += `   • Total minute vorbite: ${stats.total_minutes_talked || 0}\n`;
+                    stepLog += `   • Total apeluri voce: ${stats.total_voice_calls || 0}\n`;
+                    stepLog += `   • Total cheltuit: $${stats.total_spent_usd || 0}\n`;
+                  }
+                  historicalData = stepLog;
+                }
+                
+                stepLog += `\n✅ **Date găsite și procesate cu succes!**`;
+                
+              } catch (error) {
+                console.error('Error getting historical data:', error);
+                stepLog += `❌ **Eroare la obținerea datelor:**\n`;
+                stepLog += `   • ${error.message}\n`;
+              }
+              
+              toolResult = {
+                success: true,
+                message: historicalData || 'Nu am găsit date pentru perioada solicitată',
+                data: null
+              };
+              break;
+              
             case 'create_agent':
               toolResult = await executeCreateAgent(
                 userId,
-                args.agent_description,
+                args.agent_name,
                 args.agent_type,
-                args.voice_preference
+                args.custom_prompt
               );
               break;
               
