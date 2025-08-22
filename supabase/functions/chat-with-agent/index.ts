@@ -111,6 +111,47 @@ const getTodaysCallHistory = async (userId: string) => {
   }
 };
 
+const getYesterdayCallHistory = async (userId: string) => {
+  try {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const startOfDay = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+    const endOfDay = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate() + 1);
+
+    const { data: calls } = await supabase
+      .from('call_history')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('created_at', startOfDay.toISOString())
+      .lt('created_at', endOfDay.toISOString())
+      .order('created_at', { ascending: false });
+
+    return calls || [];
+  } catch (error) {
+    console.error('Error fetching yesterday calls:', error);
+    return [];
+  }
+};
+
+const getDateRangeCallHistory = async (userId: string, daysBack: number) => {
+  try {
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() - daysBack);
+    
+    const { data: calls } = await supabase
+      .from('call_history')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('created_at', targetDate.toISOString())
+      .order('created_at', { ascending: false });
+
+    return calls || [];
+  } catch (error) {
+    console.error(`Error fetching calls from ${daysBack} days back:`, error);
+    return [];
+  }
+};
+
 const getUserAgents = async (userId: string) => {
   try {
     const { data: agents } = await supabase
@@ -264,7 +305,7 @@ const getConversationAnalytics = async (userId: string) => {
 
 const generateUserContext = (userData: any) => {
   const { 
-    stats, balance, profile, todaysCalls, allCalls, agents, conversations, 
+    stats, balance, profile, todaysCalls, yesterdaysCalls, allCalls, agents, conversations, 
     contacts, campaigns, phoneNumbers, activeAgents, documents, callbacks, 
     transactions, analytics 
   } = userData;
@@ -324,6 +365,25 @@ const generateUserContext = (userData: any) => {
     context += `\n`;
   } else {
     context += `📞 APELURI DE ASTĂZI: Nu au fost efectuate apeluri astăzi.\n\n`;
+  }
+
+  // APELURI DE IERI
+  if (yesterdaysCalls && yesterdaysCalls.length > 0) {
+    context += `📞 APELURI DE IERI (${yesterdaysCalls.length} total):\n`;
+    const successfulYesterday = yesterdaysCalls.filter(call => call.call_status === 'completed').length;
+    const failedYesterday = yesterdaysCalls.filter(call => call.call_status === 'failed').length;
+    context += `Reușite: ${successfulYesterday}, Eșuate: ${failedYesterday}\n`;
+    
+    yesterdaysCalls.slice(0, 5).forEach((call: any, index: number) => {
+      const duration = call.duration_seconds ? Math.round(call.duration_seconds / 60) : 0;
+      const cost = call.cost_usd || 0;
+      const time = new Date(call.created_at).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+      const status = call.call_status === 'completed' ? '✅' : call.call_status === 'failed' ? '❌' : '⏳';
+      context += `${index + 1}. ${status} ${call.contact_name || call.phone_number} - ${duration}min - $${cost} (${time})\n`;
+    });
+    context += `\n`;
+  } else {
+    context += `📞 APELURI DE IERI: Nu au fost efectuate apeluri ieri.\n\n`;
   }
 
   // ISTORICUL COMPLET AL APELURILOR
@@ -427,9 +487,31 @@ const generateUserContext = (userData: any) => {
 // Tool execution functions pentru MCP/JARVIS functionality
 const executeInitiateCall = async (userId: string, contactName: string, phoneNumber: string, agentType?: string) => {
   try {
+    let stepByStepLog = "🔍 **Caut contact și agent pentru apel...**\n\n";
+    
     console.log('🚀 Initiating call:', { userId, contactName, phoneNumber, agentType });
     
+    // First check call history for this contact
+    const allCalls = await getAllCallHistory(userId);
+    const contactCalls = allCalls.filter(call => 
+      call.phone_number === phoneNumber || 
+      call.contact_name?.toLowerCase() === contactName.toLowerCase()
+    );
+    
+    if (contactCalls.length > 0) {
+      const successfulCalls = contactCalls.filter(call => call.call_status === 'completed');
+      const failedCalls = contactCalls.filter(call => call.call_status === 'failed' || call.call_status === 'no-answer');
+      stepByStepLog += `📞 **Am găsit contactul în istoric:**\n`;
+      stepByStepLog += `   • Total apeluri: ${contactCalls.length}\n`;
+      stepByStepLog += `   • Apeluri reușite: ${successfulCalls.length}\n`;
+      stepByStepLog += `   • Apeluri nerăspunse/eșuate: ${failedCalls.length}\n`;
+      stepByStepLog += `   • Ultimul apel: ${new Date(contactCalls[0].created_at).toLocaleDateString('ro-RO')}\n\n`;
+    } else {
+      stepByStepLog += `📞 **Contact nou** - nu există istoric de apeluri anterioare\n\n`;
+    }
+    
     // Find suitable agent
+    stepByStepLog += `🤖 **Caut agentul potrivit...**\n`;
     const agents = await getUserAgents(userId);
     let selectedAgent = null;
     
@@ -439,6 +521,12 @@ const executeInitiateCall = async (userId: string, contactName: string, phoneNum
         agent.description?.toLowerCase().includes(agentType.toLowerCase()) ||
         agent.name.toLowerCase().includes(agentType.toLowerCase())
       );
+      
+      if (selectedAgent) {
+        stepByStepLog += `   ✅ Am găsit agentul "${selectedAgent.name}" pentru tipul "${agentType}"\n\n`;
+      } else {
+        stepByStepLog += `   ⚠️ Nu am găsit agent specific pentru "${agentType}", folosesc agentul principal\n\n`;
+      }
     }
     
     // Fallback to first active agent
@@ -449,10 +537,15 @@ const executeInitiateCall = async (userId: string, contactName: string, phoneNum
     if (!selectedAgent) {
       return {
         success: false,
-        message: 'Nu am găsit niciun agent disponibil în contul tău. Te rog să creezi mai întâi un agent.',
+        message: stepByStepLog + `❌ **EROARE:** Nu am găsit niciun agent disponibil în contul tău. Te rog să creezi mai întâi un agent.`,
         data: null
       };
     }
+    
+    stepByStepLog += `🚀 **Inițiez apelul...**\n`;
+    stepByStepLog += `   • Agent: ${selectedAgent.name}\n`;
+    stepByStepLog += `   • Contact: ${contactName}\n`;
+    stepByStepLog += `   • Telefon: ${phoneNumber}\n\n`;
     
     // Call the initiate-scheduled-call function
     const { data: callResult, error } = await supabase.functions.invoke('initiate-scheduled-call', {
@@ -467,24 +560,36 @@ const executeInitiateCall = async (userId: string, contactName: string, phoneNum
     
     if (error) {
       console.error('Error initiating call:', error);
+      stepByStepLog += `❌ **EROARE la inițierea apelului:**\n`;
+      stepByStepLog += `   • Detalii: ${error.message}\n`;
+      stepByStepLog += `   • Verifică configurația ElevenLabs API în setări\n`;
+      
       return {
         success: false,
-        message: `Eroare la inițierea apelului: ${error.message}`,
+        message: stepByStepLog,
         data: null
       };
     }
     
     console.log('✅ Call initiated successfully:', callResult);
+    stepByStepLog += `✅ **APEL INIȚIAT CU SUCCES!**\n`;
+    stepByStepLog += `   • ID conversație: ${callResult?.conversation_id || 'N/A'}\n`;
+    stepByStepLog += `   • Status: Apelul este în curs...\n`;
     
     return {
       success: true,
-      message: `Apelul către ${contactName} (${phoneNumber}) a fost inițiat cu succes folosind agentul "${selectedAgent.name}". ID conversație: ${callResult?.conversation_id || 'N/A'}`,
+      message: stepByStepLog,
       data: {
         agent: selectedAgent.name,
         contact: contactName,
         phone: phoneNumber,
         conversationId: callResult?.conversation_id,
-        callResult
+        callResult,
+        contactHistory: {
+          totalCalls: contactCalls.length,
+          successfulCalls: contactCalls.filter(call => call.call_status === 'completed').length,
+          failedCalls: contactCalls.filter(call => call.call_status === 'failed' || call.call_status === 'no-answer').length
+        }
       }
     };
     
@@ -492,7 +597,7 @@ const executeInitiateCall = async (userId: string, contactName: string, phoneNum
     console.error('Error in executeInitiateCall:', error);
     return {
       success: false,
-      message: `Eroare la inițierea apelului: ${error.message}`,
+      message: `❌ **EROARE CRITICĂ:** ${error.message}`,
       data: null
     };
   }
@@ -524,7 +629,10 @@ const executeFindAgent = async (userId: string, agentType: string) => {
 
 const executeSearchContact = async (userId: string, query: string) => {
   try {
+    let stepLog = `🔍 **Caut contacte pentru: "${query}"**\n\n`;
+    
     const contacts = await getUserContacts(userId);
+    stepLog += `📊 Total contacte în baza de date: ${contacts.length}\n\n`;
     
     const matchingContacts = contacts.filter(contact => 
       contact.nume?.toLowerCase().includes(query.toLowerCase()) ||
@@ -532,15 +640,30 @@ const executeSearchContact = async (userId: string, query: string) => {
       contact.company?.toLowerCase().includes(query.toLowerCase())
     );
     
+    if (matchingContacts.length > 0) {
+      stepLog += `✅ **Am găsit ${matchingContacts.length} contact(e):**\n`;
+      matchingContacts.forEach((contact, index) => {
+        stepLog += `   ${index + 1}. **${contact.nume}** - ${contact.telefon}\n`;
+        if (contact.company) stepLog += `      Companie: ${contact.company}\n`;
+        if (contact.locatie) stepLog += `      Locație: ${contact.locatie}\n`;
+      });
+    } else {
+      stepLog += `❌ **Nu am găsit contacte** care să corespundă cu "${query}"\n`;
+      stepLog += `💡 **Sugestii:** Încearcă să cauți după:\n`;
+      stepLog += `   • Nume parțial (ex: "Ion" pentru "Ion Popescu")\n`;
+      stepLog += `   • Numărul de telefon\n`;
+      stepLog += `   • Numele companiei\n`;
+    }
+    
     return {
       success: true,
-      message: `Am găsit ${matchingContacts.length} contact(e) pentru "${query}"`,
+      message: stepLog,
       data: matchingContacts
     };
   } catch (error) {
     return {
       success: false,
-      message: `Eroare la căutarea contactului: ${error.message}`,
+      message: `❌ **Eroare la căutarea contactului:** ${error.message}`,
       data: null
     };
   }
@@ -629,14 +752,23 @@ const executeGetConversationDetails = async (userId: string, conversationId: str
 
 const executeCreateAgent = async (userId: string, agentDescription: string, agentType?: string, voicePreference?: string) => {
   try {
+    let stepLog = `🤖 **Creez agent nou: "${agentType || 'Personalizat'}"**\n\n`;
+    
     console.log('🤖 Creating agent:', { userId, agentDescription, agentType });
     
     // Generate agent name and ID first
     const agentName = `Agent ${agentType || 'Personalizat'} ${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
     const generatedAgentId = `agent_${Math.random().toString(36).substring(2, 15)}`;
     
+    stepLog += `📝 **Generez configurația agentului:**\n`;
+    stepLog += `   • Nume: ${agentName}\n`;
+    stepLog += `   • Tip: ${agentType || 'Personalizat'}\n`;
+    stepLog += `   • ID generat: ${generatedAgentId}\n\n`;
+    
     // Generate system prompt using the generate-agent-prompt function
     let systemPrompt = `Ești ${agentName}, un asistent AI specializat în ${agentType || 'asistență generală'}. ${agentDescription}`;
+    
+    stepLog += `🧠 **Generez prompt-ul inteligent...**\n`;
     
     // Try to generate a better prompt if we have more context
     if (agentType && agentType !== 'general') {
@@ -651,15 +783,25 @@ const executeCreateAgent = async (userId: string, agentDescription: string, agen
 
         if (!promptError && promptData?.prompt) {
           systemPrompt = promptData.prompt;
+          stepLog += `   ✅ Prompt generat cu AI pentru "${agentType}"\n\n`;
+        } else {
+          stepLog += `   ⚠️ Folosesc template standard pentru prompt\n\n`;
         }
       } catch (promptErr) {
+        stepLog += `   ⚠️ Folosesc template standard pentru prompt\n\n`;
         console.log('Using fallback prompt generation');
       }
+    } else {
+      stepLog += `   ✅ Prompt personalizat creat\n\n`;
     }
 
     // Select appropriate voice
     const voiceId = voicePreference || '9BWtsMINqrJLrRacOk9x'; // Default to Aria
+    stepLog += `🎤 **Configurez vocea:**\n`;
+    stepLog += `   • Voce selectată: ${voiceId} (${voicePreference || 'Aria - default'})\n\n`;
 
+    stepLog += `💾 **Salvez agentul în baza de date...**\n`;
+    
     // Create the agent in database with pre-generated agent_id
     const { data: agentData, error: dbError } = await supabase
       .from('kalina_agents')
@@ -678,12 +820,18 @@ const executeCreateAgent = async (userId: string, agentDescription: string, agen
 
     if (dbError) {
       console.error('Database error creating agent:', dbError);
+      stepLog += `❌ **EROARE la salvarea în baza de date:**\n`;
+      stepLog += `   • Detalii: ${dbError.message}\n`;
+      
       return {
         success: false,
-        message: `Eroare la salvarea agentului în baza de date: ${dbError.message}`,
+        message: stepLog,
         data: null
       };
     }
+    
+    stepLog += `   ✅ Agent salvat cu ID: ${agentData.id}\n\n`;
+    stepLog += `🔗 **Creez agentul în ElevenLabs...**\n`;
 
     // Create ElevenLabs agent using the new structure
     const elevenLabsConfig = {
@@ -700,6 +848,10 @@ const executeCreateAgent = async (userId: string, agentDescription: string, agen
 
     if (elevenLabsError) {
       console.error('ElevenLabs error:', elevenLabsError);
+      stepLog += `⚠️ **Eroare ElevenLabs, dar agentul local funcționează:**\n`;
+      stepLog += `   • Detalii: ${elevenLabsError.message}\n`;
+      stepLog += `   • Agentul poate fi folosit cu provider custom\n\n`;
+      
       // Update the database record with error info but don't fail completely
       await supabase
         .from('kalina_agents')
@@ -709,6 +861,8 @@ const executeCreateAgent = async (userId: string, agentDescription: string, agen
         })
         .eq('id', agentData.id);
     } else if (elevenLabsData?.agent_id) {
+      stepLog += `   ✅ Agent ElevenLabs creat cu ID: ${elevenLabsData.agent_id}\n\n`;
+      
       // Update the database record with ElevenLabs info
       await supabase
         .from('kalina_agents')
@@ -720,9 +874,14 @@ const executeCreateAgent = async (userId: string, agentDescription: string, agen
     }
 
     console.log('✅ Agent created successfully');
+    stepLog += `🎉 **AGENT CREAT CU SUCCES!**\n`;
+    stepLog += `   • Numele: ${agentName}\n`;
+    stepLog += `   • Status: Activ și gata pentru apeluri\n`;
+    stepLog += `   • Poți folosi agentul imediat pentru apeluri\n`;
+    
     return {
       success: true,
-      message: `Am creat agentul "${agentName}" cu succes! Este gata pentru apeluri.`,
+      message: stepLog,
       data: {
         agentId: agentData.id,
         name: agentName,
@@ -735,7 +894,7 @@ const executeCreateAgent = async (userId: string, agentDescription: string, agen
     console.error('Error in executeCreateAgent:', error);
     return {
       success: false,
-      message: `Eroare la crearea agentului: ${error.message}`,
+      message: `❌ **EROARE CRITICĂ la crearea agentului:** ${error.message}`,
       data: null
     };
   }
@@ -890,12 +1049,13 @@ serve(async (req) => {
 
     // Extrage TOATE datele utilizatorului pentru context complet
     const [
-      userStats, todaysCalls, allCalls, userAgents, conversations,
+      userStats, todaysCalls, yesterdaysCalls, allCalls, userAgents, conversations,
       contacts, campaigns, phoneNumbers, activeAgents, documents,
       callbacks, transactions, analytics
     ] = await Promise.all([
       getUserStatistics(userId),
       getTodaysCallHistory(userId),
+      getYesterdayCallHistory(userId),
       getAllCallHistory(userId),
       getUserAgents(userId),
       getUserConversations(userId),
@@ -913,6 +1073,7 @@ serve(async (req) => {
     const userContext = generateUserContext({
       ...userStats,
       todaysCalls,
+      yesterdaysCalls,
       allCalls,
       agents: userAgents,
       conversations,
