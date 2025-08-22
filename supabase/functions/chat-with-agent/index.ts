@@ -1465,39 +1465,56 @@ Folosește tool-urile disponibile pentru a ajuta utilizatorul cu toate nevoile s
         }
       }
       
-      // If tools were executed, create a follow-up response
-      if (toolResults.length > 0) {
-        const toolSummary = toolResults.map(result => 
-          `${result.success ? '✅' : '❌'} ${result.message}`
-        ).join('\n');
-        
-        // Generate a follow-up response that includes tool results
-        const followUpMessages = [
-          { role: 'system', content: finalSystemPrompt },
-          { role: 'user', content: message },
-          { role: 'assistant', content: aiMessage.content || '', tool_calls: aiMessage.tool_calls },
-          { role: 'user', content: `Rezultatele acțiunilor executate:\n${toolSummary}\n\nTe rog să confirmi utilizatorului ce s-a întâmplat și să oferi un răspuns relevant.` }
-        ];
-        
-        const followUpResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${OPENAI_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: model,
-            messages: followUpMessages,
-            max_tokens: 1000,
-            temperature: 0.3,
-          }),
-        });
-        
-        if (followUpResponse.ok) {
-          const followUpData = await followUpResponse.json();
-          finalResponse = followUpData.choices[0]?.message?.content || finalResponse;
+        // If tools were executed, create a follow-up response
+        if (toolResults.length > 0) {
+          const toolSummary = toolResults.map(result => 
+            result.message || `${result.success ? '✅' : '❌'} Acțiune executată`
+          ).join('\n\n');
+          
+          // If we have detailed tool messages, use them directly
+          const hasDetailedMessages = toolResults.some(result => result.message && result.message.length > 50);
+          
+          if (hasDetailedMessages) {
+            // Use the detailed tool messages directly
+            finalResponse = toolSummary;
+          } else {
+            // Generate a follow-up response that includes tool results
+            const followUpMessages = [
+              { role: 'system', content: finalSystemPrompt },
+              { role: 'user', content: message },
+              { role: 'assistant', content: aiMessage.content || '', tool_calls: aiMessage.tool_calls },
+              { role: 'user', content: `Rezultatele acțiunilor executate:\n${toolSummary}\n\nTe rog să confirmi utilizatorului ce s-a întâmplat și să oferi un răspuns relevant. FOLOSEȘTE informațiile din rezultate pentru a explica exact ce s-a întâmplat.` }
+            ];
+            
+            const followUpResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${OPENAI_API_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: model,
+                messages: followUpMessages,
+                max_tokens: 1000,
+                temperature: 0.3,
+              }),
+            });
+            
+            if (followUpResponse.ok) {
+              const followUpData = await followUpResponse.json();
+              const generatedResponse = followUpData.choices[0]?.message?.content;
+              if (generatedResponse && generatedResponse.trim()) {
+                finalResponse = generatedResponse;
+              } else {
+                // Fallback to tool summary if OpenAI doesn't generate a response
+                finalResponse = toolSummary;
+              }
+            } else {
+              // Fallback to tool summary if OpenAI call fails
+              finalResponse = toolSummary;
+            }
+          }
         }
-      }
     }
 
     console.log('Generated response:', finalResponse);
