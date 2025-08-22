@@ -177,52 +177,56 @@ const AgentAI = () => {
           </div>
         </div>
 
-        {/* Chat Area - Full Width */}
+        {/* Chat Area - Full Width with Minimalist Design */}
         <div className="w-full">
-          <Card className={`${isMobile ? 'h-[calc(100vh-12rem)] min-h-[400px]' : 'h-[600px]'} flex flex-col mobile-card`}>
-            <CardHeader className={`border-b ${isMobile ? 'p-4' : ''}`}>
-              <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-lg' : ''}`}>
-                <Bot className={`text-primary ${isMobile ? 'w-5 h-5' : 'w-5 h-5'}`} />
-                Conversație AI
-              </CardTitle>
-            </CardHeader>
+          <div className={`${isMobile ? 'h-[calc(100vh-12rem)] min-h-[400px]' : 'h-[600px]'} flex flex-col bg-background/50 backdrop-blur-sm rounded-xl border-0 shadow-lg overflow-hidden`}>
+            {/* Minimalist Header */}
+            <div className={`${isMobile ? 'p-4' : 'p-6'} bg-background/80 backdrop-blur-sm`}>
+              <div className={`flex items-center gap-3 ${isMobile ? 'text-lg' : 'text-xl'} font-light text-foreground/80`}>
+                <Bot className={`text-primary ${isMobile ? 'w-5 h-5' : 'w-6 h-6'}`} />
+                <span>Kalina AI</span>
+              </div>
+              <p className="text-sm text-muted-foreground/70 mt-1">Bună, cum pot să te ajut astăzi?</p>
+            </div>
             
-            <CardContent className="flex-1 flex flex-col p-0">
-              <ScrollArea className={`flex-1 ${isMobile ? 'p-3' : 'p-4'}`} ref={scrollAreaRef}>
+            {/* Messages Area */}
+            <div className="flex-1 flex flex-col">
+              <ScrollArea className={`flex-1 ${isMobile ? 'px-4 py-3' : 'px-6 py-4'}`} ref={scrollAreaRef}>
                 {messages.length === 0 ? (
-                  <div className={`text-center text-muted-foreground ${isMobile ? 'py-8' : 'py-12'}`}>
-                    <Bot className={`mx-auto mb-4 text-muted-foreground/50 ${isMobile ? 'w-10 h-10' : 'w-12 h-12'}`} />
-                    <p className={isMobile ? 'text-sm' : ''}>Începe o conversație! Întreabă-mă orice despre datele tale din conversații.</p>
+                  <div className={`text-center text-muted-foreground/60 ${isMobile ? 'py-8' : 'py-16'}`}>
+                    <Bot className={`mx-auto mb-6 text-muted-foreground/30 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`} />
+                    <p className={`font-light ${isMobile ? 'text-sm' : 'text-base'}`}>Începe o conversație</p>
+                    <p className={`text-xs mt-2 text-muted-foreground/40`}>Întreabă-mă orice despre conversațiile tale</p>
                   </div>
                 ) : (
-                  <div className={`${isMobile ? 'space-y-3' : 'space-y-4'}`}>
+                  <div className={`${isMobile ? 'space-y-6' : 'space-y-8'}`}>
                     {messages.map((message) => (
                       <div
                         key={message.id}
-                        className={`flex gap-2 sm:gap-3 ${
+                        className={`flex items-start gap-3 ${
                           message.sender === 'user' ? 'justify-end' : 'justify-start'
                         }`}
                       >
                         {message.sender === 'ai' && (
-                          <div className={`bg-primary rounded-full flex items-center justify-center flex-shrink-0 ${isMobile ? 'w-7 h-7' : 'w-8 h-8'}`}>
-                            <Bot className={`text-white ${isMobile ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
+                          <div className={`bg-primary/10 border border-primary/20 rounded-full flex items-center justify-center flex-shrink-0 ${isMobile ? 'w-8 h-8' : 'w-10 h-10'}`}>
+                            <Bot className={`text-primary ${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
                           </div>
                         )}
                         
                         <div
-                          className={`${isMobile ? 'max-w-[85%]' : 'max-w-[80%]'} rounded-lg ${isMobile ? 'p-2.5' : 'p-3'} ${
+                          className={`${isMobile ? 'max-w-[85%]' : 'max-w-[75%]'} ${isMobile ? 'p-4' : 'p-5'} rounded-2xl ${
                             message.sender === 'user'
-                              ? 'bg-primary text-white'
-                              : 'bg-muted text-foreground'
-                          }`}
+                              ? 'bg-primary/10 border border-primary/20 text-foreground'
+                              : 'bg-muted/30 border border-muted text-foreground'
+                          } backdrop-blur-sm`}
                         >
-                          <p className={`whitespace-pre-wrap ${isMobile ? 'text-sm' : ''}`}>{message.content}</p>
-                          <div className={`flex items-center gap-2 ${isMobile ? 'mt-1.5' : 'mt-2'}`}>
-                            <span className={`opacity-70 ${isMobile ? 'text-xs' : 'text-xs'}`}>
+                          <p className={`whitespace-pre-wrap leading-relaxed ${isMobile ? 'text-sm' : 'text-base'}`}>{message.content}</p>
+                          <div className={`flex items-center gap-3 ${isMobile ? 'mt-3' : 'mt-4'}`}>
+                            <span className={`text-muted-foreground/60 font-light ${isMobile ? 'text-xs' : 'text-sm'}`}>
                               {message.timestamp.toLocaleTimeString()}
                             </span>
                             {message.functionCalled && (
-                              <Badge variant="outline" className={isMobile ? 'text-xs px-1.5 py-0.5' : 'text-xs'}>
+                              <Badge variant="outline" className={`text-xs px-2 py-1 bg-background/50 border-primary/30`}>
                                 {message.functionCalled}
                               </Badge>
                             )}
@@ -230,23 +234,23 @@ const AgentAI = () => {
                         </div>
                         
                         {message.sender === 'user' && (
-                          <div className={`bg-muted rounded-full flex items-center justify-center flex-shrink-0 ${isMobile ? 'w-7 h-7' : 'w-8 h-8'}`}>
-                            <User className={`${isMobile ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
+                          <div className={`bg-muted/20 border border-muted rounded-full flex items-center justify-center flex-shrink-0 ${isMobile ? 'w-8 h-8' : 'w-10 h-10'}`}>
+                            <User className={`text-muted-foreground ${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
                           </div>
                         )}
                       </div>
                     ))}
                     
                     {isLoading && (
-                      <div className={`flex ${isMobile ? 'gap-2' : 'gap-3'} justify-start`}>
-                        <div className={`bg-primary rounded-full flex items-center justify-center flex-shrink-0 ${isMobile ? 'w-7 h-7' : 'w-8 h-8'}`}>
-                          <Bot className={`text-white animate-pulse ${isMobile ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
+                      <div className={`flex items-start ${isMobile ? 'gap-3' : 'gap-3'} justify-start`}>
+                        <div className={`bg-primary/10 border border-primary/20 rounded-full flex items-center justify-center flex-shrink-0 ${isMobile ? 'w-8 h-8' : 'w-10 h-10'}`}>
+                          <Bot className={`text-primary animate-pulse ${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
                         </div>
-                        <div className={`bg-muted rounded-lg ${isMobile ? 'p-2.5' : 'p-3'}`}>
-                          <div className="flex space-x-1">
-                            <div className={`bg-muted-foreground rounded-full animate-bounce ${isMobile ? 'w-1.5 h-1.5' : 'w-2 h-2'}`}></div>
-                            <div className={`bg-muted-foreground rounded-full animate-bounce ${isMobile ? 'w-1.5 h-1.5' : 'w-2 h-2'}`} style={{ animationDelay: '0.1s' }}></div>
-                            <div className={`bg-muted-foreground rounded-full animate-bounce ${isMobile ? 'w-1.5 h-1.5' : 'w-2 h-2'}`} style={{ animationDelay: '0.2s' }}></div>
+                        <div className={`bg-muted/30 border border-muted rounded-2xl backdrop-blur-sm ${isMobile ? 'p-4' : 'p-5'}`}>
+                          <div className="flex space-x-2">
+                            <div className={`bg-muted-foreground/60 rounded-full animate-bounce ${isMobile ? 'w-2 h-2' : 'w-2.5 h-2.5'}`}></div>
+                            <div className={`bg-muted-foreground/60 rounded-full animate-bounce ${isMobile ? 'w-2 h-2' : 'w-2.5 h-2.5'}`} style={{ animationDelay: '0.1s' }}></div>
+                            <div className={`bg-muted-foreground/60 rounded-full animate-bounce ${isMobile ? 'w-2 h-2' : 'w-2.5 h-2.5'}`} style={{ animationDelay: '0.2s' }}></div>
                           </div>
                         </div>
                       </div>
@@ -255,26 +259,27 @@ const AgentAI = () => {
                 )}
               </ScrollArea>
               
-              <div className={`border-t ${isMobile ? 'p-3' : 'p-4'} mobile-safe-area`}>
-                <form onSubmit={handleSubmit} className={`flex ${isMobile ? 'gap-2' : 'gap-2'}`}>
+              {/* Input Area */}
+              <div className={`bg-background/60 backdrop-blur-sm ${isMobile ? 'p-4' : 'p-6'} mobile-safe-area`}>
+                <form onSubmit={handleSubmit} className={`flex ${isMobile ? 'gap-3' : 'gap-4'}`}>
                   <Input
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
-                    placeholder={userBalance >= 0.08 ? "Întreabă despre conversațiile tale..." : "Sold insuficient pentru întrebări"}
+                    placeholder={userBalance >= 0.08 ? "Scrie mesajul tău aici..." : "Sold insuficient pentru întrebări"}
                     disabled={isLoading || userBalance < 0.08}
-                    className={`flex-1 mobile-input ${isMobile ? 'text-base' : ''}`}
+                    className={`flex-1 bg-background/50 border-muted/40 rounded-xl backdrop-blur-sm focus:border-primary/50 transition-all duration-200 ${isMobile ? 'text-base h-12' : 'h-14'} mobile-input`}
                   />
                   <Button 
                     type="submit" 
                     disabled={isLoading || !inputMessage.trim() || userBalance < 0.08}
-                    className={`mobile-button ${userBalance < 0.08 ? "bg-gray-400" : ""} ${isMobile ? 'px-3' : ''}`}
+                    className={`bg-primary/90 hover:bg-primary rounded-xl backdrop-blur-sm transition-all duration-200 shadow-lg hover:shadow-xl mobile-button ${userBalance < 0.08 ? "opacity-50" : ""} ${isMobile ? 'px-4 h-12' : 'px-6 h-14'}`}
                   >
-                    <Send className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'}`} />
+                    <Send className={`${isMobile ? 'w-5 h-5' : 'w-5 h-5'}`} />
                   </Button>
                 </form>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </DashboardLayout>
