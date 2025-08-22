@@ -4,12 +4,12 @@ import { Navigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Card } from '@/components/ui/card';
 import { cn } from '@/utils/utils';
-import { Send, Plus, Bot, User, MessageSquare, Trash2, Edit3 } from 'lucide-react';
+import { Send, Plus, Bot, User, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useChatConversations } from '@/hooks/useChatConversations';
+import { ChatHistoryDrawer } from '@/components/ChatHistoryDrawer';
 
 interface Message {
   id: string;
@@ -35,7 +35,6 @@ const MainChat = () => {
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -168,220 +167,141 @@ const MainChat = () => {
 
   return (
     <DashboardLayout>
-      <div className="flex h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 overflow-hidden">
-        {/* Conversations Sidebar */}
-        <div className={cn(
-          "transition-all duration-300 border-r border-border/20 liquid-glass",
-          sidebarOpen ? "w-80" : "w-0 md:w-80"
-        )}>
-          <div className="h-full flex flex-col p-4">
-            {/* Sidebar Header */}
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-foreground">Conversații</h3>
-              <Button 
-                onClick={handleNewChat}
-                size="sm"
-                className="glass-button"
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-
-            {/* Conversations List */}
-            <div className="flex-1 overflow-y-auto space-y-2">
-              {conversations.map((conversation) => (
-                <div
-                  key={conversation.id}
-                  className={cn(
-                    "p-3 rounded-xl cursor-pointer transition-all duration-200 group liquid-glass",
-                    currentConversationId === conversation.id 
-                      ? "bg-primary/10 border border-primary/20" 
-                      : "hover:bg-black/5"
-                  )}
-                  onClick={() => loadConversation(conversation.id)}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {conversation.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {new Date(conversation.updated_at).toLocaleDateString('ro-RO')}
-                      </p>
-                    </div>
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteConversation(conversation.id);
-                      }}
-                      size="sm"
-                      variant="ghost"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+      <div className="flex flex-col h-screen bg-background">
+        {/* Header */}
+        <div className="border-b border-border flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-3">
+            <ChatHistoryDrawer
+              conversations={conversations}
+              currentConversationId={currentConversationId}
+              onLoadConversation={loadConversation}
+              onDeleteConversation={deleteConversation}
+              onNewChat={handleNewChat}
+            />
+            <h1 className="text-xl font-semibold">Kalina AI</h1>
           </div>
+          <Button 
+            onClick={handleNewChat}
+            variant="ghost"
+            size="sm"
+            className="rounded-full hover:bg-muted"
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
         </div>
 
-        {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <div className="border-b border-border/20 liquid-glass">
-            <div className="flex items-center justify-between px-6 py-4">
-              <div className="flex items-center space-y-1">
-                <div className="flex items-center gap-3">
-                  <Button
-                    onClick={() => setSidebarOpen(!sidebarOpen)}
-                    variant="ghost"
-                    size="sm"
-                    className="md:hidden glass-button"
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                  </Button>
-                  <div>
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                      Kalina AI
-                    </h1>
-                    <p className="text-sm text-muted-foreground">
-                      Bună, cum pot să te ajut astăzi?
-                    </p>
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-3xl mx-auto px-4 py-6">
+            {localMessages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full min-h-[60vh] text-center">
+                <div className="mb-8">
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                    <Sparkles className="w-8 h-8 text-primary" />
                   </div>
-                </div>
-              </div>
-              <Button 
-                onClick={handleNewChat}
-                variant="outline"
-                size="sm"
-                className="glass-button flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Nou Chat</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto px-6 py-6">
-            <div className="max-w-4xl mx-auto space-y-6">
-              {localMessages.length === 0 ? (
-                <div className="text-center py-20">
-                  <div className="liquid-glass mx-auto w-32 h-32 rounded-full flex items-center justify-center mb-6">
-                    <Bot className="w-16 h-16 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-foreground mb-3">
-                    Începe o conversație
-                  </h3>
-                  <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-                    Scrie mesajul tău mai jos pentru a începe să vorbești cu Kalina AI. 
-                    Pot să te ajut cu diverse întrebări și sarcini.
+                  <h2 className="text-2xl font-semibold mb-2">Bună! Sunt Kalina AI</h2>
+                  <p className="text-muted-foreground text-lg">
+                    Cum te pot ajuta astăzi?
                   </p>
                 </div>
-              ) : (
-                localMessages.map((message) => (
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {localMessages.map((message) => (
                   <div
                     key={message.id}
                     className={cn(
-                      "flex w-full animate-fade-in",
-                      message.isUser ? "justify-end" : "justify-start"
+                      "group",
+                      message.isUser ? "ml-12 md:ml-24" : "mr-12 md:mr-24"
                     )}
                   >
-                    <div
-                      className={cn(
-                        "flex max-w-[85%] gap-3",
-                        message.isUser ? "flex-row-reverse" : "flex-row"
-                      )}
-                    >
+                    <div className="flex gap-3">
                       <div className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 mt-1 liquid-glass",
+                        "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white",
                         message.isUser 
-                          ? "bg-primary text-primary-foreground" 
-                          : "bg-muted"
+                          ? "bg-primary" 
+                          : "bg-muted-foreground"
                       )}>
                         {message.isUser ? (
-                          <User className="w-5 h-5" />
+                          <User className="w-4 h-4" />
                         ) : (
-                          <Bot className="w-5 h-5" />
+                          <Bot className="w-4 h-4" />
                         )}
                       </div>
-                      <div className={cn(
-                        "px-6 py-4 rounded-2xl liquid-glass transition-all duration-200",
-                        message.isUser 
-                          ? "bg-primary/5 border border-primary/20" 
-                          : "bg-muted/30 border border-border/20"
-                      )}>
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">
+                            {message.isUser ? 'Tu' : 'Kalina AI'}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {message.timestamp.toLocaleTimeString('ro-RO', { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
+                          </span>
+                        </div>
                         <div className="prose prose-sm max-w-none">
-                          <p className="mb-0 whitespace-pre-wrap leading-relaxed text-foreground">
+                          <p className="text-foreground whitespace-pre-wrap leading-relaxed">
                             {message.text}
                           </p>
                         </div>
-                        <div className="mt-2 text-xs text-muted-foreground">
-                          {message.timestamp.toLocaleTimeString('ro-RO', { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          })}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Typing indicator */}
+                {isLoading && (
+                  <div className="mr-12 md:mr-24">
+                    <div className="flex gap-3">
+                      <div className="w-8 h-8 rounded-full bg-muted-foreground flex items-center justify-center flex-shrink-0 text-white">
+                        <Bot className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">Kalina AI</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
+                          <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                          <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
                         </div>
                       </div>
                     </div>
                   </div>
-                ))
-              )}
+                )}
 
-              {/* Typing indicator */}
-              {isLoading && (
-                <div className="flex justify-start animate-fade-in">
-                  <div className="flex gap-3 max-w-[85%]">
-                    <div className="w-10 h-10 rounded-full bg-muted liquid-glass flex items-center justify-center flex-shrink-0 mt-1">
-                      <Bot className="w-5 h-5" />
-                    </div>
-                    <div className="px-6 py-4 rounded-2xl bg-muted/30 border border-border/20 liquid-glass">
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                        <span className="ml-2 text-sm text-muted-foreground">Kalina scrie...</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div ref={messagesEndRef} />
-            </div>
+                <div ref={messagesEndRef} />
+              </div>
+            )}
           </div>
+        </div>
 
-          {/* Input Area */}
-          <div className="border-t border-border/20 liquid-glass">
-            <div className="max-w-4xl mx-auto px-6 py-4">
-              <form onSubmit={handleSendMessage} className="flex gap-3">
-                <div className="flex-1 relative">
-                  <Textarea
-                    ref={textareaRef}
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Scrie mesajul tău aici..."
-                    className="min-h-[52px] max-h-32 resize-none pr-12 glass-input transition-all duration-200 focus:shadow-lg"
-                    disabled={isLoading}
-                  />
-                </div>
+        {/* Input Area */}
+        <div className="border-t border-border bg-background">
+          <div className="max-w-3xl mx-auto px-4 py-4">
+            <form onSubmit={handleSendMessage} className="relative">
+              <div className="relative flex items-end gap-2 min-h-[48px] px-4 py-3 bg-muted/30 rounded-2xl border border-border/50 focus-within:border-primary/50 transition-colors">
+                <Textarea
+                  ref={textareaRef}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Trimite un mesaj..."
+                  className="flex-1 min-h-[24px] max-h-32 resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 text-sm placeholder:text-muted-foreground"
+                  disabled={isLoading}
+                  rows={1}
+                />
                 <Button 
                   type="submit" 
                   size="sm"
-                  className="h-[52px] px-6 glass-button"
+                  className="rounded-full w-8 h-8 p-0 flex-shrink-0"
                   disabled={!inputValue.trim() || isLoading}
                 >
-                  <Send className="w-5 h-5" />
+                  <Send className="w-4 h-4" />
                 </Button>
-              </form>
-              
-              <div className="mt-2 text-xs text-muted-foreground text-center">
-                Apasă Enter pentru a trimite, Shift+Enter pentru linie nouă
               </div>
-            </div>
+            </form>
           </div>
         </div>
       </div>
