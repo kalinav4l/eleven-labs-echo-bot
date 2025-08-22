@@ -1,13 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/components/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/utils/utils';
-import { Send, Plus, Bot, User, MessageSquare, Trash2, Menu, Mic, Paperclip, MoreHorizontal } from 'lucide-react';
+import { 
+  Send, Plus, Bot, User, MessageSquare, Trash2, Menu, Mic, Paperclip, 
+  Home, Settings, Brain, FileText, Phone, TrendingUp, CalendarDays, 
+  Smartphone, Zap, CreditCard, Shield, Search, Sparkles 
+} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useChatConversations } from '@/hooks/useChatConversations';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Message {
   id: string;
@@ -18,6 +23,7 @@ interface Message {
 
 const MainChat = () => {
   const { user, loading: authLoading } = useAuth();
+  const location = useLocation();
   const {
     conversations,
     currentConversationId,
@@ -36,6 +42,31 @@ const MainChat = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Check if user is the specific admin user
+  const isSpecificAdmin = user?.id === 'a698e3c2-f0e6-4f42-8955-971d91e725ce' && 
+                         user?.email === 'mariusvirlan109@gmail.com';
+
+  const isActive = (path: string) => location.pathname === path;
+
+  // Navigation items
+  const aiAnalyticsItems = [
+    { title: "AI Agents", url: "/account/kalina-agents", icon: Brain },
+    { title: "Rapoarte", url: "/account/conversation-analytics", icon: TrendingUp },
+    { title: "Chat AI", url: "/account/agent-ai", icon: Sparkles },
+  ];
+
+  const communicationsItems = [
+    { title: "Apeluri", url: "/account/outbound", icon: Phone },
+    { title: "Programări", url: "/account/calendar", icon: CalendarDays },
+    { title: "Numere", url: "/account/phone-numbers", icon: Smartphone },
+    { title: "Test Apel", url: "/account/test-call", icon: Zap },
+  ];
+
+  const dataToolsItems = [
+    { title: "Transcrieri", url: "/account/transcript", icon: FileText },
+    { title: "Extragere Date", url: "/account/scraping", icon: Search },
+  ];
 
   // Auto-focus on input when component mounts
   useEffect(() => {
@@ -192,59 +223,213 @@ const MainChat = () => {
         sidebarOpen ? "w-80" : "w-0",
         "absolute md:relative h-[calc(100vh-3rem)]"
       )}>
-        {/* Sidebar Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <Button 
-            onClick={handleNewChat}
-            className="flex items-center gap-2 flex-1 justify-start h-10 px-3 rounded-lg border border-border hover:bg-muted/50 bg-background text-foreground mr-2"
-            variant="outline"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Nou chat</span>
-          </Button>
-          <Button
-            onClick={() => setSidebarOpen(false)}
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 md:hidden"
-          >
-            <Trash2 className="w-3 h-3" />
-          </Button>
+        {/* Sidebar Header with Logo */}
+        <div className="p-4 border-b border-border">
+          <Link to="/account" className="flex items-center gap-3 text-lg font-semibold text-foreground hover:text-foreground/80 transition-colors">
+            <Avatar className="w-8 h-8">
+              <AvatarImage alt="Kalina AI" src="/lovable-uploads/f617a44e-5bc3-46cb-8232-3110c0cee83d.png" />
+              <AvatarFallback className="bg-muted text-muted-foreground">KA</AvatarFallback>
+            </Avatar>
+            <span>Kalina AI</span>
+          </Link>
         </div>
 
-        {/* Conversations List */}
-        <div className="flex-1 overflow-y-auto p-2">
-          <div className="space-y-1">
-            {conversations.map((conversation) => (
-              <div
-                key={conversation.id}
+        {/* Sidebar Content */}
+        <div className="flex-1 overflow-y-auto p-0 space-y-0">
+          {/* Home Section */}
+          <div className="p-2">
+            <div className="space-y-1">
+              <Link
+                to="/"
                 className={cn(
-                  "group flex items-center gap-2 p-3 rounded-lg cursor-pointer transition-colors relative",
-                  currentConversationId === conversation.id 
-                    ? "bg-muted" 
-                    : "hover:bg-muted/50"
+                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                  isActive('/') || isActive('/account') 
+                    ? "bg-muted text-foreground font-medium" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 )}
-                onClick={() => loadConversation(conversation.id)}
               >
-                <MessageSquare className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm truncate text-foreground">
-                    {conversation.title}
-                  </p>
-                </div>
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteConversation(conversation.id);
-                  }}
-                  size="sm"
-                  variant="ghost"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 p-0 hover:bg-destructive/10"
+                <Home className="w-4 h-4" />
+                <span>Home</span>
+              </Link>
+              <Link
+                to="/dashboard"
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                  isActive('/dashboard') 
+                    ? "bg-muted text-foreground font-medium" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+              >
+                <TrendingUp className="w-4 h-4" />
+                <span>Dashboard</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* AI & Analytics */}
+          <div className="p-2">
+            <h3 className="px-3 py-2 text-xs uppercase tracking-wider text-muted-foreground font-medium">
+              AI & Analytics
+            </h3>
+            <div className="space-y-1">
+              {aiAnalyticsItems.map((item) => (
+                <Link
+                  key={item.title}
+                  to={item.url}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                    isActive(item.url) 
+                      ? "bg-muted text-foreground font-medium" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
                 >
-                  <Trash2 className="w-3 h-3 text-destructive" />
-                </Button>
-              </div>
-            ))}
+                  <item.icon className="w-4 h-4" />
+                  <span>{item.title}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Communications */}
+          <div className="p-2">
+            <h3 className="px-3 py-2 text-xs uppercase tracking-wider text-muted-foreground font-medium">
+              Communications
+            </h3>
+            <div className="space-y-1">
+              {communicationsItems.map((item) => (
+                <Link
+                  key={item.title}
+                  to={item.url}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                    isActive(item.url) 
+                      ? "bg-muted text-foreground font-medium" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span>{item.title}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Data & Tools */}
+          <div className="p-2">
+            <h3 className="px-3 py-2 text-xs uppercase tracking-wider text-muted-foreground font-medium">
+              Data & Tools
+            </h3>
+            <div className="space-y-1">
+              {dataToolsItems.map((item) => (
+                <Link
+                  key={item.title}
+                  to={item.url}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                    isActive(item.url) 
+                      ? "bg-muted text-foreground font-medium" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span>{item.title}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Chat Conversations */}
+          <div className="p-2 border-t border-border">
+            <div className="flex items-center justify-between px-3 py-2">
+              <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                Chat Conversations
+              </h3>
+              <Button 
+                onClick={handleNewChat}
+                size="sm"
+                className="h-7 w-7 p-0 rounded-md"
+                variant="outline"
+              >
+                <Plus className="w-3 h-3" />
+              </Button>
+            </div>
+            <div className="space-y-1 max-h-64 overflow-y-auto">
+              {conversations.map((conversation) => (
+                <div
+                  key={conversation.id}
+                  className={cn(
+                    "group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors relative",
+                    currentConversationId === conversation.id 
+                      ? "bg-muted text-foreground" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                  onClick={() => loadConversation(conversation.id)}
+                >
+                  <MessageSquare className="w-4 h-4 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm truncate">
+                      {conversation.title}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteConversation(conversation.id);
+                    }}
+                    size="sm"
+                    variant="ghost"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 p-0 hover:bg-destructive/10"
+                  >
+                    <Trash2 className="w-3 h-3 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar Footer */}
+        <div className="p-2 border-t border-border">
+          <div className="space-y-1">
+            {/* Admin Panel - Only for specific user */}
+            {isSpecificAdmin && (
+              <Link
+                to="/admin"
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors bg-destructive/10 text-destructive hover:bg-destructive/20",
+                  isActive('/admin') && "font-medium"
+                )}
+              >
+                <Shield className="w-4 h-4" />
+                <span className="font-medium">Admin Panel</span>
+              </Link>
+            )}
+            
+            <Link
+              to="/pricing"
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                isActive('/pricing') 
+                  ? "bg-muted text-foreground font-medium" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}
+            >
+              <CreditCard className="w-4 h-4" />
+              <span>Pricing</span>
+            </Link>
+            
+            <Link
+              to="/account/settings"
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                isActive('/account/settings') 
+                  ? "bg-muted text-foreground font-medium" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}
+            >
+              <Settings className="w-4 h-4" />
+              <span>Settings</span>
+            </Link>
           </div>
         </div>
       </div>
