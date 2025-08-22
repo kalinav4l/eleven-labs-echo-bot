@@ -13,13 +13,20 @@ serve(async (req) => {
 
   try {
     const body = await req.json()
+    console.log('Received request body:', JSON.stringify(body, null, 2))
     
     // Get ElevenLabs API key from Supabase Secrets
     const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY')
     
     if (!elevenLabsApiKey) {
-      console.error('Missing ElevenLabs API key')
-      throw new Error('ElevenLabs API key not configured in Supabase Secrets')
+      console.error('Missing ElevenLabs API key in Supabase Secrets')
+      return new Response(
+        JSON.stringify({ error: 'ElevenLabs API key not configured' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
     }
 
     console.log('Creating ElevenLabs agent with request:', JSON.stringify(body, null, 2))
@@ -67,10 +74,21 @@ serve(async (req) => {
       body: JSON.stringify(elevenLabsRequest),
     })
 
+    console.log('ElevenLabs response status:', response.status)
+    
     if (!response.ok) {
       const errorData = await response.text()
       console.error('ElevenLabs API error:', response.status, errorData)
-      throw new Error(`ElevenLabs API error: ${response.status} - ${errorData}`)
+      return new Response(
+        JSON.stringify({ 
+          error: `ElevenLabs API error: ${response.status}`,
+          details: errorData
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
     }
 
     const data = await response.json()
