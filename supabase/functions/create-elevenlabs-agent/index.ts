@@ -18,28 +18,40 @@ serve(async (req) => {
     const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY')
     
     if (!elevenLabsApiKey) {
+      console.error('Missing ElevenLabs API key')
       throw new Error('ElevenLabs API key not configured in Supabase Secrets')
     }
 
     console.log('Creating ElevenLabs agent with request:', JSON.stringify(body, null, 2))
 
-    // Transform the request to use the new conversation_config structure
-    const elevenLabsRequest = {
-      name: body.name,
-      conversation_config: {
-        agent: {
-          prompt: {
-            prompt: body.system_prompt
+    // Handle both old and new request formats
+    let elevenLabsRequest;
+    
+    if (body.conversation_config) {
+      // New format - use directly
+      elevenLabsRequest = {
+        name: body.name,
+        conversation_config: body.conversation_config
+      }
+    } else {
+      // Old format - transform to new format
+      elevenLabsRequest = {
+        name: body.name,
+        conversation_config: {
+          agent: {
+            prompt: {
+              prompt: body.system_prompt
+            },
+            first_message: body.first_message || `Bună ziua! Sunt ${body.name}. Cum vă pot ajuta astăzi?`,
+            language: body.language || "ro"
           },
-          first_message: body.first_message || `Bună ziua! Sunt ${body.name}. Cum vă pot ajuta astăzi?`,
-          language: body.language || "ro"
-        },
-        tts: {
-          voice_id: body.voice_id || '9BWtsMINqrJLrRacOk9x',
-          model_id: "eleven_multilingual_v2"
-        },
-        asr: {
-          quality: "high"
+          tts: {
+            voice_id: body.voice_id || '9BWtsMINqrJLrRacOk9x',
+            model_id: "eleven_multilingual_v2"
+          },
+          asr: {
+            quality: "high"
+          }
         }
       }
     }
