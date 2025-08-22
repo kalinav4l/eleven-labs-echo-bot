@@ -630,9 +630,9 @@ const executeInitiateCall = async (userId: string, contactName: string, phoneNum
     // Additional success info if available
     if (callResult.elevenlabs_data) {
       if (callResult.elevenlabs_data.success) {
-        stepByStepLog += `   • ElevenLabs: ✅ Conectat cu succes\n`;
+        stepByStepLog += `   • Serviciu vocal: ✅ Conectat cu succes\n`;
       } else {
-        stepByStepLog += `   • ElevenLabs: ⚠️ ${callResult.elevenlabs_data.message}\n`;
+        stepByStepLog += `   • Serviciu vocal: ⚠️ ${callResult.elevenlabs_data.message}\n`;
       }
     }
     

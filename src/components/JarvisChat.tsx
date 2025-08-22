@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { Mic, MicOff, Volume2, VolumeX, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { TypingAnimation } from '@/components/TypingAnimation'
 import { cn } from '@/utils/utils.ts'
 
 interface Message {
@@ -102,7 +103,14 @@ export const JarvisChat: React.FC<JarvisChatProps> = ({
                     : "bg-blue-600/30 text-blue-100 border border-blue-500/50"
                 )}
               >
-                {message.text}
+                {message.isUser ? (
+                  message.text
+                ) : (
+                  <TypingAnimation 
+                    text={message.text} 
+                    speed={25}
+                  />
+                )}
               </div>
             </div>
           ))
