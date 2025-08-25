@@ -66,79 +66,176 @@ serve(async (req) => {
       throw new Error('Missing required fields: phone_number, callback_time');
     }
 
-    // Process callback time to scheduled datetime
+    // Use AI to analyze the conversation and determine exact callback time
     let scheduledDatetime;
     const now = new Date();
     
-    // Parse callback_time and create scheduled datetime
-    const callbackTime = payload.callback_time.toLowerCase();
-    if (callbackTime.includes('minute')) {
-      const minutes = parseInt(callbackTime.match(/\d+/)?.[0] || '5');
-      scheduledDatetime = new Date(now.getTime() + minutes * 60 * 1000);
-    } else if (callbackTime.includes('hour')) {
-      const hours = parseInt(callbackTime.match(/\d+/)?.[0] || '1');
-      scheduledDatetime = new Date(now.getTime() + hours * 60 * 60 * 1000);
-    } else if (callbackTime.includes('tomorrow')) {
-      // Extract specific time if provided (e.g., "tomorrow 10:00", "tomorrow at 10:00")
-      const timeMatch = callbackTime.match(/(?:tomorrow|mâine).*?(\d{1,2}):?(\d{2})?/i);
-      if (timeMatch) {
-        const hour = parseInt(timeMatch[1]);
-        const minute = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
-        scheduledDatetime = new Date(now);
-        scheduledDatetime.setDate(scheduledDatetime.getDate() + 1);
-        scheduledDatetime.setHours(hour, minute, 0, 0);
-      } else {
-        // Default to 10:00 AM tomorrow if no specific time mentioned
-        scheduledDatetime = new Date(now);
-        scheduledDatetime.setDate(scheduledDatetime.getDate() + 1);
-        scheduledDatetime.setHours(10, 0, 0, 0);
-      }
-    } else if (callbackTime.includes('today') || callbackTime.includes('azi')) {
-      // Extract specific time for today
-      const timeMatch = callbackTime.match(/(?:today|azi).*?(\d{1,2}):?(\d{2})?/i);
-      if (timeMatch) {
-        const hour = parseInt(timeMatch[1]);
-        const minute = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
-        scheduledDatetime = new Date(now);
-        scheduledDatetime.setHours(hour, minute, 0, 0);
-      } else {
-        // Default to 2 hours from now if no specific time
-        scheduledDatetime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-      }
-    } else {
-      // Try to parse specific time patterns including Romanian format "15 și 30"
-      let timeMatch = callbackTime.match(/(\d{1,2}):(\d{2})/); // Standard format "15:30"
-      if (!timeMatch) {
-        timeMatch = callbackTime.match(/(\d{1,2})\s*(?:și|si|şi)\s*(\d{2})/i); // Romanian format "15 și 30"
-      }
-      if (!timeMatch) {
-        timeMatch = callbackTime.match(/la\s*(\d{1,2}):?(\d{2})?/i); // "la 15:30" or "la 15"
-      }
-      if (!timeMatch) {
-        timeMatch = callbackTime.match(/(\d{1,2})\s*(?:h|ore|ora)/i); // "15h" or "15 ora"
+    try {
+      console.log('🤖 Analyzing conversation with AI to determine callback time...');
+      
+      // Get the conversation transcript if available
+      let conversationContext = '';
+      if (payload.conversation_id) {
+        const { data: conversation } = await supabase
+          .from('call_history')
+          .select('dialog_json, summary')
+          .eq('conversation_id', payload.conversation_id)
+          .maybeSingle();
+        
+        if (conversation) {
+          conversationContext = conversation.summary || '';
+          if (conversation.dialog_json) {
+            try {
+              const dialog = JSON.parse(conversation.dialog_json);
+              if (dialog.transcript) {
+                conversationContext += '\n' + JSON.stringify(dialog.transcript);
+              }
+            } catch (e) {
+              console.log('Could not parse dialog JSON');
+            }
+          }
+        }
       }
       
-      if (timeMatch) {
-        const hour = parseInt(timeMatch[1]);
-        const minute = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
-        scheduledDatetime = new Date(now);
+      // Prepare the prompt for GPT analysis
+      const analysisPrompt = `
+Analizează următoarea conversație și extrage EXACT când vrea clientul să fie sunat înapoi.
+
+Context conversație: ${conversationContext}
+Cererea callback: ${payload.callback_time}
+Client nume: ${payload.client_name || 'Client'}
+Motivul: ${payload.reason || 'Nu specificat'}
+
+Data și ora curentă: ${now.toISOString()}
+
+INSTRUCȚIUNI:
+1. Analizează cu atenție când EXACT vrea clientul să fie sunat
+2. Dacă zice "mâine la 10", "tomorrow at 10", "mâine la ora 10:00" = programează pentru mâine la 10:00
+3. Dacă zice "la 15 și 30", "la 15:30", "la ora 15 și 30" = programează pentru astăzi sau mâine la 15:30
+4. Dacă ora a trecut pentru astăzi, programează pentru mâine
+5. Returnează DOAR JSON cu formatul: {"hour": 15, "minute": 30, "day": "today"/"tomorrow"}
+
+Exemplu răspuns:
+{"hour": 10, "minute": 0, "day": "tomorrow"}
+`;
+
+      const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+      if (!openaiApiKey) {
+        console.log('❌ OpenAI API key not found, using fallback parsing');
+        throw new Error('No OpenAI API key');
+      }
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: 'Ești un asistent care analizează conversații și extrage informații precise despre timp. Returnezi DOAR JSON valid.'
+            },
+            {
+              role: 'user',
+              content: analysisPrompt
+            }
+          ],
+          temperature: 0.1,
+          max_tokens: 100
+        }),
+      });
+
+      if (response.ok) {
+        const aiResult = await response.json();
+        const aiResponse = aiResult.choices[0].message.content.trim();
+        console.log('🤖 AI Analysis Result:', aiResponse);
         
-        // If time is in the past today, schedule for tomorrow
-        const testTime = new Date(now);
-        testTime.setHours(hour, minute, 0, 0);
-        if (testTime <= now) {
-          scheduledDatetime.setDate(scheduledDatetime.getDate() + 1);
-        }
-        scheduledDatetime.setHours(hour, minute, 0, 0);
-      } else {
-        // Try to parse as ISO timestamp or relative time
         try {
-          scheduledDatetime = new Date(payload.callback_time);
-          if (isNaN(scheduledDatetime.getTime())) {
-            throw new Error('Invalid date');
+          // Extract JSON from AI response
+          const jsonMatch = aiResponse.match(/\{[^}]*\}/);
+          if (jsonMatch) {
+            const timeData = JSON.parse(jsonMatch[0]);
+            console.log('📅 Parsed time data:', timeData);
+            
+            scheduledDatetime = new Date(now);
+            
+            if (timeData.day === 'tomorrow') {
+              scheduledDatetime.setDate(scheduledDatetime.getDate() + 1);
+            }
+            
+            scheduledDatetime.setHours(timeData.hour || 10, timeData.minute || 0, 0, 0);
+            
+            // If time is in the past and it's "today", move to tomorrow
+            if (timeData.day === 'today' && scheduledDatetime <= now) {
+              scheduledDatetime.setDate(scheduledDatetime.getDate() + 1);
+            }
+            
+            console.log('✅ AI determined callback time:', scheduledDatetime.toISOString());
+          } else {
+            throw new Error('No valid JSON found in AI response');
           }
-        } catch {
-          // Default to 10 minutes if parsing fails
+        } catch (parseError) {
+          console.error('❌ Error parsing AI response:', parseError);
+          throw parseError;
+        }
+      } else {
+        console.error('❌ OpenAI API error:', response.status);
+        throw new Error('OpenAI API failed');
+      }
+      
+    } catch (aiError) {
+      console.log('⚠️ AI analysis failed, falling back to manual parsing:', aiError.message);
+      
+      // Fallback to manual parsing
+      const callbackTime = payload.callback_time.toLowerCase();
+      if (callbackTime.includes('minute')) {
+        const minutes = parseInt(callbackTime.match(/\d+/)?.[0] || '5');
+        scheduledDatetime = new Date(now.getTime() + minutes * 60 * 1000);
+      } else if (callbackTime.includes('hour')) {
+        const hours = parseInt(callbackTime.match(/\d+/)?.[0] || '1');
+        scheduledDatetime = new Date(now.getTime() + hours * 60 * 60 * 1000);
+      } else if (callbackTime.includes('tomorrow') || callbackTime.includes('mâine')) {
+        // Extract specific time if provided
+        const timeMatch = callbackTime.match(/(?:tomorrow|mâine).*?(\d{1,2}):?(\d{2})?/i);
+        if (timeMatch) {
+          const hour = parseInt(timeMatch[1]);
+          const minute = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
+          scheduledDatetime = new Date(now);
+          scheduledDatetime.setDate(scheduledDatetime.getDate() + 1);
+          scheduledDatetime.setHours(hour, minute, 0, 0);
+        } else {
+          // Default to 10:00 AM tomorrow
+          scheduledDatetime = new Date(now);
+          scheduledDatetime.setDate(scheduledDatetime.getDate() + 1);
+          scheduledDatetime.setHours(10, 0, 0, 0);
+        }
+      } else {
+        // Try to parse specific time patterns including Romanian format
+        let timeMatch = callbackTime.match(/(\d{1,2}):(\d{2})/); // "15:30"
+        if (!timeMatch) {
+          timeMatch = callbackTime.match(/(\d{1,2})\s*(?:și|si|şi)\s*(\d{2})/i); // "15 și 30"
+        }
+        if (!timeMatch) {
+          timeMatch = callbackTime.match(/la\s*(\d{1,2}):?(\d{2})?/i); // "la 15:30"
+        }
+        
+        if (timeMatch) {
+          const hour = parseInt(timeMatch[1]);
+          const minute = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
+          scheduledDatetime = new Date(now);
+          
+          // If time is in the past today, schedule for tomorrow
+          const testTime = new Date(now);
+          testTime.setHours(hour, minute, 0, 0);
+          if (testTime <= now) {
+            scheduledDatetime.setDate(scheduledDatetime.getDate() + 1);
+          }
+          scheduledDatetime.setHours(hour, minute, 0, 0);
+        } else {
+          // Default to 10 minutes if all parsing fails
           scheduledDatetime = new Date(now.getTime() + 10 * 60 * 1000);
         }
       }
