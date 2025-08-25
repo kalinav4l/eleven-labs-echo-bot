@@ -79,10 +79,43 @@ serve(async (req) => {
       const hours = parseInt(callbackTime.match(/\d+/)?.[0] || '1');
       scheduledDatetime = new Date(now.getTime() + hours * 60 * 60 * 1000);
     } else if (callbackTime.includes('tomorrow')) {
-      scheduledDatetime = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      // Extract specific time if provided (e.g., "tomorrow 10:00", "tomorrow at 10:00")
+      const timeMatch = callbackTime.match(/(?:tomorrow|mâine).*?(\d{1,2}):?(\d{2})?/i);
+      if (timeMatch) {
+        const hour = parseInt(timeMatch[1]);
+        const minute = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
+        scheduledDatetime = new Date(now);
+        scheduledDatetime.setDate(scheduledDatetime.getDate() + 1);
+        scheduledDatetime.setHours(hour, minute, 0, 0);
+      } else {
+        // Default to 10:00 AM tomorrow if no specific time mentioned
+        scheduledDatetime = new Date(now);
+        scheduledDatetime.setDate(scheduledDatetime.getDate() + 1);
+        scheduledDatetime.setHours(10, 0, 0, 0);
+      }
+    } else if (callbackTime.includes('today') || callbackTime.includes('azi')) {
+      // Extract specific time for today
+      const timeMatch = callbackTime.match(/(?:today|azi).*?(\d{1,2}):?(\d{2})?/i);
+      if (timeMatch) {
+        const hour = parseInt(timeMatch[1]);
+        const minute = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
+        scheduledDatetime = new Date(now);
+        scheduledDatetime.setHours(hour, minute, 0, 0);
+      } else {
+        // Default to 2 hours from now if no specific time
+        scheduledDatetime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+      }
     } else {
-      // Default to 10 minutes
-      scheduledDatetime = new Date(now.getTime() + 10 * 60 * 1000);
+      // Try to parse as ISO timestamp or relative time
+      try {
+        scheduledDatetime = new Date(payload.callback_time);
+        if (isNaN(scheduledDatetime.getTime())) {
+          throw new Error('Invalid date');
+        }
+      } catch {
+        // Default to 10 minutes if parsing fails
+        scheduledDatetime = new Date(now.getTime() + 10 * 60 * 1000);
+      }
     }
 
     // Normalize phone number
