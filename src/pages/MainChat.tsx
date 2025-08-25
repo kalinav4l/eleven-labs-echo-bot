@@ -158,19 +158,27 @@ const MainChat = () => {
   };
   return <DashboardLayout>
 
-        {/* Header */}
-        <div className=" border-b border-border flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <ChatHistoryDrawer conversations={conversations} currentConversationId={currentConversationId} onLoadConversation={loadConversation} onDeleteConversation={deleteConversation} onNewChat={handleNewChat} />
-            <h1 className="text-xl font-semibold">Kalina AI</h1>
+        {/* Fixed Header (aligned like the fixed input) */}
+        <div className="fixed inset-x-0 top-0 z-50 pointer-events-none">
+          <div className="flex justify-center px-4 transform md:translate-x-16 lg:translate-x-24"> {/* nudge right on md+ */}
+            <div className="w-full max-w-6xl pointer-events-auto">
+              <div className="border-b bg-white border-border flex items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <ChatHistoryDrawer conversations={conversations} currentConversationId={currentConversationId} onLoadConversation={loadConversation} onDeleteConversation={deleteConversation} onNewChat={handleNewChat} />
+                  <h1 className="text-xl font-semibold">Kalina AI</h1>
+                </div>
+                <div className="flex-shrink-0">
+                  <Button onClick={handleNewChat} variant="ghost" size="sm" className="rounded-full hover:bg-muted">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
-          <Button onClick={handleNewChat} variant="ghost" size="sm" className="rounded-full hover:bg-muted">
-            <Plus className="w-4 h-4" />
-          </Button>
         </div>
 
-        {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto">
+  {/* Messages Area */}
+  <div className="flex-1 overflow-y-auto pt-[64px]"> {/* padding to account for fixed header */}
           {/* Full-bleed background wrapper - fills available interior width and height */}
           <div className="w-full bg-white min-h-[calc(90vh-8rem)]">
             <div ref={messagesContainerRef} className="relative max-w-3xl mx-auto px-4 py-6 pb-32">
@@ -207,49 +215,67 @@ const MainChat = () => {
               </div> :
           // ===== Conversation View =====
           <div className="space-y-6">
-                {localMessages.map(message => <div key={message.id} className={cn('group', message.isUser ? 'ml-12 md:ml-24' : 'mr-12 md:mr-24')}>
-                    <div className="flex gap-3">
-                      <div className={cn('w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white', message.isUser ? 'bg-primary' : 'bg-muted-foreground')}>
+                {localMessages.map(message => (
+                  <div
+                    key={message.id}
+                    className={cn(
+                      'group max-w-full',
+                      message.isUser ? 'ml-12 md:ml-24 flex justify-end' : 'mr-12 md:mr-24 flex justify-start'
+                    )}
+                  >
+                    <div className={cn('flex items-end gap-3', message.isUser ? 'flex-row-reverse' : '')}>
+                      <div
+                        className={cn(
+                          'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0',
+                          message.isUser ? 'bg-black text-white' : 'bg-muted-foreground text-white'
+                        )}
+                      >
                         {message.isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                       </div>
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">{message.isUser ? 'Tu' : 'Kalina AI'}</span>
+
+                      <div className={cn('space-y-2', message.isUser ? 'text-right' : 'text-left')}>
+                        <div className={cn('flex items-center gap-2', message.isUser ? 'justify-end' : 'justify-start')}>
+                          {!message.isUser && <span className="font-medium text-sm">Kalina AI</span>}
                           <span className="text-xs text-muted-foreground">
                             {message.timestamp.toLocaleTimeString('ro-RO', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
                           </span>
                         </div>
-                        <div className="prose prose-sm max-w-none">
-                          <p className="text-foreground whitespace-pre-wrap leading-relaxed">{message.text}</p>
+
+                        <div>
+                          <div className={cn(
+                            'inline-block rounded-lg px-3 py-2 prose-sm max-w-[60ch] whitespace-pre-wrap leading-relaxed',
+                            message.isUser ? 'bg-gray-100 text-black' : 'bg-muted/10 text-foreground'
+                          )}>
+                            {message.text}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>)}
+                  </div>
+                ))}
 
-                {isLoading && <div className="mr-12 md:mr-24">
-                    <div className="flex gap-3">
+                {isLoading && (
+                  <div className="mr-12 md:mr-24 flex justify-start">
+                    <div className="flex items-end gap-3">
                       <div className="w-8 h-8 rounded-full bg-muted-foreground flex items-center justify-center flex-shrink-0 text-white">
                         <Bot className="w-4 h-4" />
                       </div>
-                      <div className="flex-1 space-y-2">
+                      <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-sm">Kalina AI</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
-                          <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{
-                      animationDelay: '0.1s'
-                    }} />
-                          <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{
-                      animationDelay: '0.2s'
-                    }} />
+                          <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                          <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
                         </div>
                       </div>
                     </div>
-                  </div>}
+                  </div>
+                )}
 
                 <div ref={messagesEndRef} />
               </div>}
