@@ -230,7 +230,7 @@ const MainChat = () => {
 
                       {/* right actions */}
                       <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <Button type="submit" size="icon" className="rounded-full w-9 h-9" disabled={!inputValue.trim() || isLoading}>
+                        <Button type="submit" size="icon" className="rounded-full w-20 h-20" disabled={!inputValue.trim() || isLoading}>
                           <Send className="w-4 h-4" />
                         </Button>
                       </div>
