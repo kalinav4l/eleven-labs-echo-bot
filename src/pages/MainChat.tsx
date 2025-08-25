@@ -71,6 +71,7 @@ const MainChat = () => {
   useEffect(() => {
     scrollToBottom();
   }, [localMessages]);
+
   useEffect(() => {
     // keep textarea sized to content whenever value changes
     adjustTextareaHeight();
@@ -213,17 +214,23 @@ const MainChat = () => {
                   <div className="mx-auto w-full max-w-3xl">
                     <div className="relative rounded-full border border-border/60 bg-muted/20 shadow-sm hover:shadow transition-shadow">
 
-                              <Textarea ref={textareaRef} value={inputValue} onChange={e => {
-                    setInputValue(e.target.value);
-                    adjustTextareaHeight(e.target as HTMLTextAreaElement);
-                  }} onKeyDown={handleKeyDown} placeholder="Ask anything" rows={1} style={{
-                    maxHeight: `${MAX_TEXTAREA_HEIGHT}px`,
-                    overflow: 'hidden'
-                  }} className={cn('min-h-[48px] resize-none w-full bg-transparent border-0 pl-10 pr-16 py-3 text-left', 'focus-visible:ring-0 focus-visible:ring-offset-0 text-sm leading-relaxed')} />
+                              <Textarea
+                                ref={textareaRef}
+                                value={inputValue}
+                                onChange={e => {
+                                  setInputValue(e.target.value);
+                                  adjustTextareaHeight(e.target as HTMLTextAreaElement);
+                                }}
+                                onKeyDown={handleKeyDown}
+                                placeholder="Ask anything"
+                                rows={1}
+                                style={{ maxHeight: `${MAX_TEXTAREA_HEIGHT}px`, overflow: 'hidden' }}
+                                className={cn('min-h-[48px] resize-none w-full bg-transparent border-0 pl-10 pr-16 py-3 text-left', 'focus-visible:ring-0 focus-visible:ring-offset-0 text-sm leading-relaxed')}
+                              />
 
                       {/* right actions */}
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 bg-zinc-800">
-                        <Button type="submit" size="icon" disabled={!inputValue.trim() || isLoading} className="rounded-full w-9 h-9 text-zinc-950">
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <Button type="submit" size="icon" className="rounded-full w-20 h-20" disabled={!inputValue.trim() || isLoading}>
                           <Send className="w-4 h-4" />
                         </Button>
                       </div>
@@ -239,9 +246,21 @@ const MainChat = () => {
               </div> :
           // ===== Conversation View =====
           <div className="space-y-6">
-                {localMessages.map(message => <div key={message.id} className={cn('group max-w-full', message.isUser ? 'ml-12 md:ml-24 flex justify-end' : 'mr-12 md:mr-24 flex justify-start')}>
+                {localMessages.map(message => (
+                  <div
+                    key={message.id}
+                    className={cn(
+                      'group max-w-full',
+                      message.isUser ? 'ml-12 md:ml-24 flex justify-end' : 'mr-12 md:mr-24 flex justify-start'
+                    )}
+                  >
                     <div className={cn('flex items-end gap-3', message.isUser ? 'flex-row-reverse' : '')}>
-                      <div className={cn('w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0', message.isUser ? 'bg-black text-white' : 'bg-muted-foreground text-white')}>
+                      <div
+                        className={cn(
+                          'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0',
+                          message.isUser ? 'bg-black text-white' : 'bg-muted-foreground text-white'
+                        )}
+                      >
                         {message.isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                       </div>
 
@@ -250,22 +269,27 @@ const MainChat = () => {
                           {!message.isUser && <span className="font-medium text-sm">Kalina AI</span>}
                           <span className="text-xs text-muted-foreground">
                             {message.timestamp.toLocaleTimeString('ro-RO', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
                           </span>
                         </div>
 
                         <div>
-                          <div className={cn('inline-block rounded-lg px-3 py-2 prose-sm whitespace-pre-wrap leading-relaxed break-words max-w-[70%] md:max-w-[60ch] ', message.isUser ? 'bg-gray-100 text-black' : 'bg-muted/10 text-foreground')}>
+                          <div className={cn(
+                            'inline-block rounded-lg px-3 py-2 prose-sm whitespace-pre-wrap leading-relaxed break-words max-w-[70%] md:max-w-[60ch] ',
+                            message.isUser ? 'bg-gray-100 text-black' : 'bg-muted/10 text-foreground'
+                          )}>
                             {message.text}
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>)}
+                  </div>
+                ))}
 
-                {isLoading && <div className="mr-12 md:mr-24 flex justify-start">
+                {isLoading && (
+                  <div className="mr-12 md:mr-24 flex justify-start">
                     <div className="flex items-end gap-3">
                       <div className="w-8 h-8 rounded-full bg-muted-foreground flex items-center justify-center flex-shrink-0 text-white">
                         <Bot className="w-4 h-4" />
@@ -276,16 +300,13 @@ const MainChat = () => {
                         </div>
                         <div className="flex items-center gap-1">
                           <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
-                          <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{
-                      animationDelay: '0.1s'
-                    }} />
-                          <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{
-                      animationDelay: '0.2s'
-                    }} />
+                          <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                          <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
                         </div>
                       </div>
                     </div>
-                  </div>}
+                  </div>
+                )}
 
                 <div ref={messagesEndRef} />
               </div>}
@@ -298,13 +319,20 @@ const MainChat = () => {
               <div className="w-full max-w-2xl pointer-events-auto px-2">
                 <form onSubmit={handleSendMessage} className="relative">
                   <div className="relative flex items-end gap-2 min-h-[56px] px-4 py-3 bg-background rounded-2xl border border-border/50 focus-within:border-primary/50 transition-colors shadow-lg">
-                    <Textarea ref={textareaRef} value={inputValue} onChange={e => {
-                  setInputValue(e.target.value);
-                  adjustTextareaHeight(e.target as HTMLTextAreaElement);
-                }} onKeyDown={handleKeyDown} placeholder="Trimite un mesaj..." className="flex-1 min-h-[24px] resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 text-sm placeholder:text-muted-foreground" disabled={isLoading} rows={1} style={{
-                  maxHeight: `${MAX_TEXTAREA_HEIGHT}px`,
-                  overflow: 'hidden'
-                }} />
+                    <Textarea
+                      ref={textareaRef}
+                      value={inputValue}
+                      onChange={e => {
+                        setInputValue(e.target.value);
+                        adjustTextareaHeight(e.target as HTMLTextAreaElement);
+                      }}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Trimite un mesaj..."
+                      className="flex-1 min-h-[24px] resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 text-sm placeholder:text-muted-foreground"
+                      disabled={isLoading}
+                      rows={1}
+                      style={{ maxHeight: `${MAX_TEXTAREA_HEIGHT}px`, overflow: 'hidden' }}
+                    />
                     <Button type="submit" size="sm" className="rounded-full w-8 h-8 p-0 flex-shrink-0" disabled={!inputValue.trim() || isLoading}>
                       <Send className="w-4 h-4" />
                     </Button>
