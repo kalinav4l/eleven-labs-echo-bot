@@ -132,15 +132,16 @@ const DashboardLayout = ({
           
           {/* Main Content */}
           <main className="flex-1 overflow-y-auto min-h-0">
-            <div className={`max-w-7xl mx-auto ${isMobile ? 'px-2 py-2 min-h-[calc(100vh-4rem)]' : 'px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-6'}`}>
+            {/* allow pages to use full width inside padding */}
+            <div className={`${isMobile ? 'px-2 py-2 min-h-[calc(100vh-4rem)]' : 'px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-6'} w-full`}>
               {children}
             </div>
-            
-            {/* Version Footer */}
-            <div className="text-center py-4 text-xs text-muted-foreground border-t">
-              {APP_VERSION}
-            </div>
           </main>
+
+          {/* Version Footer - fixed to bottom so it's always visible */}
+          <div className="fixed left-0 right-0 bottom-0 text-center py-3 text-xs text-muted-foreground border-t bg-background/90">
+            {APP_VERSION}
+          </div>
         </div>
       </div>
     </SidebarProvider>;
