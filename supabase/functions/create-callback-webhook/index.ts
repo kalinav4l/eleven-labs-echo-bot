@@ -106,15 +106,41 @@ serve(async (req) => {
         scheduledDatetime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
       }
     } else {
-      // Try to parse as ISO timestamp or relative time
-      try {
-        scheduledDatetime = new Date(payload.callback_time);
-        if (isNaN(scheduledDatetime.getTime())) {
-          throw new Error('Invalid date');
+      // Try to parse specific time patterns including Romanian format "15 și 30"
+      let timeMatch = callbackTime.match(/(\d{1,2}):(\d{2})/); // Standard format "15:30"
+      if (!timeMatch) {
+        timeMatch = callbackTime.match(/(\d{1,2})\s*(?:și|si|şi)\s*(\d{2})/i); // Romanian format "15 și 30"
+      }
+      if (!timeMatch) {
+        timeMatch = callbackTime.match(/la\s*(\d{1,2}):?(\d{2})?/i); // "la 15:30" or "la 15"
+      }
+      if (!timeMatch) {
+        timeMatch = callbackTime.match(/(\d{1,2})\s*(?:h|ore|ora)/i); // "15h" or "15 ora"
+      }
+      
+      if (timeMatch) {
+        const hour = parseInt(timeMatch[1]);
+        const minute = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
+        scheduledDatetime = new Date(now);
+        
+        // If time is in the past today, schedule for tomorrow
+        const testTime = new Date(now);
+        testTime.setHours(hour, minute, 0, 0);
+        if (testTime <= now) {
+          scheduledDatetime.setDate(scheduledDatetime.getDate() + 1);
         }
-      } catch {
-        // Default to 10 minutes if parsing fails
-        scheduledDatetime = new Date(now.getTime() + 10 * 60 * 1000);
+        scheduledDatetime.setHours(hour, minute, 0, 0);
+      } else {
+        // Try to parse as ISO timestamp or relative time
+        try {
+          scheduledDatetime = new Date(payload.callback_time);
+          if (isNaN(scheduledDatetime.getTime())) {
+            throw new Error('Invalid date');
+          }
+        } catch {
+          // Default to 10 minutes if parsing fails
+          scheduledDatetime = new Date(now.getTime() + 10 * 60 * 1000);
+        }
       }
     }
 
