@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, X, CreditCard } from 'lucide-react';
 
@@ -17,7 +17,16 @@ export const PaymentIssueNotification: React.FC<PaymentIssueNotificationProps> =
   remainingBalance = 0,
   onDismiss 
 }) => {
-  if (!notificationType) return null;
+  const DISMISSED_FLAG = '__paymentIssueNotificationDismissed';
+  const [dismissed, setDismissed] = useState<boolean>(() => {
+    try {
+      return !!((globalThis as any)[DISMISSED_FLAG]);
+    } catch (e) {
+      return false;
+    }
+  });
+
+  if (!notificationType || dismissed) return null;
 
   const getNotificationContent = () => {
     switch (notificationType) {
@@ -68,8 +77,21 @@ export const PaymentIssueNotification: React.FC<PaymentIssueNotificationProps> =
     window.location.href = '/pricing';
   };
 
+  const handleDismissClick = () => {
+    try {
+      (globalThis as any)[DISMISSED_FLAG] = true;
+    } catch (e) {
+      /* ignore */
+    }
+    setDismissed(true);
+    if (onDismiss) onDismiss();
+  };
+
   return (
-    <div className={`fixed top-0 left-0 right-0 z-50 ${content.bgColor} border-b ${content.borderColor} p-3`}>
+    <div
+      style={{ zIndex: 9999999 }}
+      className={`fixed top-0 left-0 right-0 z-[9999999] ${content.bgColor} border-b ${content.borderColor} p-3`}
+    >
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         <div className="flex items-center space-x-3">
           {content.icon}
@@ -92,7 +114,7 @@ export const PaymentIssueNotification: React.FC<PaymentIssueNotificationProps> =
           </Button>
           {onDismiss && (
             <Button 
-              onClick={onDismiss}
+              onClick={handleDismissClick}
               variant="ghost"
               size="sm"
               className={`h-8 w-8 p-0 ${content.textColor.replace('text-', 'text-').replace('-800', '-600')} hover:${content.bgColor.replace('bg-', 'bg-').replace('-50', '-100')}`}

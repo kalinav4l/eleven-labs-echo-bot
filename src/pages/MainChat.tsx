@@ -38,6 +38,20 @@ const MainChat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const MAX_TEXTAREA_HEIGHT = 400; // px
+
+  const adjustTextareaHeight = (el?: HTMLTextAreaElement | null) => {
+    const ta = el ?? textareaRef.current;
+    if (!ta) return;
+    try {
+      ta.style.height = 'auto';
+      const newHeight = Math.min(ta.scrollHeight, MAX_TEXTAREA_HEIGHT);
+      ta.style.height = `${newHeight}px`;
+      ta.style.overflowY = ta.scrollHeight > MAX_TEXTAREA_HEIGHT ? 'auto' : 'hidden';
+    } catch (e) {
+      // ignore
+    }
+  };
 
   // Convert chat messages to local format
   useEffect(() => {
@@ -57,6 +71,11 @@ const MainChat = () => {
   useEffect(() => {
     scrollToBottom();
   }, [localMessages]);
+
+  useEffect(() => {
+    // keep textarea sized to content whenever value changes
+    adjustTextareaHeight();
+  }, [inputValue]);
   const isNewChat = localMessages.length === 0;
 
   // Redirect to auth if not authenticated
@@ -191,11 +210,23 @@ const MainChat = () => {
                 </div>
 
                 {/* Centered rounded-full input */}
-                <form onSubmit={handleSendMessage} className="w-full">
+                        <form onSubmit={handleSendMessage} className="w-full">
                   <div className="mx-auto w-full max-w-3xl">
                     <div className="relative rounded-full border border-border/60 bg-muted/20 shadow-sm hover:shadow transition-shadow">
 
-                      <Textarea ref={textareaRef} value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyDown={handleKeyDown} placeholder="Ask anything" rows={1} className={cn('min-h-[48px] max-h-40 resize-none w-full bg-transparent border-0 pl-10 pr-16 py-3 text-left', 'focus-visible:ring-0 focus-visible:ring-offset-0 text-sm leading-relaxed')} />
+                              <Textarea
+                                ref={textareaRef}
+                                value={inputValue}
+                                onChange={e => {
+                                  setInputValue(e.target.value);
+                                  adjustTextareaHeight(e.target as HTMLTextAreaElement);
+                                }}
+                                onKeyDown={handleKeyDown}
+                                placeholder="Ask anything"
+                                rows={1}
+                                style={{ maxHeight: `${MAX_TEXTAREA_HEIGHT}px`, overflow: 'hidden' }}
+                                className={cn('min-h-[48px] resize-none w-full bg-transparent border-0 pl-10 pr-16 py-3 text-left', 'focus-visible:ring-0 focus-visible:ring-offset-0 text-sm leading-relaxed')}
+                              />
 
                       {/* right actions */}
                       <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -246,7 +277,7 @@ const MainChat = () => {
 
                         <div>
                           <div className={cn(
-                            'inline-block rounded-lg px-3 py-2 prose-sm max-w-[60ch] whitespace-pre-wrap leading-relaxed',
+                            'inline-block rounded-lg px-3 py-2 prose-sm whitespace-pre-wrap leading-relaxed break-words max-w-[70%] md:max-w-[60ch] ',
                             message.isUser ? 'bg-gray-100 text-black' : 'bg-muted/10 text-foreground'
                           )}>
                             {message.text}
@@ -288,7 +319,20 @@ const MainChat = () => {
               <div className="w-full max-w-2xl pointer-events-auto px-2">
                 <form onSubmit={handleSendMessage} className="relative">
                   <div className="relative flex items-end gap-2 min-h-[56px] px-4 py-3 bg-background rounded-2xl border border-border/50 focus-within:border-primary/50 transition-colors shadow-lg">
-                    <Textarea ref={textareaRef} value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyDown={handleKeyDown} placeholder="Trimite un mesaj..." className="flex-1 min-h-[24px] max-h-32 resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 text-sm placeholder:text-muted-foreground" disabled={isLoading} rows={1} />
+                    <Textarea
+                      ref={textareaRef}
+                      value={inputValue}
+                      onChange={e => {
+                        setInputValue(e.target.value);
+                        adjustTextareaHeight(e.target as HTMLTextAreaElement);
+                      }}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Trimite un mesaj..."
+                      className="flex-1 min-h-[24px] resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 text-sm placeholder:text-muted-foreground"
+                      disabled={isLoading}
+                      rows={1}
+                      style={{ maxHeight: `${MAX_TEXTAREA_HEIGHT}px`, overflow: 'hidden' }}
+                    />
                     <Button type="submit" size="sm" className="rounded-full w-8 h-8 p-0 flex-shrink-0" disabled={!inputValue.trim() || isLoading}>
                       <Send className="w-4 h-4" />
                     </Button>
